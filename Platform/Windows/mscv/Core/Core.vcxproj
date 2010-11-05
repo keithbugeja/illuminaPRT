@@ -87,7 +87,6 @@
     <TargetExt>.lib</TargetExt>
     <IncludePath>$(SolutionDir)..\..\..\Core;$(ICInstallDir)compiler\include;$(ICInstallDir)compiler\include\Intel64;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;$(BOOST_DIR);$(TBB30_INSTALL_DIR)\include;</IncludePath>
     <LibraryPath>$(ICInstallDir)compiler\lib\Intel64;$(VCInstallDir)lib\amd64;$(VCInstallDir)atlmfc\lib\amd64;$(WindowsSdkDir)lib\x64;$(BOOST_DIR)\lib\x64;$(TBB30_INSTALL_DIR)\lib\intel64\vc10;</LibraryPath>
-    <SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)..\..\Bin\Win64\$(Configuration)\</OutDir>
@@ -97,7 +96,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetExt>.lib</TargetExt>
-    <IncludePath>$(ICInstallDir)compiler\include;$(ICInstallDir)compiler\include\Intel64;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;$(BOOST_DIR);$(TBB30_INSTALL_DIR)\include;</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\..\Core;$(ICInstallDir)compiler\include;$(ICInstallDir)compiler\include\Intel64;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;$(BOOST_DIR);$(TBB30_INSTALL_DIR)\include;</IncludePath>
     <LibraryPath>$(ICInstallDir)compiler\lib\Intel64;$(VCInstallDir)lib\amd64;$(VCInstallDir)atlmfc\lib\amd64;$(WindowsSdkDir)lib\x64;$(BOOST_DIR)\lib\x64;$(TBB30_INSTALL_DIR)\lib\intel64\vc10;</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -108,7 +107,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetExt>.lib</TargetExt>
-    <IncludePath>$(ICInstallDir)compiler\include;$(ICInstallDir)compiler\include\ia32;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;$(BOOST_DIR);$(TBB30_INSTALL_DIR)\include;</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\..\Core;$(ICInstallDir)compiler\include;$(ICInstallDir)compiler\include\ia32;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;$(BOOST_DIR);$(TBB30_INSTALL_DIR)\include;</IncludePath>
     <LibraryPath>$(ICInstallDir)compiler\lib\ia32;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib;$(BOOST_DIR)\lib\x32;$(TBB30_INSTALL_DIR)\lib\ia32\vc10</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -119,7 +118,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetExt>.lib</TargetExt>
-    <IncludePath>$(ICInstallDir)compiler\include;$(ICInstallDir)compiler\include\ia32;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;$(BOOST_DIR);$(TBB30_INSTALL_DIR)\include;</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\..\Core;$(ICInstallDir)compiler\include;$(ICInstallDir)compiler\include\ia32;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;$(BOOST_DIR);$(TBB30_INSTALL_DIR)\include;</IncludePath>
     <LibraryPath>$(ICInstallDir)compiler\lib\ia32;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib;$(BOOST_DIR)\lib\x32;$(TBB30_INSTALL_DIR)\lib\ia32\vc10</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
