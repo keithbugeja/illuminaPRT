@@ -1,0 +1,30 @@
+//----------------------------------------------------------------------------------------------
+//	Filename:	Texture.h
+//	Author:		Keith Bugeja
+//	Date:		27/02/2010
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+#pragma once
+
+#include "Texture/Texture.h"
+
+namespace Illumina 
+{
+	namespace Core
+	{
+		class SimpleTexture
+		{
+		protected:
+			RGBPixel m_colour;
+		
+		public:
+			SimpleTexture(RGBPixel p_colour)
+				: m_colour(p_colour)
+			{ }
+
+			RGBPixel GetValue(const Vector2& p_uv, const Vector3 &p_hitPoint) const {
+				return m_colour;
+			}
+		};
+	} 
+}

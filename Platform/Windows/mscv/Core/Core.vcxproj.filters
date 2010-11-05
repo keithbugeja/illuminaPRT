@@ -1,0 +1,359 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Accelerator">
+      <UniqueIdentifier>{6792e8cb-983d-46d1-9212-1913c0393882}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Camera">
+      <UniqueIdentifier>{c292dbf9-b7b4-453f-97ae-7df8ecb1cc9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Device">
+      <UniqueIdentifier>{2b007c1f-6264-42db-aaae-af362a77d36e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Exception">
+      <UniqueIdentifier>{b842a533-35ad-484f-a746-61b138e2f5f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Filter">
+      <UniqueIdentifier>{b8ed985a-d826-4dd1-b247-a7ff10284c18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Geometry">
+      <UniqueIdentifier>{597d7d49-b9cb-4687-94a3-612a95f00b88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Image">
+      <UniqueIdentifier>{257532ce-ea49-4334-977d-95253d1c8e17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Light">
+      <UniqueIdentifier>{7db5285e-6b7e-4958-bd7a-f6027b460c30}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Material">
+      <UniqueIdentifier>{62e499ee-22c4-4701-9640-5c749851fe35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Maths">
+      <UniqueIdentifier>{8c45a19f-03da-4b1e-9554-4397bdac8e24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Object">
+      <UniqueIdentifier>{0f357898-313a-4f52-8edf-d5d65a9ca157}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Sampler">
+      <UniqueIdentifier>{83104c4e-3e45-4664-a0da-c8d3cba39c4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Shape">
+      <UniqueIdentifier>{656d6d7c-07c8-4678-b046-b2c7725f5ae4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Space">
+      <UniqueIdentifier>{d73c4f3d-7527-4bbf-9ed8-ba9d61a15066}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Staging">
+      <UniqueIdentifier>{509d8d4a-2569-4e13-afc0-17c367a683f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\System">
+      <UniqueIdentifier>{25e9a703-a411-4ce9-9406-8645976de235}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Texture">
+      <UniqueIdentifier>{484fda20-b723-48b3-9c76-ec6bc3c0c798}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Threading">
+      <UniqueIdentifier>{da1215bb-6191-4ab5-83ee-beb492656c00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Tonemap">
+      <UniqueIdentifier>{59bf8f69-df99-4ff3-a4bb-499e8fb8a939}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\Core\Camera\Camera.cpp">
+      <Filter>Header Files\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Camera\PerspectiveCamera.cpp">
+      <Filter>Header Files\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Camera\ThinLensCamera.cpp">
+      <Filter>Header Files\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Exception\Exception.cpp">
+      <Filter>Header Files\Exception</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Geometry\Basis.cpp">
+      <Filter>Header Files\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Geometry\BoundingBox.cpp">
+      <Filter>Header Files\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Geometry\Matrix3x3.cpp">
+      <Filter>Header Files\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Geometry\Matrix4x4.cpp">
+      <Filter>Header Files\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Geometry\Transform.cpp">
+      <Filter>Header Files\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Geometry\Vector2.cpp">
+      <Filter>Header Files\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Geometry\Vector3.cpp">
+      <Filter>Header Files\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Image\RGBPixel.cpp">
+      <Filter>Header Files\Image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Maths\Maths.cpp">
+      <Filter>Header Files\Maths</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Maths\Random.cpp">
+      <Filter>Header Files\Maths</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Threading\Spinlock.cpp">
+      <Filter>Header Files\Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\System\Platform.cpp">
+      <Filter>Header Files\System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Staging\GeometricPrimitive.cpp">
+      <Filter>Header Files\Staging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Shape\Sphere.cpp">
+      <Filter>Header Files\Shape</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Shape\Triangle.cpp">
+      <Filter>Header Files\Shape</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Object\Object.cpp">
+      <Filter>Header Files\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Object\UniqueID.cpp">
+      <Filter>Header Files\Object</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
+      <Filter>Header Files\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Camera\PerspectiveCamera.h">
+      <Filter>Header Files\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Camera\ThinLensCamera.h">
+      <Filter>Header Files\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Exception\Exception.h">
+      <Filter>Header Files\Exception</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Filter\Filter.h">
+      <Filter>Header Files\Filter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Geometry\Basis.h">
+      <Filter>Header Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Geometry\BoundingBox.h">
+      <Filter>Header Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Geometry\BoundingSphere.h">
+      <Filter>Header Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Geometry\BoundingVolume.h">
+      <Filter>Header Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Geometry\Interval.h">
+      <Filter>Header Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Geometry\Matrix3x3.h">
+      <Filter>Header Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Geometry\Matrix4x4.h">
+      <Filter>Header Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Geometry\Plane.h">
+      <Filter>Header Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Geometry\Ray.h">
+      <Filter>Header Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Geometry\Transform.h">
+      <Filter>Header Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Geometry\Vector2.h">
+      <Filter>Header Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Geometry\Vector3.h">
+      <Filter>Header Files\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Image\Image.h">
+      <Filter>Header Files\Image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Image\ImageIO.h">
+      <Filter>Header Files\Image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Image\ImagePPM.h">
+      <Filter>Header Files\Image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Image\RGBPixel.h">
+      <Filter>Header Files\Image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Maths\Maths.h">
+      <Filter>Header Files\Maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Maths\Random.h">
+      <Filter>Header Files\Maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\Atomic.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\AtomicReference.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\LinkedList.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\List.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\Lock.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\Monitor.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\Pointer.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\Queue.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\ReentrantLock.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\Spinlock.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\WorkQueue.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\ImageTexture.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\MarbleTexture.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\Noise.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\NoiseTexture.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\SimpleTexture.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\Texture.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\System\Platform.h">
+      <Filter>Header Files\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Staging\Aggregate.h">
+      <Filter>Header Files\Staging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Staging\GeometricPrimitive.h">
+      <Filter>Header Files\Staging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Staging\OctreeAggregate.h">
+      <Filter>Header Files\Staging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Staging\Primitive.h">
+      <Filter>Header Files\Staging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Space\BasicSpace.h">
+      <Filter>Header Files\Space</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Space\BVHSpace.h">
+      <Filter>Header Files\Space</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Space\Space.h">
+      <Filter>Header Files\Space</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\BasicMesh.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\BIHMesh.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\BVHMesh.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\HybridMesh.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\IndexedTriangle.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\KDTreeMesh.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\OctreeMesh.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\Shape.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\ShapeFactory.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\Sphere.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\TreeMesh.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\Triangle.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\TriangleMesh.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\VertexFormats.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Object\Cloneable.h">
+      <Filter>Header Files\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Object\Object.h">
+      <Filter>Header Files\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Object\UniqueID.h">
+      <Filter>Header Files\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Sampler\Sampler.h">
+      <Filter>Header Files\Sampler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Device\Device.h">
+      <Filter>Header Files\Device</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\Core\Geometry\Vector3.inl">
+      <Filter>Header Files\Geometry</Filter>
+    </None>
+    <None Include="..\..\..\..\Core\Threading\Spinlock.inl">
+      <Filter>Header Files\Threading</Filter>
+    </None>
+    <None Include="..\..\..\..\Core\Shape\IndexedTriangle.inl">
+      <Filter>Header Files\Shape</Filter>
+    </None>
+    <None Include="..\..\..\..\Core\Shape\TriangleMesh.inl">
+      <Filter>Header Files\Shape</Filter>
+    </None>
+    <None Include="..\..\..\..\Core\Object\Object.inl">
+      <Filter>Header Files\Object</Filter>
+    </None>
+  </ItemGroup>
+</Project>
