@@ -53,6 +53,7 @@
 #include "Threading/LinkedList.h"
  
 using namespace std;
+using namespace tbb;
 using namespace Illumina::Core;
  
 void TestLists(void)
@@ -69,7 +70,7 @@ void TestLists(void)
 	Queue queue;
 	Object *p = NULL;
  
-	#pragma omp parallel for 
+	//#pragma omp parallel for 
 	for (int j = 0; j < 100000; j++)
 	{
 		queue.Enqueue(a);
@@ -122,7 +123,7 @@ void TestAtomic(void)
 	AtomicStampedReference<void> s;
 	s.Set((void*)0x1000, 0);
  
-	#pragma omp parallel for
+	//#pragma omp parallel for
 	for (int n = 0; n < 1000000; n++)
 	{
 		s.CompareAndSet((void*)0x1000, (void*)0x2000, 0, 1);
@@ -141,7 +142,7 @@ void TestUID(void)
 
 	List<Object> objectList;
 
-	#pragma omp parallel for
+	//#pragma omp parallel for
 	for (int j = 0; j < 1000; j++)
 	{
 		Object t("test");
@@ -165,7 +166,7 @@ void TestSpinLock(void)
 	int sharedvar = 0;
 	double start = Platform::GetTime();
  
-	#pragma omp parallel for
+	//#pragma omp parallel for
 	for (int j = 0; j < 100000; j++)
 	{
 		lock.Lock();
@@ -411,83 +412,164 @@ void SimplePacketTracer(int p_nOMPThreads)
 
 		// Here we rebuild the AS
 		basicSpace.Update();
-
+		
 		// Render the scene
-		#pragma omp parallel for schedule(guided)
-		for (int y = 0; y < height; y++)
-		{
-			DifferentialSurface differentialSurface;
-
-			Vector3 lightVector,
-				reflectionVector;
-
-			float testDensity, 
-				distance,
-				diffuse,
-				specular,
-				shadow,
-				contribution;
-
-			bool bHit;
- 
-			for (int x = 0; x < width; x++)
+		//#pragma omp parallel for schedule(guided)
+		//parallel_for(blocked_range<int>(0, height - 1), [=] (blocked_range<int>& r) 
 			{
-				RGBPixel pixelColour = RGBPixel::Black,
-					finalColour = RGBPixel::Black;
-			
-				Ray &ray = camera.GetRay(
-					((float)x) / width, 
-					((float)y) / height, 
-					0.5f, 0.5f );
+				//std::cout << "[ " << r.begin() << " - " << r.end() << "]" << std::endl;
 
-				bHit = false;
+				Image *c = (Image*)&canvas;
 
-				contribution = 
-					shadow = 1.0f;
-
-				for (int depth = 0; depth < MaxDepth; depth++)
+				//for (int y = r.begin(); y != r.end(); ++y)
+				for (int y = 0; y < height; ++y)
 				{
-					bHit = basicSpace.Intersects(ray, 0.0f, differentialSurface, testDensity);
+					DifferentialSurface differentialSurface;
 
-					if (bHit)
+					Vector3 lightVector,
+						reflectionVector;
+
+					float testDensity, 
+						distance,
+						diffuse,
+						specular,
+						shadow,
+						contribution;
+
+					bool bHit;
+
+					for (int x = 0; x < width; x++)
 					{
-						//pixelColour = marbleTexture.GetValue(differentialSurface.PointUV, differentialSurface.PointWS * 20);
-						pixelColour.Set(pixelColour.R * 0.5f + 0.5f, pixelColour.G * 0.5f + 0.4f, pixelColour.B * 0.5f + 0.3f);
-						Vector3::Subtract(lightPosition, differentialSurface.PointWS, lightVector);
-						Vector3 normal(differentialSurface.BasisWS.U);
-						normal.Y = -normal.Y;
- 
-						distance = lightVector.Length();
-						lightVector.Normalize();
-						diffuse = Maths::Clamp(Vector3::Dot(lightVector, normal), 0.3f, 1.0f);
- 
-						Ray shadowRay(differentialSurface.PointWS, lightVector, 0.0001f, distance - 0.01f);
-						shadow = basicSpace.Intersects(shadowRay, 0.0f) ? 0.4f : 1.0f;
-
-						Vector3::Reflect(lightVector, normal, lightVector);
-						specular = Maths::Pow(Vector3::Dot(ray.Direction, lightVector), 64);
-
-						pixelColour *= shadow * (diffuse + specular) * contribution;
-						finalColour += pixelColour;
-						contribution *= 0.25f;
-
-						if (depth < MaxDepth - 1)
-						{
-							Vector3::Reflect(ray.Direction, normal, reflectionVector);
-							ray.Direction = reflectionVector;
-							ray.Origin = differentialSurface.PointWS + reflectionVector * 0.0001f;
-						}
-					}
-					else
-						break;
-				}
+						RGBPixel pixelColour = RGBPixel::Black,
+							finalColour = RGBPixel::Black;
 			
-				canvas.Set(x, (height - 1) - y, finalColour);
+						Ray &ray = camera.GetRay(
+							((float)x) / width, 
+							((float)y) / height, 
+							0.5f, 0.5f );
+
+						bHit = false;
+
+						contribution = 
+							shadow = 1.0f;
+						
+						for (int depth = 0; depth < MaxDepth; depth++)
+						{
+							bHit = basicSpace.Intersects(ray, 0, differentialSurface); // .Intersects(ray, 0.0f, differentialSurface, testDensity);
+
+							if (bHit)
+							{
+								//pixelColour = marbleTexture.GetValue(differentialSurface.PointUV, differentialSurface.PointWS * 20);
+								pixelColour.Set(pixelColour.R * 0.5f + 0.5f, pixelColour.G * 0.5f + 0.4f, pixelColour.B * 0.5f + 0.3f);
+								Vector3::Subtract(lightPosition, differentialSurface.PointWS, lightVector);
+								Vector3 normal(differentialSurface.BasisWS.U);
+								normal.Y = -normal.Y;
+ 
+								distance = lightVector.Length();
+								lightVector.Normalize();
+								diffuse = Maths::Clamp(Vector3::Dot(lightVector, normal), 0.3f, 1.0f);
+ 
+								Ray shadowRay(differentialSurface.PointWS, lightVector, 0.0001f, distance - 0.01f);
+								shadow = basicSpace.Intersects(shadowRay, 0.0f) ? 0.4f : 1.0f;
+
+								Vector3::Reflect(lightVector, normal, lightVector);
+								specular = Maths::Pow(Vector3::Dot(ray.Direction, lightVector), 64);
+
+								pixelColour *= shadow * (diffuse + specular) * contribution;
+								finalColour += pixelColour;
+								contribution *= 0.25f;
+
+								if (depth < MaxDepth - 1)
+								{
+									Vector3::Reflect(ray.Direction, normal, reflectionVector);
+									ray.Direction = reflectionVector;
+									ray.Origin = differentialSurface.PointWS + reflectionVector * 0.0001f;
+								}
+							}
+							else
+								break;
+						}
+
+						//std::cout << "Block Y = " << y << std::endl;
+						c->Set(x, (height - 1) - y, finalColour);
+						//canvas.Set(x, (height - 1) - y, finalColour);
+					}
+					
+					++renderProgress;
+				}
 			}
+		//);
+		
+		/*
+		DifferentialSurface differentialSurface;
+
+		Vector3 lightVector,
+			reflectionVector;
+
+		float testDensity, 
+			distance,
+			diffuse,
+			specular,
+			shadow,
+			contribution;
+
+		bool bHit;
  
-			++renderProgress;
-		}
+		for (int x = 0; x < width; x++)
+		{
+			RGBPixel pixelColour = RGBPixel::Black,
+				finalColour = RGBPixel::Black;
+			
+			Ray &ray = camera.GetRay(
+				((float)x) / width, 
+				((float)y) / height, 
+				0.5f, 0.5f );
+
+			bHit = false;
+
+			contribution = 
+				shadow = 1.0f;
+
+			for (int depth = 0; depth < MaxDepth; depth++)
+			{
+				bHit = basicSpace.Intersects(ray, 0, differentialSurface); // .Intersects(ray, 0.0f, differentialSurface, testDensity);
+
+				if (bHit)
+				{
+					//pixelColour = marbleTexture.GetValue(differentialSurface.PointUV, differentialSurface.PointWS * 20);
+					pixelColour.Set(pixelColour.R * 0.5f + 0.5f, pixelColour.G * 0.5f + 0.4f, pixelColour.B * 0.5f + 0.3f);
+					Vector3::Subtract(lightPosition, differentialSurface.PointWS, lightVector);
+					Vector3 normal(differentialSurface.BasisWS.U);
+					normal.Y = -normal.Y;
  
+					distance = lightVector.Length();
+					lightVector.Normalize();
+					diffuse = Maths::Clamp(Vector3::Dot(lightVector, normal), 0.3f, 1.0f);
+ 
+					Ray shadowRay(differentialSurface.PointWS, lightVector, 0.0001f, distance - 0.01f);
+					shadow = basicSpace.Intersects(shadowRay, 0.0f) ? 0.4f : 1.0f;
+
+					Vector3::Reflect(lightVector, normal, lightVector);
+					specular = Maths::Pow(Vector3::Dot(ray.Direction, lightVector), 64);
+
+					pixelColour *= shadow * (diffuse + specular) * contribution;
+					finalColour += pixelColour;
+					contribution *= 0.25f;
+
+					if (depth < MaxDepth - 1)
+					{
+						Vector3::Reflect(ray.Direction, normal, reflectionVector);
+						ray.Direction = reflectionVector;
+						ray.Origin = differentialSurface.PointWS + reflectionVector * 0.0001f;
+					}
+				}
+				else
+					break;
+			}
+			
+			canvas.Set(x, (height - 1) - y, finalColour);
+		*/
+  
 		totalFPS += (float)(1.0 / renderTimer.elapsed());
 		std::cout<< shape_mesh3->ToString() << std::endl;
 		std::cout << "Total Render Time : " << renderTimer.elapsed() << " seconds" << std::endl;

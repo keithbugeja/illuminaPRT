@@ -74,9 +74,9 @@ namespace Illumina
 				delete[] m_bitmap;
 			}
 
-			inline void Set(int p_x, int p_y, const RGBPixel &p_colour) {
+			/* inline */ void Set(int p_x, int p_y, const RGBPixel &p_colour) {
 				m_bitmap[IndexOf(p_x, p_y)] = p_colour;
-			}
+			} 
 
 			inline RGBPixel Get(int p_x, int p_y) {
 				return RGBPixel(m_bitmap[IndexOf(p_x, p_y)]);

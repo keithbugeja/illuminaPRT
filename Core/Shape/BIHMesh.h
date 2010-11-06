@@ -520,6 +520,7 @@ namespace Illumina
 				{
 					//std::cout << "Adding leaf node [" << p_objectList.Size() << ", " << p_nDepth << "]" << std::endl;
 					p_pNode->Type = TreeMeshNodeType::Leaf; 
+					p_pNode->Axis = p_nAxis;
 					p_pNode->TriangleList.PushBack(p_objectList);
  
 					m_statistics.m_leafNodeCount++;

@@ -9,12 +9,13 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Shape/TriangleMesh.h"
-#include "Accelerator/Octree.h"
+//#include "Accelerator/Octree.h"
 
 namespace Illumina 
 {
 	namespace Core
 	{
+		/*
 		template<class T, class U> 
 		class OctreeMesh
 			: public ITriangleMesh<T, U>
@@ -84,5 +85,6 @@ namespace Illumina
 				return intersectionList.Size() > 0;
 			}
 		};
+		*/
 	} 
 }
