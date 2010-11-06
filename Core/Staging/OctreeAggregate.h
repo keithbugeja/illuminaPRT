@@ -10,12 +10,13 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Staging/Aggregate.h"
-#include "Accelerator/Octree.h"
+//#include "Accelerator/Octree.h"
 
 namespace Illumina 
 {
 	namespace Core
 	{
+		/*
 		class OctreeAggregate : public Aggregate
 		{
 			Octree<IPrimitive*> *m_pOctree;
@@ -94,5 +95,6 @@ namespace Illumina
 
 			std::string ToString(void) const { return "CollectionPrimitive"; }
 		};
+		*/
 	} 
 }

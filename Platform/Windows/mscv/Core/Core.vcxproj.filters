@@ -13,62 +13,50 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\Accelerator">
-      <UniqueIdentifier>{6792e8cb-983d-46d1-9212-1913c0393882}</UniqueIdentifier>
+    <Filter Include="Header Files\Threading">
+      <UniqueIdentifier>{ba516a9c-f18a-4b9c-8129-68ad3e4e63d9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Camera">
-      <UniqueIdentifier>{c292dbf9-b7b4-453f-97ae-7df8ecb1cc9c}</UniqueIdentifier>
+      <UniqueIdentifier>{5f780f91-bc8d-4d25-ae53-88d95132c873}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Device">
-      <UniqueIdentifier>{2b007c1f-6264-42db-aaae-af362a77d36e}</UniqueIdentifier>
+      <UniqueIdentifier>{8e7863d8-3a9a-4259-9e7c-4b1a0702a8c9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Exception">
-      <UniqueIdentifier>{b842a533-35ad-484f-a746-61b138e2f5f8}</UniqueIdentifier>
+      <UniqueIdentifier>{292c0018-8ea0-4fcd-8137-33c31fd7281d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Filter">
-      <UniqueIdentifier>{b8ed985a-d826-4dd1-b247-a7ff10284c18}</UniqueIdentifier>
+      <UniqueIdentifier>{7ddc69e3-c366-4343-977f-d7262cc21ff9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Geometry">
-      <UniqueIdentifier>{597d7d49-b9cb-4687-94a3-612a95f00b88}</UniqueIdentifier>
+      <UniqueIdentifier>{275f482c-a4ba-44c6-ae4f-467bac65c671}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Image">
-      <UniqueIdentifier>{257532ce-ea49-4334-977d-95253d1c8e17}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Light">
-      <UniqueIdentifier>{7db5285e-6b7e-4958-bd7a-f6027b460c30}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Material">
-      <UniqueIdentifier>{62e499ee-22c4-4701-9640-5c749851fe35}</UniqueIdentifier>
+      <UniqueIdentifier>{caa8bf2d-1b31-406c-a212-da50a32a1e45}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Maths">
-      <UniqueIdentifier>{8c45a19f-03da-4b1e-9554-4397bdac8e24}</UniqueIdentifier>
+      <UniqueIdentifier>{4ec2ad4f-c316-460f-bdf7-5ccd8354ffaf}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Object">
-      <UniqueIdentifier>{0f357898-313a-4f52-8edf-d5d65a9ca157}</UniqueIdentifier>
+      <UniqueIdentifier>{6996402c-1008-4b32-a75d-cc2cca3bfd06}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Sampler">
-      <UniqueIdentifier>{83104c4e-3e45-4664-a0da-c8d3cba39c4e}</UniqueIdentifier>
+      <UniqueIdentifier>{b1e80c7d-11e4-4885-abe4-5a6923c62582}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Shape">
-      <UniqueIdentifier>{656d6d7c-07c8-4678-b046-b2c7725f5ae4}</UniqueIdentifier>
+      <UniqueIdentifier>{4d25c62b-00cf-401f-8595-a5fcbddb00b3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Space">
-      <UniqueIdentifier>{d73c4f3d-7527-4bbf-9ed8-ba9d61a15066}</UniqueIdentifier>
+      <UniqueIdentifier>{0eea7f30-17b4-4d43-b325-ebfdc576d85d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Staging">
-      <UniqueIdentifier>{509d8d4a-2569-4e13-afc0-17c367a683f7}</UniqueIdentifier>
+      <UniqueIdentifier>{3b70388e-b3e7-4601-9d4e-7ede4bdc11b1}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\System">
-      <UniqueIdentifier>{25e9a703-a411-4ce9-9406-8645976de235}</UniqueIdentifier>
+      <UniqueIdentifier>{85978a92-150a-4f34-b23b-2d270de868fd}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Texture">
-      <UniqueIdentifier>{484fda20-b723-48b3-9c76-ec6bc3c0c798}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Threading">
-      <UniqueIdentifier>{da1215bb-6191-4ab5-83ee-beb492656c00}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Tonemap">
-      <UniqueIdentifier>{59bf8f69-df99-4ff3-a4bb-499e8fb8a939}</UniqueIdentifier>
+      <UniqueIdentifier>{3637b545-c9ea-4819-9275-ce43fbe2606e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -114,14 +102,11 @@
     <ClCompile Include="..\..\..\..\Core\Maths\Random.cpp">
       <Filter>Header Files\Maths</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\Core\Threading\Spinlock.cpp">
-      <Filter>Header Files\Threading</Filter>
+    <ClCompile Include="..\..\..\..\Core\Object\Object.cpp">
+      <Filter>Header Files\Object</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\Core\System\Platform.cpp">
-      <Filter>Header Files\System</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\Core\Staging\GeometricPrimitive.cpp">
-      <Filter>Header Files\Staging</Filter>
+    <ClCompile Include="..\..\..\..\Core\Object\UniqueID.cpp">
+      <Filter>Header Files\Object</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Core\Shape\Sphere.cpp">
       <Filter>Header Files\Shape</Filter>
@@ -129,11 +114,14 @@
     <ClCompile Include="..\..\..\..\Core\Shape\Triangle.cpp">
       <Filter>Header Files\Shape</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\Core\Object\Object.cpp">
-      <Filter>Header Files\Object</Filter>
+    <ClCompile Include="..\..\..\..\Core\Staging\GeometricPrimitive.cpp">
+      <Filter>Header Files\Staging</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\Core\Object\UniqueID.cpp">
-      <Filter>Header Files\Object</Filter>
+    <ClCompile Include="..\..\..\..\Core\System\Platform.cpp">
+      <Filter>Header Files\System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Threading\Spinlock.cpp">
+      <Filter>Header Files\Threading</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -145,6 +133,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Camera\ThinLensCamera.h">
       <Filter>Header Files\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Device\Device.h">
+      <Filter>Header Files\Device</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Exception\Exception.h">
       <Filter>Header Files\Exception</Filter>
@@ -206,80 +197,17 @@
     <ClInclude Include="..\..\..\..\Core\Maths\Random.h">
       <Filter>Header Files\Maths</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Threading\Atomic.h">
-      <Filter>Header Files\Threading</Filter>
+    <ClInclude Include="..\..\..\..\Core\Object\Cloneable.h">
+      <Filter>Header Files\Object</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Threading\AtomicReference.h">
-      <Filter>Header Files\Threading</Filter>
+    <ClInclude Include="..\..\..\..\Core\Object\Object.h">
+      <Filter>Header Files\Object</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Threading\LinkedList.h">
-      <Filter>Header Files\Threading</Filter>
+    <ClInclude Include="..\..\..\..\Core\Object\UniqueID.h">
+      <Filter>Header Files\Object</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Threading\List.h">
-      <Filter>Header Files\Threading</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Threading\Lock.h">
-      <Filter>Header Files\Threading</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Threading\Monitor.h">
-      <Filter>Header Files\Threading</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Threading\Pointer.h">
-      <Filter>Header Files\Threading</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Threading\Queue.h">
-      <Filter>Header Files\Threading</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Threading\ReentrantLock.h">
-      <Filter>Header Files\Threading</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Threading\Spinlock.h">
-      <Filter>Header Files\Threading</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Threading\WorkQueue.h">
-      <Filter>Header Files\Threading</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Texture\ImageTexture.h">
-      <Filter>Header Files\Texture</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Texture\MarbleTexture.h">
-      <Filter>Header Files\Texture</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Texture\Noise.h">
-      <Filter>Header Files\Texture</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Texture\NoiseTexture.h">
-      <Filter>Header Files\Texture</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Texture\SimpleTexture.h">
-      <Filter>Header Files\Texture</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Texture\Texture.h">
-      <Filter>Header Files\Texture</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\System\Platform.h">
-      <Filter>Header Files\System</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Staging\Aggregate.h">
-      <Filter>Header Files\Staging</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Staging\GeometricPrimitive.h">
-      <Filter>Header Files\Staging</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Staging\OctreeAggregate.h">
-      <Filter>Header Files\Staging</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Staging\Primitive.h">
-      <Filter>Header Files\Staging</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Space\BasicSpace.h">
-      <Filter>Header Files\Space</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Space\BVHSpace.h">
-      <Filter>Header Files\Space</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Space\Space.h">
-      <Filter>Header Files\Space</Filter>
+    <ClInclude Include="..\..\..\..\Core\Sampler\Sampler.h">
+      <Filter>Header Files\Sampler</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Shape\BasicMesh.h">
       <Filter>Header Files\Shape</Filter>
@@ -323,28 +251,88 @@
     <ClInclude Include="..\..\..\..\Core\Shape\VertexFormats.h">
       <Filter>Header Files\Shape</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Object\Cloneable.h">
-      <Filter>Header Files\Object</Filter>
+    <ClInclude Include="..\..\..\..\Core\Space\BasicSpace.h">
+      <Filter>Header Files\Space</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Object\Object.h">
-      <Filter>Header Files\Object</Filter>
+    <ClInclude Include="..\..\..\..\Core\Space\BVHSpace.h">
+      <Filter>Header Files\Space</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Object\UniqueID.h">
-      <Filter>Header Files\Object</Filter>
+    <ClInclude Include="..\..\..\..\Core\Space\Space.h">
+      <Filter>Header Files\Space</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Sampler\Sampler.h">
-      <Filter>Header Files\Sampler</Filter>
+    <ClInclude Include="..\..\..\..\Core\Staging\Aggregate.h">
+      <Filter>Header Files\Staging</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Device\Device.h">
-      <Filter>Header Files\Device</Filter>
+    <ClInclude Include="..\..\..\..\Core\Staging\GeometricPrimitive.h">
+      <Filter>Header Files\Staging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Staging\OctreeAggregate.h">
+      <Filter>Header Files\Staging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Staging\Primitive.h">
+      <Filter>Header Files\Staging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\System\Platform.h">
+      <Filter>Header Files\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\ImageTexture.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\MarbleTexture.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\Noise.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\NoiseTexture.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\SimpleTexture.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\Texture.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\Atomic.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\AtomicReference.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\LinkedList.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\List.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\Lock.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\Monitor.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\Pointer.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\Queue.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\ReentrantLock.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\Spinlock.h">
+      <Filter>Header Files\Threading</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Threading\WorkQueue.h">
+      <Filter>Header Files\Threading</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">
       <Filter>Header Files\Geometry</Filter>
     </None>
-    <None Include="..\..\..\..\Core\Threading\Spinlock.inl">
-      <Filter>Header Files\Threading</Filter>
+    <None Include="..\..\..\..\Core\Object\Object.inl">
+      <Filter>Header Files\Object</Filter>
     </None>
     <None Include="..\..\..\..\Core\Shape\IndexedTriangle.inl">
       <Filter>Header Files\Shape</Filter>
@@ -352,8 +340,8 @@
     <None Include="..\..\..\..\Core\Shape\TriangleMesh.inl">
       <Filter>Header Files\Shape</Filter>
     </None>
-    <None Include="..\..\..\..\Core\Object\Object.inl">
-      <Filter>Header Files\Object</Filter>
+    <None Include="..\..\..\..\Core\Threading\Spinlock.inl">
+      <Filter>Header Files\Threading</Filter>
     </None>
   </ItemGroup>
 </Project>

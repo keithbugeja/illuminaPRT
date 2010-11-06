@@ -35,8 +35,11 @@
 	typedef __int64 Int64;
 
 	// Alignment macro for specifying 16-byte boundary alignment of types 
-	#define ALIGN_16 _declspec(align(16))
-	//#define ALIGN_16
+	#if defined(SSE_ENABLED)
+		#define ALIGN_16 _declspec(align(16))
+	#else
+		#define ALIGN_16
+	#endif
 
 	// Aligned Malloc and Free, which allow user to specify alignment boundary
 	inline void* AlignedMalloc(size_t size, int boundary) {
