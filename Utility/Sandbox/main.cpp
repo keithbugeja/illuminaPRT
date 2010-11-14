@@ -51,7 +51,9 @@
 #include "Threading/Atomic.h"
 #include "Threading/AtomicReference.h"
 #include "Threading/LinkedList.h"
- 
+
+#include "System/EngineKernel.h"
+
 using namespace std;
 using namespace tbb;
 using namespace Illumina::Core;
@@ -182,6 +184,11 @@ void TestSpinLock(void)
 //----------------------------------------------------------------------------------------------
 void SimplePacketTracer(int p_nOMPThreads)
 {
+	EngineKernel engine;
+	DummyFactory *pDummyFactory = new DummyFactory();
+	engine.dummyManager.RegisterFactory("Dummy", pDummyFactory);
+	Dummy *pDummy = engine.dummyManager.CreateInstance("Dummy", "Shitty");
+
 	//----------------------------------------------------------------------------------------------
 	// Set number of OMP Threads
 	//----------------------------------------------------------------------------------------------

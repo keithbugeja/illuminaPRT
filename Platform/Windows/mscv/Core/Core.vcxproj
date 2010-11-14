@@ -134,7 +134,10 @@
     <ClCompile Include="..\..\..\..\Core\Shape\Sphere.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Triangle.cpp" />
     <ClCompile Include="..\..\..\..\Core\Staging\GeometricPrimitive.cpp" />
+    <ClCompile Include="..\..\..\..\Core\System\LibraryManager.cpp" />
     <ClCompile Include="..\..\..\..\Core\System\Platform.cpp" />
+    <ClCompile Include="..\..\..\..\Core\System\PlugInManager.cpp" />
+    <ClCompile Include="..\..\..\..\Core\System\Version.cpp" />
     <ClCompile Include="..\..\..\..\Core\Threading\Spinlock.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -187,7 +190,15 @@
     <ClInclude Include="..\..\..\..\Core\Staging\GeometricPrimitive.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\OctreeAggregate.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\Primitive.h" />
+    <ClInclude Include="..\..\..\..\Core\System\EngineKernel.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Library.h" />
+    <ClInclude Include="..\..\..\..\Core\System\LibraryImpl.h" />
+    <ClInclude Include="..\..\..\..\Core\System\LibraryManager.h" />
+    <ClInclude Include="..\..\..\..\Core\System\LibrarySymbols.h" />
     <ClInclude Include="..\..\..\..\Core\System\Platform.h" />
+    <ClInclude Include="..\..\..\..\Core\System\PlugIn.h" />
+    <ClInclude Include="..\..\..\..\Core\System\PlugInManager.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Version.h" />
     <ClInclude Include="..\..\..\..\Core\Texture\ImageTexture.h" />
     <ClInclude Include="..\..\..\..\Core\Texture\MarbleTexture.h" />
     <ClInclude Include="..\..\..\..\Core\Texture\Noise.h" />
