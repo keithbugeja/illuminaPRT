@@ -77,18 +77,18 @@
     <LibraryPath>$(TBB30_INSTALL_DIR)\lib\tbb\ia32\vc10;$(BOOST_DIR)\lib\x32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IntDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</IntDir>
     <IncludePath>$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
     <LibraryPath>$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IntDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</IntDir>
     <IncludePath>$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
     <LibraryPath>$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
@@ -134,6 +134,7 @@
     <ClCompile Include="..\..\..\..\Core\Shape\Sphere.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Triangle.cpp" />
     <ClCompile Include="..\..\..\..\Core\Staging\GeometricPrimitive.cpp" />
+    <ClCompile Include="..\..\..\..\Core\System\EngineKernel.cpp" />
     <ClCompile Include="..\..\..\..\Core\System\LibraryManager.cpp" />
     <ClCompile Include="..\..\..\..\Core\System\Platform.cpp" />
     <ClCompile Include="..\..\..\..\Core\System\PlugInManager.cpp" />
@@ -190,7 +191,11 @@
     <ClInclude Include="..\..\..\..\Core\Staging\GeometricPrimitive.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\OctreeAggregate.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\Primitive.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Dummy.h" />
+    <ClInclude Include="..\..\..\..\Core\System\DummyManager.h" />
     <ClInclude Include="..\..\..\..\Core\System\EngineKernel.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Factory.h" />
+    <ClInclude Include="..\..\..\..\Core\System\FactoryManager.h" />
     <ClInclude Include="..\..\..\..\Core\System\Library.h" />
     <ClInclude Include="..\..\..\..\Core\System\LibraryImpl.h" />
     <ClInclude Include="..\..\..\..\Core\System\LibraryManager.h" />
@@ -222,6 +227,7 @@
     <None Include="..\..\..\..\Core\Object\Object.inl" />
     <None Include="..\..\..\..\Core\Shape\IndexedTriangle.inl" />
     <None Include="..\..\..\..\Core\Shape\TriangleMesh.inl" />
+    <None Include="..\..\..\..\Core\System\FactoryManager.inl" />
     <None Include="..\..\..\..\Core\Threading\Spinlock.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

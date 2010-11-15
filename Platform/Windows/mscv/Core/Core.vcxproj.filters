@@ -132,6 +132,9 @@
     <ClCompile Include="..\..\..\..\Core\System\PlugInManager.cpp">
       <Filter>Header Files\System</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\System\EngineKernel.cpp">
+      <Filter>Header Files\System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -359,6 +362,18 @@
     <ClInclude Include="..\..\..\..\Core\System\EngineKernel.h">
       <Filter>Header Files\System</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\System\Factory.h">
+      <Filter>Header Files\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\System\FactoryManager.h">
+      <Filter>Header Files\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\System\Dummy.h">
+      <Filter>Header Files\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\System\DummyManager.h">
+      <Filter>Header Files\System</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">
@@ -375,6 +390,9 @@
     </None>
     <None Include="..\..\..\..\Core\Threading\Spinlock.inl">
       <Filter>Header Files\Threading</Filter>
+    </None>
+    <None Include="..\..\..\..\Core\System\FactoryManager.inl">
+      <Filter>Header Files\System</Filter>
     </None>
   </ItemGroup>
 </Project>

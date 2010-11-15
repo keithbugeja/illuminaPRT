@@ -6,6 +6,7 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+#include <string>
 #include "Version.h"
 
 namespace Illumina 
