@@ -53,6 +53,7 @@
 #include "Threading/LinkedList.h"
 
 #include "System/EngineKernel.h"
+#include "System/Dummy.h"
 
 using namespace std;
 using namespace tbb;
@@ -184,10 +185,17 @@ void TestSpinLock(void)
 //----------------------------------------------------------------------------------------------
 void SimplePacketTracer(int p_nOMPThreads)
 {
-	EngineKernel engine;
-	DummyFactory *pDummyFactory = new DummyFactory();
-	engine.dummyManager.RegisterFactory("Dummy", pDummyFactory);
-	Dummy *pDummy = engine.dummyManager.CreateInstance("Dummy", "Shitty");
+	//EngineKernel engine;
+	//engine.GetPlugInManager()->Load("plugin.dll");
+	//IDummy* pDummy = engine.GetDummyManager()->CreateInstance("DummyFactory", "MyInstance");
+
+	//std::cout<<"DummyPlugIn Name:"<<pDummy->GetName()<<std::endl;
+
+	//engine.GetPlugInManager()->Unload("plugin.dll");
+
+	//DummyFactory *pDummyFactory = new DummyFactory();
+	//engine.dummyManager.RegisterFactory("Dummy", pDummyFactory);
+	//Dummy *pDummy = engine.dummyManager.CreateInstance("Dummy", "Shitty");
 
 	//----------------------------------------------------------------------------------------------
 	// Set number of OMP Threads

@@ -37,7 +37,7 @@ bool LibraryManager::Load(const std::string& p_strName)
 	if (!pLibrary->Load(p_strName))
 		return false;
 
-	m_libraryMap[p_strName] = pLibrary; // .insert(p_strName, pLibrary);
+	m_libraryMap[p_strName] = pLibrary; 
 	return true;
 }
 

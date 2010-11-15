@@ -6,11 +6,17 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sandbox", "Sandbox\Sandbox.vcxproj", "{3B58572D-4F96-408F-A991-599C99F3FBCF}"
 	ProjectSection(ProjectDependencies) = postProject
 		{8637448F-8F88-43B0-9CAD-F5FA42323E17} = {8637448F-8F88-43B0-9CAD-F5FA42323E17}
+		{BF2CD5A3-5DC2-4C0A-A390-488BB5641245} = {BF2CD5A3-5DC2-4C0A-A390-488BB5641245}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Plugin", "Plugin\Plugin.vcxproj", "{BF2CD5A3-5DC2-4C0A-A390-488BB5641245}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8637448F-8F88-43B0-9CAD-F5FA42323E17} = {8637448F-8F88-43B0-9CAD-F5FA42323E17}
 	EndProjectSection
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 3
+		SccNumberOfProjects = 4
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs05
 		SccLocalPath0 = .
@@ -20,6 +26,9 @@ Global
 		SccProjectUniqueName2 = Sandbox\\Sandbox.vcxproj
 		SccProjectName2 = Sandbox
 		SccLocalPath2 = Sandbox
+		SccProjectUniqueName3 = Plugin\\Plugin.vcxproj
+		SccProjectName3 = Plugin
+		SccLocalPath3 = Plugin
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -44,6 +53,14 @@ Global
 		{3B58572D-4F96-408F-A991-599C99F3FBCF}.Release|Win32.Build.0 = Release|Win32
 		{3B58572D-4F96-408F-A991-599C99F3FBCF}.Release|Win64.ActiveCfg = Release|x64
 		{3B58572D-4F96-408F-A991-599C99F3FBCF}.Release|Win64.Build.0 = Release|x64
+		{BF2CD5A3-5DC2-4C0A-A390-488BB5641245}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BF2CD5A3-5DC2-4C0A-A390-488BB5641245}.Debug|Win32.Build.0 = Debug|Win32
+		{BF2CD5A3-5DC2-4C0A-A390-488BB5641245}.Debug|Win64.ActiveCfg = Debug|x64
+		{BF2CD5A3-5DC2-4C0A-A390-488BB5641245}.Debug|Win64.Build.0 = Debug|x64
+		{BF2CD5A3-5DC2-4C0A-A390-488BB5641245}.Release|Win32.ActiveCfg = Release|Win32
+		{BF2CD5A3-5DC2-4C0A-A390-488BB5641245}.Release|Win32.Build.0 = Release|Win32
+		{BF2CD5A3-5DC2-4C0A-A390-488BB5641245}.Release|Win64.ActiveCfg = Release|x64
+		{BF2CD5A3-5DC2-4C0A-A390-488BB5641245}.Release|Win64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
