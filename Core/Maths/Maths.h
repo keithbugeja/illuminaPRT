@@ -10,16 +10,16 @@
 #include <limits>
 #include <math.h>
 
-namespace Illumina 
+namespace Illumina
 {
-	namespace Core 
+	namespace Core
 	{
 		class Maths
 		{
 		public:
 			inline static float Frac(float p_fValue) {
 				float integerPart;
-				return modf(p_fValue, &integerPart);
+				return (float)modf((double)p_fValue, (double*)&integerPart);
 			}
 
 			inline static float Ceil(float p_fValue) {
@@ -38,7 +38,7 @@ namespace Illumina
 				return (p_fValue < 0.0f) ? -p_fValue : p_fValue;
 			}
 
-			inline static int ISgn(float p_fValue) 
+			inline static int ISgn(float p_fValue)
 			{
 				if (p_fValue == 0.0f) return 0;
 				return (p_fValue < 0.0f) ? -1: 1;
@@ -146,25 +146,25 @@ namespace Illumina
 				p_fValue2 = temp;
 			}
 
-			static const float E;			
-			static const float Pi;		
+			static const float E;
+			static const float Pi;
 			static const float PiTwo;
 			static const float PiHalf;
-			static const float InvPi;	
+			static const float InvPi;
 			static const float InvPiTwo;
-			static const float SqrtPi;	
-			static const float SqrtPiTwo;	
+			static const float SqrtPi;
+			static const float SqrtPiTwo;
 			static const float InvSqrtPi;
 			static const float InvSqrtPiTwo;
-			static const float Epsilon;	
-			static const float Infinity;		
-			static const float Minimum;		
-			static const float Maximum;	
+			static const float Epsilon;
+			static const float Infinity;
+			static const float Minimum;
+			static const float Maximum;
 			static const float Tolerance;
 
 		private:
-			static const float _DegToRad;	
-			static const float _RadToDeg;	
+			static const float _DegToRad;
+			static const float _RadToDeg;
 		};
 	}
 }

@@ -200,7 +200,7 @@ void SimplePacketTracer(int p_nOMPThreads)
 	//----------------------------------------------------------------------------------------------
 	// Set number of OMP Threads
 	//----------------------------------------------------------------------------------------------
-	std::cout << "Initialising OMP thread count : [Threads = " << p_nOMPThreads << "]" << std::endl;
+	std::cout << "Initialising qOMP thread count : [Threads = " << p_nOMPThreads << "]" << std::endl;
 	//omp_set_num_threads(p_nOMPThreads);
 	//omp_set_num_threads(1);
  
