@@ -35,7 +35,7 @@ IBoundingVolume* Sphere::GetBoundingVolume(void) const {
 //----------------------------------------------------------------------------------------------
 bool Sphere::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 {
-	Vector3 &temp = p_ray.Origin - Centre;
+	const Vector3 &temp = p_ray.Origin - Centre;
 	
 	double a = Vector3::Dot(p_ray.Direction, p_ray.Direction);
 	double b = 2 * Vector3::Dot(p_ray.Direction, temp);
@@ -73,7 +73,7 @@ bool Sphere::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_
 //----------------------------------------------------------------------------------------------
 bool Sphere::Intersects(const Ray &p_ray, float p_fTime)
 {
-	Vector3 &temp = p_ray.Origin - Centre;
+	const Vector3 &temp = p_ray.Origin - Centre;
 	
 	double a = Vector3::Dot(p_ray.Direction, p_ray.Direction);
 	double b = 2 * Vector3::Dot(p_ray.Direction, temp);

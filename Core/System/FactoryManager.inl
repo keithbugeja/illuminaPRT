@@ -121,9 +121,8 @@ T* FactoryManager<T>::ReleaseInstance(const std::string& p_strInstanceName)
 	if (ContainsItem(p_strInstanceName))
 	{
 		T* pInstance = FindItem(p_strInstanceName);
-				
-		if (p_strInstanceName != NULL)
-			delete pInstance;
+
+		Safe_Delete(pInstance);
 
 		m_instanceMap.erase(p_strInstanceName);
 	}

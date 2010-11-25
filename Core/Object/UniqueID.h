@@ -90,9 +90,9 @@ namespace Illumina
 			static long long GetUniqueID(void) 
 			{
 				#if defined(__ARCHITECTURE_X64__)
-					return AtomicInt64::Increment((long long*)&m_llNextID);
+					return AtomicInt64::Increment((Int64*)&m_llNextID);
 				#else
-					return AtomicInt32::Increment((long*)(((char*)&m_llNextID) + 4));
+					return AtomicInt32::Increment((Int32*)(((char*)&m_llNextID) + 4));
 				#endif
 			}
 		};

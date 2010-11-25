@@ -70,7 +70,11 @@ namespace Illumina
 						return result;
 					#endif
 				#else
-					boost::interprocess::detail::atomic_add32(reinterpret_cast<volatile uint32_t*>(&m_int32), p_nValue);
+					#if defined(__PLATFORM_WINDOWS__)
+						return p_nValue + boost::interprocess::winapi::interlocked_exchange_add(reinterpret_cast<volatile long*>(&m_int32), p_nValue);
+					#else
+						return boost::interprocess::detail::atomic_add32(reinterpret_cast<volatile uint32_t*>(&m_int32), p_nValue);
+					#endif
 				#endif
 			}
 
@@ -93,7 +97,11 @@ namespace Illumina
 						return result;
 					#endif
 				#else
-					boost::interprocess::detail::atomic_dec32(reinterpret_cast<volatile uint32_t*>(&m_int32), p_nValue);
+					#if defined(__PLATFORM_WINDOWS__)
+						return boost::interprocess::winapi::interlocked_exchange_add(reinterpret_cast<volatile long*>(&m_int32), -p_nValue) - p_nValue;
+					#else
+						return boost::interprocess::detail::atomic_sub32(reinterpret_cast<volatile uint32_t*>(&m_int32), p_nValue);
+					#endif
 				#endif
 			}
 

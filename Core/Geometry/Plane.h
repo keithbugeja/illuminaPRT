@@ -108,7 +108,7 @@ namespace Illumina
 			Side GetSide(const Vector3 &p_vector) const
 			{
 				// (P - dN) . N = 0
-				Vector3 &P = p_vector - (Distance * Normal);
+				Vector3 P = p_vector - (Distance * Normal);
 				int nDotSign = Maths::ISgn(P.Dot(Normal));
 		
 				if ( nDotSign == -1 )
@@ -122,7 +122,7 @@ namespace Illumina
 
 			Side GetSide(const Vector3 &p_midPoint, const Vector3 &p_halfVector) const
 			{
-				Vector3 &M = p_midPoint - (Distance * Normal),
+				const Vector3 &M = p_midPoint - (Distance * Normal),
 						&A = M + p_halfVector,
 						&B = M - p_halfVector;
 
