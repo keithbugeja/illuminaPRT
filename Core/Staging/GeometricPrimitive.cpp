@@ -15,7 +15,7 @@ boost::shared_ptr<IBoundingVolume> GeometricPrimitive::GetWorldBounds(void) cons
 //----------------------------------------------------------------------------------------------
 bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface, float &p_fTestDensity) const
 {
-	Ray &invRay = p_ray.ApplyInverse(WorldTransform);
+	const Ray &invRay = p_ray.ApplyInverse(WorldTransform);
 	
 	if (m_pShape->GetBoundingVolume()->Intersects(invRay))
 	{
@@ -35,7 +35,7 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Differential
 //----------------------------------------------------------------------------------------------
 bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, DifferentialSurface& p_surface) const
 {
-	Ray &invRay = p_ray.ApplyInverse(WorldTransform);
+	const Ray &invRay = p_ray.ApplyInverse(WorldTransform);
 	
 	if (m_pShape->GetBoundingVolume()->Intersects(invRay))
 	{
@@ -55,7 +55,7 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Differential
 //----------------------------------------------------------------------------------------------
 bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime) const
 {
-	Ray &invRay = p_ray.ApplyInverse(WorldTransform);
+	const Ray &invRay = p_ray.ApplyInverse(WorldTransform);
 	return (m_pShape->GetBoundingVolume()->Intersects(p_ray) && 
 			m_pShape->Intersects(invRay, p_fTime));
 }

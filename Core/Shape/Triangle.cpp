@@ -56,10 +56,10 @@ bool Triangle::IsBounded(void) const {
 //----------------------------------------------------------------------------------------------
 bool Triangle::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 {
-	Vector3 &OA = p_ray.Origin - Vertex[0],
-			&BA = Vertex[1] - Vertex[0],
-			&CA = Vertex[2] - Vertex[0],
-			&D = -p_ray.Direction;
+	const Vector3 &OA = p_ray.Origin - Vertex[0],
+		&BA = Vertex[1] - Vertex[0],
+		&CA = Vertex[2] - Vertex[0],
+		&D = -p_ray.Direction;
 
 	// Use Cramer's Rule to solve for beta, gamma and t:
 	// Since Xi = det(Ai)/det(A), find det(A):
@@ -106,10 +106,10 @@ bool Triangle::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &
 //----------------------------------------------------------------------------------------------
 bool Triangle::Intersects(const Ray &p_ray, float p_fTime)
 {
-	Vector3 &OA = p_ray.Origin - Vertex[0],
-			&BA = Vertex[1] - Vertex[0],
-			&CA = Vertex[2] - Vertex[0],
-			&D = -p_ray.Direction;
+	const Vector3 &OA = p_ray.Origin - Vertex[0],
+		&BA = Vertex[1] - Vertex[0],
+		&CA = Vertex[2] - Vertex[0],
+		&D = -p_ray.Direction;
 
 	// Use Cramer's Rule to solve for beta, gamma and t:
 	// Since Xi = det(Ai)/det(A), find det(A):

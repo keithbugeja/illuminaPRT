@@ -156,6 +156,7 @@ namespace Illumina
 			// Rays should be in the same general direction!
 			void BuildPacket(T& p_ray00, T& p_ray10, T& p_ray01, T& p_ray11, int p_nDensity)
 			{
+				/*
 				Vector3 near[3], far[3];
 
 				p_ray10.PointAlongRay(p_ray10.Min, near[0]);
@@ -181,6 +182,7 @@ namespace Illumina
 
 				m_nDensity = p_nDensity;
 				m_bDirty = true;
+				*/
 			}
 
 			void BuildFrustum(void) 
@@ -209,7 +211,7 @@ namespace Illumina
 
 					List<Ray> list(m_nDensity * m_nDensity);
 
-					for (t = 0; t < 1; t += i)
+					for (int t = 0; t < 1; t += i)
 					{
 						float hT = Maths::Hermite(t);
 
@@ -231,7 +233,7 @@ namespace Illumina
 						rU.Max = rB.Max - rT.Max;
 						rU.Direction.Normalize();
 
-						for (u = 0; u < 1; u += i)
+						for (int u = 0; u < 1; u += i)
 						{
 							float hU = Maths::Hermite(u);
 							r.Origin = rT.Origin + hU * rU.Origin;
@@ -243,7 +245,7 @@ namespace Illumina
 						}
 					}
 
-					return m_nList;
+					return list;
 				}
 			}
 		};

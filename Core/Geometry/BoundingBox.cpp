@@ -112,9 +112,9 @@ void AxisAlignedBoundingBox::Apply(const Transformation &p_transformation, IBoun
 	// We only support AABBs so far, so assert type is correct
 	BOOST_ASSERT(p_out.GetType() == AxisAlignedBox);
 
-	Matrix3x3 &rotation = p_transformation.GetRotation();
-	Vector3 &centre = p_transformation.Apply(m_centre);
-	Vector3 extent = m_extent;
+	const Matrix3x3 &rotation = p_transformation.GetRotation();
+	const Vector3 &centre = p_transformation.Apply(m_centre);
+	const Vector3 extent = m_extent;
 
 	Vector3 halfSize(
 		Maths::Abs(rotation._00) * extent.X + Maths::Abs(rotation._01) * extent.Y + Maths::Abs(rotation._02) * extent.Z,
