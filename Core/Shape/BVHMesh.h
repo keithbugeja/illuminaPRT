@@ -9,7 +9,10 @@
 #pragma once
 
 #include <stack>
+#include <algorithm>
+
 #include <boost/shared_ptr.hpp>
+
 #include "Shape/TriangleMesh.h"
 #include "Shape/TreeMesh.h"
 
@@ -102,11 +105,11 @@ namespace Illumina
 			bool Compile(void) 
 			{
 				// Create a list of pointers to indexed triangles
-				int objectCount = (int)TriangleList.Size();
+				int objectCount = (int)ITriangleMesh<T, U>::TriangleList.Size();
 				List<T*> triangleList(objectCount);
  
 				for (int idx = 0; idx < objectCount; idx++) {
-					triangleList.PushBack(&TriangleList[idx]);
+					triangleList.PushBack(&ITriangleMesh<T, U>::TriangleList[idx]);
 				}
  
 				// Build bounding volume hierarchy
@@ -154,7 +157,7 @@ namespace Illumina
 					pNode = traverseStack.top();
 					traverseStack.pop();
 
-					while(pNode->Type == TreeMeshNodeType::Internal)
+					while(pNode->Type == /*TreeMeshNodeType::*/Internal)
 					{
 						if (pNode->m_pChild[1]->BoundingBox.Intersects(p_ray))
 							traverseStack.push(pNode->m_pChild[1]);
@@ -195,7 +198,7 @@ namespace Illumina
 					pNode = traverseStack.top();
 					traverseStack.pop();
 
-					while(pNode->Type == TreeMeshNodeType::Internal)
+					while(pNode->Type == /*TreeMeshNodeType::*/Internal)
 					{
 						if (pNode->m_pChild[1]->BoundingBox.Intersects(p_ray))
 							traverseStack.push(pNode->m_pChild[1]);
@@ -228,7 +231,7 @@ namespace Illumina
  
 				if (p_pNode->BoundingBox.Intersect(p_ray, in, out))
 				{
-					if (p_pNode->Type == TreeMeshNodeType::Internal)
+					if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 						return Intersect_Recursive(p_pNode->m_pChild[0], p_ray, p_fTime) || Intersect_Recursive(p_pNode->m_pChild[1], p_ray, p_fTime);
  
 					int count = (int)p_pNode->TriangleList.Size();
@@ -252,7 +255,7 @@ namespace Illumina
  
 				if (p_pNode->BoundingBox.Intersect(p_ray, in, out))
 				{
-					if (p_pNode->Type == TreeMeshNodeType::Internal)
+					if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 						return Intersect_Recursive(p_pNode->m_pChild[0], p_ray, p_fTime, p_surface) | Intersect_Recursive(p_pNode->m_pChild[1], p_ray, p_fTime, p_surface);
  
 					int count = (int)p_pNode->TriangleList.Size();
@@ -333,7 +336,7 @@ namespace Illumina
 			void BuildHierarchy(BVHNode<T*> *p_pNode, List<T*> &p_objectList, int p_nAxis, int p_nDepth = 0)
 			{
 				// Update stats
-				m_statistics.m_maxTreeDepth = max(p_nDepth, m_statistics.m_maxTreeDepth);
+				m_statistics.m_maxTreeDepth = std::max(p_nDepth, m_statistics.m_maxTreeDepth);
  
 				// Compute the node bounds for the given object list
 				ComputeBounds(p_objectList, p_pNode->BoundingBox);
@@ -341,13 +344,13 @@ namespace Illumina
 				// If we have enough objects, we consider this node a leaf
 				if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxDepth)
 				{
-					p_pNode->Type = TreeMeshNodeType::Leaf; 
+					p_pNode->Type = /*TreeMeshNodeType::*/Leaf; 
 					p_pNode->TriangleList.PushBack(p_objectList);
  
 					m_statistics.m_leafNodeCount++;
-					m_statistics.m_minTreeDepth = min(m_statistics.m_minTreeDepth, p_nDepth);
-					m_statistics.m_minLeafTriangleCount = min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
-					m_statistics.m_maxLeafTriangleCount = max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_minTreeDepth = std::min(m_statistics.m_minTreeDepth, p_nDepth);
+					m_statistics.m_minLeafTriangleCount = std::min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_maxLeafTriangleCount = std::max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
 				}
 				else
 				{
@@ -358,17 +361,17 @@ namespace Illumina
 
 					if (leftList.Size() == 0 || rightList.Size() == 0)
 					{
-						p_pNode->Type = TreeMeshNodeType::Leaf; 
+						p_pNode->Type = /*TreeMeshNodeType::*/Leaf; 
 						p_pNode->TriangleList.PushBack(p_objectList);
 
 						m_statistics.m_leafNodeCount++;
-						m_statistics.m_minTreeDepth = min(m_statistics.m_minTreeDepth, p_nDepth);
-						m_statistics.m_minLeafTriangleCount = min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
-						m_statistics.m_maxLeafTriangleCount = max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
+						m_statistics.m_minTreeDepth = std::min(m_statistics.m_minTreeDepth, p_nDepth);
+						m_statistics.m_minLeafTriangleCount = std::min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
+						m_statistics.m_maxLeafTriangleCount = std::max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
 					}
 					else
 					{
-						p_pNode->Type = TreeMeshNodeType::Internal;
+						p_pNode->Type = /*TreeMeshNodeType::*/Internal;
 
 						p_pNode->m_pChild[0] = RequestNode();
 						p_pNode->m_pChild[1] = RequestNode();

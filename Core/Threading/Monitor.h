@@ -99,7 +99,7 @@ namespace Illumina
 				p_monitor.IncRefCount();
 				DecRefCount();
 				m_pObject = p_monitor.m_pObject;
-				owned = p_monitor.owned;
+				// owned = p_monitor.owned;
 				
 				return *this;
 			}

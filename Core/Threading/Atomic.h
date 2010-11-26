@@ -40,10 +40,12 @@ namespace Illumina
 
 			// Incorrect semantics
 			Int32 operator++(int) {
+				#pragma message("Incorrect Semantics in Atomic::operator++(int) => should use FAA semantics!")
 				return boost::interprocess::detail::atomic_inc32(reinterpret_cast<volatile uint32_t*>(&m_int32));
 			}
 
 			Int32 operator--(void) {
+				#pragma message("Incorrect Semantics in Atomic::operator--(int) => should use FAS semantics!")
 				return boost::interprocess::detail::atomic_dec32(reinterpret_cast<volatile uint32_t*>(&m_int32));
 			}
 
@@ -452,6 +454,7 @@ namespace Illumina
 							(Int64)p_nExchangeHi, (Int64)p_nExchangeLo,
 							(Int64*)p_pComparandResult) != 0);
 					#else
+						#pragma message("DCAS not implemented for this compiler!")
 					#endif
 				}
 			#endif
