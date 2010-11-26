@@ -4,7 +4,9 @@
 //	Date:		22/03/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-using namespace Illumina::Core;
+
+namespace Illumina {
+namespace Core {
 
 //----------------------------------------------------------------------------------------------
 template<class TVertex> 
@@ -52,14 +54,14 @@ void IndexedTriangle<TVertex>::ComputeBoundingVolume(void)
 template<class TVertex>
 bool IndexedTriangle<TVertex>::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 {
-	TVertex	&v0 = m_pMesh->VertexList[m_nVertexID[0]],
-			&v1 = m_pMesh->VertexList[m_nVertexID[1]],
-			&v2 = m_pMesh->VertexList[m_nVertexID[2]];
+	const TVertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
+		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
+		&v2 = m_pMesh->VertexList[m_nVertexID[2]];
 
-	Vector3 &OA = p_ray.Origin - v0.Position,
-			&BA = v1.Position - v0.Position,
-			&CA = v2.Position - v0.Position,
-			&D = -p_ray.Direction;
+	const Vector3 &OA = p_ray.Origin - v0.Position,
+		&BA = v1.Position - v0.Position,
+		&CA = v2.Position - v0.Position,
+		&D = -p_ray.Direction;
 
 	//td + o = a + B(b-a) + G(c-a)
 
@@ -112,14 +114,14 @@ bool IndexedTriangle<TVertex>::Intersects(const Ray &p_ray, float p_fTime, Diffe
 template<>
 bool IndexedTriangle<Vertex>::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 {
-	Vertex	&v0 = m_pMesh->VertexList[m_nVertexID[0]],
-			&v1 = m_pMesh->VertexList[m_nVertexID[1]],
-			&v2 = m_pMesh->VertexList[m_nVertexID[2]];
+	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
+		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
+		&v2 = m_pMesh->VertexList[m_nVertexID[2]];
 
-	Vector3 &OA = p_ray.Origin - v0.Position,
-			&BA = v1.Position - v0.Position,
-			&CA = v2.Position - v0.Position,
-			&D = -p_ray.Direction;
+	const Vector3 &OA = p_ray.Origin - v0.Position,
+		&BA = v1.Position - v0.Position,
+		&CA = v2.Position - v0.Position,
+		&D = -p_ray.Direction;
 
 	// Use Cramer's Rule to solve for beta, gamma and t:
 	// Since Xi = det(Ai)/det(A), find det(A):
@@ -168,14 +170,14 @@ bool IndexedTriangle<Vertex>::Intersects(const Ray &p_ray, float p_fTime, Differ
 template<class TVertex>
 bool IndexedTriangle<TVertex>::Intersects(const Ray &p_ray, float p_fTime)
 {
-	TVertex	&v0 = m_pMesh->VertexList[m_nVertexID[0]],
-			&v1 = m_pMesh->VertexList[m_nVertexID[1]],
-			&v2 = m_pMesh->VertexList[m_nVertexID[2]];
+	const TVertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
+		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
+		&v2 = m_pMesh->VertexList[m_nVertexID[2]];
 
-	Vector3 &OA = p_ray.Origin - v0.Position,
-			&BA = v1.Position - v0.Position,
-			&CA = v2.Position - v0.Position,
-			&D = -p_ray.Direction;
+	const Vector3 &OA = p_ray.Origin - v0.Position,
+		&BA = v1.Position - v0.Position,
+		&CA = v2.Position - v0.Position,
+		&D = -p_ray.Direction;
 
 	//td + o = a + B(b-a) + G(c-a)
 
@@ -225,3 +227,6 @@ IndexedTriangle<TVertex>& IndexedTriangle<TVertex>::operator=(const IndexedTrian
 	return *this;
 }
 //----------------------------------------------------------------------------------------------
+
+}
+}

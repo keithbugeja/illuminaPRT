@@ -91,7 +91,7 @@ namespace Illumina
 			{
 				int nodesFreed = 0;
 
-				if (p_pNode->Type == TreeMeshNodeType::Internal)
+				if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 				{
 					nodesFreed += ReleaseNode(p_pNode->m_pChild[0]);
 					nodesFreed += ReleaseNode(p_pNode->m_pChild[1]);
@@ -129,11 +129,11 @@ namespace Illumina
 			bool Compile(void) 
 			{
 				// Create a list of pointers to indexed triangles
-				int objectCount = (int)TriangleList.Size();
+				int objectCount = (int)ITriangleMesh<T, U>::TriangleList.Size();
 				List<T*> triangleList(objectCount);
  
 				for (int idx = 0; idx < objectCount; idx++) {
-					triangleList.PushBack(&TriangleList[idx]);
+					triangleList.PushBack(&ITriangleMesh<T, U>::TriangleList[idx]);
 				}
  
 				// Build bounding volume hierarchy
@@ -186,7 +186,7 @@ namespace Illumina
 
 				int count, halfspace;
 
-				if (!pAABB->Intersect(p_ray, tIn, tOut))
+				if (!pAABB->Intersects(p_ray, tIn, tOut))
 					return false;
 
 				tIn = Maths::Max(0, tIn);
@@ -207,7 +207,7 @@ namespace Illumina
 					tOut = nodeElement.Max;
 					tIn = nodeElement.Min;
 
-					while (pNode->Type == TreeMeshNodeType::Internal)
+					while (pNode->Type == /*TreeMeshNodeType::*/Internal)
 					{
 						direction = p_ray.Direction[pNode->Axis];
 						intercept = p_ray.Origin[pNode->Axis] + tIn * direction;
@@ -285,7 +285,7 @@ namespace Illumina
 					tOut = nodeElement.Max;
 					tIn = nodeElement.Min;
 
-					while (pNode->Type == TreeMeshNodeType::Internal)
+					while (pNode->Type == /*TreeMeshNodeType::*/Internal)
 					{
 						direction = p_ray.Direction[pNode->Axis];
 						intercept = p_ray.Origin[pNode->Axis] + tIn * direction;
@@ -374,7 +374,7 @@ namespace Illumina
 					in = in < 0 ? 0 : in;
 
 					// Traverse internal nodes
-					if (p_pNode->Type == TreeMeshNodeType::Internal)
+					if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 					{
 						float direction = p_ray.Direction[p_pNode->Axis],
 							intercept = p_ray.Origin[p_pNode->Axis] + in * direction;
@@ -604,24 +604,24 @@ namespace Illumina
 			void BuildHierarchy_S2(KDTreeNode<T*> *p_pNode, List<T*> &p_objectList, int p_nAxis, int p_nDepth = 0)
 			{
 				// Update stats
-				m_statistics.m_maxTreeDepth = max(p_nDepth, m_statistics.m_maxTreeDepth);
+				m_statistics.m_maxTreeDepth = std::max(p_nDepth, m_statistics.m_maxTreeDepth);
  
 				// If we have enough objects, we consider this node a leaf
 				if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxTreeDepth || p_pNode->BoundingBox.GetRadius() <= m_nMinNodeWidth)
 				{
 					//std::cout << "Adding leaf node [" << p_objectList.Size() << ", " << p_nDepth << "]" << std::endl;
-					p_pNode->Type = TreeMeshNodeType::Leaf; 
+					p_pNode->Type = /*TreeMeshNodeType::*/Leaf; 
 					p_pNode->TriangleList.PushBack(p_objectList);
  
 					m_statistics.m_leafNodeCount++;
-					m_statistics.m_minTreeDepth = min(m_statistics.m_minTreeDepth, p_nDepth);
-					m_statistics.m_minLeafTriangleCount = min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
-					m_statistics.m_maxLeafTriangleCount = max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_minTreeDepth = std::min(m_statistics.m_minTreeDepth, p_nDepth);
+					m_statistics.m_minLeafTriangleCount = std::min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_maxLeafTriangleCount = std::max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
 				}
 				else
 				{
 					//std::cout << "Adding internal node [" << p_objectList.Size() << ", " << p_nDepth << "]" << std::endl;
-					p_pNode->Type = TreeMeshNodeType::Internal;
+					p_pNode->Type = /*TreeMeshNodeType::*/Internal;
 					p_pNode->Axis = p_nAxis;
 					p_pNode->Partition = FindPartitionPlane(p_objectList, p_pNode->BoundingBox, p_nAxis);
 					

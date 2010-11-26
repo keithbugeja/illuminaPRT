@@ -36,11 +36,11 @@ namespace Illumina
 				bool bIntersect = false;
 				Ray ray(p_ray);
 
-				for (int idx = 0, count = (int)TriangleList.Size(); idx < count; idx++)
+				for (int idx = 0, count = (int)ITriangleMesh<T, U>::TriangleList.Size(); idx < count; idx++)
 				{
 					//intersectionCount++;
 
-					if (TriangleList[idx].Intersects(ray, p_fTime, p_surface))
+					if (ITriangleMesh<T, U>::TriangleList[idx].Intersects(ray, p_fTime, p_surface))
 					{
 						ray.Max = p_surface.Distance;
 						bIntersect = true;
@@ -53,9 +53,9 @@ namespace Illumina
 
 			bool Intersects(const Ray &p_ray, float p_fTime)
 			{
-				for (int idx = 0, count = (int)TriangleList.Size(); idx < count; idx++)
+				for (int idx = 0, count = (int)ITriangleMesh<T, U>::TriangleList.Size(); idx < count; idx++)
 				{
-					if (TriangleList[idx].Intersects(p_ray, p_fTime))
+					if (ITriangleMesh<T, U>::TriangleList[idx].Intersects(p_ray, p_fTime))
 						return true;					
 				}
 

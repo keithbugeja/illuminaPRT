@@ -46,7 +46,7 @@ namespace Illumina
 			AtomicStampedReference<QueueNode> m_head;
 			AtomicStampedReference<QueueNode> m_tail;
 
-			boost::thread_specific_ptr<std::vector<QueueNode*>> m_freeNodeList;
+			boost::thread_specific_ptr< std::vector<QueueNode*> > m_freeNodeList;
 		
 		protected:
 			QueueNode* AllocateNode(void)
@@ -100,11 +100,11 @@ namespace Illumina
 
 			void Enqueue(void *p_object)
 			{
-#if defined(__ARCHITECTURE_X64__)
-				Int64 tailStamp, nextStamp;
-#else
-				Int32 tailStamp, nextStamp;
-#endif
+				#if defined(__ARCHITECTURE_X64__)
+					Int64 tailStamp, nextStamp;
+				#else
+					Int32 tailStamp, nextStamp;
+				#endif
 
 				QueueNode *pNode = AllocateNode();
 				pNode->Next.Set(NULL, 0);
@@ -141,11 +141,12 @@ namespace Illumina
 			void* Dequeue(void)
 			{
 				QueueNode *pHead, *pTail, *pNext;
-#if defined(__ARCHITECTURE_X64__)
-				Int64 headStamp, tailStamp, nextStamp;
-#else
-				Int32 headStamp, tailStamp, nextStamp;
-#endif
+				
+				#if defined(__ARCHITECTURE_X64__)
+					Int64 headStamp, tailStamp, nextStamp;
+				#else
+					Int32 headStamp, tailStamp, nextStamp;
+				#endif
 
 				while(true)
 				{

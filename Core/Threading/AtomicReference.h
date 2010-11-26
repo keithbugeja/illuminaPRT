@@ -26,18 +26,18 @@ namespace Illumina
 			inline static void* CompareAndSwap(void **p_pReference, void *p_pNewReference, void *p_pComparand)
 			{
 				#if defined(__ARCHITECTURE_X64__) 
-					return (void*)AtomicInt64::CompareAndSwap((long long*)p_pReference, (long long)p_pNewReference, (long long)p_pComparand);
+					return (void*)AtomicInt64::CompareAndSwap((Int64*)p_pReference, (Int64)p_pNewReference, (Int64)p_pComparand);
 				#else
-					return (void*)AtomicInt32::CompareAndSwap((long*)p_pReference, (long)p_pNewReference, (long)p_pComparand);
+					return (void*)AtomicInt32::CompareAndSwap((Int32*)p_pReference, (Int32)p_pNewReference, (Int32)p_pComparand);
 				#endif
 			}
 
 			inline static bool CompareAndSet(void **p_pReference, void *p_pNewReference, void *p_pComparand)
 			{
 				#if defined(__ARCHITECTURE_X64__) 
-					return (long long)p_pComparand == AtomicInt64::CompareAndSwap((long long*)p_pReference, (long long)p_pNewReference, (long long)p_pComparand);
+					return (Int64)p_pComparand == AtomicInt64::CompareAndSwap((Int64*)p_pReference, (Int64)p_pNewReference, (Int64)p_pComparand);
 				#else
-					return (long)p_pComparand == AtomicInt32::CompareAndSwap((long*)p_pReference, (long)p_pNewReference, (long)p_pComparand);
+					return (Int32)p_pComparand == AtomicInt32::CompareAndSwap((Int32*)p_pReference, (Int32)p_pNewReference, (Int32)p_pComparand);
 				#endif
 			}
 		};
@@ -133,7 +133,7 @@ namespace Illumina
 
 			bool TryStamp(T *p_pReference, Int64 p_nStamp) 
 			{
-				StampedReference<T> comparand(m_stampedReference.Stamp, p_pReference);
+				StampedReference64<T> comparand(m_stampedReference.Stamp, p_pReference);
 				return Atomic::DoubleCompareAndSwap(m_stampedReference.GetAddress(), (Int64)p_pReference, p_nStamp, comparand.GetAddress());
 			}
 
