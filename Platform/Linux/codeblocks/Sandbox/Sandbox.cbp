@@ -7,24 +7,40 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin/Debug/Sandbox" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
+				<Option output="../../../../Bin/Linux/Debug/Sandbox" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../../../../Bin/Linux/Debug/obj" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-std=c++0x" />
 					<Add option="-g" />
+					<Add directory="../../../../Core" />
+					<Add directory="../../../../../Libraries/boost" />
 				</Compiler>
+				<Linker>
+					<Add library="../../../../Bin/Linux/Debug/libCore.a" />
+					<Add library="../../../../../Libraries/boost/lib/libboost_thread.a" />
+					<Add library="/lib64/libpthread-2.12.1.so" />
+					<Add directory="../../../../../Libraries/boost/lib" />
+				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="bin/Release/Sandbox" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Release/" />
+				<Option output="../../../../Bin/Linux/Release/Sandbox" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../../../../Bin/Linux/Release/obj" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-std=c++0x" />
+					<Add directory="../../../../Core" />
+					<Add directory="../../../../../Libraries/boost" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add library="../../../../Bin/Linux/Release/libCore.a" />
+					<Add library="../../../../../Libraries/boost/lib/libboost_thread.a" />
+					<Add library="/lib64/libpthread-2.12.1.so" />
+					<Add directory="../../../../../Libraries/boost/lib" />
 				</Linker>
 			</Target>
 		</Build>
@@ -32,7 +48,7 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
-		<Unit filename="main.cpp" />
+		<Unit filename="../../../../Utility/Sandbox/main.cpp" />
 		<Extensions>
 			<code_completion />
 			<debugger />

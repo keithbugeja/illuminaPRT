@@ -7,36 +7,153 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="libCore" prefix_auto="1" extension_auto="1" />
+				<Option output="../../../../Bin/Linux/Debug/libCore" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="" />
-				<Option object_output="obj/Debug/" />
+				<Option object_output="../../../../Bin/Linux/Debug/obj/" />
 				<Option type="2" />
 				<Option compiler="gcc" />
 				<Option createDefFile="1" />
 				<Compiler>
+					<Add option="-std=c++0x" />
 					<Add option="-Wall" />
 					<Add option="-g" />
+					<Add directory="../../../../Core" />
+					<Add directory="../../../../../Libraries/boost" />
 				</Compiler>
+				<Linker>
+					<Add directory="../../../../../Libraries/boost/lib" />
+				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="libCore" prefix_auto="1" extension_auto="1" />
+				<Option output="../../../../Bin/Linux/Release/libCore" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="" />
-				<Option object_output="obj/Release/" />
+				<Option object_output="../../../../Bin/Linux/Release/obj/" />
 				<Option type="2" />
 				<Option compiler="gcc" />
 				<Option createDefFile="1" />
 				<Compiler>
-					<Add option="-Wall" />
 					<Add option="-O2" />
+					<Add option="-std=c++0x" />
+					<Add option="-Wall" />
+					<Add directory="../../../../Core" />
+					<Add directory="../../../../../Libraries/boost" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add directory="../../../../../Libraries/boost/lib" />
 				</Linker>
 			</Target>
 		</Build>
-		<Unit filename="main.c">
-			<Option compilerVar="CC" />
-		</Unit>
+		<Unit filename="../../../../Core/Camera/Camera.cpp" />
+		<Unit filename="../../../../Core/Camera/Camera.h" />
+		<Unit filename="../../../../Core/Camera/PerspectiveCamera.cpp" />
+		<Unit filename="../../../../Core/Camera/PerspectiveCamera.h" />
+		<Unit filename="../../../../Core/Camera/ThinLensCamera.cpp" />
+		<Unit filename="../../../../Core/Camera/ThinLensCamera.h" />
+		<Unit filename="../../../../Core/Device/Device.h" />
+		<Unit filename="../../../../Core/Exception/Exception.cpp" />
+		<Unit filename="../../../../Core/Exception/Exception.h" />
+		<Unit filename="../../../../Core/Filter/Filter.h" />
+		<Unit filename="../../../../Core/Geometry/Basis.cpp" />
+		<Unit filename="../../../../Core/Geometry/Basis.h" />
+		<Unit filename="../../../../Core/Geometry/BoundingBox.cpp" />
+		<Unit filename="../../../../Core/Geometry/BoundingBox.h" />
+		<Unit filename="../../../../Core/Geometry/BoundingSphere.h" />
+		<Unit filename="../../../../Core/Geometry/BoundingVolume.h" />
+		<Unit filename="../../../../Core/Geometry/Interval.h" />
+		<Unit filename="../../../../Core/Geometry/Matrix3x3.cpp" />
+		<Unit filename="../../../../Core/Geometry/Matrix3x3.h" />
+		<Unit filename="../../../../Core/Geometry/Matrix4x4.cpp" />
+		<Unit filename="../../../../Core/Geometry/Matrix4x4.h" />
+		<Unit filename="../../../../Core/Geometry/Plane.h" />
+		<Unit filename="../../../../Core/Geometry/Ray.h" />
+		<Unit filename="../../../../Core/Geometry/Transform.cpp" />
+		<Unit filename="../../../../Core/Geometry/Transform.h" />
+		<Unit filename="../../../../Core/Geometry/Vector2.cpp" />
+		<Unit filename="../../../../Core/Geometry/Vector2.h" />
+		<Unit filename="../../../../Core/Geometry/Vector3.cpp" />
+		<Unit filename="../../../../Core/Geometry/Vector3.h" />
+		<Unit filename="../../../../Core/Geometry/Vector3.inl" />
+		<Unit filename="../../../../Core/Image/Image.h" />
+		<Unit filename="../../../../Core/Image/ImageIO.h" />
+		<Unit filename="../../../../Core/Image/ImagePPM.h" />
+		<Unit filename="../../../../Core/Image/RGBPixel.cpp" />
+		<Unit filename="../../../../Core/Image/RGBPixel.h" />
+		<Unit filename="../../../../Core/Maths/Maths.cpp" />
+		<Unit filename="../../../../Core/Maths/Maths.h" />
+		<Unit filename="../../../../Core/Maths/Random.cpp" />
+		<Unit filename="../../../../Core/Maths/Random.h" />
+		<Unit filename="../../../../Core/Object/Cloneable.h" />
+		<Unit filename="../../../../Core/Object/Object.cpp" />
+		<Unit filename="../../../../Core/Object/Object.h" />
+		<Unit filename="../../../../Core/Object/Object.inl" />
+		<Unit filename="../../../../Core/Object/UniqueID.cpp" />
+		<Unit filename="../../../../Core/Object/UniqueID.h" />
+		<Unit filename="../../../../Core/Sampler/Sampler.h" />
+		<Unit filename="../../../../Core/Shape/BIHMesh.h" />
+		<Unit filename="../../../../Core/Shape/BVHMesh.h" />
+		<Unit filename="../../../../Core/Shape/BasicMesh.h" />
+		<Unit filename="../../../../Core/Shape/HybridMesh.h" />
+		<Unit filename="../../../../Core/Shape/IndexedTriangle.h" />
+		<Unit filename="../../../../Core/Shape/IndexedTriangle.inl" />
+		<Unit filename="../../../../Core/Shape/KDTreeMesh.h" />
+		<Unit filename="../../../../Core/Shape/OctreeMesh.h" />
+		<Unit filename="../../../../Core/Shape/Shape.h" />
+		<Unit filename="../../../../Core/Shape/ShapeFactory.h" />
+		<Unit filename="../../../../Core/Shape/Sphere.cpp" />
+		<Unit filename="../../../../Core/Shape/Sphere.h" />
+		<Unit filename="../../../../Core/Shape/TreeMesh.h" />
+		<Unit filename="../../../../Core/Shape/Triangle.cpp" />
+		<Unit filename="../../../../Core/Shape/Triangle.h" />
+		<Unit filename="../../../../Core/Shape/TriangleMesh.h" />
+		<Unit filename="../../../../Core/Shape/TriangleMesh.inl" />
+		<Unit filename="../../../../Core/Shape/VertexFormats.h" />
+		<Unit filename="../../../../Core/Space/BVHSpace.h" />
+		<Unit filename="../../../../Core/Space/BasicSpace.h" />
+		<Unit filename="../../../../Core/Space/Space.h" />
+		<Unit filename="../../../../Core/Staging/Aggregate.h" />
+		<Unit filename="../../../../Core/Staging/GeometricPrimitive.cpp" />
+		<Unit filename="../../../../Core/Staging/GeometricPrimitive.h" />
+		<Unit filename="../../../../Core/Staging/OctreeAggregate.h" />
+		<Unit filename="../../../../Core/Staging/Primitive.h" />
+		<Unit filename="../../../../Core/System/Dummy.h" />
+		<Unit filename="../../../../Core/System/DummyManager.h" />
+		<Unit filename="../../../../Core/System/EngineKernel.cpp" />
+		<Unit filename="../../../../Core/System/EngineKernel.h" />
+		<Unit filename="../../../../Core/System/Factory.h" />
+		<Unit filename="../../../../Core/System/FactoryManager.h" />
+		<Unit filename="../../../../Core/System/FactoryManager.inl" />
+		<Unit filename="../../../../Core/System/Library.h" />
+		<Unit filename="../../../../Core/System/LibraryImpl.h" />
+		<Unit filename="../../../../Core/System/LibraryManager.cpp" />
+		<Unit filename="../../../../Core/System/LibraryManager.h" />
+		<Unit filename="../../../../Core/System/LibrarySymbols.h" />
+		<Unit filename="../../../../Core/System/Platform.cpp" />
+		<Unit filename="../../../../Core/System/Platform.h" />
+		<Unit filename="../../../../Core/System/PlugIn.h" />
+		<Unit filename="../../../../Core/System/PlugInManager.cpp" />
+		<Unit filename="../../../../Core/System/PlugInManager.h" />
+		<Unit filename="../../../../Core/System/Version.cpp" />
+		<Unit filename="../../../../Core/System/Version.h" />
+		<Unit filename="../../../../Core/Texture/ImageTexture.h" />
+		<Unit filename="../../../../Core/Texture/MarbleTexture.h" />
+		<Unit filename="../../../../Core/Texture/Noise.h" />
+		<Unit filename="../../../../Core/Texture/NoiseTexture.h" />
+		<Unit filename="../../../../Core/Texture/SimpleTexture.h" />
+		<Unit filename="../../../../Core/Texture/Texture.h" />
+		<Unit filename="../../../../Core/Threading/Atomic.h" />
+		<Unit filename="../../../../Core/Threading/AtomicReference.h" />
+		<Unit filename="../../../../Core/Threading/LinkedList.h" />
+		<Unit filename="../../../../Core/Threading/List.h" />
+		<Unit filename="../../../../Core/Threading/Lock.h" />
+		<Unit filename="../../../../Core/Threading/Monitor.h" />
+		<Unit filename="../../../../Core/Threading/Pointer.h" />
+		<Unit filename="../../../../Core/Threading/Queue.h" />
+		<Unit filename="../../../../Core/Threading/ReentrantLock.h" />
+		<Unit filename="../../../../Core/Threading/Spinlock.cpp" />
+		<Unit filename="../../../../Core/Threading/Spinlock.h" />
+		<Unit filename="../../../../Core/Threading/Spinlock.inl" />
+		<Unit filename="../../../../Core/Threading/WorkQueue.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />
