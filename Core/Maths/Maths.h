@@ -17,6 +17,16 @@ namespace Illumina
 		class Maths
 		{
 		public:
+			template <class T>
+			static T Min(const T &p_value1, const T &p_value2) {
+				return (p_value1 < p_value2) ? p_value1 : p_value2;
+			}
+
+			template <class T>
+			static T Max(const T &p_value1, const T& p_value2) {
+				return (p_value1 > p_value2) ? p_value1 : p_value2;
+			}
+
 			inline static float Frac(float p_fValue) {
 				float integerPart;
 				return (float)modf((double)p_fValue, (double*)&integerPart);

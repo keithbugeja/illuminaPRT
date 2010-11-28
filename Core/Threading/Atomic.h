@@ -43,7 +43,7 @@ namespace Illumina
                     return __sync_fetch_and_add(&m_int32, 1);
 				#elif defined(__COMPILER_MSVC__)
 					#if defined(__ARCHITECTURE_X64__)
-						return _InterlockedExchangeAdd(reinterpret_cast<volatile long*>(&m_int32), p_nIncrement);
+						return _InterlockedExchangeAdd(reinterpret_cast<volatile long*>(&m_int32), 1);
 					#else
 						long *pInt32 = reinterpret_cast<long*>(&m_int32), result;
 
@@ -70,7 +70,7 @@ namespace Illumina
                     return __sync_fetch_and_sub(&m_int32, 1);
 				#elif defined(__COMPILER_MSVC__)
 					#if defined(__ARCHITECTURE_X64__)
-						return _InterlockedExchangeAdd(reinterpret_cast<volatile long*>(&m_int32), p_nIncrement);
+						return _InterlockedExchangeAdd(reinterpret_cast<volatile long*>(&m_int32), -1);
 					#else
 						long *pInt32 = reinterpret_cast<long*>(&m_int32), result;
 

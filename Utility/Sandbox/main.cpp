@@ -56,9 +56,9 @@
 #include "System/Dummy.h"
 
 using namespace std;
-using namespace tbb;
+//using namespace tbb;
 using namespace Illumina::Core;
- 
+
 void TestLists(void)
 {
 	//omp_set_num_threads(8);
@@ -69,11 +69,11 @@ void TestLists(void)
 	Object *c = a;
 	bool result = AtomicReference::CompareAndSet((void**)&c, b, b);
 	std::cout<<result<<" : "<<c->ToString()<<std::endl;
- 
+
 	Queue queue;
 	Object *p = NULL;
- 
-	//#pragma omp parallel for 
+
+	//#pragma omp parallel for
 	for (int j = 0; j < 100000; j++)
 	{
 		queue.Enqueue(a);
@@ -81,18 +81,18 @@ void TestLists(void)
 		queue.Dequeue();
 		p = (Object*)queue.Dequeue();
 	}
- 
+
 	std::cout<<p<<std::endl;
- 
+
 	queue.Enqueue(a);
 	queue.Enqueue(b);
- 
+
 	Object *da = (Object*)queue.Dequeue();
 	std::cout<<da->ToString() << std::endl;
- 
+
 	Object *db = (Object*)queue.Dequeue();
 	std::cout<<db->ToString() << std::endl;
- 
+
 	Object *dc = (Object*)queue.Dequeue();
 	std::cout<<"Last obj : " << dc << std::endl;
 
@@ -100,32 +100,32 @@ void TestLists(void)
 		std::cout<<"Queue is empty! Correct!"<< std::endl;
 	else
 		std::cout<<"Queue is not empty! Wrong!"<<std::endl;
- 
+
 	std::cout<<"Instance count:"<<QueueNode::NodeInstanceCount<<std::endl;
 }
- 
+
 void TestAtomic(void)
 {
 	Int32	a[2] = {1, 2},
 			b[2] = {1, 2};
- 
-	if (Atomic::DoubleCompareAndSwap(a, 4, 5, b))
+
+	if (Atomic::DoubleWidthCompareAndSwap(a, 4, 5, b))
 		std::cout<<"DCAS -> Success!"<<std::endl;
 	else
 		std::cout<<"DCAS -> Failed!"<<std::endl;
- 
+
 #if defined(__ARCHITECTURE_X64__)
 	ALIGN_16 Int64  a64[2] = {3, 4},
 					b64[2] = {3, 4};
- 
-	if (Atomic::DoubleCompareAndSwap(a64, 69, 58, b64))
+
+	if (Atomic::DoubleWidthCompareAndSwap(a64, 69, 58, b64))
 		std::cout<<"DCAS -> Success!"<<std::endl;
 	else
 		std::cout<<"DCAS -> Failed!"<<std::endl;
- 
+
 	AtomicStampedReference<void> s;
 	s.Set((void*)0x1000, 0);
- 
+
 	//#pragma omp parallel for
 	for (int n = 0; n < 1000000; n++)
 	{
@@ -134,11 +134,11 @@ void TestAtomic(void)
 		s.CompareAndSet((void*)0x3000, (void*)0x4000, 2, 3);
 		s.CompareAndSet((void*)0x4000, (void*)0x1000, 3, 0);
 	}
- 
+
 	std::cout<<"Ref : [0x1000] " << s.GetReference() <<", [0] " << s.GetStamp() << std::endl;
 #endif
 }
- 
+
 void TestUID(void)
 {
 	//omp_set_num_threads(8);
@@ -153,22 +153,22 @@ void TestUID(void)
 		std::cout << t.ToString() << " Hash : " << t.GetHashCode() << std::endl;
 		objectList.PushBack(t);
 	}
- 
+
 	std::cout<<objectList.Size()<<std::endl;
 	std::cin.get();
- 
+
 	exit(0);
 }
- 
+
 void TestSpinLock(void)
 {
 	//omp_set_num_threads(Platform::GetProcessorCount());
- 
+
 	Spinlock lock(100);
 
 	int sharedvar = 0;
 	double start = Platform::GetTime();
- 
+
 	//#pragma omp parallel for
 	for (int j = 0; j < 100000; j++)
 	{
@@ -176,12 +176,12 @@ void TestSpinLock(void)
 		sharedvar++;
 		lock.Unlock();
 	}
- 
+
 	double end = Platform::GetTime();
- 
+
 	std::cout << "Result : " << sharedvar << ", Time : " << end - start << std::endl;
 }
- 
+
 //----------------------------------------------------------------------------------------------
 void SimplePacketTracer(int p_nOMPThreads)
 {
@@ -203,7 +203,7 @@ void SimplePacketTracer(int p_nOMPThreads)
 	std::cout << "Initialising qOMP thread count : [Threads = " << p_nOMPThreads << "]" << std::endl;
 	//omp_set_num_threads(p_nOMPThreads);
 	//omp_set_num_threads(1);
- 
+
 	//----------------------------------------------------------------------------------------------
 	// Setup camera
 	//----------------------------------------------------------------------------------------------
@@ -212,24 +212,29 @@ void SimplePacketTracer(int p_nOMPThreads)
 		//Vector3(-20.0, 0.0, 0.0), Vector3(1.0f, -0.05f, 0.0f), Vector3::UnitYPos,
 		Vector3(-20.0, 10.0, -20.0), Vector3(1.0f, -0.5f, 1.0f), Vector3::UnitYPos,
 		-2.0f, 2.0f, -2.0f, 2.0f, 2.0f);
-	
+
 	//ThinLensCamera camera(
 	//	Vector3(0.0, 0.0, -10), Vector3(0.5f, 0.5f, 1.0f), Vector3::UnitYPos,
 	//	0.05f, -2.0f, 2.0f, -2.0f, 2.0f, 2.0f);
 
 	std::cout << "Setting up camera : [" << camera.ToString() << "]" << std::endl;
- 
+
 	//----------------------------------------------------------------------------------------------
 	// Setup textures
 	//----------------------------------------------------------------------------------------------
 	// Create marble texture
 	std::cout << "Setting up textures..." << std::endl;
 	MarbleTexture marbleTexture(0.002f, 1.0f, 4);
-	
+
 	// Create image texture
 	ImagePPM ppmLoader;
+
+	#if defined(__PLATFORM_WINDOWS__)
 	boost::shared_ptr<ITexture> imgTexture(new ImageTexture("D:\\Media\\Assets\\IlluminaRT\\Textures\\texture.ppm", ppmLoader));
- 
+	#elif defined(__PLATFORM_LINUX__)
+	boost::shared_ptr<ITexture> imgTexture(new ImageTexture("../../../Resource/Texture/texture.ppm", ppmLoader));
+	#endif
+
 	//----------------------------------------------------------------------------------------------
 	// Setup scene objects
 	//----------------------------------------------------------------------------------------------
@@ -239,24 +244,30 @@ void SimplePacketTracer(int p_nOMPThreads)
 	// Create Sphere
 	Sphere shape_sphere1(Vector3(0, -3.0f, 0), 1.0f);
 	Sphere shape_sphere2(Vector3(8.0f, 8.0f, 10.0f), 2.0f);
-	
+
 	// Create Box
 	std::cout << "-- Create object : [box]" << std::endl;
 
-	boost::shared_ptr<BasicMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 = 
+	boost::shared_ptr<BasicMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 		ShapeFactory::CreateBox<BasicMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(Vector3(-2,-2,-2), Vector3(2,2,2));
 
 	// Load Model 1
+	#if defined(__PLATFORM_WINDOWS__)
 	std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\ducky2.obj");
+	#elif defined(__PLATFORM_LINUX__)
+	std::string fname_model01("../../../Resource/Model/ducky2.obj");
+	#endif
+
 	std::cout << "-- Load object : [" << fname_model01 << "]" << std::endl;
-	//boost::shared_ptr<SimpleMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh2 = 
+	//boost::shared_ptr<SimpleMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh2 =
 	//	ShapeFactory::LoadMesh<SimpleMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
-	boost::shared_ptr<BVHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh2 = 
+	boost::shared_ptr<BVHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh2 =
 		ShapeFactory::LoadMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
-	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh2 = 
+	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh2 =
 	//	ShapeFactory::LoadMesh<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
 
 	// Load Model 2
+	#if defined(__PLATFORM_WINDOWS__)
 	//std::string fname_model02("D:\\Media\\Assets\\IlluminaRT\\Models\\sibenik3.obj");
 	std::string fname_model02("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza3.obj");
 	//std::string fname_model02("D:\\Media\\Assets\\IlluminaRT\\Models\\conference3.obj");
@@ -266,23 +277,35 @@ void SimplePacketTracer(int p_nOMPThreads)
 	//std::string fname_model02("D:\\Media\\Assets\\IlluminaRT\\Models\\ducky2.obj");
 	//std::string fname_model02("D:\\Media\\Assets\\IlluminaRT\\Models\\venusm.obj");
 	//std::string fname_model02("D:\\Media\\Assets\\IlluminaRT\\Models\\torus.obj");
+	#elif defined(__PLATFORM_LINUX__)
+	//std::string fname_model02("../../../Resource/Model/sibenik3.obj");
+	std::string fname_model02("../../../Resource/Model/sponza3.obj");
+	//std::string fname_model02("../../../Resource/Model/conference3.obj");
+	//std::string fname_model02("../../../Resource/Model/david.obj");
+	//std::string fname_model02("../../../Resource/Model/box.obj");
+	//std::string fname_model02("../../../Resource/Model/bunny2.obj");
+	//std::string fname_model02("../../../Resource/Model/ducky2.obj");
+	//std::string fname_model02("../../../Resource/Model/venusm.obj");
+	//std::string fname_model02("../../../Resource/Model/torus.obj");
+	#endif
+
 	std::cout << "-- Load object : [" << fname_model02 << "]" << std::endl;
 
-	//boost::shared_ptr<SimpleMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 = 
+	//boost::shared_ptr<SimpleMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
 	//	ShapeFactory::LoadMesh<SimpleMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model02);
-	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 = 
+	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
 	//	ShapeFactory::LoadMesh<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model02);
-	//boost::shared_ptr<BVHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 = 
+	//boost::shared_ptr<BVHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
 	//	ShapeFactory::LoadMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model02);
-	//boost::shared_ptr<BIHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 = 
+	//boost::shared_ptr<BIHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
 	//	ShapeFactory::LoadMesh<BIHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model02);
-	boost::shared_ptr<PBIHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 = 
+	boost::shared_ptr<PBIHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
 		ShapeFactory::LoadMesh<PBIHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model02);
-	//boost::shared_ptr<GridMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 = 
+	//boost::shared_ptr<GridMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
 	//	ShapeFactory::LoadMesh<GridMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model02);
 	//std::cout << "Save object : [sibenik.obj]" << std::endl;
 	//ShapeFactory::SaveMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>("D:\\Assets\\object_out.obj", shape_mesh3);
- 
+
 	//----------------------------------------------------------------------------------------------
 	// Compute bounding volumes
 	//----------------------------------------------------------------------------------------------
@@ -307,14 +330,14 @@ void SimplePacketTracer(int p_nOMPThreads)
 	compileTimer.restart();
 	shape_mesh3->Compile();
 	std::cout << "-- Model 02 : [" << fname_model02 << "] compiled in " << compileTimer.elapsed() << " seconds." << std::endl;
- 
+
 	//----------------------------------------------------------------------------------------------
 	// Initialise scene space
 	//----------------------------------------------------------------------------------------------
 	std::cout << "Adding models to scene space..." << std::endl;
 	//BasicSpace basicSpace;
 	BasicSpace basicSpace;
- 
+
 	{
 	/*
 	GeometricPrimitive pmv_sphere1;
@@ -359,7 +382,7 @@ void SimplePacketTracer(int p_nOMPThreads)
 	pmv_mesh4.WorldTransform.SetTranslation(Vector3(-10.0f, 4.0f, 0.0f));
 	basicSpace.PrimitiveList.PushBack(&pmv_mesh4);
 	*/
-	
+
 	/*
 	GeometricPrimitive pmv_mesh5;
 	pmv_mesh5.SetShape((Shape*)shape_mesh3.get());
@@ -382,7 +405,7 @@ void SimplePacketTracer(int p_nOMPThreads)
 
 	pmv_mesh6.WorldTransform.SetTranslation(Vector3(0.0f, -10.0f, 0.0f));
 	basicSpace.PrimitiveList.PushBack(&pmv_mesh6);
- 
+
 	// Prepare space
 	basicSpace.Initialise();
 	basicSpace.Build();
@@ -399,20 +422,20 @@ void SimplePacketTracer(int p_nOMPThreads)
 	//----------------------------------------------------------------------------------------------
 	const int MaxDepth = 1;
 
-	//const int width = 768, 
+	//const int width = 768,
 	//	height = 768;
 
 	const int width = 512,
 		height = 512;
 
-	//const int width = 256, 
+	//const int width = 256,
 	//	height = 256;
- 
+
 	// Create image
 	Image canvas(width, height);
 	boost::timer renderTimer;
 	boost::progress_display renderProgress(height);
- 
+
 	Vector3 lightPosition(0, 5, 0);
 	float alpha = 0, totalFPS = 0;
 
@@ -421,16 +444,16 @@ void SimplePacketTracer(int p_nOMPThreads)
 	{
 		renderTimer.restart();
 		alpha += 0.05f;
- 
+
 		camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10.0, Maths::Sin(alpha) * -20));
 		camera.LookAt(Vector3::Zero);
 
 		// Here we rebuild the AS
 		basicSpace.Update();
-		
+
 		// Render the scene
 		//#pragma omp parallel for schedule(guided)
-		//parallel_for(blocked_range<int>(0, height - 1), [=] (blocked_range<int>& r) 
+		//parallel_for(blocked_range<int>(0, height - 1), [=] (blocked_range<int>& r)
 			{
 				//std::cout << "[ " << r.begin() << " - " << r.end() << "]" << std::endl;
 
@@ -444,7 +467,7 @@ void SimplePacketTracer(int p_nOMPThreads)
 					Vector3 lightVector,
 						reflectionVector;
 
-					float testDensity, 
+					float testDensity,
 						distance,
 						diffuse,
 						specular,
@@ -457,17 +480,17 @@ void SimplePacketTracer(int p_nOMPThreads)
 					{
 						RGBPixel pixelColour = RGBPixel::Black,
 							finalColour = RGBPixel::Black;
-			
-						Ray &ray = camera.GetRay(
-							((float)x) / width, 
-							((float)y) / height, 
+
+						Ray ray = camera.GetRay(
+							((float)x) / width,
+							((float)y) / height,
 							0.5f, 0.5f );
 
 						bHit = false;
 
-						contribution = 
+						contribution =
 							shadow = 1.0f;
-						
+
 						for (int depth = 0; depth < MaxDepth; depth++)
 						{
 							bHit = basicSpace.Intersects(ray, 0, differentialSurface); // .Intersects(ray, 0.0f, differentialSurface, testDensity);
@@ -479,11 +502,11 @@ void SimplePacketTracer(int p_nOMPThreads)
 								Vector3::Subtract(lightPosition, differentialSurface.PointWS, lightVector);
 								Vector3 normal(differentialSurface.BasisWS.U);
 								normal.Y = -normal.Y;
- 
+
 								distance = lightVector.Length();
 								lightVector.Normalize();
 								diffuse = Maths::Clamp(Vector3::Dot(lightVector, normal), 0.3f, 1.0f);
- 
+
 								Ray shadowRay(differentialSurface.PointWS, lightVector, 0.0001f, distance - 0.01f);
 								shadow = basicSpace.Intersects(shadowRay, 0.0f) ? 0.4f : 1.0f;
 
@@ -509,19 +532,19 @@ void SimplePacketTracer(int p_nOMPThreads)
 						c->Set(x, (height - 1) - y, finalColour);
 						//canvas.Set(x, (height - 1) - y, finalColour);
 					}
-					
+
 					++renderProgress;
 				}
 			}
 		//);
-		
+
 		/*
 		DifferentialSurface differentialSurface;
 
 		Vector3 lightVector,
 			reflectionVector;
 
-		float testDensity, 
+		float testDensity,
 			distance,
 			diffuse,
 			specular,
@@ -529,20 +552,20 @@ void SimplePacketTracer(int p_nOMPThreads)
 			contribution;
 
 		bool bHit;
- 
+
 		for (int x = 0; x < width; x++)
 		{
 			RGBPixel pixelColour = RGBPixel::Black,
 				finalColour = RGBPixel::Black;
-			
+
 			Ray &ray = camera.GetRay(
-				((float)x) / width, 
-				((float)y) / height, 
+				((float)x) / width,
+				((float)y) / height,
 				0.5f, 0.5f );
 
 			bHit = false;
 
-			contribution = 
+			contribution =
 				shadow = 1.0f;
 
 			for (int depth = 0; depth < MaxDepth; depth++)
@@ -556,11 +579,11 @@ void SimplePacketTracer(int p_nOMPThreads)
 					Vector3::Subtract(lightPosition, differentialSurface.PointWS, lightVector);
 					Vector3 normal(differentialSurface.BasisWS.U);
 					normal.Y = -normal.Y;
- 
+
 					distance = lightVector.Length();
 					lightVector.Normalize();
 					diffuse = Maths::Clamp(Vector3::Dot(lightVector, normal), 0.3f, 1.0f);
- 
+
 					Ray shadowRay(differentialSurface.PointWS, lightVector, 0.0001f, distance - 0.01f);
 					shadow = basicSpace.Intersects(shadowRay, 0.0f) ? 0.4f : 1.0f;
 
@@ -581,34 +604,38 @@ void SimplePacketTracer(int p_nOMPThreads)
 				else
 					break;
 			}
-			
+
 			canvas.Set(x, (height - 1) - y, finalColour);
 		*/
-  
+
 		totalFPS += (float)(1.0 / renderTimer.elapsed());
 		std::cout<< shape_mesh3->ToString() << std::endl;
 		std::cout << "Total Render Time : " << renderTimer.elapsed() << " seconds" << std::endl;
 		std::cout << "FPS: [" << totalFPS / iteration <<" / " << iteration << "]" << std::endl;
- 
+
 		ImagePPM imagePPM;
+		#if defined(__PLATFORM_WINDOWS__)
 		imagePPM.Save(canvas, "D:\\Media\\Assets\\IlluminaRT\\Textures\\result.ppm");
+		#elif defined(__PLATFORM_LINUX__)
+		imagePPM.Save(canvas, "../../../Resource/Texture/result.ppm");
+		#endif
 	}
 }
- 
-int main(const int& arg)
+
+int main()
 {
 	int nCores = Platform::GetProcessorCount();
 	std::cout << "Hardware cores : " << nCores << std::endl;
- 
+
 	//TestAtomic();
 	//TestUID();
 	//TestSpinLock();
 	//TestLists();
- 
+
 	//SimpleTracer(4);
 	SimplePacketTracer(nCores);
 	std::cout << "Complete in " << Platform::GetTime() << " seconds " << std::endl;
- 
+
 	char cKey;
 	cin >> cKey;
 }
