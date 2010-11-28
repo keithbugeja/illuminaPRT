@@ -7,12 +7,13 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+#include <string.h>
 #include <boost/format.hpp>
 
 #include "System/Platform.h"
 #include "Geometry/Vector3.h"
 
-namespace Illumina 
+namespace Illumina
 {
 	namespace Core
 	{
@@ -27,12 +28,12 @@ namespace Illumina
 			/* Common matrix configurations */
 			static const Matrix3x3 Identity;
 			static const Matrix3x3 Zero;
-			
+
 			/* Matrix cells */
 			ALIGN_16 union
 			{
 				float Elements[Order];
-				struct 
+				struct
 				{
 					float _00, _01, _02,
 						  _10, _11, _12,
@@ -58,12 +59,12 @@ namespace Illumina
 			Matrix3x3(const Matrix3x3& p_matrix) {
 				memcpy( Elements, p_matrix.Elements, sizeof(float) * Order );
 			}
-			
+
 			/* Makes a rotation matrix about an arbitrary angle */
 			explicit Matrix3x3(const Vector3& p_axis, float p_fAngle) {
 				MakeRotation( p_axis, p_fAngle );
 			}
-	
+
 			/* Constructs a matrix from three vectors */
 			explicit Matrix3x3(const Vector3& p_vector1, const Vector3& p_vector2, const Vector3& p_vector3, bool p_bRowMajor = true)
 			{
@@ -143,7 +144,7 @@ namespace Illumina
 				float fCos = Maths::Cos( p_fAngle ),
 					  fSin = Maths::Sin( p_fAngle ),
 					  fOneMinusCos = 1.0f - fCos;
-				
+
 				float fXY = p_axis.X * p_axis.Y * fOneMinusCos,
 					  fXZ = p_axis.X * p_axis.Z * fOneMinusCos,
 					  fYZ = p_axis.Y * p_axis.Z * fOneMinusCos,
@@ -213,11 +214,11 @@ namespace Illumina
 					case 0:
 						_00 = p_column.X; _10 = p_column.Y; _20 = p_column.Z;
 						return;
-					
+
 					case 1:
 						_01 = p_column.X; _11 = p_column.Y; _21 = p_column.Z;
 						return;
-					
+
 					case 2:
 						_02 = p_column.X; _12 = p_column.Y; _22 = p_column.Z;
 						return;
@@ -278,8 +279,8 @@ namespace Illumina
 			/* Computes the determinant of the matrix */
 			float Determinant(void) const
 			{
-				return _00 * (_11*_22 - _21*_12) - 
-					   _01 * (_10*_22 - _20*_12) + 
+				return _00 * (_11*_22 - _21*_12) -
+					   _01 * (_10*_22 - _20*_12) +
 					   _02 * (_10*_21 - _20*_11);
 			}
 
@@ -297,9 +298,9 @@ namespace Illumina
 				std::swap(_20, _02);
 				std::swap(_21, _12);
 			}
-			
+
 			/* Computes the matrix inverse */
-			void Invert(void) 
+			void Invert(void)
 			{
 				float fDeterminant = Determinant();
 
@@ -340,7 +341,7 @@ namespace Illumina
 				Matrix3x3::Add(*this, p_matrix, result);
 				return result;
 			}
-			
+
 			/* Overloads the subtraction operator */
 			Matrix3x3 operator-(const Matrix3x3& p_matrix) const
 			{
@@ -391,7 +392,7 @@ namespace Illumina
 
 				return result;
 			}
-			
+
 			Matrix3x3& operator+=(const Matrix3x3 &p_matrix)
 			{
 				for (int n=0; n<Order; n++)
@@ -399,7 +400,7 @@ namespace Illumina
 
 				return *this;
 			}
-			
+
 			Matrix3x3& operator-=(const Matrix3x3 &p_matrix)
 			{
 				for (int n=0; n<Order; n++)
@@ -407,7 +408,7 @@ namespace Illumina
 
 				return *this;
 			}
-			
+
 			Matrix3x3& operator*=(float p_fValue)
 			{
 				for (int n=0; n<Order; n++)
@@ -415,7 +416,7 @@ namespace Illumina
 
 				return *this;
 			}
-			
+
 			Matrix3x3& operator/=(float p_fValue)
 			{
 				if (!Maths::Equals(p_fValue, 0.0f))
@@ -433,7 +434,7 @@ namespace Illumina
 
 				return *this;
 			}
-			
+
 			/* Product operation with a vector */
 			Vector3 operator*(const Vector3& p_vector) const
 			{
@@ -441,7 +442,7 @@ namespace Illumina
 							   _10 * p_vector.X + _11 * p_vector.Y + _12 * p_vector.Z,
 							   _20 * p_vector.X + _21 * p_vector.Y + _22 * p_vector.Z);
 			}
-			
+
 			/* Product operation with a matrix */
 			Matrix3x3 operator*(const Matrix3x3& p_matrix) const
 			{
@@ -461,9 +462,9 @@ namespace Illumina
 
 				return result;
 			}
-			
+
 			/* Unary negation operator */
-			Matrix3x3 operator-(void) const 
+			Matrix3x3 operator-(void) const
 			{
 				Matrix3x3 negateThis;
 				Matrix3x3::Negate(*this, negateThis);
@@ -476,7 +477,7 @@ namespace Illumina
 				memcpy(Elements, p_matrix.Elements, sizeof(float) * Order);
 				return *this;
 			}
-						
+
 			/* Equality operator */
 			bool operator==(const Matrix3x3& p_matrix) const
 			{
@@ -486,7 +487,7 @@ namespace Illumina
 
 				return true;
 			}
-			
+
 			/* Inequality operator */
 			bool operator!=(const Matrix3x3& p_matrix) const
 			{
@@ -510,7 +511,7 @@ namespace Illumina
 			/* Factory method which creates a scaling matrix */
 			inline static Matrix3x3 CreateScaling(const Vector3& p_scale)
 			{
-				Matrix3x3 result; 
+				Matrix3x3 result;
 				result.MakeDiagonal(p_scale);
 				return result;
 			}
@@ -520,7 +521,7 @@ namespace Illumina
 			{
 				#if defined(SSE_ENABLED)
 					__m128 v1, v2, v3;
-					
+
 					v1 = _mm_load_ps(&p_matrix1.Elements[0]);
 					v2 = _mm_load_ps(&p_matrix2.Elements[0]);
 					v3 = _mm_add_ps(v1, v2);
@@ -543,7 +544,7 @@ namespace Illumina
 			{
 				#if defined(SSE_ENABLED)
 					__m128 v1, v2, v3;
-					
+
 					v1 = _mm_load_ps(&p_matrix1.Elements[0]);
 					v2 = _mm_load_ps(&p_matrix2.Elements[0]);
 					v3 = _mm_sub_ps(v1, v2);
@@ -602,7 +603,7 @@ namespace Illumina
 			}
 
 			/* Negation */
-			inline static void Negate(const Matrix3x3 &p_matrix, Matrix3x3 &p_out) 
+			inline static void Negate(const Matrix3x3 &p_matrix, Matrix3x3 &p_out)
 			{
 				p_out._00 = -p_matrix._00;
 				p_out._10 = -p_matrix._10;
@@ -641,8 +642,8 @@ namespace Illumina
 			std::string ToString(void)
 			{
 				boost::format formatter;
-				
-				std::string strOut = 
+
+				std::string strOut =
 					boost::str(boost::format("[%d %d %d | %d %d %d | %d %d %d]") % _00 % _01 % _02 % _10 % _11 % _12 % _20 % _21 % _22);
 				return strOut;
 			}
@@ -656,4 +657,3 @@ namespace Illumina
 		};
 	}
 }
-

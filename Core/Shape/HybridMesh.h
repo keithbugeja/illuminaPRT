@@ -8,13 +8,15 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+#include <algorithm>
 #include <stack>
 #include <map>
+
 #include <boost/shared_ptr.hpp>
 #include "Shape/TriangleMesh.h"
 #include "Shape/TreeMesh.h"
 
-namespace Illumina 
+namespace Illumina
 {
 	namespace Core
 	{
@@ -24,17 +26,17 @@ namespace Illumina
 		{
 			// Node bounding box
 			AxisAlignedBoundingBox BoundingBox;
-						
+
 			// Only if a leaf
 			List<T> TriangleList;
- 
+
 			// Construction and destruction
 			GridCell() { }
 			~GridCell() { }
 		};
- 
+
 		// Bounding Volume Hierarchy Mesh
-		template<class T, class U> 
+		template<class T, class U>
 		class GridMesh
 			: public ITriangleMesh<T, U>
 		{
@@ -44,7 +46,7 @@ namespace Illumina
 
 			Vector3 m_gridOrigin,
 				m_gridCellSize;
-			
+
 			int M[3];
 
 		protected:
@@ -119,7 +121,7 @@ namespace Illumina
 			}
 
 			inline void TransformToGridCellIndex(const Vector3& p_worldPosition, Vector3& p_gridPosition)
-			{			
+			{
 				p_gridPosition.X = Maths::Floor((p_worldPosition.X - m_gridOrigin.X + Maths::Epsilon) / m_gridCellSize.X);
 				p_gridPosition.Y = Maths::Floor((p_worldPosition.Y - m_gridOrigin.Y + Maths::Epsilon) / m_gridCellSize.Y);
 				p_gridPosition.Z = Maths::Floor((p_worldPosition.Z - m_gridOrigin.Z + Maths::Epsilon) / m_gridCellSize.Z);
@@ -132,7 +134,7 @@ namespace Illumina
 		public:
 			GridMesh(void)
 			{ }
-			
+
 			~GridMesh()
 			{
 			}
@@ -140,25 +142,25 @@ namespace Illumina
 			boost::shared_ptr<ITriangleMesh<T, U>> CreateInstance(void) {
 				return boost::shared_ptr<ITriangleMesh<T, U>>(new GridMesh<T, U>());
 			}
- 
-			bool Compile(void) 
+
+			bool Compile(void)
 			{
 				// Create a list of pointers to indexed triangles
-				int objectCount = (int)TriangleList.Size();
+				int objectCount = (int)ITriangleMesh<T, U>::TriangleList.Size();
 				List<T*> triangleList(objectCount);
- 
+
 				for (int idx = 0; idx < objectCount; idx++) {
-					triangleList.PushBack(&TriangleList[idx]);
+					triangleList.PushBack(&ITriangleMesh<T, U>::TriangleList[idx]);
 				}
- 
+
 				// Compute bounds of grid
-				ComputeBounds(triangleList, m_boundingBox);
+				ComputeBounds(triangleList, ITriangleMesh<T, U>::m_boundingBox);
 
 				// Grid origin is equal to the minextent of its bounding box
-				m_gridOrigin = m_boundingBox.GetMinExtent();
+				m_gridOrigin = ITriangleMesh<T, U>::m_boundingBox.GetMinExtent();
 
 				// Number of cells is equal to (rN / V) ^ 1/3
-				Vector3 dimensions = m_boundingBox.GetSize();
+				Vector3 dimensions = ITriangleMesh<T, U>::m_boundingBox.GetSize();
 				//float gridVolume = dimensions.X * dimensions.Y * dimensions.Z,
 				//		coeff = 1.0, factor = Maths::Pow((coeff * triangleList.Size()) / gridVolume, 1.0f / 3.0f);
 				float factor = 0.01f;
@@ -171,33 +173,33 @@ namespace Illumina
 
 				m_gridCell.SetMinExtent(Vector3::Zero);
 				m_gridCell.SetMaxExtent(m_gridCellSize);
-								
+
 				// Build Grid
 				BuildGrid();
 
 				return true;
 			}
- 
+
 			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 			{
 				Ray ray(p_ray);
- 
+
 				return Intersect_(ray, p_fTime, p_surface);
 			}
- 
+
 			bool Intersects(const Ray &p_ray, float p_fTime)
 			{
 				Ray ray(p_ray);
- 
+
 				return Intersect_(ray, p_fTime);
 			}
- 
+
 			std::string ToString(void) const
 			{
 				//return boost::str(boost::format("\nBVHMesh %s") % m_statistics.ToString());
 				return "Grid Cell";
 			}
- 
+
 		protected:
 			bool Intersect_(Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 			{
@@ -209,7 +211,7 @@ namespace Illumina
 				float in, out;
 
 				// If the ray doesn't collide with the object's bounding box, exit early
-				if (!m_boundingBox.Intersects(p_ray, in, out))
+				if (!ITriangleMesh<T, U>::m_boundingBox.Intersects(p_ray, in, out))
 					return false;
 
 				//
@@ -230,14 +232,14 @@ namespace Illumina
 				{
 					//
 					// Initialise step according to ray direction
-					// 
+					//
 					step[i] = Maths::ISgn(p_ray.Direction[i]);
 
 					//
 					// Determine tMax for next crossings
 					//
-					bounds[i] = (cellIndex[i] + (step[i] > 0)) * m_gridCellSize[i]; 
-					
+					bounds[i] = (cellIndex[i] + (step[i] > 0)) * m_gridCellSize[i];
+
 					if (Maths::FAbs(p_ray.Direction[i]) > Maths::Epsilon)
 						next[i] = Maths::Abs((bounds[i] - currentPosition[i]) / p_ray.Direction[i]);
 					else
@@ -253,7 +255,7 @@ namespace Illumina
 				}
 
 				bool bIntersect = false;
-				
+
 				int argmin = next.ArgMinAbsComponent(),
 					hash;
 
@@ -268,7 +270,7 @@ namespace Illumina
 
 						int count = 0;
 
-						if ((count = (int)pGridCell->TriangleList.Size()) > 0) 
+						if ((count = (int)pGridCell->TriangleList.Size()) > 0)
 						{
 							for (int n = 0; n < count; n++)
 							{
@@ -288,7 +290,7 @@ namespace Illumina
 
 					argmin = next.ArgMinAbsComponent();
 					cellIndex[argmin] += step[argmin];
-					
+
 					if (cellIndex[argmin] < 0 || cellIndex[argmin] > M[argmin])
 						break;
 
@@ -308,7 +310,7 @@ namespace Illumina
 				float in, out;
 
 				// If the ray doesn't collide with the object's bounding box, exit early
-				if (!m_boundingBox.Intersects(p_ray, in, out))
+				if (!ITriangleMesh<T, U>::m_boundingBox.Intersects(p_ray, in, out))
 					return false;
 
 				//
@@ -329,14 +331,14 @@ namespace Illumina
 				{
 					//
 					// Initialise step according to ray direction
-					// 
+					//
 					step[i] = Maths::ISgn(p_ray.Direction[i]);
 
 					//
 					// Determine tMax for next crossings
 					//
-					bounds[i] = (cellIndex[i] + (step[i] > 0)) * m_gridCellSize[i]; 
-					
+					bounds[i] = (cellIndex[i] + (step[i] > 0)) * m_gridCellSize[i];
+
 					if (Maths::FAbs(p_ray.Direction[i]) > Maths::Epsilon)
 						next[i] = Maths::Abs((bounds[i] - currentPosition[i]) / p_ray.Direction[i]);
 					else
@@ -365,7 +367,7 @@ namespace Illumina
 
 						int count = 0;
 
-						if ((count = (int)pGridCell->TriangleList.Size()) > 0) 
+						if ((count = (int)pGridCell->TriangleList.Size()) > 0)
 						{
 							for (int n = 0; n < count; n++)
 							{
@@ -377,7 +379,7 @@ namespace Illumina
 
 					argmin = next.ArgMinAbsComponent();
 					cellIndex[argmin] += step[argmin];
-					
+
 					if (cellIndex[argmin] < 0 || cellIndex[argmin] > M[argmin])
 						break;
 
@@ -390,17 +392,17 @@ namespace Illumina
 			void ComputeBounds(const List<T*> &p_objectList, AxisAlignedBoundingBox &p_aabb)
 			{
 				p_aabb.Invalidate();
-				
+
 				if (p_objectList.Size() > 0)
 				{
 					p_aabb.ComputeFromVolume(*(p_objectList[0]->GetBoundingVolume()));
- 
+
 					for (int idx = 1, count = (int)p_objectList.Size(); idx < count; idx++) {
 						p_aabb.Union(*(p_objectList[idx]->GetBoundingVolume()));
 					}
 				}
 			}
- 
+
 			void BuildGrid(void)
 			{
 				Vector3 cellStart;
@@ -412,14 +414,14 @@ namespace Illumina
 				int cellCount = 0;
 
 				// Find cell span of object
-				for (int index = 0; index < TriangleList.Size(); index++)
+				for (int index = 0; index < ITriangleMesh<T, U>::TriangleList.Size(); index++)
 				{
-					IBoundingVolume* pBoundingVolume = TriangleList[index].GetBoundingVolume();
-					
+					IBoundingVolume* pBoundingVolume = ITriangleMesh<T, U>::TriangleList[index].GetBoundingVolume();
+
 					pBoundingVolume->ProjectToInterval(Vector3::UnitXPos, intervalX);
 					pBoundingVolume->ProjectToInterval(Vector3::UnitYPos, intervalY);
 					pBoundingVolume->ProjectToInterval(Vector3::UnitZPos, intervalZ);
-					
+
 					//std::cout << "Actual   X : " << pBoundingVolume->GetMinExtent(0) << " : " << pBoundingVolume->GetMaxExtent(0) << std::endl;
 					//std::cout << "Interval X : " << intervalX.Min << " : " << intervalX.Max << std::endl;
 					//std::cout << "Actual   Y : " << pBoundingVolume->GetMinExtent(1) << " : " << pBoundingVolume->GetMaxExtent(1) << std::endl;
@@ -442,14 +444,14 @@ namespace Illumina
 								{
 									GridCell<T*>* pGridCell = RequestCell();
 									ComputeCellAABB(x, y, z, pGridCell->BoundingBox);
-									pGridCell->TriangleList.PushBack(&TriangleList[index]);
+									pGridCell->TriangleList.PushBack(&ITriangleMesh<T, U>::TriangleList[index]);
 									m_grid[hash] = pGridCell;
 									cellCount++;
 								}
 								else
 								{
 									GridCell<T*>* pGridCell = m_grid[hash];
-									pGridCell->TriangleList.PushBack(&TriangleList[index]);
+									pGridCell->TriangleList.PushBack(&ITriangleMesh<T, U>::TriangleList[index]);
 								}
 							}
 						}
@@ -507,9 +509,9 @@ namespace Illumina
 				BoundingBox.Intersect(p_ray, in, out);
 
 				int x, y, z;
-				
+
 				Vector3 normalisedOrigin = p_ray.PointAlongRay(in) - BoundingBox.GetMinExtent();
-				
+
 				origin.X /= CellSize.X;
 				origin.Y /= CellSize.Y;
 				origin.Z /= CellSize.Z;
@@ -548,20 +550,20 @@ namespace Illumina
 
 			// Node Type
 			TreeMeshNodeType Type;
-			
+
 			// Only if an internal node
 			HybridNode *m_pChild[2];
-			
+
 			// Only if a leaf
 			List<T> TriangleList;
- 
+
 			// Construction and destruction
 			HybridNode() { }
 			~HybridNode() { }
 		};
- 
+
 		// Bounding Volume Hierarchy Mesh
-		template<class T, class U> 
+		template<class T, class U>
 		class HybridMesh
 			: public ITriangleMesh<T, U>
 		{
@@ -570,9 +572,9 @@ namespace Illumina
 
 			int m_nMaxLeafObjects,
 				m_nMaxDepth;
- 
+
 			HybridNode<T*> m_rootNode;
- 
+
 		protected:
 			//----------------------------------------------------------------------------------------------
 			// Methods for requesting and freeing nodes
@@ -605,12 +607,12 @@ namespace Illumina
 				: m_nMaxLeafObjects(20)
 				, m_nMaxDepth(20)
 			{ }
- 
+
 			HybridMesh(int p_nMaxObjectsPerLeaf, int p_nMaxDepth = 20)
 				: m_nMaxLeafObjects(p_nMaxObjectsPerLeaf)
 				, m_nMaxDepth(p_nMaxDepth)
 			{ }
-			
+
 			~HybridMesh()
 			{
 				ReleaseNode(m_rootNode.m_pChild[0]);
@@ -620,45 +622,45 @@ namespace Illumina
 			boost::shared_ptr<ITriangleMesh<T, U>> CreateInstance(void) {
 				return boost::shared_ptr<ITriangleMesh<T, U>>(new HybridMesh<T, U>());
 			}
- 
-			bool Compile(void) 
+
+			bool Compile(void)
 			{
 				// Create a list of pointers to indexed triangles
-				int objectCount = (int)TriangleList.Size();
+				int objectCount = (int)ITriangleMesh<T, U>::TriangleList.Size();
 				List<T*> triangleList(objectCount);
- 
+
 				for (int idx = 0; idx < objectCount; idx++) {
-					triangleList.PushBack(&TriangleList[idx]);
+					triangleList.PushBack(&ITriangleMesh<T, U>::TriangleList[idx]);
 				}
- 
+
 				// Build bounding volume hierarchy
-				BuildHierarchy(&m_rootNode, triangleList, 0); 
-				
+				BuildHierarchy(&m_rootNode, triangleList, 0);
+
 				// Update Stats
 				m_statistics.m_triangleCount = objectCount;
 
 				return true;
 			}
- 
+
 			bool Intersect(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 			{
 				Ray ray(p_ray);
- 
+
 				return Intersect_Stack(&m_rootNode, ray, p_fTime, p_surface);
 			}
- 
+
 			bool Intersect(const Ray &p_ray, float p_fTime)
 			{
 				Ray ray(p_ray);
- 
+
 				return Intersect_Stack(&m_rootNode, ray, p_fTime);
 			}
- 
+
 			std::string ToString(void) const
 			{
 				return boost::str(boost::format("\nBVHMesh %s") % m_statistics.ToString());
 			}
- 
+
 		protected:
 			bool Intersect_Stack(HybridNode<T*> *p_pNode, Ray &p_ray, float p_fTime)
 			{
@@ -687,7 +689,7 @@ namespace Illumina
 							break;
 					}
 
-					if ((count = (int)pNode->TriangleList.Size()) > 0) 
+					if ((count = (int)pNode->TriangleList.Size()) > 0)
 					{
 						for (int n = 0; n < count; n++)
 						{
@@ -728,7 +730,7 @@ namespace Illumina
 							break;
 					}
 
-					if ((count = (int)pNode->TriangleList.Size()) > 0) 
+					if ((count = (int)pNode->TriangleList.Size()) > 0)
 					{
 						for (int n = 0; n < count; n++)
 						{
@@ -747,43 +749,43 @@ namespace Illumina
 			bool Intersect_Recursive(HybridNode<T*> *p_pNode, Ray &p_ray, float p_fTime)
 			{
 				float in, out;
- 
+
 				if (p_pNode->BoundingBox.Intersect(p_ray, in, out))
 				{
 					if (p_pNode->Type == TreeMeshNodeType::Internal)
 						return Intersect_Recursive(p_pNode->m_pChild[0], p_ray, p_fTime) || Intersect_Recursive(p_pNode->m_pChild[1], p_ray, p_fTime);
- 
+
 					int count = (int)p_pNode->TriangleList.Size();
 
-					if (count == 0) 
+					if (count == 0)
 						return false;
- 
+
 					for (int n = 0; n < count; n++)
 					{
 						if (p_pNode->TriangleList[n]->Intersect(p_ray, p_fTime))
 							return true;
 					}
 				}
-				
+
 				return false;
 			}
 
 			bool Intersect_Recursive(HybridNode<T*> *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 			{
 				float in, out;
- 
+
 				if (p_pNode->BoundingBox.Intersect(p_ray, in, out))
 				{
 					if (p_pNode->Type == TreeMeshNodeType::Internal)
 						return Intersect_Recursive(p_pNode->m_pChild[0], p_ray, p_fTime, p_surface) | Intersect_Recursive(p_pNode->m_pChild[1], p_ray, p_fTime, p_surface);
- 
+
 					int count = (int)p_pNode->TriangleList.Size();
- 
-					if (count == 0) 
+
+					if (count == 0)
 						return false;
- 
+
 					bool bIntersect = false;
- 
+
 					for (int n = 0; n < count; n++)
 					{
 						if (p_pNode->TriangleList[n]->Intersect(p_ray, p_fTime, p_surface))
@@ -792,27 +794,27 @@ namespace Illumina
 							bIntersect = true;
 						}
 					}
-					
+
 					return bIntersect;
 				}
-				
+
 				return false;
 			}
 
 			void ComputeBounds(const List<T*> &p_objectList, AxisAlignedBoundingBox &p_aabb)
 			{
 				p_aabb.Invalidate();
-				
+
 				if (p_objectList.Size() > 0)
 				{
 					p_aabb.ComputeFromVolume(*(p_objectList[0]->GetBoundingVolume()));
- 
+
 					for (int idx = 1, count = (int)p_objectList.Size(); idx < count; idx++) {
 						p_aabb.Union(*(p_objectList[idx]->GetBoundingVolume()));
 					}
 				}
 			}
- 
+
 			int Split(const List<T*> &p_objectList, float p_fPartition, int p_nAxis, List<T*> &p_outLeftList, List<T*> &p_outRightList)
 			{
 				int count = (int)p_objectList.Size();
@@ -820,34 +822,34 @@ namespace Illumina
 				{
 					if (p_objectList[n]->GetBoundingVolume()->GetCentre()[p_nAxis] >= p_fPartition)
 						p_outRightList.PushBack(p_objectList[n]);
-					else 
+					else
 						p_outLeftList.PushBack(p_objectList[n]);
 				}
- 
+
 				return (int)p_outLeftList.Size();
 			}
- 
+
 			float FindPartitionPlane(const List<T*> &p_objectList, int p_nAxis)
 			{
 				return FindPartitionPlane_Centroid(p_objectList, p_nAxis);
 			}
- 
+
 			float FindPartitionPlane_Centroid(const List<T*> &p_objectList, int p_nAxis)
 			{
 				// Initialise centroid for object cluster
 				Vector3 Centroid(0.0f);
- 
+
 				// Calculate cluster centroid
 				int objectCount = (int)p_objectList.Size();
 
 				AxisAlignedBoundingBox *pAABB = NULL;
- 
+
 				for (int idx = 0; idx < objectCount; idx++)
 				{
 					pAABB = (AxisAlignedBoundingBox*)p_objectList[idx]->GetBoundingVolume();
 					Vector3::Add(Centroid, pAABB->GetCentre(), Centroid);
 				}
- 
+
 				Centroid /= (float)objectCount;
 				return Centroid[p_nAxis];
 			}
@@ -855,21 +857,21 @@ namespace Illumina
 			void BuildHierarchy(HybridNode<T*> *p_pNode, List<T*> &p_objectList, int p_nAxis, int p_nDepth = 0)
 			{
 				// Update stats
-				m_statistics.m_maxTreeDepth = max(p_nDepth, m_statistics.m_maxTreeDepth);
- 
+				m_statistics.m_maxTreeDepth = std::max(p_nDepth, m_statistics.m_maxTreeDepth);
+
 				// Compute the node bounds for the given object list
 				ComputeBounds(p_objectList, p_pNode->BoundingBox);
- 
+
 				// If we have enough objects, we consider this node a leaf
 				if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxDepth)
 				{
-					p_pNode->Type = TreeMeshNodeType::Leaf; 
+					p_pNode->Type = TreeMeshNodeType::Leaf;
 					p_pNode->TriangleList.PushBack(p_objectList);
- 
+
 					m_statistics.m_leafNodeCount++;
-					m_statistics.m_minTreeDepth = min(m_statistics.m_minTreeDepth, p_nDepth);
-					m_statistics.m_minLeafTriangleCount = min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
-					m_statistics.m_maxLeafTriangleCount = max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_minTreeDepth = std::min(m_statistics.m_minTreeDepth, p_nDepth);
+					m_statistics.m_minLeafTriangleCount = std::min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_maxLeafTriangleCount = std::max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
 				}
 				else
 				{
@@ -880,13 +882,13 @@ namespace Illumina
 
 					if (leftList.Size() == 0 || rightList.Size() == 0)
 					{
-						p_pNode->Type = TreeMeshNodeType::Leaf; 
+						p_pNode->Type = TreeMeshNodeType::Leaf;
 						p_pNode->TriangleList.PushBack(p_objectList);
 
 						m_statistics.m_leafNodeCount++;
-						m_statistics.m_minTreeDepth = min(m_statistics.m_minTreeDepth, p_nDepth);
-						m_statistics.m_minLeafTriangleCount = min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
-						m_statistics.m_maxLeafTriangleCount = max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
+						m_statistics.m_minTreeDepth = std::min(m_statistics.m_minTreeDepth, p_nDepth);
+						m_statistics.m_minLeafTriangleCount = std::min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
+						m_statistics.m_maxLeafTriangleCount = std::max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
 					}
 					else
 					{
@@ -897,14 +899,14 @@ namespace Illumina
 
 						int nAxis = (p_nAxis + 1) % 3,
 							nDepth = p_nDepth + 1;
- 
+
 						BuildHierarchy(p_pNode->m_pChild[0], leftList, nAxis, nDepth);
 						BuildHierarchy(p_pNode->m_pChild[1], rightList, nAxis, nDepth);
- 
+
 						m_statistics.m_internalNodeCount++;
 					}
 				}
 			}
 		};
-	} 
+	}
 }

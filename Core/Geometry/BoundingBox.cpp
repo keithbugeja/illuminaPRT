@@ -10,10 +10,10 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-AxisAlignedBoundingBox::AxisAlignedBoundingBox(void) 
+AxisAlignedBoundingBox::AxisAlignedBoundingBox(void)
 { }
 //----------------------------------------------------------------------------------------------
-AxisAlignedBoundingBox::AxisAlignedBoundingBox(const Vector3 &p_minExtent, 
+AxisAlignedBoundingBox::AxisAlignedBoundingBox(const Vector3 &p_minExtent,
 											   const Vector3 &p_maxExtent)
 {
 	m_minExtent = Vector3::Min(p_maxExtent, p_minExtent);
@@ -23,11 +23,11 @@ AxisAlignedBoundingBox::AxisAlignedBoundingBox(const Vector3 &p_minExtent,
 }
 //----------------------------------------------------------------------------------------------
 AxisAlignedBoundingBox::AxisAlignedBoundingBox(const AxisAlignedBoundingBox &p_aabb)
-	: m_minExtent(p_aabb.m_minExtent)
+    : m_fRadius(p_aabb.m_fRadius)
+	, m_minExtent(p_aabb.m_minExtent)
 	, m_maxExtent(p_aabb.m_maxExtent)
 	, m_centre(p_aabb.m_centre)
 	, m_extent(p_aabb.m_extent)
-	, m_fRadius(p_aabb.m_fRadius)
 {
 }
 //----------------------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ void AxisAlignedBoundingBox::ComputeFromVolume(const IBoundingVolume &p_volume)
 {
 	// We only support AABBs so far, so assert type is correct
 	BOOST_ASSERT(p_volume.GetType() == AxisAlignedBox);
-	
+
 	*this = *((AxisAlignedBoundingBox*)&p_volume);
 }
 //----------------------------------------------------------------------------------------------
@@ -120,13 +120,13 @@ void AxisAlignedBoundingBox::Apply(const Transformation &p_transformation, IBoun
 		Maths::Abs(rotation._00) * extent.X + Maths::Abs(rotation._01) * extent.Y + Maths::Abs(rotation._02) * extent.Z,
 		Maths::Abs(rotation._10) * extent.X + Maths::Abs(rotation._11) * extent.Y + Maths::Abs(rotation._12) * extent.Z,
 		Maths::Abs(rotation._20) * extent.X + Maths::Abs(rotation._21) * extent.Y + Maths::Abs(rotation._22) * extent.Z
-	);	
+	);
 
 	if (p_transformation.HasScaling())
 		p_transformation.Scale(halfSize, halfSize);
 
 	AxisAlignedBoundingBox &aabb = (AxisAlignedBoundingBox&)p_out;
-	
+
 	Vector3::Subtract(centre, halfSize, aabb.m_minExtent);
 	Vector3::Add(centre, halfSize, aabb.m_maxExtent);
 
@@ -144,7 +144,7 @@ bool AxisAlignedBoundingBox::Intersects(const Ray &p_ray, float &p_hitIn, float 
 	// Implementation from http://ompf.org/ray/ray_box.html
 	// based on geimer-muller ray-box intersection
 
-	Vector3 rcpDirection = 
+	Vector3 rcpDirection =
 		Vector3(1.0f / p_ray.Direction.X,
 				1.0f / p_ray.Direction.Y,
 				1.0f / p_ray.Direction.Z);
@@ -164,7 +164,7 @@ bool AxisAlignedBoundingBox::Intersects(const Ray &p_ray, float &p_hitIn, float 
 	limitMin = Maths::Max(Maths::Min(rMin, rMax), limitMin);
 	limitMax = Maths::Min(Maths::Max(rMin, rMax), limitMax);
 
-	if (limitMin > p_ray.Max || limitMax < p_ray.Min) 
+	if (limitMin > p_ray.Max || limitMax < p_ray.Min)
 		return false;
 
 	p_hitIn = limitMin;
@@ -260,9 +260,9 @@ Plane::Side AxisAlignedBoundingBox::GetSide(const Plane &p_plane) const
 {
 	float fDistance = p_plane.GetDisplacement(m_centre);
 
-	float fAbsDistance = Maths::FAbs(p_plane.Normal.X * m_extent.X) + 
-		Maths::Abs(p_plane.Normal.Y * m_extent.Y) + 
-		Maths::Abs(p_plane.Normal.Z * m_extent.Z); 
+	float fAbsDistance = Maths::FAbs(p_plane.Normal.X * m_extent.X) +
+		Maths::Abs(p_plane.Normal.Y * m_extent.Y) +
+		Maths::Abs(p_plane.Normal.Z * m_extent.Z);
 
 	if (fDistance < -fAbsDistance)
 		return Plane::Side_Negative;
@@ -287,40 +287,40 @@ void AxisAlignedBoundingBox::GetClosestPoint(const Vector3 &p_point, Vector3 &p_
 		Maths::Min(Maths::Max(m_minExtent.Z, p_point.Z), m_maxExtent.Z));
 }
 //----------------------------------------------------------------------------------------------
-float AxisAlignedBoundingBox::GetRadius(void) const { 
-	return m_fRadius; 
+float AxisAlignedBoundingBox::GetRadius(void) const {
+	return m_fRadius;
 }
 //----------------------------------------------------------------------------------------------
 Vector3 AxisAlignedBoundingBox::GetSize(void) const {
 	return m_maxExtent - m_minExtent;
 }
 //----------------------------------------------------------------------------------------------
-Vector3 AxisAlignedBoundingBox::GetExtent(void) const { 
-	return m_extent; 
+Vector3 AxisAlignedBoundingBox::GetExtent(void) const {
+	return m_extent;
 }
 //----------------------------------------------------------------------------------------------
-Vector3 AxisAlignedBoundingBox::GetCentre(void) const { 
-	return m_centre; 
+Vector3 AxisAlignedBoundingBox::GetCentre(void) const {
+	return m_centre;
 }
 //----------------------------------------------------------------------------------------------
-Vector3 AxisAlignedBoundingBox::GetMinExtent(void) const { 
-	return m_minExtent; 
+Vector3 AxisAlignedBoundingBox::GetMinExtent(void) const {
+	return m_minExtent;
 }
 //----------------------------------------------------------------------------------------------
-void AxisAlignedBoundingBox::SetMinExtent(const Vector3 &p_minExtent) 
-{ 
-	m_minExtent = p_minExtent; 
-	Update(); 
+void AxisAlignedBoundingBox::SetMinExtent(const Vector3 &p_minExtent)
+{
+	m_minExtent = p_minExtent;
+	Update();
 }
 //----------------------------------------------------------------------------------------------
-Vector3 AxisAlignedBoundingBox::GetMaxExtent(void) const { 
-	return m_maxExtent; 
+Vector3 AxisAlignedBoundingBox::GetMaxExtent(void) const {
+	return m_maxExtent;
 }
 //----------------------------------------------------------------------------------------------
-void AxisAlignedBoundingBox::SetMaxExtent(const Vector3 &p_maxExtent) 
-{ 
-	m_maxExtent = p_maxExtent; 
-	Update(); 
+void AxisAlignedBoundingBox::SetMaxExtent(const Vector3 &p_maxExtent)
+{
+	m_maxExtent = p_maxExtent;
+	Update();
 }
 //----------------------------------------------------------------------------------------------
 void AxisAlignedBoundingBox::SetMinExtent(int p_nAxis, float p_fValue)

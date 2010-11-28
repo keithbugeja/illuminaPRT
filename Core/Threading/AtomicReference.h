@@ -16,7 +16,7 @@
 #include "System/Platform.h"
 #include "Threading/Atomic.h"
 
-namespace Illumina 
+namespace Illumina
 {
 	namespace Core
 	{
@@ -25,7 +25,7 @@ namespace Illumina
 		public:
 			inline static void* CompareAndSwap(void **p_pReference, void *p_pNewReference, void *p_pComparand)
 			{
-				#if defined(__ARCHITECTURE_X64__) 
+				#if defined(__ARCHITECTURE_X64__)
 					return (void*)AtomicInt64::CompareAndSwap((Int64*)p_pReference, (Int64)p_pNewReference, (Int64)p_pComparand);
 				#else
 					return (void*)AtomicInt32::CompareAndSwap((Int32*)p_pReference, (Int32)p_pNewReference, (Int32)p_pComparand);
@@ -34,7 +34,7 @@ namespace Illumina
 
 			inline static bool CompareAndSet(void **p_pReference, void *p_pNewReference, void *p_pComparand)
 			{
-				#if defined(__ARCHITECTURE_X64__) 
+				#if defined(__ARCHITECTURE_X64__)
 					return (Int64)p_pComparand == AtomicInt64::CompareAndSwap((Int64*)p_pReference, (Int64)p_pNewReference, (Int64)p_pComparand);
 				#else
 					return (Int32)p_pComparand == AtomicInt32::CompareAndSwap((Int32*)p_pReference, (Int32)p_pNewReference, (Int32)p_pComparand);
@@ -42,7 +42,7 @@ namespace Illumina
 			}
 		};
 
-		template<class T> 
+		template<class T>
 		struct StampedReference32
 		{
 			volatile Int32 Stamp;
@@ -56,7 +56,7 @@ namespace Illumina
 			inline Int32* GetAddress(void) { return (Int32*)(&Stamp); }
 		};
 
-		template<class T> 
+		template<class T>
 		struct StampedReference64
 		{
 			volatile Int64 Stamp;
@@ -66,7 +66,7 @@ namespace Illumina
 				: Stamp(p_stamp)
 				, Reference(p_reference)
 			{ }
-			
+
 			inline Int64* GetAddress(void) { return (Int64*)(&Stamp); }
 		};
 
@@ -77,23 +77,23 @@ namespace Illumina
 
 		public:
 			AtomicStampedReference32(void)
-				: m_stampedReference(0, NULL) 
+				: m_stampedReference(0, NULL)
 			{ }
 
 			AtomicStampedReference32(Int32 p_nStamp, T *p_pReference)
 				: m_stampedReference(p_nStamp, p_pReference)
 			{ }
 
-			bool TryStamp(T *p_pReference, Int32 p_nStamp) 
+			bool TryStamp(T *p_pReference, Int32 p_nStamp)
 			{
 				StampedReference32<T> comparand(m_stampedReference.Stamp, p_pReference);
-				return Atomic::DoubleCompareAndSwap(m_stampedReference.GetAddress(), (Int32)p_pReference, p_nStamp, comparand.GetAddress());
+				return Atomic::DoubleWidthCompareAndSwap(m_stampedReference.GetAddress(), (Int32)p_pReference, p_nStamp, comparand.GetAddress());
 			}
 
-			bool CompareAndSet(T *p_pExpectedReference, T *p_pNewReference, Int32 p_nExpectedStamp, Int32 p_nNewStamp) 
+			bool CompareAndSet(T *p_pExpectedReference, T *p_pNewReference, Int32 p_nExpectedStamp, Int32 p_nNewStamp)
 			{
 				StampedReference32<T> comparand(p_nExpectedStamp, p_pExpectedReference);
-				return Atomic::DoubleCompareAndSwap(m_stampedReference.GetAddress(), (Int32)p_pNewReference, p_nNewStamp, comparand.GetAddress());
+				return Atomic::DoubleWidthCompareAndSwap(m_stampedReference.GetAddress(), (Int32)p_pNewReference, p_nNewStamp, comparand.GetAddress());
 			}
 
 			T* Get(Int32 *p_pnStamp) const
@@ -110,7 +110,7 @@ namespace Illumina
 				return m_stampedReference.Stamp;
 			}
 
-			void Set(T *p_pReference, Int32 p_nStamp) 
+			void Set(T *p_pReference, Int32 p_nStamp)
 			{
 				m_stampedReference.Stamp = p_nStamp;
 				m_stampedReference.Reference = p_pReference;
@@ -124,23 +124,23 @@ namespace Illumina
 
 		public:
 			AtomicStampedReference64(void)
-				: m_stampedReference(0, NULL) 
+				: m_stampedReference(0, NULL)
 			{ }
 
 			AtomicStampedReference64(Int64 p_nStamp, T *p_pReference)
 				: m_stampedReference(p_nStamp, p_pReference)
 			{ }
 
-			bool TryStamp(T *p_pReference, Int64 p_nStamp) 
+			bool TryStamp(T *p_pReference, Int64 p_nStamp)
 			{
 				StampedReference64<T> comparand(m_stampedReference.Stamp, p_pReference);
-				return Atomic::DoubleCompareAndSwap(m_stampedReference.GetAddress(), (Int64)p_pReference, p_nStamp, comparand.GetAddress());
+				return Atomic::DoubleWidthCompareAndSwap(m_stampedReference.GetAddress(), (Int64)p_pReference, p_nStamp, comparand.GetAddress());
 			}
 
-			bool CompareAndSet(T *p_pExpectedReference, T *p_pNewReference, Int64 p_nExpectedStamp, Int64 p_nNewStamp) 
+			bool CompareAndSet(T *p_pExpectedReference, T *p_pNewReference, Int64 p_nExpectedStamp, Int64 p_nNewStamp)
 			{
 				StampedReference64<T> comparand(p_nExpectedStamp, p_pExpectedReference);
-				return Atomic::DoubleCompareAndSwap(m_stampedReference.GetAddress(), (Int64)p_pNewReference, p_nNewStamp, comparand.GetAddress());
+				return Atomic::DoubleWidthCompareAndSwap(m_stampedReference.GetAddress(), (Int64)p_pNewReference, p_nNewStamp, comparand.GetAddress());
 			}
 
 			T* Get(Int64 *p_pnStamp) const
@@ -157,20 +157,20 @@ namespace Illumina
 				return m_stampedReference.Stamp;
 			}
 
-			void Set(T *p_pReference, Int64 p_pnStamp) 
+			void Set(T *p_pReference, Int64 p_pnStamp)
 			{
 				m_stampedReference.Stamp = p_pnStamp;
 				m_stampedReference.Reference = p_pReference;
 			}
 		};
 
-		// Since we cannot typedef templates, create a new templated class which 
+		// Since we cannot typedef templates, create a new templated class which
 		// hides the current platform implementation
 		#if defined(__ARCHITECTURE_X64__)
-			template<class T> 
-			class AtomicStampedReference 
+			template<class T>
+			class AtomicStampedReference
 				: public AtomicStampedReference64<T>
-			{ 
+			{
 			public:
 				AtomicStampedReference(void)
 					: AtomicStampedReference64<T>()
@@ -181,11 +181,11 @@ namespace Illumina
 				{ }
 			};
 		#else
-			template<class T> 
-			class AtomicStampedReference 
+			template<class T>
+			class AtomicStampedReference
 				: public AtomicStampedReference32<T>
 			{
-			public: 
+			public:
 				AtomicStampedReference(void)
 					: AtomicStampedReference32<T>()
 				{ }

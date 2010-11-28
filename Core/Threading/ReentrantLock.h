@@ -11,9 +11,9 @@
 
 #include "Threading/Lock.h"
 
-namespace Illumina 
+namespace Illumina
 {
-	namespace Core 
+	namespace Core
 	{
 		class ReentrantLock : public ILock
 		{
@@ -22,14 +22,14 @@ namespace Illumina
 
 		public:
 			ReentrantLock(void) {
-				m_lock.initialize();
+				//m_lock.initialize();
 			}
 
 			~ReentrantLock(void) {
-				m_lock.destroy();
+				//m_lock.destroy();
 			}
-			
-			inline bool TryLock(void) 
+
+			inline bool TryLock(void)
 			{
 				return m_lock.try_lock();
 			}

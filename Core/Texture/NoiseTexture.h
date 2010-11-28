@@ -9,7 +9,7 @@
 #include "Texture/Texture.h"
 #include "Texture/Noise.h"
 
-namespace Illumina 
+namespace Illumina
 {
 	namespace Core
 	{
@@ -29,9 +29,9 @@ namespace Illumina
 			}
 
 			NoiseTexture(const RGBPixel &p_c0, const RGBPixel &p_c1, float p_fScale = 1.0f)
-				: m_c0(p_c0)
+				: m_fScale(p_fScale)
+				, m_c0(p_c0)
 				, m_c1(p_c1)
-				, m_fScale(p_fScale)
 			{ }
 
 			RGBPixel GetValue(const Vector2& p_uv, const Vector3 &p_hitPoint) const
@@ -40,5 +40,5 @@ namespace Illumina
 				return t * m_c0 + (1.0f - t) * m_c1;
 			}
 		};
-	} 
+	}
 }
