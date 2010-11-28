@@ -14,7 +14,7 @@
 
 #include "Exception/Exception.h"
 
-namespace Illumina 
+namespace Illumina
 {
 	namespace Core
 	{
@@ -26,13 +26,13 @@ namespace Illumina
 			void *Item;
 
 			QueueNode(void)
-				: Item(NULL)
-				, Next(0, NULL)
+				: Next(0, NULL)
+				, Item(NULL)
 			{ NodeInstanceCount++; }
 
 			QueueNode(void *p_pItem, QueueNode *p_pNext = NULL)
-				: Item(p_pItem)
-				, Next(0, p_pNext)
+				: Next(0, p_pNext)
+				, Item(p_pItem)
 			{ NodeInstanceCount++; }
 
 			~QueueNode()
@@ -47,7 +47,7 @@ namespace Illumina
 			AtomicStampedReference<QueueNode> m_tail;
 
 			boost::thread_specific_ptr< std::vector<QueueNode*> > m_freeNodeList;
-		
+
 		protected:
 			QueueNode* AllocateNode(void)
 			{
@@ -57,7 +57,7 @@ namespace Illumina
 				if (m_freeNodeList.get() == NULL)
 				{
 					m_freeNodeList.reset(new std::vector<QueueNode*>);
-					std::cout<<"Created Free Node List for Thread : " << GetCurrentThreadId() << " at " << m_freeNodeList.get() <<std::endl;
+					// std::cout<<"Created Free Node List for Thread : " << GetCurrentThreadId() << " at " << m_freeNodeList.get() <<std::endl;
 				}
 
 				// Do we have any node in the list?
@@ -68,7 +68,7 @@ namespace Illumina
 				}
 				else
 					pNode = new QueueNode();
-				
+
 				return pNode;
 			}
 
@@ -78,7 +78,7 @@ namespace Illumina
 				if (m_freeNodeList.get() == NULL)
 				{
 					m_freeNodeList.reset(new std::vector<QueueNode*>);
-					std::cout<<"Created Free Node List for Thread : " << GetCurrentThreadId() << " at " << m_freeNodeList.get() <<std::endl;
+					//std::cout<<"Created Free Node List for Thread : " << GetCurrentThreadId() << " at " << m_freeNodeList.get() <<std::endl;
 				}
 
 				m_freeNodeList.get()->push_back(p_pNode);
@@ -122,14 +122,14 @@ namespace Illumina
 						if (pNext == NULL)
 						{
 							// Make last.next to point to the newly created node
-							if (pTail->Next.CompareAndSet(pNext, pNode, nextStamp, nextStamp + 1)) 
+							if (pTail->Next.CompareAndSet(pNext, pNode, nextStamp, nextStamp + 1))
 							{
 								// Update the tail to point to the newly created node too
 								m_tail.CompareAndSet(pTail, pNode, tailStamp, tailStamp + 1);
 								return;
 							}
-						} 
-						else 
+						}
+						else
 						{
 							// Help other thread completing the switch such that tail = tail->next
 							m_tail.CompareAndSet(pTail, pNext, tailStamp, tailStamp + 1);
@@ -141,7 +141,7 @@ namespace Illumina
 			void* Dequeue(void)
 			{
 				QueueNode *pHead, *pTail, *pNext;
-				
+
 				#if defined(__ARCHITECTURE_X64__)
 					Int64 headStamp, tailStamp, nextStamp;
 				#else
@@ -153,7 +153,7 @@ namespace Illumina
 					pHead = m_head.Get(&headStamp);
 					pTail = m_tail.Get(&tailStamp);
 					pNext = pHead->Next.Get(&nextStamp);
-					
+
 					// Check if pFirst has changed - if so, pNext might be invalid
 					if (pHead == m_head.GetReference() && headStamp == m_head.GetStamp())
 					{
@@ -166,7 +166,7 @@ namespace Illumina
 							// Queue is not empty - there is a pending operation, which we help to complete
 							m_tail.CompareAndSet(pTail, pNext, tailStamp, tailStamp + 1);
 						}
-						else 
+						else
 						{
 							// Retrieve item from node
 							void *pItem = pNext->Item;

@@ -15,7 +15,7 @@
 #include "Shape/VertexFormats.h"
 #include "Threading/List.h"
 
-namespace Illumina 
+namespace Illumina
 {
 	namespace Core
 	{
@@ -30,7 +30,8 @@ namespace Illumina
 
 				std::ofstream meshFile;
 
-				meshFile.open(p_strMeshFile, std::ios::binary | std::ios::trunc);
+                meshFile.open(p_strMeshFile.c_str(), std::ios::binary | std::ios::trunc);
+				//meshFile.open(p_strMeshFile, std::ios::binary | std::ios::trunc);
 
 				if (!meshFile.is_open())
 				{
@@ -39,14 +40,14 @@ namespace Illumina
 
 				for (int n = 0; n < nVertices; n++)
 				{
-					meshFile << "v " << p_pMesh->VertexList[n].Position.X << " " << 
+					meshFile << "v " << p_pMesh->VertexList[n].Position.X << " " <<
 						p_pMesh->VertexList[n].Position.Y << " " <<
 						p_pMesh->VertexList[n].Position.Z << std::endl;
 				}
 
 				for (int n = 0; n < nTriangles; n++)
 				{
-					meshFile << "f " << (p_pMesh->TriangleList[n].GetVertexIndex(0) + 1) << " " << 
+					meshFile << "f " << (p_pMesh->TriangleList[n].GetVertexIndex(0) + 1) << " " <<
 						(p_pMesh->TriangleList[n].GetVertexIndex(1) + 1) << " " <<
 						(p_pMesh->TriangleList[n].GetVertexIndex(2) + 1) << std::endl;
 				}
@@ -54,13 +55,13 @@ namespace Illumina
 				meshFile.close();
 			}
 
-			// Quick and dirty obj loader : 
+			// Quick and dirty obj loader :
 			// TODO: Make a ModelIO interface and provide an obj implementation
 			template<class TMesh, class TVertex>
 			static boost::shared_ptr<TMesh> LoadMesh(const std::string& p_strMeshFile)
 			{
 				boost::shared_ptr<TMesh> mesh(new TMesh);
-				
+
 				std::ifstream meshFile;
 
 				// Open image file
@@ -91,16 +92,16 @@ namespace Illumina
 
 							mesh->AddVertex(vertex);
 							break;
-						
-						case 'f':
-							for (char* p = strLine; *p != '\0'; p++) if (*p == '/') *p = 32; 
 
-							sscanf(strLine, "%c %d %d %d %d %d %d %d %d %d", 
-								&cDummy, 
+						case 'f':
+							for (char* p = strLine; *p != '\0'; p++) if (*p == '/') *p = 32;
+
+							sscanf(strLine, "%c %d %d %d %d %d %d %d %d %d",
+								&cDummy,
 								&v1, &iDummy, &iDummy,
 								&v2, &iDummy, &iDummy,
 								&v3, &iDummy, &iDummy);
-							
+
 							mesh->AddIndexedTriangle(v1 - 1, v2 - 1, v3 - 1);
 							break;
 
@@ -112,7 +113,7 @@ namespace Illumina
 				return mesh;
 			}
 
-			template<class TMesh, class TVertex> 
+			template<class TMesh, class TVertex>
 			static boost::shared_ptr<TMesh> CreateBox(const Vector3 &p_minExtent, const Vector3 &p_maxExtent)
 			{
 				boost::shared_ptr<TMesh> mesh(new TMesh);
@@ -180,5 +181,5 @@ namespace Illumina
 				return mesh;
 			}
 		};
-	} 
+	}
 }

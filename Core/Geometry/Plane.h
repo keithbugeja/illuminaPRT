@@ -30,19 +30,19 @@ namespace Illumina
 			};
 
 		public:
-			Plane(void) { }	
+			Plane(void) { }
 
-			Plane(const Plane &p_plane) 
+			Plane(const Plane &p_plane)
 				: Distance( p_plane.Distance)
 				, Normal( p_plane.Normal )
 			{ }
 
-			Plane(const Vector3 &p_normal, float p_fDistance) 
-				: Normal(p_normal)
-				, Distance(p_fDistance) 
+			Plane(const Vector3 &p_normal, float p_fDistance)
+				: Distance(p_fDistance)
+				, Normal(p_normal)
 			{ }
 
-			Plane(const Vector3 &p_normal, const Vector3 &p_point) 
+			Plane(const Vector3 &p_normal, const Vector3 &p_point)
 			{
 				// This should formally be transcribed as:
 				// TVector3<TReal> P = p_planePoint - p_planePoint.Origin;
@@ -53,14 +53,14 @@ namespace Illumina
 				Normal = p_normal;
 			}
 
-			Plane(const Vector3 &p_point1, const Vector3 &p_point2, const Vector3 &p_point3) 
+			Plane(const Vector3 &p_point1, const Vector3 &p_point2, const Vector3 &p_point3)
 			{
 				// N = norm(AB x AC)
 				// D = (A - O) . N
 
 				Vector3 AB = p_point2 - p_point1,
 						AC = p_point3 - p_point1;
-		
+
 				Vector3::Cross(AB, AC, Normal);
 				Normal.Normalize();
 
@@ -110,12 +110,12 @@ namespace Illumina
 				// (P - dN) . N = 0
 				Vector3 P = p_vector - (Distance * Normal);
 				int nDotSign = Maths::ISgn(P.Dot(Normal));
-		
+
 				if ( nDotSign == -1 )
 					return Side_Negative;
 				else if (nDotSign == 1)
 					return Side_Positive;
-		
+
 				// Co-planar
 				return Side_Neither;
 			}
@@ -139,7 +139,7 @@ namespace Illumina
 
 					return Side_Neither;
 				}
-		
+
 				return Side_Both;
 			}
 
@@ -156,7 +156,7 @@ namespace Illumina
 			}
 
 		public:
-			float	Distance;	
+			float	Distance;
 			Vector3 Normal;
 		};
 	}

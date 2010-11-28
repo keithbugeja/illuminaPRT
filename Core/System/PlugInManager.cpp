@@ -4,8 +4,6 @@
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-#pragma once
-
 #include "PlugInManager.h"
 
 using namespace Illumina::Core;
@@ -16,7 +14,7 @@ using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 PlugInManager::PlugInManager(EngineKernel* p_pEngineKernel)
 	: m_pEngineKernel(p_pEngineKernel)
-{ 
+{
 	BOOST_ASSERT(p_pEngineKernel != NULL);
 }
 //----------------------------------------------------------------------------------------------
@@ -33,10 +31,10 @@ void PlugInManager::AddPlugIn(IPlugIn *p_pPlugIn)
 void PlugInManager::RemovePlugIn(IPlugIn *p_pPlugIn)
 {
 	std::vector<IPlugIn*>::iterator plugInIterator = FindPlugIn(p_pPlugIn);
-	
+
 	if (plugInIterator == m_plugInArray.end())
 		throw new Exception("Plug-In does is not registered with Plug-In Manager!");
-	
+
 	m_plugInArray.erase(plugInIterator);
 }
 //----------------------------------------------------------------------------------------------
@@ -74,7 +72,7 @@ IPlugIn* PlugInManager::Load(const std::string& p_strLibrary)
 void PlugInManager::Unload(const std::string& p_strLibrary)
 {
 	IPlugIn* pPlugIn = m_libraryManager.GetPlugInSingleton(p_strLibrary);
-	
+
 	if (pPlugIn != NULL)
 	{
 		Unregister(pPlugIn);

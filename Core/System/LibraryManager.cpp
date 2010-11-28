@@ -6,7 +6,7 @@
 //----------------------------------------------------------------------------------------------
 #include "LibraryImpl.h"
 #include "LibraryManager.h"
-#include "Exception\Exception.h"
+#include "Exception/Exception.h"
 
 using namespace Illumina::Core;
 
@@ -18,7 +18,7 @@ ILibrary* LibraryManager::CreateLibrary()
 {
 	#ifdef __PLATFORM_WINDOWS__
 		return new LibraryImplementation();
-	#else			
+	#else
 		throw new Exception("No Library System defined for platform!", __FILE__, __LINE__);
 	#endif
 }
@@ -31,11 +31,11 @@ ILibrary* LibraryManager::CreateLibrary()
 bool LibraryManager::Load(const std::string& p_strName)
 {
 	ILibrary* pLibrary = CreateLibrary();
-	
+
 	if (!pLibrary->Load(p_strName))
 		return false;
 
-	m_libraryMap[p_strName] = pLibrary; 
+	m_libraryMap[p_strName] = pLibrary;
 	return true;
 }
 
@@ -54,8 +54,8 @@ void LibraryManager::Unload(const std::string& p_strName)
 }
 
 //----------------------------------------------------------------------------------------------
-/// Returns the <b>singleton</b> instance to the PlugIn loaded by the specified 
-///	dynamic library. 
+/// Returns the <b>singleton</b> instance to the PlugIn loaded by the specified
+///	dynamic library.
 ///	\param p_strName Dynamic library file
 /// \return Pointer to PlugIn instance
 //----------------------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ Illumina::Core::IPlugIn* LibraryManager::GetPlugInSingleton(const std::string& p
 
 	SYMBOL_SINGLE_GET GetPlugInSingleton = (SYMBOL_SINGLE_GET)pLibrary->GetSymbol("GetPlugInSingleton");
 	BOOST_ASSERT(GetPlugInSingleton != NULL);
-	
+
 	Illumina::Core::IPlugIn* pPlugIn = GetPlugInSingleton();
 	return pPlugIn;
 }
@@ -85,7 +85,7 @@ void LibraryManager::DisposePlugInSingleton(const std::string& p_strName)
 
 		SYMBOL_SINGLE_DISPOSE DisposePlugInSingleton = (SYMBOL_SINGLE_DISPOSE)pLibrary->GetSymbol("DisposePlugInSingleton");
 		BOOST_ASSERT(DisposePlugInSingleton != NULL);
-		
+
 		DisposePlugInSingleton();
 	}
 }
@@ -101,10 +101,10 @@ PlugInHandle LibraryManager::CreatePlugInInstance(const std::string& p_strName)
 		return NULL;
 
 	ILibrary* pLibrary = m_libraryMap[p_strName];
-	
+
 	SYMBOL_MULTI_CREATE CreatePlugInInstance = (SYMBOL_MULTI_CREATE)pLibrary->GetSymbol("CreatePlugInInstance");
 	BOOST_ASSERT(CreatePlugInInstance != NULL);
-	
+
 	return CreatePlugInInstance();
 }
 
@@ -123,7 +123,7 @@ IPlugIn* LibraryManager::GetPlugInInstance(const std::string& p_strName, PlugInH
 
 	SYMBOL_MULTI_GET GetPlugInInstance = (SYMBOL_MULTI_GET)pLibrary->GetSymbol("GetPlugInInstance");
 	BOOST_ASSERT(GetPlugInInstance != NULL);
-	
+
 	return GetPlugInInstance( p_hInstance );
 }
 
@@ -137,10 +137,10 @@ void LibraryManager::DisposePlugInInstance(const std::string& p_strName, PlugInH
 	if (m_libraryMap.find(p_strName) != m_libraryMap.end())
 	{
 		ILibrary* pLibrary = m_libraryMap[p_strName];
-	
+
 		SYMBOL_MULTI_DISPOSE DisposePlugInInstance = (SYMBOL_MULTI_DISPOSE)pLibrary->GetSymbol("DisposePlugInInstance");
 		BOOST_ASSERT(DisposePlugInInstance != NULL);
-		
+
 		DisposePlugInInstance( p_hInstance );
 	}
 }
@@ -154,10 +154,10 @@ void LibraryManager::DisposePlugInInstances(const std::string& p_strName)
 	if (m_libraryMap.find(p_strName) != m_libraryMap.end())
 	{
 		ILibrary* pLibrary = m_libraryMap[p_strName];
-	
+
 		SYMBOL_MULTI_DISPOSEALL DisposePlugInInstances = (SYMBOL_MULTI_DISPOSEALL)pLibrary->GetSymbol("DisposePlugInInstances");
 		BOOST_ASSERT(DisposePlugInInstances != NULL);
-		
+
 		DisposePlugInInstances();
 	}
 }
