@@ -513,7 +513,7 @@ namespace Illumina
 			void BuildHierarchy_S1(BIHNode<T*> *p_pNode, List<T*> &p_objectList, AxisAlignedBoundingBox &p_aabb, int p_nAxis, int p_nDepth = 0)
 			{
 				// Update stats
-				m_statistics.m_maxTreeDepth = std::max(p_nDepth, m_statistics.m_maxTreeDepth);
+				m_statistics.m_maxTreeDepth = Maths::Max(p_nDepth, m_statistics.m_maxTreeDepth);
 
 				ComputeBounds(p_objectList, p_pNode->BoundingBox);
 
@@ -526,9 +526,9 @@ namespace Illumina
 					p_pNode->TriangleList.PushBack(p_objectList);
 
 					m_statistics.m_leafNodeCount++;
-					m_statistics.m_minTreeDepth = std::min<int>(m_statistics.m_minTreeDepth, p_nDepth);
-					m_statistics.m_minLeafTriangleCount = std::min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
-					m_statistics.m_maxLeafTriangleCount = std::max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_minTreeDepth = Maths::Min(m_statistics.m_minTreeDepth, p_nDepth);
+					m_statistics.m_minLeafTriangleCount = Maths::Min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_maxLeafTriangleCount = Maths::Max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
 				}
 				else
 				{
@@ -571,7 +571,7 @@ namespace Illumina
 			void BuildHierarchy_S2(BIHNode<T*> *p_pNode, List<T*> &p_objectList, int p_nAxis, int p_nDepth = 0)
 			{
 				// Update stats
-				m_statistics.m_maxTreeDepth = std::max(p_nDepth, m_statistics.m_maxTreeDepth);
+				m_statistics.m_maxTreeDepth = Maths::Min(p_nDepth, m_statistics.m_maxTreeDepth);
 
 				ComputeBounds(p_objectList, p_pNode->BoundingBox);
 
@@ -583,9 +583,9 @@ namespace Illumina
 					p_pNode->TriangleList.PushBack(p_objectList);
 
 					m_statistics.m_leafNodeCount++;
-					m_statistics.m_minTreeDepth = std::min(m_statistics.m_minTreeDepth, p_nDepth);
-					m_statistics.m_minLeafTriangleCount = std::min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
-					m_statistics.m_maxLeafTriangleCount = std::max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_minTreeDepth = Maths::Min(m_statistics.m_minTreeDepth, p_nDepth);
+					m_statistics.m_minLeafTriangleCount = Maths::Min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_maxLeafTriangleCount = Maths::Min(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
 				}
 				else
 				{
@@ -1068,7 +1068,7 @@ namespace Illumina
 			void BuildHierarchy_S1(BIHNode<T*> *p_pNode, List<T*> &p_objectList, AxisAlignedBoundingBox &p_aabb, int p_nAxis, int p_nDepth = 0)
 			{
 				// Update stats
-				m_statistics.m_maxTreeDepth = std::max(p_nDepth, m_statistics.m_maxTreeDepth);
+				m_statistics.m_maxTreeDepth = Maths::Min(p_nDepth, m_statistics.m_maxTreeDepth);
 
 				ComputeBounds(p_objectList, p_pNode->BoundingBox);
 
@@ -1080,9 +1080,9 @@ namespace Illumina
 					p_pNode->TriangleList.PushBack(p_objectList);
 
 					m_statistics.m_leafNodeCount++;
-					m_statistics.m_minTreeDepth = std::min(m_statistics.m_minTreeDepth, p_nDepth);
-					m_statistics.m_minLeafTriangleCount = std::min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
-					m_statistics.m_maxLeafTriangleCount = std::max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_minTreeDepth = Maths::Min(m_statistics.m_minTreeDepth, p_nDepth);
+					m_statistics.m_minLeafTriangleCount = Maths::Min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_maxLeafTriangleCount = Maths::Min(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
 				}
 				else
 				{
@@ -1125,7 +1125,7 @@ namespace Illumina
 			void BuildHierarchy_S2(BIHNode<T*> *p_pNode, List<T*> &p_objectList, int p_nAxis, int p_nDepth = 0)
 			{
 				// Update stats
-				m_statistics.m_maxTreeDepth = std::max(p_nDepth, m_statistics.m_maxTreeDepth);
+				m_statistics.m_maxTreeDepth = Maths::Min(p_nDepth, m_statistics.m_maxTreeDepth);
 
 				ComputeBounds(p_objectList, p_pNode->BoundingBox);
 
@@ -1137,9 +1137,9 @@ namespace Illumina
 					p_pNode->TriangleList.PushBack(p_objectList);
 
 					m_statistics.m_leafNodeCount++;
-					m_statistics.m_minTreeDepth = std::min(m_statistics.m_minTreeDepth, p_nDepth);
-					m_statistics.m_minLeafTriangleCount = std::min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
-					m_statistics.m_maxLeafTriangleCount = std::max(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_minTreeDepth = Maths::Min(m_statistics.m_minTreeDepth, p_nDepth);
+					m_statistics.m_minLeafTriangleCount = Maths::Min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
+					m_statistics.m_maxLeafTriangleCount = Maths::Min(m_statistics.m_maxLeafTriangleCount, (int)p_objectList.Size());
 				}
 				else
 				{
