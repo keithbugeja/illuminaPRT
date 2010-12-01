@@ -25,7 +25,7 @@ namespace Illumina
 		{
 			// Node Type
 			TreeMeshNodeType Type;
- 
+
 			// Node bounding box
 			AxisAlignedBoundingBox BoundingBox;
 
@@ -37,10 +37,10 @@ namespace Illumina
 
 			// Only if an internal node
 			KDTreeNode *m_pChild[2];
-			
+
 			// Only if a leaf
 			List<T> TriangleList;
- 
+
 			// Constructor
 			KDTreeNode() { }
 			~KDTreeNode() { }
@@ -131,16 +131,16 @@ namespace Illumina
 				// Create a list of pointers to indexed triangles
 				int objectCount = (int)ITriangleMesh<T, U>::TriangleList.Size();
 				List<T*> triangleList(objectCount);
- 
+
 				for (int idx = 0; idx < objectCount; idx++) {
 					triangleList.PushBack(&ITriangleMesh<T, U>::TriangleList[idx]);
 				}
- 
+
 				// Build bounding volume hierarchy
 				ComputeBounds(triangleList, m_rootNode.BoundingBox);
 				m_nMinNodeWidth = m_rootNode.BoundingBox.GetRadius() / 1000.0f;
 				BuildHierarchy(&m_rootNode, triangleList, 0); 
-				
+
 				// Update Stats
 				m_statistics.m_triangleCount = objectCount;
 
@@ -148,25 +148,25 @@ namespace Illumina
 
 				return true;
 			}
-		
+
 			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface, float &p_fTestDensity)
 			{
 				Ray ray(p_ray);
- 
+
 				return Intersect_Stack(&m_rootNode, ray, p_fTime, p_surface);
 			}
 
 			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 			{
 				Ray ray(p_ray);
- 
+
 				return Intersect_Stack(&m_rootNode, ray, p_fTime, p_surface);
 			}
- 
+
 			bool Intersects(const Ray &p_ray, float p_fTime)
 			{
 				Ray ray(p_ray);
- 
+
 				return Intersect_Recursive(&m_rootNode, ray, p_fTime);
 			}
 
@@ -347,21 +347,21 @@ namespace Illumina
 
 				if (p_pNode->BoundingBox.Intersects(p_ray, in, out))
 				{
-					if (p_pNode->Type == TreeMeshNodeType::Internal)
+					if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 						return Intersect_Recursive(p_pNode->m_pChild[0], p_ray, p_fTime) || Intersect_Recursive(p_pNode->m_pChild[1], p_ray, p_fTime);
- 
+
 					int count = (int)p_pNode->TriangleList.Size();
 
 					if (count == 0) 
 						return false;
- 
+
 					for (int n = 0; n < count; n++)
 					{
 						if (p_pNode->TriangleList[n]->Intersects(p_ray, p_fTime))
 							return true;
 					}
 				}
-				
+
 				return false;
 			}
 
@@ -380,7 +380,7 @@ namespace Illumina
 							intercept = p_ray.Origin[p_pNode->Axis] + in * direction;
 
 						int halfspace = (intercept > p_pNode->Partition);
-						
+
 						if (direction != 0.0f)
 						{
 							float tSplit = in + (p_pNode->Partition - intercept) / direction;
@@ -390,7 +390,7 @@ namespace Illumina
 								return Intersect_Recursive(p_pNode->m_pChild[halfspace], p_ray, p_fTime, p_surface);
 							else
 								return Intersect_Recursive(p_pNode->m_pChild[halfspace], p_ray, p_fTime, p_surface) || 
-									Intersect_Recursive(p_pNode->m_pChild[halfspace^1], p_ray, p_fTime, p_surface);
+								Intersect_Recursive(p_pNode->m_pChild[halfspace^1], p_ray, p_fTime, p_surface);
 						}
 						else
 						{
@@ -401,7 +401,7 @@ namespace Illumina
 					// Test geometry at leaf
 					bool bIntersect = false;
 					int count = (int)p_pNode->TriangleList.Size();
- 
+
 					if (count > 0)
 					{
 						for (int n = 0; n < count; n++)
@@ -418,18 +418,18 @@ namespace Illumina
 
 					return bIntersect;
 				}
-				
+
 				return false;
 			}
 
 			void ComputeBounds(const List<T*> &p_objectList, AxisAlignedBoundingBox &p_aabb)
 			{
 				p_aabb.Invalidate();
-				
+
 				if (p_objectList.Size() > 0)
 				{
 					p_aabb.ComputeFromVolume(*(p_objectList[0]->GetBoundingVolume()));
- 
+
 					for (int idx = 1, count = (int)p_objectList.Size(); idx < count; idx++) {
 						p_aabb.Union(*(p_objectList[idx]->GetBoundingVolume()));
 					}
@@ -533,7 +533,7 @@ namespace Illumina
 
 				int minBins[Bins], 
 					maxBins[Bins];
-				
+
 				for (int j = 0; j < Bins; j++)
 					maxBins[j] = minBins[j] = 0;
 
@@ -566,13 +566,13 @@ namespace Illumina
 				for (int j = 0; j < Bins; j++)
 				{
 					leftPrims = rightPrims = 1;
-					
+
 					for (int k = 0; k <=j; k++)
 						leftPrims += minBins[k];
 
 					for (int k = j; k < Bins; k++)
 						rightPrims += maxBins[k];
-					
+
 					cost = (float)((rightPrims * (Bins - j) + leftPrims * j)) / Bins;
 					//cost = (float)rightPrims / (float)(j) + 
 					//	(float)leftPrims / (float)(Bins - j);
@@ -605,14 +605,14 @@ namespace Illumina
 			{
 				// Update stats
 				m_statistics.m_maxTreeDepth = Maths::Min(p_nDepth, m_statistics.m_maxTreeDepth);
- 
+
 				// If we have enough objects, we consider this node a leaf
 				if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxTreeDepth || p_pNode->BoundingBox.GetRadius() <= m_nMinNodeWidth)
 				{
 					//std::cout << "Adding leaf node [" << p_objectList.Size() << ", " << p_nDepth << "]" << std::endl;
 					p_pNode->Type = /*TreeMeshNodeType::*/Leaf; 
 					p_pNode->TriangleList.PushBack(p_objectList);
- 
+
 					m_statistics.m_leafNodeCount++;
 					m_statistics.m_minTreeDepth = Maths::Min(m_statistics.m_minTreeDepth, p_nDepth);
 					m_statistics.m_minLeafTriangleCount = Maths::Min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
@@ -624,10 +624,10 @@ namespace Illumina
 					p_pNode->Type = /*TreeMeshNodeType::*/Internal;
 					p_pNode->Axis = p_nAxis;
 					p_pNode->Partition = FindPartitionPlane(p_objectList, p_pNode->BoundingBox, p_nAxis);
-					
+
 					List<T*> leftList, rightList;
 					leftList.Clear(); rightList.Clear(); 
- 
+
 					p_pNode->m_pChild[0] = RequestNode();
 					p_pNode->m_pChild[1] = RequestNode();
 
@@ -645,10 +645,10 @@ namespace Illumina
 
 					int nAxis = (p_nAxis + 1) % 3,
 						nDepth = p_nDepth + 1;
- 
+
 					BuildHierarchy_S2(p_pNode->m_pChild[0], leftList, nAxis, nDepth);
 					BuildHierarchy_S2(p_pNode->m_pChild[1], rightList, nAxis, nDepth);
- 
+
 					m_statistics.m_internalNodeCount++;
 				}
 			}

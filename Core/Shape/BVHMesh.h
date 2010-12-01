@@ -29,18 +29,18 @@ namespace Illumina
 
 			// Node Type
 			TreeMeshNodeType Type;
-			
+
 			// Only if an internal node
 			BVHNode *m_pChild[2];
-			
+
 			// Only if a leaf
 			List<T> TriangleList;
- 
+
 			// Construction and destruction
 			BVHNode() { }
 			~BVHNode() { }
 		};
- 
+
 		// Bounding Volume Hierarchy Mesh
 		template<class T, class U> 
 		class BVHMesh
@@ -51,9 +51,9 @@ namespace Illumina
 
 			int m_nMaxLeafObjects,
 				m_nMaxDepth;
- 
+
 			BVHNode<T*> m_rootNode;
- 
+
 		protected:
 			//----------------------------------------------------------------------------------------------
 			// Methods for requesting and freeing nodes
@@ -67,7 +67,7 @@ namespace Illumina
 			{
 				int nodesFreed = 0;
 
-				if (p_pNode->Type == TreeMeshNodeType::Internal)
+				if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 				{
 					nodesFreed += ReleaseNode(p_pNode->m_pChild[0]);
 					nodesFreed += ReleaseNode(p_pNode->m_pChild[1]);
@@ -86,12 +86,12 @@ namespace Illumina
 				: m_nMaxLeafObjects(20)
 				, m_nMaxDepth(20)
 			{ }
- 
+
 			BVHMesh(int p_nMaxObjectsPerLeaf, int p_nMaxDepth = 20)
 				: m_nMaxLeafObjects(p_nMaxObjectsPerLeaf)
 				, m_nMaxDepth(p_nMaxDepth)
 			{ }
-			
+
 			~BVHMesh()
 			{
 				ReleaseNode(m_rootNode.m_pChild[0]);
@@ -101,45 +101,45 @@ namespace Illumina
 			boost::shared_ptr<ITriangleMesh<T, U>> CreateInstance(void) {
 				return boost::shared_ptr<ITriangleMesh<T, U>>(new BVHMesh<T, U>());
 			}
- 
+
 			bool Compile(void) 
 			{
 				// Create a list of pointers to indexed triangles
 				int objectCount = (int)ITriangleMesh<T, U>::TriangleList.Size();
 				List<T*> triangleList(objectCount);
- 
+
 				for (int idx = 0; idx < objectCount; idx++) {
 					triangleList.PushBack(&ITriangleMesh<T, U>::TriangleList[idx]);
 				}
- 
+
 				// Build bounding volume hierarchy
 				BuildHierarchy(&m_rootNode, triangleList, 0); 
-				
+
 				// Update Stats
 				m_statistics.m_triangleCount = objectCount;
 
 				return true;
 			}
- 
+
 			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 			{
 				Ray ray(p_ray);
- 
+
 				return Intersect_Stack(&m_rootNode, ray, p_fTime, p_surface);
 			}
- 
+
 			bool Intersects(const Ray &p_ray, float p_fTime)
 			{
 				Ray ray(p_ray);
- 
+
 				return Intersect_Stack(&m_rootNode, ray, p_fTime);
 			}
- 
+
 			std::string ToString(void) const
 			{
 				return boost::str(boost::format("\nBVHMesh %s") % m_statistics.ToString());
 			}
- 
+
 		protected:
 			bool Intersect_Stack(BVHNode<T*> *p_pNode, Ray &p_ray, float p_fTime)
 			{
@@ -228,43 +228,43 @@ namespace Illumina
 			bool Intersect_Recursive(BVHNode<T*> *p_pNode, Ray &p_ray, float p_fTime)
 			{
 				float in, out;
- 
+
 				if (p_pNode->BoundingBox.Intersect(p_ray, in, out))
 				{
 					if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 						return Intersect_Recursive(p_pNode->m_pChild[0], p_ray, p_fTime) || Intersect_Recursive(p_pNode->m_pChild[1], p_ray, p_fTime);
- 
+
 					int count = (int)p_pNode->TriangleList.Size();
 
 					if (count == 0) 
 						return false;
- 
+
 					for (int n = 0; n < count; n++)
 					{
 						if (p_pNode->TriangleList[n]->Intersect(p_ray, p_fTime))
 							return true;
 					}
 				}
-				
+
 				return false;
 			}
 
 			bool Intersect_Recursive(BVHNode<T*> *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 			{
 				float in, out;
- 
+
 				if (p_pNode->BoundingBox.Intersect(p_ray, in, out))
 				{
 					if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 						return Intersect_Recursive(p_pNode->m_pChild[0], p_ray, p_fTime, p_surface) | Intersect_Recursive(p_pNode->m_pChild[1], p_ray, p_fTime, p_surface);
- 
+
 					int count = (int)p_pNode->TriangleList.Size();
- 
+
 					if (count == 0) 
 						return false;
- 
+
 					bool bIntersect = false;
- 
+
 					for (int n = 0; n < count; n++)
 					{
 						if (p_pNode->TriangleList[n]->Intersect(p_ray, p_fTime, p_surface))
@@ -273,27 +273,27 @@ namespace Illumina
 							bIntersect = true;
 						}
 					}
-					
+
 					return bIntersect;
 				}
-				
+
 				return false;
 			}
 
 			void ComputeBounds(const List<T*> &p_objectList, AxisAlignedBoundingBox &p_aabb)
 			{
 				p_aabb.Invalidate();
-				
+
 				if (p_objectList.Size() > 0)
 				{
 					p_aabb.ComputeFromVolume(*(p_objectList[0]->GetBoundingVolume()));
- 
+
 					for (int idx = 1, count = (int)p_objectList.Size(); idx < count; idx++) {
 						p_aabb.Union(*(p_objectList[idx]->GetBoundingVolume()));
 					}
 				}
 			}
- 
+
 			int Split(const List<T*> &p_objectList, float p_fPartition, int p_nAxis, List<T*> &p_outLeftList, List<T*> &p_outRightList)
 			{
 				int count = (int)p_objectList.Size();
@@ -304,31 +304,31 @@ namespace Illumina
 					else 
 						p_outLeftList.PushBack(p_objectList[n]);
 				}
- 
+
 				return (int)p_outLeftList.Size();
 			}
- 
+
 			float FindPartitionPlane(const List<T*> &p_objectList, int p_nAxis)
 			{
 				return FindPartitionPlane_Centroid(p_objectList, p_nAxis);
 			}
- 
+
 			float FindPartitionPlane_Centroid(const List<T*> &p_objectList, int p_nAxis)
 			{
 				// Initialise centroid for object cluster
 				Vector3 Centroid(0.0f);
- 
+
 				// Calculate cluster centroid
 				int objectCount = (int)p_objectList.Size();
 
 				AxisAlignedBoundingBox *pAABB = NULL;
- 
+
 				for (int idx = 0; idx < objectCount; idx++)
 				{
 					pAABB = (AxisAlignedBoundingBox*)p_objectList[idx]->GetBoundingVolume();
 					Vector3::Add(Centroid, pAABB->GetCentre(), Centroid);
 				}
- 
+
 				Centroid /= (float)objectCount;
 				return Centroid[p_nAxis];
 			}
@@ -337,16 +337,16 @@ namespace Illumina
 			{
 				// Update stats
 				m_statistics.m_maxTreeDepth = Maths::Max(p_nDepth, m_statistics.m_maxTreeDepth);
- 
+
 				// Compute the node bounds for the given object list
 				ComputeBounds(p_objectList, p_pNode->BoundingBox);
- 
+
 				// If we have enough objects, we consider this node a leaf
 				if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxDepth)
 				{
 					p_pNode->Type = /*TreeMeshNodeType::*/Leaf; 
 					p_pNode->TriangleList.PushBack(p_objectList);
- 
+
 					m_statistics.m_leafNodeCount++;
 					m_statistics.m_minTreeDepth = Maths::Min(m_statistics.m_minTreeDepth, p_nDepth);
 					m_statistics.m_minLeafTriangleCount = Maths::Min(m_statistics.m_minLeafTriangleCount, (int)p_objectList.Size());
@@ -378,10 +378,10 @@ namespace Illumina
 
 						int nAxis = (p_nAxis + 1) % 3,
 							nDepth = p_nDepth + 1;
- 
+
 						BuildHierarchy(p_pNode->m_pChild[0], leftList, nAxis, nDepth);
 						BuildHierarchy(p_pNode->m_pChild[1], rightList, nAxis, nDepth);
- 
+
 						m_statistics.m_internalNodeCount++;
 					}
 				}

@@ -9,27 +9,27 @@
 #include <boost/format.hpp>
 #include <boost/shared_ptr.hpp>
 
-namespace Illumina 
+namespace Illumina
 {
 	namespace Core
 	{
 		class Exception
 		{
-		private: 
-			int m_nSourceLine;
-			std::string m_strSourceFile;
+		private:
 			std::string m_strMessage;
+			std::string m_strSourceFile;
+			int m_nSourceLine;
 			Exception* m_pInnerException;
 
 		public: // public methods
-			Exception(const std::string &p_strMessage, 
+			Exception(const std::string &p_strMessage,
 				const std::string &p_strSourceFile,
 				int p_nSourceLine,
 				const Exception* p_pInnerException);
-			Exception(const std::string &p_strMessage, 
+			Exception(const std::string &p_strMessage,
 				const std::string &p_strSourceFile,
 				int p_nSourceLine);
-			Exception(const std::string &p_strMessage, 
+			Exception(const std::string &p_strMessage,
 				const Exception* p_pInnerException);
 			Exception(const std::string &p_strMessage);
 			Exception(const char *p_szMessage);
@@ -42,5 +42,5 @@ namespace Illumina
 			const Exception* GetInnerException(void) const;
 			std::string GetMessageTrace(void) const;
 		};
-	} 
+	}
 }

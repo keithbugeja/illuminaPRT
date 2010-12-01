@@ -13,9 +13,9 @@
 using namespace Illumina::Core;
 
 //----------------------------------------------------------------------------------------------
-Exception::Exception(const std::string &p_strMessage, 
-	const std::string &p_strSourceFile, 
-	int p_nSourceLine, 
+Exception::Exception(const std::string &p_strMessage,
+	const std::string &p_strSourceFile,
+	int p_nSourceLine,
 	const Exception* p_pInnerException)
 	: m_strMessage(p_strMessage)
 	, m_strSourceFile(p_strSourceFile)
@@ -23,8 +23,8 @@ Exception::Exception(const std::string &p_strMessage,
 	, m_pInnerException((Exception*) p_pInnerException)
 { }
 //----------------------------------------------------------------------------------------------
-Exception::Exception(const std::string &p_strMessage, 
-	const std::string &p_strSourceFile, 
+Exception::Exception(const std::string &p_strMessage,
+	const std::string &p_strSourceFile,
 	int p_nSourceLine)
 	: m_strMessage(p_strMessage)
 	, m_strSourceFile(p_strSourceFile)
@@ -85,14 +85,14 @@ std::string Exception::GetMessageTrace(void) const
 	if (m_pInnerException == NULL)
 	{
 		return boost::str(
-			boost::format("%s [Source : %s Line : %d]") 
+			boost::format("%s [Source : %s Line : %d]")
 				% m_strMessage % m_strSourceFile % m_nSourceLine);
 	}
 	else
 	{
 		return boost::str(
-			boost::format("%s [Source : %s Line : %d] Inner Exception : ") 
-				% m_strMessage % m_strSourceFile % m_nSourceLine 
+			boost::format("%s [Source : %s Line : %d] Inner Exception : ")
+				% m_strMessage % m_strSourceFile % m_nSourceLine
 				% m_pInnerException->GetMessageTrace());
 	}
 }

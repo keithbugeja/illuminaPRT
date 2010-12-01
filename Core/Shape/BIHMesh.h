@@ -68,7 +68,7 @@ namespace Illumina
 			{
 				int nodesFreed = 0;
 
-				if (p_pNode->Type == TreeMeshNodeType::Internal)
+				if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 				{
 					nodesFreed += ReleaseNode(p_pNode->m_pChild[0]);
 					nodesFreed += ReleaseNode(p_pNode->m_pChild[1]);
@@ -193,7 +193,7 @@ namespace Illumina
 					return false;
 
 				// Internal node
-				if (p_pNode->Type == TreeMeshNodeType::Internal)
+				if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 				{
 					BIHNode<T*> *pLeftNode,
 						*pRightNode;
@@ -281,7 +281,7 @@ namespace Illumina
 					return false;
 
 				// Internal node
-				if (p_pNode->Type == TreeMeshNodeType::Internal)
+				if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 				{
 					BIHNode<T*> *pLeftNode,
 						*pRightNode;
@@ -521,7 +521,7 @@ namespace Illumina
 				if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxTreeDepth)
 				{
 					//std::cout << "Adding leaf node [" << p_objectList.Size() << ", " << p_nDepth << "]" << std::endl;
-					p_pNode->Type = TreeMeshNodeType::Leaf;
+					p_pNode->Type = /*TreeMeshNodeType::*/Leaf;
 					p_pNode->Axis = p_nAxis;
 					p_pNode->TriangleList.PushBack(p_objectList);
 
@@ -545,7 +545,7 @@ namespace Illumina
 					leftAABB.SetMaxExtent(p_nAxis, fSplitPlane);
 					rightAABB.SetMinExtent(p_nAxis, fSplitPlane);
 
-					p_pNode->Type = TreeMeshNodeType::Internal;
+					p_pNode->Type = /*TreeMeshNodeType::*/Internal;
 					p_pNode->Axis = p_nAxis;
 
 					p_pNode->m_pChild[0] = RequestNode();
@@ -579,7 +579,7 @@ namespace Illumina
 				if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxTreeDepth)
 				{
 					//std::cout << "Adding leaf node [" << p_objectList.Size() << ", " << p_nDepth << "]" << std::endl;
-					p_pNode->Type = TreeMeshNodeType::Leaf;
+					p_pNode->Type = /*TreeMeshNodeType::*/Leaf;
 					p_pNode->TriangleList.PushBack(p_objectList);
 
 					m_statistics.m_leafNodeCount++;
@@ -594,7 +594,7 @@ namespace Illumina
 					float fSplitPlane = FindPartitionPlane(p_objectList, p_nAxis);
 					Split(p_objectList, fSplitPlane, p_nAxis, p_pNode->Clip[0], p_pNode->Clip[1], leftList, rightList);
 
-					p_pNode->Type = TreeMeshNodeType::Internal;
+					p_pNode->Type = /*TreeMeshNodeType::*/Internal;
 					p_pNode->Axis = p_nAxis;
 
 					p_pNode->m_pChild[0] = RequestNode();
@@ -633,7 +633,7 @@ namespace Illumina
 			{
 				int nodesFreed = 0;
 
-				if (p_pNode->Type == TreeMeshNodeType::Internal)
+				if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 				{
 					nodesFreed += ReleaseNode(p_pNode->m_pChild[0]);
 					nodesFreed += ReleaseNode(p_pNode->m_pChild[1]);
@@ -748,7 +748,7 @@ namespace Illumina
 					return false;
 
 				// Internal node
-				if (p_pNode->Type == TreeMeshNodeType::Internal)
+				if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 				{
 					BIHNode<T*> *pLeftNode,
 						*pRightNode;
@@ -836,7 +836,7 @@ namespace Illumina
 					return false;
 
 				// Internal node
-				if (p_pNode->Type == TreeMeshNodeType::Internal)
+				if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
 				{
 					BIHNode<T*> *pLeftNode,
 						*pRightNode;
@@ -1076,7 +1076,7 @@ namespace Illumina
 				if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxTreeDepth)
 				{
 					//std::cout << "Adding leaf node [" << p_objectList.Size() << ", " << p_nDepth << "]" << std::endl;
-					p_pNode->Type = TreeMeshNodeType::Leaf;
+					p_pNode->Type = /*TreeMeshNodeType::*/Leaf;
 					p_pNode->TriangleList.PushBack(p_objectList);
 
 					m_statistics.m_leafNodeCount++;
@@ -1099,7 +1099,7 @@ namespace Illumina
 					leftAABB.SetMaxExtent(p_nAxis, fSplitPlane);
 					rightAABB.SetMinExtent(p_nAxis, fSplitPlane);
 
-					p_pNode->Type = TreeMeshNodeType::Internal;
+					p_pNode->Type = /*TreeMeshNodeType::*/Internal;
 					p_pNode->Axis = p_nAxis;
 
 					p_pNode->m_pChild[0] = RequestNode();
@@ -1133,7 +1133,7 @@ namespace Illumina
 				if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxTreeDepth)
 				{
 					//std::cout << "Adding leaf node [" << p_objectList.Size() << ", " << p_nDepth << "]" << std::endl;
-					p_pNode->Type = TreeMeshNodeType::Leaf;
+					p_pNode->Type = /*TreeMeshNodeType::*/Leaf;
 					p_pNode->TriangleList.PushBack(p_objectList);
 
 					m_statistics.m_leafNodeCount++;
@@ -1148,7 +1148,7 @@ namespace Illumina
 					float fSplitPlane = FindPartitionPlane(p_objectList, p_nAxis);
 					Split(p_objectList, fSplitPlane, p_nAxis, p_pNode->Clip[0], p_pNode->Clip[1], leftList, rightList);
 
-					p_pNode->Type = TreeMeshNodeType::Internal;
+					p_pNode->Type = /*TreeMeshNodeType::*/Internal;
 					p_pNode->Axis = p_nAxis;
 
 					p_pNode->m_pChild[0] = RequestNode();
