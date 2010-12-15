@@ -36,7 +36,7 @@ void BasicRenderer::Render(void)
 		{
 			Ray ray = m_pCamera->GetRay(((float)x) / width, ((float)y) / height, 0.5f, 0.5f);
 			Spectrum Li = m_pIntegrator->Radiance(m_pScene, ray, intersection);
-			m_pDevice->Set(x, y, Li);
+			m_pDevice->Set(x, height - (y + 1), Li);
 		}
 	}
 

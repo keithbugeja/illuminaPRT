@@ -41,8 +41,6 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 		{
 			Spectrum lightLi = p_pScene->LightList[j]->Radiance(p_intersection.Surface.Point, wOut, visibilityQuery);				
 
-			lightLi = 1.0f;
-
 			if (!visibilityQuery.IsOccluded())
 			{
 				wOut.Normalize();
