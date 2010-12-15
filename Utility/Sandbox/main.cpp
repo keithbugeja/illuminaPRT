@@ -977,7 +977,7 @@ void RayTracer(int p_nOMPThreads)
 	//----------------------------------------------------------------------------------------------
 	// Scene creation complete
 	//----------------------------------------------------------------------------------------------
-	PointLight pointLight(Vector3(0,5,0), RGBSpectrum(1,1,1));
+	PointLight pointLight(Vector3(0,5,0), RGBSpectrum(100,100,100));
  
 	Scene scene(&basicSpace);
 	scene.LightList.PushBack(&pointLight);
