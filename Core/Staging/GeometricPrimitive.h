@@ -27,9 +27,8 @@ namespace Illumina
 			boost::shared_ptr<IBoundingVolume> GetWorldBounds(void) const;
 			inline bool IsBounded(void) const { return (m_pShape != NULL && m_pShape->IsBounded()); }
 
-			bool Intersect(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface, float &p_fTestDensity) const;
-			bool Intersect(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface) const;
-			bool Intersect(const Ray &p_ray, float p_fTime) const;
+			bool Intersect(const Ray &p_ray, float p_fTime, Intersection &p_intersection);
+			bool Intersect(const Ray &p_ray, float p_fTime);
 
 			std::string ToString(void) const;
 		};

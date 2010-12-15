@@ -24,8 +24,7 @@ namespace Illumina
 			virtual void Update(void) = 0;
 			virtual void Build(void) = 0;
 
-			virtual bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface& p_surface, float& p_fTestDensity) { return Intersects(p_ray, p_fTime, p_surface); }
-			virtual bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface) const = 0;
+			virtual bool Intersects(const Ray &p_ray, float p_fTime, Intersection &p_intersection) const = 0;
 			virtual bool Intersects(const Ray &p_ray, float p_fTime) const = 0;
 
 			virtual std::string ToString(void) const { return "ISpace"; }

@@ -19,7 +19,7 @@ namespace Illumina
 				Shallow
 			};
 
-			virtual ICloneable* Clone(CloneType p_cloneType, ICloneable* p_out = NULL) {
+			virtual ICloneable* Clone(CloneType p_cloneType = Deep, ICloneable* p_out = NULL) {
 				throw new Exception("Method not supported!");
 			}
 		};
