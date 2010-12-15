@@ -8,9 +8,10 @@
 
 #include <vector>
 
+#include "System/IlluminaPRT.h"
+#include "System/LibraryManager.h"
 #include "Exception/Exception.h"
-#include "LibraryManager.h"
-
+//----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core

@@ -8,6 +8,7 @@
 
 #include "Geometry/BoundingVolume.h"
 
+//----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
 	namespace Core

@@ -4,8 +4,8 @@
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-#include "LibraryImpl.h"
-#include "LibraryManager.h"
+#include "System/LibraryImpl.h"
+#include "System/LibraryManager.h"
 #include "Exception/Exception.h"
 
 using namespace Illumina::Core;

@@ -13,7 +13,9 @@ namespace Illumina
 		{
 		private:
 			ISpace *m_pSpace;
-			List<ILight*> m_lightList;
+			
+		public:
+			List<ILight*> LightList;			
 
 		public:
 			Scene(void);
@@ -24,8 +26,6 @@ namespace Illumina
 			
 			ISpace* GetSpace(void);
 			void SetSpace(ISpace *p_pSpace);
-
-			List<ILight*>& GetLightList(void);
 		};
 	}
 }

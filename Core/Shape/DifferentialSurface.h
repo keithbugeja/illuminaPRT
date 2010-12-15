@@ -7,22 +7,21 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+#include "System/IlluminaPRT.h"
+
 #include "Geometry/Ray.h"
 #include "Geometry/Basis.h"
-
 #include "Image/RGBPixel.h"
-
+//----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
 	namespace Core
 	{
-		class Shape;
-
 		/* Structure describing a surface point */
 		class DifferentialSurface
 		{
 		protected:
-			Shape *m_pShape;
+			IShape *m_pShape;
 
 		public:
 			/* Surface info in local space */
@@ -44,11 +43,11 @@ namespace Illumina
 		public:
 			DifferentialSurface() {}
 
-			inline void SetShape(const Shape *p_pShape) { 
-				m_pShape = (Shape*)p_pShape; 
+			inline void SetShape(const IShape *p_pShape) { 
+				m_pShape = (IShape*)p_pShape; 
 			}
 
-			inline Shape* GetShape(void) const { 
+			inline IShape* GetShape(void) const { 
 				return m_pShape; 
 			}
 		};

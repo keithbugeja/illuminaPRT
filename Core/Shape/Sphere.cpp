@@ -55,7 +55,7 @@ bool Sphere::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_
 			return false;
 
 
-		p_surface.SetShape((Shape*)this);
+		p_surface.SetShape((IShape*)this);
 		p_surface.Distance = (float)t;
 		p_surface.Point = p_ray.PointAlongRay((float)t);
 		Vector3::Subtract(p_surface.Point, Centre, p_surface.Normal);

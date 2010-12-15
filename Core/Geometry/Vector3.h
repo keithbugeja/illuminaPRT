@@ -7,12 +7,11 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-#include <boost/format.hpp>
+#include "System/IlluminaPRT.h"
 
 #include "Maths/Maths.h"
-#include "System/Platform.h"
 #include "Threading/List.h"
-
+//----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
 	namespace Core

@@ -3,11 +3,9 @@
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
-//	Implementation for Rays in R3
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-#include <boost/format.hpp>
 #include "Camera/Camera.h"
 
 namespace Illumina 

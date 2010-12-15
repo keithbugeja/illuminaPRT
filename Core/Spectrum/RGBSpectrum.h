@@ -1,7 +1,13 @@
+//----------------------------------------------------------------------------------------------
+//	Filename:	RGBSpectrum.h
+//	Author:		Keith Bugeja
+//	Date:		27/02/2010
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 #pragma once
 
 #include "Spectrum/BaseSpectrum.h"
-
+//----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
@@ -71,6 +77,13 @@ namespace Illumina
 				if (Maths::FAbs(m_fSamples[2]) > Maths::Epsilon) return false;
 
 				return true;
+			}
+
+			RGBSpectrum& operator=(float p_fValue)
+			{
+				m_fSamples[0] = m_fSamples[1] = m_fSamples[2] = p_fValue;
+
+				return *this;
 			}
 
 			RGBSpectrum& operator=(const RGBSpectrum &p_spectrum)
@@ -146,7 +159,7 @@ namespace Illumina
 				else if (m_fSamples[2] > p_fMax) m_fSamples[2] = p_fMax;
 			}
 
-			std::string ToString(void)
+			std::string ToString(void) const
 			{
 				std::string strOut = boost::str(boost::format("[%d %d %d]") % m_fSamples[0] % m_fSamples[1] % m_fSamples[2]);
 				return strOut;

@@ -1,5 +1,14 @@
-#include "Geometry/Ray.h"
+//----------------------------------------------------------------------------------------------
+//	Filename:	Visibility.h
+//	Author:		Keith Bugeja
+//	Date:		27/02/2010
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+#pragma once
 
+#include "System/IlluminaPRT.h"
+#include "Geometry/Ray.h"
+//----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
@@ -18,7 +27,7 @@ namespace Illumina
 			VisibilityQuery(Scene *p_pScene, const Vector3 &p_segmentStart, const Vector3 &p_segmentEnd);
 			VisibilityQuery(Scene *p_pScene, const Vector3 &p_segmentStart, float p_fEpsilonStart, const Vector3 &p_segmentEnd, float p_fEpsilonEnd);
 
-			bool IsOccluded(); 
+			bool IsOccluded(void); 
 
 			void SetSegment(const Vector3 &p_segmentStart, const Vector3 &p_segmentEnd);
 			void SetSegment(const Vector3 &p_segmentStart, float p_fEpsilonStart, const Vector3 &p_segmentEnd, float p_fEpsilonEnd);

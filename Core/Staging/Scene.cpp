@@ -29,8 +29,3 @@ void Scene::SetSpace(ISpace *p_pSpace)
 {
 	m_pSpace = p_pSpace;
 }
-
-List<ILight*>& Scene::GetLightList(void)
-{
-	return m_lightList;
-}

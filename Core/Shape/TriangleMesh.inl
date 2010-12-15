@@ -17,11 +17,6 @@ void ITriangleMesh<T, U>::ComputeBoundingVolume(void)
 {
 	m_boundingBox.Invalidate();
 
-	//for (int nIdx = 0; nIdx < VertexList.Size(); nIdx++)
-	//{
-	//	m_boundingBox.Union(VertexList[nIdx].Position);
-	//}
-
 	for (int nIdx = 0, count = (int)TriangleList.Size(); nIdx < count; nIdx++)
 	{
 		T& triangle = TriangleList.At(nIdx);

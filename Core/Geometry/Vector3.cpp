@@ -25,7 +25,6 @@ Vector3::Vector3(const Vector3 &p_vector)
 //----------------------------------------------------------------------------------------------
 std::string Vector3::ToString(void) const
 {
-	boost::format("[%d %d %d]") % X % Y % Z;
 	std::string strOut = boost::str(boost::format("[%d %d %d]") % X % Y % Z);
 	return strOut;
 }

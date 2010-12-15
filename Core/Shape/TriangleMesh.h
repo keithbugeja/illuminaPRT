@@ -21,7 +21,7 @@ namespace Illumina
 		// T = IndexedTriangle derivative
 		// U = VertexBase derivative
 		template<class T, class U> class ITriangleMesh
-			: public Shape
+			: public IShape
 		{
 		protected:
 			AxisAlignedBoundingBox m_boundingBox;

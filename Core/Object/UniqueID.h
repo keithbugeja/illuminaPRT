@@ -11,11 +11,10 @@
 #pragma once
 
 #include <boost/format.hpp>
-#include <boost/shared_ptr.hpp>
 
-#include "System/Platform.h"
+#include "System/IlluminaPRT.h"
 #include "Threading/Atomic.h"
-
+//----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
 	namespace Core
