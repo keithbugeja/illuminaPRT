@@ -10,6 +10,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Space/Space.h"
+#include "Geometry/Intersection.h"
 
 namespace Illumina 
 {
@@ -19,33 +20,21 @@ namespace Illumina
 			: public ISpace
 		{
 		public:
-			void Initialise(void) 
-			{
-				for (int primitiveIdx = 0, count = (int)PrimitiveList.Size(); primitiveIdx < count; primitiveIdx++)
-				{
-				}
-			}
+			void Initialise(void)  { }
 
 			void Build(void) { }
 			void Update(void) { }
 
-			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface& p_surface, float& p_fTestDensity) 
-			{
-				p_fTestDensity = 0.0f;
-
-				return Intersects(p_ray, p_fTime, p_surface);
-			}
-
-			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface) const
+			bool Intersects(const Ray &p_ray, float p_fTime, Intersection &p_intersection) const
 			{
 				Ray ray(p_ray);
 				bool bHit = false;
 
 				for (int primitiveIdx = 0, count = (int)PrimitiveList.Size(); primitiveIdx < count; primitiveIdx++)
 				{
-					if (PrimitiveList[primitiveIdx]->Intersect(ray, p_fTime, p_surface))
+					if (PrimitiveList[primitiveIdx]->Intersect(ray, p_fTime, p_intersection))
 					{
-						ray.Max = p_surface.Distance;
+						ray.Max = p_intersection.GetDifferentialSurface().Distance;
 						bHit = true;
 					}
 				}

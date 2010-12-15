@@ -188,7 +188,6 @@ namespace Illumina
 
 			std::string ToString(void)
 			{
-				boost::format formatter;
 				std::string strOut = boost::str(boost::format("[%d %d]") % X % Y);
 				return strOut;
 			}
