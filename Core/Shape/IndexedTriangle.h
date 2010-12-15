@@ -16,7 +16,7 @@ namespace Illumina
 	namespace Core
 	{
 		template <class TVertex> class IndexedTriangle 
-			: public Shape
+			: public IShape
 		{
 		protected:
 			ITriangleMesh<IndexedTriangle, TVertex> *m_pMesh;

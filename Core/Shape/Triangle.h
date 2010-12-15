@@ -14,7 +14,7 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class Triangle : public Shape
+		class Triangle : public IShape
 		{
 		protected:
 			AxisAlignedBoundingBox	m_boundingBox;

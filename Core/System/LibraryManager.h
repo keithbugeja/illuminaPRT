@@ -8,10 +8,11 @@
 
 #include <map>
 
-#include "LibrarySymbols.h"
-#include "Library.h"
-#include "PlugIn.h"
-
+#include "System/IlluminaPRT.h"
+#include "System/LibrarySymbols.h"
+#include "System/Library.h"
+#include "System/PlugIn.h"
+//----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
 	namespace Core 

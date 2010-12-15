@@ -21,7 +21,7 @@ namespace Illumina
 	namespace Core
 	{
 		/* Base class for all shape primitives */
-		class Shape
+		class IShape
 		{
 		public:
 			virtual bool IsBounded(void) const = 0;
@@ -41,7 +41,7 @@ namespace Illumina
 			virtual bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface& p_surface) = 0;
 			virtual bool Intersects(const Ray &p_ray, float p_fTime) = 0;
 
-			virtual std::string ToString(void) const { return "Shape"; };
+			virtual std::string ToString(void) const { return "[IShape]"; };
 		};
 	} 
 }

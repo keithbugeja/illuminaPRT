@@ -3,10 +3,14 @@
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
-//	Description goes here...
 //----------------------------------------------------------------------------------------------
-#include "Geometry/BoundingBox.h"
 #include <iostream>
+
+#include "Geometry/BoundingBox.h"
+#include "Geometry/Ray.h"
+#include "Geometry/Plane.h"
+#include "Geometry/Interval.h"
+#include "Geometry/Transform.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -23,7 +27,7 @@ AxisAlignedBoundingBox::AxisAlignedBoundingBox(const Vector3 &p_minExtent,
 }
 //----------------------------------------------------------------------------------------------
 AxisAlignedBoundingBox::AxisAlignedBoundingBox(const AxisAlignedBoundingBox &p_aabb)
-    : m_fRadius(p_aabb.m_fRadius)
+	: m_fRadius(p_aabb.m_fRadius)
 	, m_minExtent(p_aabb.m_minExtent)
 	, m_maxExtent(p_aabb.m_maxExtent)
 	, m_centre(p_aabb.m_centre)
@@ -379,3 +383,4 @@ std::string AxisAlignedBoundingBox::ToString(void) const
 	std::string strOut = boost::str(boost::format("[%s - %s]") % m_minExtent.ToString() % m_maxExtent.ToString());
 	return strOut;
 }
+//----------------------------------------------------------------------------------------------

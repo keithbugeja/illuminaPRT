@@ -118,19 +118,32 @@
     <ClCompile Include="..\..\..\..\Core\Camera\Camera.cpp" />
     <ClCompile Include="..\..\..\..\Core\Camera\PerspectiveCamera.cpp" />
     <ClCompile Include="..\..\..\..\Core\Camera\ThinLensCamera.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Device\ImageDevice.cpp" />
     <ClCompile Include="..\..\..\..\Core\Exception\Exception.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Filter\BoxFilter.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Filter\TentFilter.cpp" />
     <ClCompile Include="..\..\..\..\Core\Geometry\Basis.cpp" />
     <ClCompile Include="..\..\..\..\Core\Geometry\BoundingBox.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Intersection.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Interval.cpp" />
     <ClCompile Include="..\..\..\..\Core\Geometry\Matrix3x3.cpp" />
     <ClCompile Include="..\..\..\..\Core\Geometry\Matrix4x4.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Plane.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Ray.cpp" />
     <ClCompile Include="..\..\..\..\Core\Geometry\Transform.cpp" />
     <ClCompile Include="..\..\..\..\Core\Geometry\Vector2.cpp" />
     <ClCompile Include="..\..\..\..\Core\Geometry\Vector3.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Image\Image.cpp" />
     <ClCompile Include="..\..\..\..\Core\Image\RGBPixel.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Integrator\WhittedIntegrator.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Light\PointLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Maths\Maths.cpp" />
     <ClCompile Include="..\..\..\..\Core\Maths\Random.cpp" />
     <ClCompile Include="..\..\..\..\Core\Object\Object.cpp" />
     <ClCompile Include="..\..\..\..\Core\Object\UniqueID.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Renderer\BasicRenderer.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Sampler\JitterSampler.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Sampler\RandomSampler.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Sphere.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Triangle.cpp" />
     <ClCompile Include="..\..\..\..\Core\Staging\GeometricPrimitive.cpp" />
@@ -151,10 +164,11 @@
     <ClInclude Include="..\..\..\..\Core\Device\ImageDevice.h" />
     <ClInclude Include="..\..\..\..\Core\Distributed\Tile.h" />
     <ClInclude Include="..\..\..\..\Core\Exception\Exception.h" />
+    <ClInclude Include="..\..\..\..\Core\Filter\BoxFilter.h" />
     <ClInclude Include="..\..\..\..\Core\Filter\Filter.h" />
+    <ClInclude Include="..\..\..\..\Core\Filter\TentFilter.h" />
     <ClInclude Include="..\..\..\..\Core\Geometry\Basis.h" />
     <ClInclude Include="..\..\..\..\Core\Geometry\BoundingBox.h" />
-    <ClInclude Include="..\..\..\..\Core\Geometry\BoundingSphere.h" />
     <ClInclude Include="..\..\..\..\Core\Geometry\BoundingVolume.h" />
     <ClInclude Include="..\..\..\..\Core\Geometry\Intersection.h" />
     <ClInclude Include="..\..\..\..\Core\Geometry\Interval.h" />
@@ -179,7 +193,10 @@
     <ClInclude Include="..\..\..\..\Core\Object\Cloneable.h" />
     <ClInclude Include="..\..\..\..\Core\Object\Object.h" />
     <ClInclude Include="..\..\..\..\Core\Object\UniqueID.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\BasicRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\Renderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\JitterSampler.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\RandomSampler.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\Sampler.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\BasicMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\BIHMesh.h" />
@@ -204,7 +221,6 @@
     <ClInclude Include="..\..\..\..\Core\Spectrum\Spectrum.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\Aggregate.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\GeometricPrimitive.h" />
-    <ClInclude Include="..\..\..\..\Core\Staging\OctreeAggregate.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\Primitive.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\Scene.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\Visibility.h" />
@@ -213,6 +229,7 @@
     <ClInclude Include="..\..\..\..\Core\System\EngineKernel.h" />
     <ClInclude Include="..\..\..\..\Core\System\Factory.h" />
     <ClInclude Include="..\..\..\..\Core\System\FactoryManager.h" />
+    <ClInclude Include="..\..\..\..\Core\System\IlluminaPRT.h" />
     <ClInclude Include="..\..\..\..\Core\System\Library.h" />
     <ClInclude Include="..\..\..\..\Core\System\LibraryImpl.h" />
     <ClInclude Include="..\..\..\..\Core\System\LibraryManager.h" />
@@ -240,7 +257,12 @@
     <ClInclude Include="..\..\..\..\Core\Threading\WorkQueue.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\Core\Geometry\Basis.inl" />
+    <None Include="..\..\..\..\Core\Geometry\Interval.inl" />
+    <None Include="..\..\..\..\Core\Geometry\Plane.inl" />
+    <None Include="..\..\..\..\Core\Geometry\Ray.inl" />
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl" />
+    <None Include="..\..\..\..\Core\Image\Image.inl" />
     <None Include="..\..\..\..\Core\Object\Object.inl" />
     <None Include="..\..\..\..\Core\Shape\IndexedTriangle.inl" />
     <None Include="..\..\..\..\Core\Shape\TriangleMesh.inl" />

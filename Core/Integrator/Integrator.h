@@ -1,15 +1,18 @@
+//----------------------------------------------------------------------------------------------
+//	Filename:	Integrator.h
+//	Author:		Keith Bugeja
+//	Date:		27/02/2010
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 #pragma once
 
-#include "Geometry/Ray.h"
-
+#include "System/IlluminaPRT.h"
+//#include "Geometry/Ray.h"
+//----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
 	{
-		class Scene;
-		class ICamera;
-		class Intersection;
-
 		class IIntegrator
 		{
 		public:

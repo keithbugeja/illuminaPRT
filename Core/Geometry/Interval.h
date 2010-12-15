@@ -7,11 +7,9 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-#include <boost/format.hpp>
-
 #include "Maths/Maths.h"
 #include "Threading/List.h"
-
+//----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
 	namespace Core
@@ -26,77 +24,33 @@ namespace Illumina
 			};
 
 		public:
-			Interval() {}
-			Interval(float p_fValue) 
-				: Min(p_fValue), Max(p_fValue) {}
-			Interval(float p_fMin, float p_fMax) 
-				: Min(p_fMin), Max(p_fMax) {}
-			Interval(const Interval& p_interval) 
-				: Min(p_interval.Min), Max(p_interval.Max) {}
+			Interval(void);
+			Interval(float p_fValue);
+			Interval(float p_fMin, float p_fMax);
+			Interval(const Interval& p_interval); 
 
-			float operator[](int p_nIndex) const { return Element[p_nIndex]; }
-			float& operator[](int p_nIndex) { return Element[p_nIndex]; }
+			float operator[](int p_nIndex) const;
+			float& operator[](int p_nIndex);
 
-			inline void Set(float p_fValue) {
-				Min = Max = p_fValue;
-			}
+			inline void Set(float p_fValue);
+			inline void Set(float p_fMin, float p_fMax);
 
-			inline void Set(float p_fMin, float p_fMax) {
-				Min = p_fMin; Max = p_fMax;
-			}
-	
-			Interval& operator=(const Interval &p_interval)
-			{
-				Min = p_interval.Min;
-				Max = p_interval.Max;
-				
-				return *this;
-			}
+			inline Interval& operator=(const Interval &p_interval);
+			inline bool operator==(const Interval &p_interval) const;
+			inline bool operator!=(const Interval& p_interval) const;
 
-			inline bool operator==(const Interval &p_interval) const
-			{
-				if (Min != p_interval.Min) return false;
-				if (Max != p_interval.Max) return false;
+			inline void Extend(float p_fValue);
+			inline float Median(void) const;
+			inline float Span(void) const;
 
-				return true;
-			}
+			inline bool Intersects(const Interval& p_interval) const;
+			inline bool Contains(float p_fValue) const;
 
-			inline bool operator!=(const Interval& p_interval) const {
-				return !(*this == p_interval);
-			}
-
-			inline void Extend(float p_fValue) 
-			{
-				if (Min > p_fValue) Min = p_fValue;
-				if (Max < p_fValue) Max = p_fValue;
-			}
-
-			inline float Median(void) const {
-				return (Min + Max) * 0.5f;
-			}
-
-			inline float Span(void) const {
-				return Max - Min;
-			}
-
-			inline bool Intersects(const Interval& p_interval) const
-			{
-				return Max >= p_interval.Min && Min <= p_interval.Max;
-			}
-
-			inline bool Contains(float p_fValue) const
-			{
-				return Min <= p_fValue && p_fValue <= Max;
-			}
-
-			std::string ToString(void)
-			{
-				boost::format formatter;
-				std::string strOut = boost::str(boost::format("[%d %d]") % Min % Max);
-				return strOut;
-			}
+			std::string ToString(void) const;
 		};
 
 		typedef List<Interval> IntervalList;
 	}
 }
+
+#include "Geometry/Interval.inl"

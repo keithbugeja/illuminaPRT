@@ -1,3 +1,6 @@
+#pragma once
+
+/*
 #include "Object/object.h"
 #include "Geometry/vector2.h"
 #include "Geometry/ray.h"
@@ -70,3 +73,4 @@ namespace Illumina
 		};
 	}
 }
+*/

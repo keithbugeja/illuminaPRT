@@ -1,16 +1,13 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	CollectionPrimitive.h
+//	Filename:	Aggregate.h
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-#include <boost/format.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include "Staging/Primitive.h"
-
+//----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
 	namespace Core
@@ -22,7 +19,7 @@ namespace Illumina
 
 			virtual void Prepare(void) { };
 
-			std::string ToString(void) const { return "Aggregate"; }
+			std::string ToString(void) const { return "[Aggregate]"; }
 		};
 	} 
 }

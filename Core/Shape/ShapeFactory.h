@@ -31,7 +31,6 @@ namespace Illumina
 				std::ofstream meshFile;
 
                 meshFile.open(p_strMeshFile.c_str(), std::ios::binary | std::ios::trunc);
-				//meshFile.open(p_strMeshFile, std::ios::binary | std::ios::trunc);
 
 				if (!meshFile.is_open())
 				{

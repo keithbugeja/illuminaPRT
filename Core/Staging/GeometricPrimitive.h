@@ -6,26 +6,28 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-#include <boost/format.hpp>
-#include <boost/shared_ptr.hpp>
-
+#include "Geometry/Transform.h"
 #include "Staging/Primitive.h"
-
+//----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
 	namespace Core
 	{
-		class GeometricPrimitive : public IPrimitive
+		class GeometricPrimitive 
+			: public IPrimitive
 		{
 		protected:
-			Shape* m_pShape;
+			IShape *m_pShape;
 
 		public:
-			inline Shape *GetShape(void) const { return m_pShape; }
-			inline void SetShape(Shape *p_pShape) { m_pShape = p_pShape; }
+			Transformation WorldTransform;
+
+		public:
+			inline IShape *GetShape(void) const { return m_pShape; }
+			inline void SetShape(IShape *p_pShape) { m_pShape = p_pShape; }
 
 			boost::shared_ptr<IBoundingVolume> GetWorldBounds(void) const;
-			inline bool IsBounded(void) const { return (m_pShape != NULL && m_pShape->IsBounded()); }
+			bool IsBounded(void) const;
 
 			bool Intersect(const Ray &p_ray, float p_fTime, Intersection &p_intersection);
 			bool Intersect(const Ray &p_ray, float p_fTime);

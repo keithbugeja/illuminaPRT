@@ -3,13 +3,11 @@
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
-//	Implementation for Rays in R3
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-#include <boost/format.hpp>
+#include "System/IlluminaPRT.h"
 
-#include "Geometry/Vector2.h"
 #include "Geometry/Vector3.h"
 #include "Geometry/Basis.h"
 #include "Geometry/Ray.h"

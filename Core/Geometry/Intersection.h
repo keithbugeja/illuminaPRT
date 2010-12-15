@@ -1,9 +1,16 @@
+//----------------------------------------------------------------------------------------------
+//	Filename:	Intersection.h
+//	Author:		Keith Bugeja
+//	Date:		27/02/2010
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 #pragma once
+
+#include "System/IlluminaPRT.h"
 
 #include "Geometry/Transform.h"
 #include "Shape/DifferentialSurface.h"
-#include "Staging/Primitive.h"
-
+//----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
 	namespace Core
@@ -11,27 +18,18 @@ namespace Illumina
 		class Intersection
 		{
 		protected:
-			Transformation m_worldTransform;
-			DifferentialSurface m_differentialSurface;
 			IPrimitive *m_pPrimitive;
-			float m_fRayEpsilon;
 
 		public:
-			Intersection(void)
-				: m_worldTransform()
-				, m_differentialSurface()
-				, m_pPrimitive(NULL)
-				, m_fRayEpsilon(0.0f)
-			{ }
+			DifferentialSurface Surface;
+			Transformation WorldTransform;
+			float RayEpsilon;
 
-			DifferentialSurface& GetDifferentialSurface(void) { return m_differentialSurface; }
-			Transformation& GetWorldTransform(void) { return m_worldTransform; }
-			
-			IPrimitive* GetPrimitive(void) { return m_pPrimitive; }
-			void SetPrimitive(IPrimitive* p_pPrimitive) { m_pPrimitive = p_pPrimitive; }
+		public:
+			Intersection(void);
 
-			float GetRayEpsilon(void) { return m_fRayEpsilon; }
-			void SetRayEpsilon(float p_fRayEpsilon) { m_fRayEpsilon = p_fRayEpsilon; }
+			IPrimitive* GetPrimitive(void);
+			void SetPrimitive(IPrimitive* p_pPrimitive);
 		};
 	}
 }

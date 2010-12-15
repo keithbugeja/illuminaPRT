@@ -34,7 +34,7 @@ namespace Illumina
 				{
 					if (PrimitiveList[primitiveIdx]->Intersect(ray, p_fTime, p_intersection))
 					{
-						ray.Max = p_intersection.GetDifferentialSurface().Distance;
+						ray.Max = p_intersection.Surface.Distance;
 						bHit = true;
 					}
 				}

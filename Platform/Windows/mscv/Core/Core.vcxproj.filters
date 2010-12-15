@@ -159,6 +159,45 @@
     <ClCompile Include="..\..\..\..\Core\Staging\Visibility.cpp">
       <Filter>Header Files\Staging</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Integrator\WhittedIntegrator.cpp">
+      <Filter>Header Files\Integrator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Device\ImageDevice.cpp">
+      <Filter>Header Files\Device</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Filter\TentFilter.cpp">
+      <Filter>Header Files\Filter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Filter\BoxFilter.cpp">
+      <Filter>Header Files\Filter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Geometry\Intersection.cpp">
+      <Filter>Header Files\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Geometry\Interval.cpp">
+      <Filter>Header Files\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Geometry\Plane.cpp">
+      <Filter>Header Files\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Geometry\Ray.cpp">
+      <Filter>Header Files\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Image\Image.cpp">
+      <Filter>Header Files\Image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Light\PointLight.cpp">
+      <Filter>Header Files\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Renderer\BasicRenderer.cpp">
+      <Filter>Header Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Sampler\RandomSampler.cpp">
+      <Filter>Header Files\Sampler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Sampler\JitterSampler.cpp">
+      <Filter>Header Files\Sampler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -183,9 +222,6 @@
       <Filter>Header Files\Geometry</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Geometry\BoundingBox.h">
-      <Filter>Header Files\Geometry</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Geometry\BoundingSphere.h">
       <Filter>Header Files\Geometry</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Geometry\BoundingVolume.h">
@@ -300,9 +336,6 @@
       <Filter>Header Files\Staging</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Staging\GeometricPrimitive.h">
-      <Filter>Header Files\Staging</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Staging\OctreeAggregate.h">
       <Filter>Header Files\Staging</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Staging\Primitive.h">
@@ -443,6 +476,24 @@
     <ClInclude Include="..\..\..\..\Core\Staging\Visibility.h">
       <Filter>Header Files\Staging</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\System\IlluminaPRT.h">
+      <Filter>Header Files\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Filter\TentFilter.h">
+      <Filter>Header Files\Filter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Filter\BoxFilter.h">
+      <Filter>Header Files\Filter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Renderer\BasicRenderer.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Sampler\RandomSampler.h">
+      <Filter>Header Files\Sampler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Sampler\JitterSampler.h">
+      <Filter>Header Files\Sampler</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">
@@ -462,6 +513,21 @@
     </None>
     <None Include="..\..\..\..\Core\System\FactoryManager.inl">
       <Filter>Header Files\System</Filter>
+    </None>
+    <None Include="..\..\..\..\Core\Geometry\Basis.inl">
+      <Filter>Header Files\Geometry</Filter>
+    </None>
+    <None Include="..\..\..\..\Core\Geometry\Interval.inl">
+      <Filter>Header Files\Geometry</Filter>
+    </None>
+    <None Include="..\..\..\..\Core\Geometry\Plane.inl">
+      <Filter>Header Files\Geometry</Filter>
+    </None>
+    <None Include="..\..\..\..\Core\Geometry\Ray.inl">
+      <Filter>Header Files\Geometry</Filter>
+    </None>
+    <None Include="..\..\..\..\Core\Image\Image.inl">
+      <Filter>Header Files\Image</Filter>
     </None>
   </ItemGroup>
 </Project>

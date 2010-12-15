@@ -14,7 +14,7 @@ namespace Illumina
 	namespace Core
 	{
 		class Sphere : 
-			public Shape
+			public IShape
 		{
 		public:
 			AxisAlignedBoundingBox m_boundingBox;

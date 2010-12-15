@@ -40,7 +40,6 @@
 #include "Shape/BIHMesh.h"
 #include "Shape/HybridMesh.h"
 #include "Staging/GeometricPrimitive.h"
-#include "Staging/OctreeAggregate.h"
 #include "Space/BasicSpace.h"
 #include "Space/BVHSpace.h"
 #include "Object/Object.h"
@@ -58,7 +57,7 @@
 #include "Light/PointLight.h"
 #include "Integrator/WhittedIntegrator.h"
 #include "Device/ImageDevice.h"
-#include "Renderer/Renderer.h"
+#include "Renderer/BasicRenderer.h"
 
 #include "System/EngineKernel.h"
 #include "System/Dummy.h"
@@ -965,7 +964,7 @@ void RayTracer(int p_nOMPThreads)
 	BasicSpace basicSpace;
 
 	GeometricPrimitive pmv_mesh1;
-	pmv_mesh1.SetShape((Shape*)shape_mesh1.get());
+	pmv_mesh1.SetShape((IShape*)shape_mesh1.get());
 	pmv_mesh1.WorldTransform.SetScaling(Vector3(3.0f, 3.0f, 3.0f));
 
 	pmv_mesh1.WorldTransform.SetTranslation(Vector3(0.0f, -10.0f, 0.0f));
@@ -978,21 +977,21 @@ void RayTracer(int p_nOMPThreads)
 	//----------------------------------------------------------------------------------------------
 	// Scene creation complete
 	//----------------------------------------------------------------------------------------------
- 	PointLight pointLight(Vector3(0,5,0), RGBSpectrum(1,1,1));
+	PointLight pointLight(Vector3(0,5,0), RGBSpectrum(1,1,1));
  
- 	Scene scene(&basicSpace);
- 	scene.GetLightList().PushBack(&pointLight);
+	Scene scene(&basicSpace);
+	scene.LightList.PushBack(&pointLight);
  
- 	WhittedIntegrator integrator;
- 	integrator.Initialise(&scene, &camera);
+	WhittedIntegrator integrator;
+	integrator.Initialise(&scene, &camera);
  
- 	ImagePPM imagePPM;
+	ImagePPM imagePPM;
 	int width = 640, height = 480;
  
- 	#if defined(__PLATFORM_WINDOWS__)
- 	ImageDevice device(width, height, &imagePPM, "D:\\Media\\Assets\\IlluminaRT\\Textures\\result.ppm");
- 	#elif defined(__PLATFORM_LINUX__)
- 	ImageDevice device(width, height, &imagePPM, "../../../Resource/Texture/result.ppm");
+	#if defined(__PLATFORM_WINDOWS__)
+	ImageDevice device(width, height, &imagePPM, "D:\\Media\\Assets\\IlluminaRT\\Textures\\result.ppm");
+	#elif defined(__PLATFORM_LINUX__)
+	ImageDevice device(width, height, &imagePPM, "../../../Resource/Texture/result.ppm");
 	#endif
 
 	BasicRenderer basicRenderer(&scene, &camera, &integrator, &device);
@@ -1007,25 +1006,25 @@ void RayTracer(int p_nOMPThreads)
 	double alpha = 0.0f,
 		totalFPS = 0.0f;
 
- 	for (int iteration = 1; iteration < 10000; iteration++)
- 	{
- 	 	renderTimer.restart();
- 	 	alpha += 0.05f;
- 	 
- 	 	camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10.0, Maths::Sin(alpha) * -20));
- 	 	camera.LookAt(Vector3::Zero);
- 	 
- 	 	// Here we rebuild the AS
- 	 	basicSpace.Update();
- 	 
- 	 	// Render
- 	 	basicRenderer.Render();
- 	 
- 	 	totalFPS += (float)(1.0 / renderTimer.elapsed());
- 	 	std::cout << shape_mesh1->ToString() << std::endl;
- 	 	std::cout << "Total Render Time : " << renderTimer.elapsed() << " seconds" << std::endl;
- 	 	std::cout << "FPS: [" << totalFPS / iteration <<" / " << iteration << "]" << std::endl;
- 	}
+	for (int iteration = 1; iteration < 10000; iteration++)
+	{
+		renderTimer.restart();
+		alpha += 0.05f;
+	 
+		camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10.0, Maths::Sin(alpha) * -20));
+		camera.LookAt(Vector3::Zero);
+	 
+		// Here we rebuild the AS
+		basicSpace.Update();
+	 
+		// Render
+		basicRenderer.Render();
+	 
+		totalFPS += (float)(1.0 / renderTimer.elapsed());
+		std::cout << shape_mesh1->ToString() << std::endl;
+		std::cout << "Total Render Time : " << renderTimer.elapsed() << " seconds" << std::endl;
+		std::cout << "FPS: [" << totalFPS / iteration <<" / " << iteration << "]" << std::endl;
+	}
 }
 
 int main()

@@ -6,15 +6,11 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-#include <boost/format.hpp>
-#include <boost/shared_ptr.hpp>
+#include "System/IlluminaPRT.h"
 
-#include "Geometry/Ray.h"
-#include "Geometry/Plane.h"
 #include "Geometry/Vector3.h"
-#include "Geometry/Interval.h"
-#include "Geometry/Transform.h"
-
+#include "Geometry/Plane.h"
+//----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
 	namespace Core

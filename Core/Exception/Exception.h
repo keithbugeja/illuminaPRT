@@ -6,8 +6,7 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-#include <boost/format.hpp>
-#include <boost/shared_ptr.hpp>
+#include <string>
 
 namespace Illumina
 {
