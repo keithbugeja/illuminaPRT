@@ -198,6 +198,9 @@
     <ClCompile Include="..\..\..\..\Core\Sampler\JitterSampler.cpp">
       <Filter>Header Files\Sampler</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Integrator\Integrator.cpp">
+      <Filter>Header Files\Integrator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
