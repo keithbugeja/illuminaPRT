@@ -25,7 +25,7 @@ Spectrum PointLight::Power(void) {
 Spectrum PointLight::Radiance(const Vector3 &p_point, Vector3 &p_wOut, VisibilityQuery &p_visibilityQuery)
 {
 	// Update visibility query information
-	p_visibilityQuery.SetSegment(m_position, p_point); 
+	p_visibilityQuery.SetSegment(m_position, 0.0001f, p_point, 0.0001f); 
 
 	Vector3::Subtract(m_position, p_point, p_wOut);
 	double distanceSquared = p_wOut.LengthSquared();

@@ -135,6 +135,7 @@
     <ClCompile Include="..\..\..\..\Core\Geometry\Vector3.cpp" />
     <ClCompile Include="..\..\..\..\Core\Image\Image.cpp" />
     <ClCompile Include="..\..\..\..\Core\Image\RGBPixel.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Integrator\Integrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\WhittedIntegrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\PointLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Maths\Maths.cpp" />
