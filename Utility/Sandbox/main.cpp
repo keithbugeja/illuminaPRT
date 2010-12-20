@@ -901,8 +901,12 @@ void RayTracer(int p_nOMPThreads)
 
 	// Load Model
 	#if defined(__PLATFORM_WINDOWS__)
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sibenik3.obj");
-		std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza3.obj");
+		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\testAxes.obj");
+		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\cornellbox.obj");
+		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sibenik.obj");
+		std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza4.obj");
+		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\Kalabsha\\Kalabsha12.obj");
+		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\cornell_box.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\conference3.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\david.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\box.obj");
@@ -926,14 +930,14 @@ void RayTracer(int p_nOMPThreads)
 
 	//boost::shared_ptr<SimpleMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 	//	ShapeFactory::LoadMesh<SimpleMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
-	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-	//	ShapeFactory::LoadMesh<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
+	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
+		ShapeFactory::LoadMesh<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
 	//boost::shared_ptr<BVHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 	//	ShapeFactory::LoadMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
 	//boost::shared_ptr<BIHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 	//	ShapeFactory::LoadMesh<BIHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
-	boost::shared_ptr<PBIHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-		ShapeFactory::LoadMesh<PBIHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
+	//boost::shared_ptr<PBIHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
+	//	ShapeFactory::LoadMesh<PBIHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
 	//boost::shared_ptr<GridMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 	//	ShapeFactory::LoadMesh<GridMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
 
@@ -977,7 +981,7 @@ void RayTracer(int p_nOMPThreads)
 	//----------------------------------------------------------------------------------------------
 	// Scene creation complete
 	//----------------------------------------------------------------------------------------------
-	PointLight pointLight(Vector3(0,12.5,0), RGBSpectrum(1000,1000,1000));
+	PointLight pointLight(Vector3(0, 50, 0), RGBSpectrum(10000,10000,10000));
  
 	Scene scene(&basicSpace);
 	scene.LightList.PushBack(&pointLight);
@@ -986,7 +990,7 @@ void RayTracer(int p_nOMPThreads)
 	integrator.Initialise(&scene, &camera);
  
 	ImagePPM imagePPM;
-	int width = 640, height = 480;
+	int width = 320, height = 240;
  
 	#if defined(__PLATFORM_WINDOWS__)
 	ImageDevice device(width, height, &imagePPM, "D:\\Media\\Assets\\IlluminaRT\\Textures\\result.ppm");
@@ -1011,7 +1015,10 @@ void RayTracer(int p_nOMPThreads)
 		renderTimer.restart();
 		alpha += 0.05f;
 	 
-		camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10.0, Maths::Sin(alpha) * -20));
+		//camera.MoveTo(Vector3(0, 0, -30));
+		camera.MoveTo(Vector3(Maths::Cos(alpha) * -30, 0, Maths::Sin(alpha) * -30));
+		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -5, 5, Maths::Sin(alpha) * -5));
+		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10.0, Maths::Sin(alpha) * -20));
 		camera.LookAt(Vector3::Zero);
 	 
 		// Here we rebuild the AS

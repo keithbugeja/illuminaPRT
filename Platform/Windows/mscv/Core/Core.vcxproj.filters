@@ -497,6 +497,9 @@
     <ClInclude Include="..\..\..\..\Core\Sampler\JitterSampler.h">
       <Filter>Header Files\Sampler</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Staging\WavefrontLoader.h">
+      <Filter>Header Files\Staging</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">

@@ -14,6 +14,7 @@
 #include "Shape/Shape.h"
 #include "Shape/VertexFormats.h"
 #include "Threading/List.h"
+#include "Staging/WavefrontLoader.h"
 
 namespace Illumina
 {
@@ -30,7 +31,7 @@ namespace Illumina
 
 				std::ofstream meshFile;
 
-                meshFile.open(p_strMeshFile.c_str(), std::ios::binary | std::ios::trunc);
+				meshFile.open(p_strMeshFile.c_str(), std::ios::binary | std::ios::trunc);
 
 				if (!meshFile.is_open())
 				{
@@ -57,6 +58,14 @@ namespace Illumina
 			// Quick and dirty obj loader :
 			// TODO: Make a ModelIO interface and provide an obj implementation
 			template<class TMesh, class TVertex>
+			static boost::shared_ptr<TMesh> LoadMesh2(const std::string& p_strMeshFile)
+			{
+				return WavefrontLoader::LoadMesh<TMesh, TVertex>(p_strMeshFile);
+			}
+
+			// Quick and dirty obj loader :
+			// TODO: Make a ModelIO interface and provide an obj implementation
+			template<class TMesh, class TVertex>
 			static boost::shared_ptr<TMesh> LoadMesh(const std::string& p_strMeshFile)
 			{
 				boost::shared_ptr<TMesh> mesh(new TMesh);
@@ -66,7 +75,7 @@ namespace Illumina
 				// Open image file
 				meshFile.open(p_strMeshFile.c_str());
 
-				// If file couldn't be open, report error and quit
+				// If file couldn't be opened, report error and quit
 				if (!meshFile.is_open())
 				{
 					std::cerr << "ERROR -- Couldn't open file \'" << p_strMeshFile << "\'" << std::endl;
@@ -111,6 +120,7 @@ namespace Illumina
 
 				return mesh;
 			}
+
 
 			template<class TMesh, class TVertex>
 			static boost::shared_ptr<TMesh> CreateBox(const Vector3 &p_minExtent, const Vector3 &p_maxExtent)

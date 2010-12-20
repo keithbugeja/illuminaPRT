@@ -33,7 +33,7 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection
 			WorldTransform.Rotate(p_intersection.Surface.Normal, NormalWS);
 			p_intersection.Surface.BasisWS.InitFromU(NormalWS);
 			p_intersection.Surface.PointWS = p_ray.PointAlongRay(p_intersection.Surface.Distance);
-			
+			p_intersection.WorldTransform = WorldTransform;
 			return true;
 		}
 	}
