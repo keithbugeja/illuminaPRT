@@ -50,6 +50,7 @@ void ImageDevice::Set(float p_fX, float p_fY, const Spectrum &p_spectrum) {
 //----------------------------------------------------------------------------------------------
 float ImageDevice::HDRToLDR(float p_fValue)
 {
-	return (float)(p_fValue / (p_fValue + 1));
+	return p_fValue;
+	//return (float)(p_fValue / (p_fValue + 1));
 }
 //----------------------------------------------------------------------------------------------

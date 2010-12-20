@@ -33,7 +33,7 @@ Spectrum PointLight::Radiance(const Vector3 &p_point, Vector3 &p_wOut, Visibilit
 
 	// Radiance prop to Energy / (Area of sphere * distance squared)
 	// L = Phi / (4*Pi * |Sp - x| ^ 2)
-	return m_intensity / (4 * Maths::Pi * distanceSquared);
+	return m_intensity * (1.0f / (4 * Maths::Pi * distanceSquared));
 }
 //----------------------------------------------------------------------------------------------
 Spectrum PointLight::Radiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wOut, VisibilityQuery &p_visibilityQuery)

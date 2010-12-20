@@ -225,6 +225,7 @@
     <ClInclude Include="..\..\..\..\Core\Staging\Primitive.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\Scene.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\Visibility.h" />
+    <ClInclude Include="..\..\..\..\Core\Staging\WavefrontLoader.h" />
     <ClInclude Include="..\..\..\..\Core\System\Dummy.h" />
     <ClInclude Include="..\..\..\..\Core\System\DummyManager.h" />
     <ClInclude Include="..\..\..\..\Core\System\EngineKernel.h" />

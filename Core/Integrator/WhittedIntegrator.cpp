@@ -34,40 +34,69 @@ bool WhittedIntegrator::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
 {
-	Spectrum light, 
-		result;
+	Spectrum result;
 
 	Vector3 wOut, 
 		reflectionVector;
 
-	Ray ray(p_ray);
+	Ray ray;
 
-	for (int i = 0; i < m_nMaxRayDepth; i++)
+	const int samples = 1;
+	m_nMaxRayDepth = 1;
+
+	for (int s = 0; s < samples; s++)
 	{
-		bool bHit = p_pScene->Intersects(ray, p_intersection);
-				
-		if (bHit)
+		ray = p_ray;
+
+		for (int i = 0; i < m_nMaxRayDepth; i++)
 		{
-			VisibilityQuery visibilityQuery(p_pScene);
-
-			Vector3 normal(p_intersection.Surface.BasisWS.U);
-			normal.Y = -normal.Y;
-
-			for (int j = 0; j < p_pScene->LightList.Size(); ++j)
+			bool bHit = p_pScene->Intersects(ray, p_intersection);
+				
+			if (bHit)
 			{
-				light = IIntegrator::EstimateDirectLighting(p_pScene, p_pScene->LightList[j], p_intersection.Surface.PointWS, normal, wOut);
+				Spectrum light;
+
+				result[0] = (p_intersection.Surface.BasisWS.U[0] + 1.0f) * 0.5f;
+				result[1] = (p_intersection.Surface.BasisWS.U[1] + 1.0f) * 0.5f;
+				result[2] = (p_intersection.Surface.BasisWS.U[2] + 1.0f) * 0.5f;
+				
+				//Vector3 wOut = Vector3(0,-50,0) - p_intersection.Surface.Point;
+				//wOut.Normalize();
+				//float d = Vector3::Dot(wOut, p_intersection.Surface.Normal);
+				//result[0] = d;
+				//result[1] = d;
+				//result[2] = d;
+
+				//light = IIntegrator::EstimateDirectLighting(p_pScene, p_pScene->LightList[0], p_intersection.Surface.PointWS, p_intersection.Surface.BasisWS.U, wOut);
+
+				break;
+				
+				for (int j = 0; j < p_pScene->LightList.Size(); ++j)
+				{
+					light += IIntegrator::EstimateDirectLighting(p_pScene, p_pScene->LightList[j], p_intersection.Surface.PointWS, p_intersection.Surface.BasisWS.U, wOut);
+				}
+
+				if (light.IsBlack())
+					break;
+
+				// Need method to generate a point on the hemisphere
+				Matrix3x3::Product(p_intersection.Surface.BasisWS.GetMatrix(), 
+					OrthonormalBasis::FromSpherical(m_random.NextFloat() * Maths::PiTwo, m_random.NextFloat() * Maths::PiHalf),
+					reflectionVector);
+
+				ray.Direction = reflectionVector;
+				ray.Origin = p_intersection.Surface.PointWS + reflectionVector * 0.0001f;
+
+				result += light;
 			}
-
-			// Need method to generate a point on the hemisphere
-
-			Vector3::Reflect(ray.Direction, normal, reflectionVector);
-			ray.Direction = reflectionVector;
-			ray.Origin = p_intersection.Surface.PointWS + reflectionVector * 0.0001f;
-
-			result += light;
+			else
+			{
+				result = 0.f;
+				break;
+			}
 		}
 	}
 
-	return result;
+	return result / samples;
 }
 //----------------------------------------------------------------------------------------------

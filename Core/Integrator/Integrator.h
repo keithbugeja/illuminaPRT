@@ -22,6 +22,8 @@ namespace Illumina
 
 			static Spectrum EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, 
 				const Vector3 &p_point, const Vector3 &p_normal, Vector3 &p_wOut);
+
+			//static Vector3 SampleHemisphere(const Transformation &p_transform, float p_fU, float p_fV);
 		};
 	}
 }

@@ -22,12 +22,18 @@ Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight,
 
 	Spectrum Li = p_pLight->Radiance(p_point, p_wOut, visibilityQuery);
 				
-	if (!Li.IsBlack() && !visibilityQuery.IsOccluded())
+	if (!Li.IsBlack() /*&& !visibilityQuery.IsOccluded()*/)
 	{
-		p_wOut.Normalize();
-		return Li * Maths::Max(0, Vector3::Dot(p_wOut, p_normal));
+		//return Li * Maths::Max(0, Vector3::Dot(-p_wOut, p_normal));
+		return Vector3::Dot(p_wOut, p_normal);
 	}
 
 	return 0;
 }
+//----------------------------------------------------------------------------------------------
+//Vector3 IIntegrator::SampleHemisphere(const Transformation p_transform, float p_fU, float p_fV)
+//{
+//	Vector2 spherical(p_fU * Maths::PiTwo, p_fV * Maths::PiHalf);
+//	return p_transform.Apply(OrthonormalBasis::FromSpherical(spherical));
+//}
 //----------------------------------------------------------------------------------------------

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Integrator/Integrator.h"
+#include "Maths/Random.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {
@@ -18,8 +19,10 @@ namespace Illumina
 			int m_nMaxRayDepth,
 				m_nShadowSampleCount;
 
+			Random m_random;
+
 		public:
-			WhittedIntegrator(int p_nMaxRayDepth = 3, int p_nShadowSampleCount = 1);
+			WhittedIntegrator(int p_nMaxRayDepth = 2, int p_nShadowSampleCount = 1);
 
 			bool Initialise(Scene *p_pScene, ICamera *p_pCamera);
 			bool Shutdown(void);
