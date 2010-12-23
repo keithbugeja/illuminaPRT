@@ -16,6 +16,7 @@
 #include "Geometry/Transform.h"
 #include "Geometry/Ray.h"
 #include "Sampler/Sampler.h"
+#include "Sampler/RandomSampler.h"
 #include "Filter/Filter.h"
 #include "Image/ImagePPM.h"
 #include "Image/Image.h"
@@ -904,8 +905,8 @@ void RayTracer(int p_nOMPThreads)
 	// Load Model
 	#if defined(__PLATFORM_WINDOWS__)
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\testAxes.obj");
-		std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza4.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sibenik.obj");
+		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza4.obj");
+		std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sibenik.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza4.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza_crytek.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\Kalabsha\\Kalabsha12.obj");
@@ -948,8 +949,8 @@ void RayTracer(int p_nOMPThreads)
 	//ShapeFactory::SaveMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>("D:\\Assets\\object_out.obj", shape_mesh1);
 
 	// Initialise sphere arealight
-	Sphere shape_mesh2(Vector3(0, 15.0f, 0), 4.0f);
-	DiffuseAreaLight diffuseLight(NULL, &shape_mesh2, Spectrum(1000,1000,1000));
+	Sphere shape_mesh2(Vector3(0, 15.0f, 0), 3.0f);
+	DiffuseAreaLight diffuseLight(NULL, &shape_mesh2, Spectrum(10000,10000,10000));
 
 	//----------------------------------------------------------------------------------------------
 	// Compute bounding volumes
@@ -984,6 +985,7 @@ void RayTracer(int p_nOMPThreads)
 	pmv_mesh1.SetShape((IShape*)shape_mesh1.get());
 	//pmv_mesh1.SetMaterial((IMaterial*)&material_mesh1);
 	pmv_mesh1.WorldTransform.SetScaling(Vector3(3.0f, 3.0f, 3.0f));
+	//pmv_mesh1.WorldTransform.SetScaling(Vector3(5.0f, 5.0f, 5.0f));
 	pmv_mesh1.WorldTransform.SetTranslation(Vector3(0.0f, -10.0f, 0.0f));
 	basicSpace.PrimitiveList.PushBack(&pmv_mesh1);
 
@@ -997,12 +999,17 @@ void RayTracer(int p_nOMPThreads)
 	basicSpace.Build();
 
 	//----------------------------------------------------------------------------------------------
+	// Initialise sampler
+	//----------------------------------------------------------------------------------------------
+	RandomSampler sampler;
+
+	//----------------------------------------------------------------------------------------------
 	// Scene creation complete
 	//----------------------------------------------------------------------------------------------
 	//PointLight pointLight(Vector3(0, 5, 0), RGBSpectrum(1000,1000,1000));
 	//PointLight pointLight(Vector3(0, 15, 0), RGBSpectrum(1000,1000,1000));
  
-	Scene scene(&basicSpace);
+	Scene scene(&basicSpace, &sampler);
 	//scene.LightList.PushBack(&pointLight);
 	scene.LightList.PushBack(&diffuseLight);
  
@@ -1010,7 +1017,8 @@ void RayTracer(int p_nOMPThreads)
 	integrator.Initialise(&scene, &camera);
  
 	ImagePPM imagePPM;
-	int width = 256, height = 256;
+	//int width = 256, height = 256;
+	int width = 512, height = 512;
  
 	#if defined(__PLATFORM_WINDOWS__)
 	ImageDevice device(width, height, &imagePPM, "D:\\Media\\Assets\\IlluminaRT\\Textures\\result.ppm");

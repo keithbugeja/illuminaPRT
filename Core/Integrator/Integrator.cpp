@@ -25,14 +25,15 @@ Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight,
 
 	Spectrum Li = p_pLight->Radiance(p_point, p_u, p_v, p_wOut, visibilityQuery);
 				
-	//if (!Li.IsBlack())
-	if (!Li.IsBlack() && !visibilityQuery.IsOccluded())
+	if (!Li.IsBlack())
+	//if (!Li.IsBlack() && !visibilityQuery.IsOccluded())
 	{
 		return Li * Maths::Max(0, Vector3::Dot(p_wOut, p_normal));
 	}
 
 	return 0;
 }
+
 /*
 public Spectrum EstimateDirectLighting(ILight light, Vector3 p_point, 
 	Vector3 p_normal, Vector3 p_wOut, BSDF p_bsdf, int p_bxdfIndex)

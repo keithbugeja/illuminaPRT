@@ -28,6 +28,7 @@ namespace Illumina
 			VisibilityQuery(Scene *p_pScene, const Vector3 &p_segmentStart, float p_fEpsilonStart, const Vector3 &p_segmentEnd, float p_fEpsilonEnd);
 
 			bool IsOccluded(void); 
+			bool IsOccluded(IPrimitive *p_pExclude);
 
 			void SetSegment(const Vector3 &p_segmentStart, const Vector3 &p_segmentEnd);
 			void SetSegment(const Vector3 &p_segmentStart, float p_fEpsilonStart, const Vector3 &p_segmentEnd, float p_fEpsilonEnd);

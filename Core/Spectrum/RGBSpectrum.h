@@ -104,7 +104,7 @@ namespace Illumina
 			}
 
 			RGBSpectrum operator/(float p_fScale) const {
-				BOOST_ASSERT(p_fScale > 0);
+				//BOOST_ASSERT(p_fScale > 0);
 				return *this * (1.0f / p_fScale);
 			}
 
