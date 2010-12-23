@@ -29,7 +29,7 @@ namespace Illumina
 			std::string GetVertexHash(void)
 			{
 				std::stringstream hash;
-				hash << std::hex << Position << "." << Texture << "." << Normal << std::dec;
+				hash << std::hex << Position << ':' << Texture << ':' << Normal << std::dec;
 				return hash.str();
 			}
 		};

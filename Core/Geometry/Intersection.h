@@ -19,6 +19,7 @@ namespace Illumina
 		{
 		protected:
 			IPrimitive *m_pPrimitive;
+			IMaterial *m_pMaterial;
 
 		public:
 			DifferentialSurface Surface;
@@ -28,8 +29,11 @@ namespace Illumina
 		public:
 			Intersection(void);
 
-			IPrimitive* GetPrimitive(void);
+			IPrimitive* GetPrimitive(void) const;
 			void SetPrimitive(IPrimitive* p_pPrimitive);
+
+			IMaterial* GetMaterial(void) const;
+			void SetMaterial(IMaterial* p_pMaterial);
 		};
 	}
 }

@@ -28,7 +28,7 @@
 			#define __ARCHITECTURE_X64__
 
 			// SSE functionality :: Enable SSE
-			#define SSE_ENABLED
+			// #define SSE_ENABLED
 		#else
 			#define __ARCHITECTURE_X86__
 		#endif

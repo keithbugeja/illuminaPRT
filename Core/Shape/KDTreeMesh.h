@@ -153,6 +153,7 @@ namespace Illumina
 			{
 				Ray ray(p_ray);
 
+				//return Intersect_Recursive(&m_rootNode, ray, p_fTime, p_surface);
 				return Intersect_Stack(&m_rootNode, ray, p_fTime, p_surface);
 			}
 
@@ -160,6 +161,7 @@ namespace Illumina
 			{
 				Ray ray(p_ray);
 
+				//return Intersect_Recursive(&m_rootNode, ray, p_fTime, p_surface);
 				return Intersect_Stack(&m_rootNode, ray, p_fTime, p_surface);
 			}
 
@@ -347,7 +349,7 @@ namespace Illumina
 
 				if (p_pNode->BoundingBox.Intersects(p_ray, in, out))
 				{
-					if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
+					if (p_pNode->Type == Internal)
 						return Intersect_Recursive(p_pNode->m_pChild[0], p_ray, p_fTime) || Intersect_Recursive(p_pNode->m_pChild[1], p_ray, p_fTime);
 
 					int count = (int)p_pNode->TriangleList.Size();
@@ -367,14 +369,15 @@ namespace Illumina
 
 			bool Intersect_Recursive(KDTreeNode<T*> *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 			{
+				
 				float in, out;
 
-				if (p_pNode->BoundingBox.Intersect(p_ray, in, out))
+				if (p_pNode->BoundingBox.Intersects(p_ray, in, out))
 				{
 					in = in < 0 ? 0 : in;
 
 					// Traverse internal nodes
-					if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
+					if (p_pNode->Type == Internal)
 					{
 						float direction = p_ray.Direction[p_pNode->Axis],
 							intercept = p_ray.Origin[p_pNode->Axis] + in * direction;
@@ -406,7 +409,7 @@ namespace Illumina
 					{
 						for (int n = 0; n < count; n++)
 						{
-							if (p_pNode->TriangleList[n]->Intersect(p_ray, p_fTime, p_surface))
+							if (p_pNode->TriangleList[n]->Intersects(p_ray, p_fTime, p_surface))
 							{
 								p_ray.Max = Maths::Min(p_ray.Max, p_surface.Distance);
 
@@ -422,7 +425,7 @@ namespace Illumina
 				return false;
 			}
 
-			void ComputeBounds(const List<T*> &p_objectList, AxisAlignedBoundingBox &p_aabb)
+			void ComputeBounds(const List<T*> &p_objectList, AxisAlignedBoundingBox &p_aabb, float p_fMinEpsilon = 0.0f, float p_fMaxEpsilon = 0.0f)
 			{
 				p_aabb.Invalidate();
 
@@ -433,6 +436,9 @@ namespace Illumina
 					for (int idx = 1, count = (int)p_objectList.Size(); idx < count; idx++) {
 						p_aabb.Union(*(p_objectList[idx]->GetBoundingVolume()));
 					}
+
+					p_aabb.SetMinExtent(p_aabb.GetMinExtent() - p_fMinEpsilon);
+					p_aabb.SetMaxExtent(p_aabb.GetMaxExtent() + p_fMaxEpsilon);
 				}
 			}
 
@@ -444,34 +450,11 @@ namespace Illumina
 				int count = (int)p_objectList.Size();
 				for (int n = 0; n < count; n++)
 				{
-					float fCentre = p_objectList[n]->GetBoundingVolume()->GetCentre()[p_nAxis],
-						fExtent = p_objectList[n]->GetBoundingVolume()->GetExtent()[p_nAxis],
-						extLo = fCentre - fExtent,
-						extHi = fCentre + fExtent;
+					float min = p_objectList[n]->GetBoundingVolume()->GetMinExtent(p_nAxis),
+						max = p_objectList[n]->GetBoundingVolume()->GetMaxExtent(p_nAxis);
 
-					//std::cout << "Body size = " << p_objectList[n]->GetBoundingVolume()->GetExtent().ToString() << std::endl;
-					//std::cout << "Body projection, extent = " << fExtent << ", centre = " << fCentre << std::endl;
-					//std::cout << "Body centre = " << p_objectList[n]->GetBoundingVolume()->GetCentre().ToString() << std::endl;
-
-					if (p_fPartition >= extLo && p_fPartition <= extHi)
-					{
-						p_outRightList.PushBack(p_objectList[n]);
-						p_outLeftList.PushBack(p_objectList[n]);
-					}
-					else
-					{
-						if (p_fPartition < extLo)
-						{
-							p_outLeftList.PushBack(p_objectList[n]);
-							continue;
-						}
-
-						if (p_fPartition > extHi)
-						{
-							p_outRightList.PushBack(p_objectList[n]);
-							continue;
-						}
-					}
+					if (p_fPartition >= min) p_outLeftList.PushBack(p_objectList[n]);
+					if (p_fPartition <= max) p_outRightList.PushBack(p_objectList[n]);
 				}
 
 				//std::cout << "Distributing objects as [" << (int)p_outLeftList.Size() << ", " << (int)p_outRightList.Size() << "]" << std::endl;
@@ -484,14 +467,10 @@ namespace Illumina
 				for (int n = 0; n < count; n++)
 				{
 					if (p_objectList[n]->GetBoundingVolume()->Intersects(p_leftAABB))
-					{
 						p_outLeftList.PushBack(p_objectList[n]);
-					}
 
 					if (p_objectList[n]->GetBoundingVolume()->Intersects(p_rightAABB))
-					{
 						p_outRightList.PushBack(p_objectList[n]);
-					}
 				}
 
 				return (int)p_outLeftList.Size();
@@ -593,7 +572,7 @@ namespace Illumina
 
 			void BuildHierarchy(KDTreeNode<T*> *p_pNode, List<T*> &p_objectList, int p_nAxis, int p_nDepth = 0)
 			{
-				ComputeBounds(p_objectList, p_pNode->BoundingBox);
+				ComputeBounds(p_objectList, p_pNode->BoundingBox, 0.0001f, 0.0001f);
 				Vector3 &size = p_pNode->BoundingBox.GetExtent();
 				if (size.X > size.Y) p_nAxis = size.X > size.Z ? 0 : 2;
 				else p_nAxis = size.Y > size.Z ? 1 : 2;
@@ -610,7 +589,7 @@ namespace Illumina
 				if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxTreeDepth || p_pNode->BoundingBox.GetRadius() <= m_nMinNodeWidth)
 				{
 					//std::cout << "Adding leaf node [" << p_objectList.Size() << ", " << p_nDepth << "]" << std::endl;
-					p_pNode->Type = /*TreeMeshNodeType::*/Leaf; 
+					p_pNode->Type = Leaf; 
 					p_pNode->TriangleList.PushBack(p_objectList);
 
 					m_statistics.m_leafNodeCount++;
@@ -621,7 +600,7 @@ namespace Illumina
 				else
 				{
 					//std::cout << "Adding internal node [" << p_objectList.Size() << ", " << p_nDepth << "]" << std::endl;
-					p_pNode->Type = /*TreeMeshNodeType::*/Internal;
+					p_pNode->Type = Internal;
 					p_pNode->Axis = p_nAxis;
 					p_pNode->Partition = FindPartitionPlane(p_objectList, p_pNode->BoundingBox, p_nAxis);
 
@@ -641,7 +620,8 @@ namespace Illumina
 					leftAABB.SetMaxExtent(p_nAxis, p_pNode->Partition);
 					rightAABB.SetMinExtent(p_nAxis, p_pNode->Partition);
 
-					Distribute(p_objectList, leftAABB, rightAABB, leftList, rightList);
+					//Distribute(p_objectList, leftAABB, rightAABB, leftList, rightList);
+					Distribute(p_objectList, p_pNode->Partition, p_pNode->Axis, leftList, rightList);
 
 					int nAxis = (p_nAxis + 1) % 3,
 						nDepth = p_nDepth + 1;

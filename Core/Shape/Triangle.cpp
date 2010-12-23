@@ -99,7 +99,7 @@ bool Triangle::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &
 		UV[0].U * alpha + UV[1].U * beta + UV[2].U * gamma, 
 		UV[0].V * alpha + UV[1].V * beta + UV[2].V * gamma);
 
-	Vector3::Cross(BA, CA, p_surface.Normal);
+	Vector3::Cross(BA, CA, p_surface.GeometryNormal);
 
 	return true;
 }

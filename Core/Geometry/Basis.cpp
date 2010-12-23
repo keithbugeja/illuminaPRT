@@ -9,7 +9,7 @@
 using namespace Illumina::Core;
 
 //----------------------------------------------------------------------------------------------
-const float OrthonormalBasis::Epsilon = 0.001f;
+const float OrthonormalBasis::Epsilon = 0.0001f;
 
 //----------------------------------------------------------------------------------------------
 OrthonormalBasis::OrthonormalBasis(void)
@@ -40,28 +40,45 @@ void OrthonormalBasis::FrowWV(const Vector3 &p_w, const Vector3 &p_v)
 	}
 
 	U = Vector3::Cross(V, W);
+
 }
 //----------------------------------------------------------------------------------------------
  void OrthonormalBasis::InitFromU(const Vector3 &p_u)
 {
 	U = Vector3::Normalize(p_u);
-	V = Vector3::Cross(U, Vector3::UnitXPos);
-				
+	V = Vector3::Cross(Vector3::UnitZPos, U);
+
 	if (V.LengthSquared() < Epsilon)
-		V = Vector3::Cross(U, Vector3::UnitYPos);
+		V = Vector3::Cross(Vector3::UnitXPos, U);
 
 	W = Vector3::Cross(U, V);
+
+	//U = Vector3::Normalize(p_u);
+	//V = Vector3::Cross(U, Vector3::UnitXPos);
+	//			
+	//if (V.LengthSquared() < Epsilon)
+	//	V = Vector3::Cross(U, Vector3::UnitYPos);
+
+	//W = Vector3::Cross(U, V);
 }
 //----------------------------------------------------------------------------------------------
 void OrthonormalBasis::InitFromV(const Vector3 &p_v)
 {
 	V = Vector3::Normalize(p_v);
-	U = Vector3::Cross(V, Vector3::UnitXPos);
-				
+	U = Vector3::Cross(V, Vector3::UnitZPos);
+
 	if (U.LengthSquared() < Epsilon)
-		U = Vector3::Cross(V, Vector3::UnitYPos);
+		U = Vector3::Cross(V, Vector3::UnitYNeg);
 
 	W = Vector3::Cross(U, V);
+
+	//V = Vector3::Normalize(p_v);
+	//U = Vector3::Cross(V, Vector3::UnitXPos);
+	//			
+	//if (U.LengthSquared() < Epsilon)
+	//	U = Vector3::Cross(V, Vector3::UnitYPos);
+
+	//W = Vector3::Cross(U, V);
 }
 //----------------------------------------------------------------------------------------------
 void OrthonormalBasis::InitFromW(const Vector3 &p_w)
