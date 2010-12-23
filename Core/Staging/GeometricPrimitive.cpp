@@ -22,18 +22,30 @@ bool GeometricPrimitive::IsBounded(void) const
 //----------------------------------------------------------------------------------------------
 bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection &p_intersection)
 {
+	// Todo:
+	// Major bottleneck in ray inverse transform and normal rotation
+	// Try speeding that up.
+
 	const Ray &invRay = p_ray.ApplyInverse(WorldTransform);
 	
 	if (m_pShape->GetBoundingVolume()->Intersects(invRay))
 	{
 		if (m_pShape->Intersects(invRay, p_fTime, p_intersection.Surface))
 		{
-			Vector3 NormalWS;
-			
-			WorldTransform.Rotate(p_intersection.Surface.Normal, NormalWS);
-			p_intersection.Surface.BasisWS.InitFromU(NormalWS);
+			Vector3 shadingNormalWS, 
+				geometryNormalWS;
+
+			WorldTransform.Rotate(p_intersection.Surface.GeometryNormal, geometryNormalWS);
+			p_intersection.Surface.ShadingBasisWS.InitFromV(shadingNormalWS);
+
+			WorldTransform.Rotate(p_intersection.Surface.ShadingNormal, shadingNormalWS);
+			p_intersection.Surface.GeometryBasisWS.InitFromV(geometryNormalWS);
+
 			p_intersection.Surface.PointWS = p_ray.PointAlongRay(p_intersection.Surface.Distance);
 			p_intersection.WorldTransform = WorldTransform;
+
+			p_intersection.SetMaterial(m_pMaterial);
+			
 			return true;
 		}
 	}

@@ -25,17 +25,15 @@ namespace Illumina
 
 		public:
 			/* Surface info in local space */
-			Vector3	Normal;
+			Vector3 ShadingNormal;
+			Vector3 GeometryNormal;
 			Vector3 Point;
 			Vector2 PointUV;
 
 			/* Surface info in world space */
-			OrthonormalBasis BasisWS;
+			OrthonormalBasis ShadingBasisWS;
+			OrthonormalBasis GeometryBasisWS;
 			Vector3 PointWS;
-
-			/* Space-independent info */
-			/* Colour at surface point : temporary */
-			RGBPixel		Colour;
 
 			/* Surface point expressed as P = O + tD, where t = Distance */
 			float	Distance;

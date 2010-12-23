@@ -42,6 +42,7 @@
 #include "Staging/GeometricPrimitive.h"
 #include "Space/BasicSpace.h"
 #include "Space/BVHSpace.h"
+#include "Material/Material.h"
 #include "Object/Object.h"
 #include "Threading/Atomic.h"
 #include "Threading/AtomicReference.h"
@@ -902,11 +903,12 @@ void RayTracer(int p_nOMPThreads)
 	// Load Model
 	#if defined(__PLATFORM_WINDOWS__)
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\testAxes.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\cornellbox.obj");
+		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza5.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sibenik.obj");
-		std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza4.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\Kalabsha\\Kalabsha12.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\cornell_box.obj");
+		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza4.obj");
+		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza_crytek.obj");
+		std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\Kalabsha\\Kalabsha12.obj");
+		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\cornellbox.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\conference3.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\david.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\box.obj");
@@ -928,8 +930,8 @@ void RayTracer(int p_nOMPThreads)
 
 	std::cout << "-- Load object : [" << fname_model01 << "]" << std::endl;
 
-	//boost::shared_ptr<SimpleMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-	//	ShapeFactory::LoadMesh<SimpleMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
+	//boost::shared_ptr<BasicMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
+	//	ShapeFactory::LoadMesh<BasicMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
 	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 		ShapeFactory::LoadMesh<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
 	//boost::shared_ptr<BVHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
@@ -962,6 +964,11 @@ void RayTracer(int p_nOMPThreads)
 	std::cout << "-- Model 01 : [" << fname_model01 << "] compiled in " << compileTimer.elapsed() << " seconds." << std::endl;
 
 	//----------------------------------------------------------------------------------------------
+	// Materials
+	//----------------------------------------------------------------------------------------------
+	BasicMaterial material_mesh1(Spectrum(1,0,0));
+
+	//----------------------------------------------------------------------------------------------
 	// Initialise scene space
 	//----------------------------------------------------------------------------------------------
 	std::cout << "Adding models to scene space..." << std::endl;
@@ -969,8 +976,8 @@ void RayTracer(int p_nOMPThreads)
 
 	GeometricPrimitive pmv_mesh1;
 	pmv_mesh1.SetShape((IShape*)shape_mesh1.get());
+	pmv_mesh1.SetMaterial((IMaterial*)&material_mesh1);
 	pmv_mesh1.WorldTransform.SetScaling(Vector3(3.0f, 3.0f, 3.0f));
-
 	pmv_mesh1.WorldTransform.SetTranslation(Vector3(0.0f, -10.0f, 0.0f));
 	basicSpace.PrimitiveList.PushBack(&pmv_mesh1);
 
@@ -981,7 +988,8 @@ void RayTracer(int p_nOMPThreads)
 	//----------------------------------------------------------------------------------------------
 	// Scene creation complete
 	//----------------------------------------------------------------------------------------------
-	PointLight pointLight(Vector3(0, 50, 0), RGBSpectrum(10000,10000,10000));
+	PointLight pointLight(Vector3(0, 5, 0), RGBSpectrum(1000,1000,1000));
+	//PointLight pointLight(Vector3(0, 15, 0), RGBSpectrum(1000,1000,1000));
  
 	Scene scene(&basicSpace);
 	scene.LightList.PushBack(&pointLight);
@@ -990,7 +998,7 @@ void RayTracer(int p_nOMPThreads)
 	integrator.Initialise(&scene, &camera);
  
 	ImagePPM imagePPM;
-	int width = 320, height = 240;
+	int width = 256, height = 256;
  
 	#if defined(__PLATFORM_WINDOWS__)
 	ImageDevice device(width, height, &imagePPM, "D:\\Media\\Assets\\IlluminaRT\\Textures\\result.ppm");
@@ -1015,10 +1023,12 @@ void RayTracer(int p_nOMPThreads)
 		renderTimer.restart();
 		alpha += 0.05f;
 	 
-		//camera.MoveTo(Vector3(0, 0, -30));
-		camera.MoveTo(Vector3(Maths::Cos(alpha) * -30, 0, Maths::Sin(alpha) * -30));
+		camera.MoveTo(Vector3(0, 5, -10));
+		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 0, Maths::Sin(alpha) * -20));
+		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10, Maths::Sin(alpha) * -20));
+		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -30, 0, Maths::Sin(alpha) * -30));
 		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -5, 5, Maths::Sin(alpha) * -5));
-		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10.0, Maths::Sin(alpha) * -20));
+		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10.0, Maths::Sin(alpha) * -10));
 		camera.LookAt(Vector3::Zero);
 	 
 		// Here we rebuild the AS

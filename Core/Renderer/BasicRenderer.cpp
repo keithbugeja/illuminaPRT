@@ -23,15 +23,16 @@ BasicRenderer::BasicRenderer(Scene *p_pScene, ICamera *p_pCamera, IIntegrator *p
 //----------------------------------------------------------------------------------------------
 void BasicRenderer::Render(void)
 {
-	Intersection intersection;
-
 	int height = m_pDevice->GetHeight(),
 		width = m_pDevice->GetWidth();
 
 	m_pDevice->BeginFrame();
 
+	#pragma omp parallel for schedule(guided)
 	for (int y = 0; y < height; ++y)
 	{
+		Intersection intersection;
+
 		for (int x = 0; x < width; x++)
 		{
 			Ray ray = m_pCamera->GetRay(((float)x) / width, ((float)y) / height, 0.5f, 0.5f);

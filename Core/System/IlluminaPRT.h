@@ -13,6 +13,7 @@ namespace Illumina
 		class IIntegrator;
 		class IPrimitive;
 		class IRenderer;
+		class IMaterial;
 		class ICamera;
 		class IDevice;
 		class IShape;

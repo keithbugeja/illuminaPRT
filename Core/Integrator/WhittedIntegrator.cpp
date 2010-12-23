@@ -9,6 +9,7 @@
 
 #include "Geometry/Ray.h"
 #include "Geometry/Intersection.h"
+#include "Material/Material.h"
 #include "Spectrum/Spectrum.h"
 #include "Staging/Visibility.h"
 #include "Staging/Scene.h"
@@ -34,15 +35,41 @@ bool WhittedIntegrator::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
 {
-	Spectrum result;
+	/*
+	Color TracePath(Ray r,depth) {
+		if(depth == MaxDepth)
+			return Black;  // bounced enough times
+ 
+		r.FindNearestObject();
+		if(r.hitSomething == false)
+			return Black;  // nothing was hit
+ 
+		Material m = r.thingHit->material;
+		Color emittance = m.emittance;
+ 
+		// pick a random direction from here and keep going
+		Ray newRay;
+		newRay.origin = r.pointWhereObjWasHit;
+		newRay.direction = RandomUnitVectorInHemisphereOf(r.normalWhereObjWasHit);
+		float cos_omega = DotProduct(newRay.direction, r.normalWhereObjWasHit);
+   
+		Color BDRF = m.reflectance*cos_omega;
+		Color reflected = TracePath(newRay,depth+1);
+ 
+		return emittance + ( BDRF * cos_omega * reflected );
+	}
+	*/
 
-	Vector3 wOut, 
+	const int samples = 10;
+	m_nMaxRayDepth = 3;
+
+	Vector3 wOut, wIn,
 		reflectionVector;
-
+	
+	Spectrum result = 0,
+		diffuse;
+	
 	Ray ray;
-
-	const int samples = 1;
-	m_nMaxRayDepth = 1;
 
 	for (int s = 0; s < samples; s++)
 	{
@@ -50,50 +77,41 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 
 		for (int i = 0; i < m_nMaxRayDepth; i++)
 		{
-			bool bHit = p_pScene->Intersects(ray, p_intersection);
-				
-			if (bHit)
+			if(p_pScene->Intersects(ray, p_intersection))
 			{
+				// Get BSDF for current point of intersection
+                BSDF bsdf = intersection.Primitive.GetBSDF(intersection.SurfaceGeometry, intersection.SurfaceGeometry);
+
+                // Add emissive component
+                radiance += intersection.Le(wOut);
+
+                // Add direct lighting contribution
+                radiance += SampleAllLights(intersection.SurfaceGeometry.Point, intersection.SurfaceGeometry.Normal, wOut, bsdf, m_shadowSampleCount);
+
 				Spectrum light;
-
-				result[0] = (p_intersection.Surface.BasisWS.U[0] + 1.0f) * 0.5f;
-				result[1] = (p_intersection.Surface.BasisWS.U[1] + 1.0f) * 0.5f;
-				result[2] = (p_intersection.Surface.BasisWS.U[2] + 1.0f) * 0.5f;
 				
-				//Vector3 wOut = Vector3(0,-50,0) - p_intersection.Surface.Point;
-				//wOut.Normalize();
-				//float d = Vector3::Dot(wOut, p_intersection.Surface.Normal);
-				//result[0] = d;
-				//result[1] = d;
-				//result[2] = d;
-
-				//light = IIntegrator::EstimateDirectLighting(p_pScene, p_pScene->LightList[0], p_intersection.Surface.PointWS, p_intersection.Surface.BasisWS.U, wOut);
-
-				break;
-				
-				for (int j = 0; j < p_pScene->LightList.Size(); ++j)
+				for (int lightIdx = 0; lightIdx < p_pScene->LightList.Size(); ++lightIdx)
 				{
-					light += IIntegrator::EstimateDirectLighting(p_pScene, p_pScene->LightList[j], p_intersection.Surface.PointWS, p_intersection.Surface.BasisWS.U, wOut);
+					light = IIntegrator::EstimateDirectLighting(p_pScene, p_pScene->LightList[lightIdx], 
+						p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.V, wOut);
+
 				}
 
-				if (light.IsBlack())
-					break;
+				//p_intersection.GetMaterial()->Diffuse(p_intersection.Surface, p_intersection.Surface.PointWS, wIn, reflectionVector, diffuse);
 
-				// Need method to generate a point on the hemisphere
-				Matrix3x3::Product(p_intersection.Surface.BasisWS.GetMatrix(), 
+				 //Need method to generate a point on the hemisphere
+				Matrix3x3::Product(p_intersection.Surface.GeometryBasisWS.GetMatrix(), 
 					OrthonormalBasis::FromSpherical(m_random.NextFloat() * Maths::PiTwo, m_random.NextFloat() * Maths::PiHalf),
 					reflectionVector);
 
+				//Vector3::Reflect(ray.Direction, p_intersection.Surface.GeometryBasisWS.V, reflectionVector);
 				ray.Direction = reflectionVector;
-				ray.Origin = p_intersection.Surface.PointWS + reflectionVector * 0.0001f;
+				ray.Origin = p_intersection.Surface.PointWS + ray.Direction * 0.0001f;
 
-				result += light;
+				result += /*diffuse * */ (light / (i + 1));
 			}
 			else
-			{
-				result = 0.f;
 				break;
-			}
 		}
 	}
 

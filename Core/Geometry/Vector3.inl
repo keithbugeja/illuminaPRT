@@ -46,7 +46,7 @@ inline Vector3 Vector3::operator*(float p_fValue) const {
 }
 //----------------------------------------------------------------------------------------------
 inline Vector3 Vector3::operator/(float p_fValue) const {
-	BOOST_ASSERT(p_fValue != 0.0f);
+	//BOOST_ASSERT(p_fValue != 0.0f);
 	return Vector3(*this * (1.0f / p_fValue));
 }
 //----------------------------------------------------------------------------------------------

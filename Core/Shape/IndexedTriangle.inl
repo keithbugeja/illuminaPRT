@@ -104,7 +104,6 @@ bool IndexedTriangle<TVertex>::Intersects(const Ray &p_ray, float p_fTime, Diffe
 		v0.UV.U * alpha + v1.UV.U * beta + v2.UV.U * gamma,
 		v0.UV.V * alpha + v1.UV.V * beta + v2.UV.V * gamma);
 
-	//p_surface.Basis.InitFromU(Vector3::Cross(BA, CA));
 	Vector3::Cross(BA, CA, p_surface.Normal);
 	p_surface.Colour = RGBPixel::Green;
 	return true;
@@ -117,40 +116,6 @@ bool IndexedTriangle<Vertex>::Intersects(const Ray &p_ray, float p_fTime, Differ
 	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
 		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
 		&v2 = m_pMesh->VertexList[m_nVertexID[2]];
-
-	/*
-	Vector3 e1 = v1.Position - v0.Position;
-	Vector3 e2 = v2.Position - v0.Position;
-
-	Vector3 d = -p_ray.Direction;
-	Vector3 p = d.Cross(e2);
-	float a = e1.Dot(p);
-	if (a > -0.00001 && a < 0.00001) return false;
-	float f = 1/a;
-	Vector3 s = p_ray.Origin - v0.Position;
-	float u = s.Dot(p) * f;
-	if (u < 0 || u > 1) return false;
-	Vector3 q = s.Cross(e1);
-	float v = d.Dot(q) * f;
-	if (v < 0 || u + v > 1.0f) return false;
-	float t = e2.Dot(q) * f;
-	float w = 1 - (u+v);
-
-	// Populate differential surface
-	p_surface.SetShape(this);
-	p_surface.Distance = t;
-	p_surface.Point = p_ray.PointAlongRay(t);
-	
-	p_surface.PointUV.Set (
-		v0.UV.U * u + v1.UV.U * v + v2.UV.U * w,
-		v0.UV.V * u + v1.UV.V * v + v2.UV.V * w);
-
-	p_surface.Normal = 1;
-	*/
-	//Vector3::Cross(v1.Position - v0.Position, v2.Position - v0.Position, p_surface.Normal);
-	//p_surface.Normal.Normalize();
-
-	/**/
 
 	const Vector3 &OA = p_ray.Origin - v0.Position,
 		&BA = v1.Position - v0.Position,
@@ -192,29 +157,25 @@ bool IndexedTriangle<Vertex>::Intersects(const Ray &p_ray, float p_fTime, Differ
 	p_surface.Distance = t;
 	p_surface.Point = p_ray.PointAlongRay(t);
 	
+	// Set 2d parametric surface representation
 	p_surface.PointUV.Set (
 		v0.UV.U * alpha + v1.UV.U * beta + v2.UV.U * gamma,
 		v0.UV.V * alpha + v1.UV.V * beta + v2.UV.V * gamma);
 
-	//p_surface.Normal = v0.Position;
-	//p_surface.Normal.Normalize();
+	// Set shading normal
+	p_surface.ShadingNormal.Set(v0.Normal.X * alpha + v1.Normal.X * beta + v2.Normal.X * gamma,
+		v0.Normal.Y * alpha + v1.Normal.Y * beta + v2.Normal.Y * gamma,
+		v0.Normal.Z * alpha + v1.Normal.Z * beta + v2.Normal.Z * gamma);
 
-	//p_surface.Normal = v0.Normal + v1.Normal + v2.Normal;
-	//p_surface.Normal.Normalize();
+	p_surface.ShadingNormal.Normalize();
 
-	//p_surface.Normal.Set(v0.Normal.X * alpha + v1.Normal.X * beta + v2.Normal.X * gamma,
-	//	v0.Normal.Y * alpha + v1.Normal.Y * beta + v2.Normal.Y * gamma,
-	//	v0.Normal.Z * alpha + v1.Normal.Z * beta + v2.Normal.Z * gamma);
-	
-	//Vector3::Cross(BA, CA, p_surface.Normal); p_surface.Normal.Y = -p_surface.Normal.Y;
-	//p_surface.Normal.Normalize();
+	// Set geometry normal
+	Vector3::Cross(v1.Position - v0.Position, v2.Position - v0.Position, p_surface.GeometryNormal);
+	p_surface.GeometryNormal.Normalize();
 
-	Vector3::Cross(v1.Position - v0.Position, v2.Position - v0.Position, p_surface.Normal);
-	p_surface.Normal.Normalize();
+	if (Vector3::Dot(p_ray.Origin - p_surface.Point, p_surface.GeometryNormal) < 0)
+		p_surface.GeometryNormal = -p_surface.GeometryNormal;
 
-	//Vector3::Cross(BA, CA, p_surface.Normal); //p_surface.Normal.Y = -p_surface.Normal.Y;
-	//p_surface.Normal.Normalize();
-	/**/
 	return true;
 }
 //----------------------------------------------------------------------------------------------
