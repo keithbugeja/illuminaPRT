@@ -36,6 +36,12 @@ bool VisibilityQuery::IsOccluded(void)
 	return m_pScene->Intersects(m_queryRay);
 }
 //----------------------------------------------------------------------------------------------
+bool VisibilityQuery::IsOccluded(IPrimitive *p_pExclude)
+{
+	BOOST_ASSERT(m_pScene != NULL);
+	return m_pScene->Intersects(m_queryRay, p_pExclude);
+}
+//----------------------------------------------------------------------------------------------
 void VisibilityQuery::SetSegment(const Vector3 &p_segmentStart, const Vector3 &p_segmentEnd)
 {
 	m_queryRay.Set(p_segmentStart, p_segmentEnd - p_segmentStart, 0.0f, 1.0f);

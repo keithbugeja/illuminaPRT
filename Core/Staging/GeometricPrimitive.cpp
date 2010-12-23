@@ -37,11 +37,11 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection
 
 			// Update geometry normal
 			WorldTransform.Rotate(p_intersection.Surface.GeometryNormal, geometryNormalWS);
-			p_intersection.Surface.ShadingBasisWS.InitFromV(shadingNormalWS);
+			p_intersection.Surface.ShadingBasisWS.InitFromW(shadingNormalWS);
 
 			// Update shading normal
 			WorldTransform.Rotate(p_intersection.Surface.ShadingNormal, shadingNormalWS);
-			p_intersection.Surface.GeometryBasisWS.InitFromV(geometryNormalWS);
+			p_intersection.Surface.GeometryBasisWS.InitFromW(geometryNormalWS);
 
 			// Update intersection point in world space
 			p_intersection.Surface.PointWS = p_ray.PointAlongRay(p_intersection.Surface.Distance);

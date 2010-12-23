@@ -62,7 +62,7 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 	*/
 
 	const int samples = 1;
-	m_nMaxRayDepth = 1;
+	m_nMaxRayDepth = 2;
 
 	Vector3 wOut, wIn,
 		reflectionVector;
@@ -71,8 +71,6 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 		diffuse;
 	
 	Ray ray;
-
-	JitterSampler sampler;
 
 	for (int s = 0; s < samples; s++)
 	{
@@ -91,26 +89,29 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 				// We encoutered a light
 				if (p_intersection.IsEmissive())
 				{
-					sampler.Get2DSamples(&sample, 1);
+					p_pScene->GetSampler()->Get2DSamples(&sample, 1);
 
 					result += p_intersection.GetLight()->Radiance(
 						p_intersection.Surface.PointWS, sample.U, sample.V, wOut, visibilityQuery);
 				}
 
 				// Sample all scene lights
-				result += SampleAllLights(p_pScene, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.V, &sampler, 1);
+				result += SampleAllLights(p_pScene, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, p_pScene->GetSampler(), 1);
 
-				/*
+				/**/
 				//Need method to generate a point on the hemisphere
-				sampler.Get2DSamples(&sample, 1);
+				p_pScene->GetSampler()->Get2DSamples(&sample, 1);
 
-				Matrix3x3::Product(p_intersection.Surface.GeometryBasisWS.GetMatrix(), 
-					OrthonormalBasis::FromSpherical(sample.U * Maths::PiTwo, sample.V * Maths::PiHalf),
-					reflectionVector);
+				//Vector3::Reflect(p_intersection.Surface.GeometryBasisWS.W, -ray.Direction, reflectionVector);
+				reflectionVector = p_intersection.Surface.GeometryBasisWS.Project(OrthonormalBasis::FromSpherical(0, 0));
+
+				//Matrix3x3::Product(p_intersection.Surface.GeometryBasisWS.GetMatrix(), 
+				//	OrthonormalBasis::FromSpherical(sample.U * Maths::PiTwo, sample.V * Maths::PiHalf),
+				//	reflectionVector);
 
 				ray.Direction = reflectionVector;
 				ray.Origin = p_intersection.Surface.PointWS + ray.Direction * 0.0001f;
-				*/
+				/**/
 
 				////
 				////// Get BSDF for current point of intersection
