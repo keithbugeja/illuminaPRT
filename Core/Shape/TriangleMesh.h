@@ -11,6 +11,7 @@
 #include "Shape/Shape.h"
 #include "Shape/VertexFormats.h"
 #include "Geometry/BoundingBox.h"
+#include "Sampler/JitterSampler.h"
 #include "Threading/List.h"
 
 namespace Illumina 
@@ -24,6 +25,8 @@ namespace Illumina
 			: public IShape
 		{
 		protected:
+			float m_fArea;
+
 			AxisAlignedBoundingBox m_boundingBox;
 
 		public:
@@ -38,6 +41,10 @@ namespace Illumina
 			bool IsBounded(void) const;
 			void ComputeBoundingVolume(void);
 			IBoundingVolume* GetBoundingVolume(void) const;
+
+			// Area methods
+			void ComputeArea(void);
+			float GetArea(void) const;
 
 			// Vertex management			
 			size_t AddVertex(const U &p_vertex);
@@ -60,6 +67,11 @@ namespace Illumina
 			// Update and rebuild methods for dynamic meshes
 			bool Update(void) { return true; }
 			bool Rebuild(void) { return true; }
+
+			// Sampling methods
+			float GetPdf(const Vector3 &p_point) const;
+			Vector3 SamplePoint(float p_u, float p_v, Vector3 &p_normal) const;
+			Vector3 SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) const;
 
 			// Intersect methods
 			virtual bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface) = 0;

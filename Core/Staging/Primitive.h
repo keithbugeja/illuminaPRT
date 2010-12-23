@@ -18,9 +18,6 @@ namespace Illumina
 			virtual bool IsBounded(void) const = 0;
 			virtual boost::shared_ptr<IBoundingVolume> GetWorldBounds(void) const  = 0;
 
-			virtual AreaLight* GetAreaLight(void) const = 0;
-			virtual BSDF* GetBSDF(void) const = 0;
-
 			virtual bool Intersect(const Ray &p_ray, float p_fTime, Intersection &p_intersection) = 0;
 			virtual bool Intersect(const Ray &p_ray, float p_fTime) = 0;
 

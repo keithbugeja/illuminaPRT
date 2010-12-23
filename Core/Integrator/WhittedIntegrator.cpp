@@ -9,6 +9,7 @@
 
 #include "Geometry/Ray.h"
 #include "Geometry/Intersection.h"
+#include "Sampler/JitterSampler.h"
 #include "Material/Material.h"
 #include "Spectrum/Spectrum.h"
 #include "Staging/Visibility.h"
@@ -60,8 +61,8 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 	}
 	*/
 
-	const int samples = 10;
-	m_nMaxRayDepth = 3;
+	const int samples = 1;
+	m_nMaxRayDepth = 1;
 
 	Vector3 wOut, wIn,
 		reflectionVector;
@@ -71,6 +72,8 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 	
 	Ray ray;
 
+	JitterSampler sampler;
+
 	for (int s = 0; s < samples; s++)
 	{
 		ray = p_ray;
@@ -79,36 +82,66 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 		{
 			if(p_pScene->Intersects(ray, p_intersection))
 			{
-				// Get BSDF for current point of intersection
-                BSDF bsdf = intersection.Primitive.GetBSDF(intersection.SurfaceGeometry, intersection.SurfaceGeometry);
+				//result = Spectrum(p_intersection.Surface.Distance);
+				VisibilityQuery visibilityQuery(p_pScene);
 
-                // Add emissive component
-                radiance += intersection.Le(wOut);
+				Vector3 wOut;
+				Vector2 sample;
 
-                // Add direct lighting contribution
-                radiance += SampleAllLights(intersection.SurfaceGeometry.Point, intersection.SurfaceGeometry.Normal, wOut, bsdf, m_shadowSampleCount);
-
-				Spectrum light;
-				
-				for (int lightIdx = 0; lightIdx < p_pScene->LightList.Size(); ++lightIdx)
+				// We encoutered a light
+				if (p_intersection.IsEmissive())
 				{
-					light = IIntegrator::EstimateDirectLighting(p_pScene, p_pScene->LightList[lightIdx], 
-						p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.V, wOut);
+					sampler.Get2DSamples(&sample, 1);
 
+					result += p_intersection.GetLight()->Radiance(
+						p_intersection.Surface.PointWS, sample.U, sample.V, wOut, visibilityQuery);
 				}
 
-				//p_intersection.GetMaterial()->Diffuse(p_intersection.Surface, p_intersection.Surface.PointWS, wIn, reflectionVector, diffuse);
+				// Sample all scene lights
+				result += SampleAllLights(p_pScene, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.V, &sampler, 1);
 
-				 //Need method to generate a point on the hemisphere
+				/*
+				//Need method to generate a point on the hemisphere
+				sampler.Get2DSamples(&sample, 1);
+
 				Matrix3x3::Product(p_intersection.Surface.GeometryBasisWS.GetMatrix(), 
-					OrthonormalBasis::FromSpherical(m_random.NextFloat() * Maths::PiTwo, m_random.NextFloat() * Maths::PiHalf),
+					OrthonormalBasis::FromSpherical(sample.U * Maths::PiTwo, sample.V * Maths::PiHalf),
 					reflectionVector);
 
-				//Vector3::Reflect(ray.Direction, p_intersection.Surface.GeometryBasisWS.V, reflectionVector);
 				ray.Direction = reflectionVector;
 				ray.Origin = p_intersection.Surface.PointWS + ray.Direction * 0.0001f;
+				*/
 
-				result += /*diffuse * */ (light / (i + 1));
+				////
+				////// Get BSDF for current point of intersection
+				////BSDF bsdf = intersection.Primitive.GetBSDF(intersection.SurfaceGeometry, intersection.SurfaceGeometry);
+
+				////// Add emissive component
+				////radiance += intersection.Le(wOut);
+
+				////// Add direct lighting contribution
+				////radiance += SampleAllLights(intersection.SurfaceGeometry.Point, intersection.SurfaceGeometry.Normal, wOut, bsdf, m_shadowSampleCount);
+
+				//Spectrum light;
+				//
+				//for (int lightIdx = 0; lightIdx < p_pScene->LightList.Size(); ++lightIdx)
+				//{
+				//	light = IIntegrator::EstimateDirectLighting(p_pScene, p_pScene->LightList[lightIdx], 
+				//		p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.V, wOut);
+				//}
+
+				////p_intersection.GetMaterial()->Diffuse(p_intersection.Surface, p_intersection.Surface.PointWS, wIn, reflectionVector, diffuse);
+
+				////Need method to generate a point on the hemisphere
+				//Matrix3x3::Product(p_intersection.Surface.GeometryBasisWS.GetMatrix(), 
+				//	OrthonormalBasis::FromSpherical(m_random.NextFloat() * Maths::PiTwo, m_random.NextFloat() * Maths::PiHalf),
+				//	reflectionVector);
+
+				////Vector3::Reflect(ray.Direction, p_intersection.Surface.GeometryBasisWS.V, reflectionVector);
+				//ray.Direction = reflectionVector;
+				//ray.Origin = p_intersection.Surface.PointWS + ray.Direction * 0.0001f;
+
+				//result += /*diffuse * */ (light / (i + 1));
 			}
 			else
 				break;

@@ -5,6 +5,8 @@
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 #include "Shape/Sphere.h"
+#include "Exception/Exception.h"
+#include "Maths/Random.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -96,5 +98,49 @@ bool Sphere::Intersects(const Ray &p_ray, float p_fTime)
 	}
 
 	return false;
+}
+//----------------------------------------------------------------------------------------------
+float Sphere::GetArea(void) const
+{
+	return Maths::Pi * 4 * Radius * Radius;
+}
+//----------------------------------------------------------------------------------------------
+float Sphere::GetPdf(const Vector3 &p_point) const
+{
+	return 1.0f / GetArea();
+}
+//----------------------------------------------------------------------------------------------
+Vector3 Sphere::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) const
+{
+	Vector3 wIn = p_viewPoint - Centre;
+	float distance = wIn.Length();
+
+	if (distance < Radius)
+		return Vector3::Zero;
+
+	float sin_alpha_max = Radius / distance;
+	float cos_alpha_max = (1.0f - sin_alpha_max * sin_alpha_max);
+	float q = 1.0f / (Maths::PiTwo * (1.0f - cos_alpha_max));
+
+	float cos_alpha = 1.0 + p_u * (cos_alpha_max - 1.0f);
+	float sin_alpha = Maths::Sqrt(1.0 - cos_alpha * cos_alpha);
+
+	float phi = Maths::PiTwo * p_v;
+	float cos_phi = Maths::Cos(phi);
+	float sin_phi = Maths::Sin(phi);
+
+	Vector3 surfacePoint(cos_phi * sin_alpha, sin_alpha * cos_alpha, cos_alpha);
+	OrthonormalBasis basis; 
+	wIn.Normalize(); basis.InitFromV(wIn);
+	surfacePoint = basis.Project(surfacePoint);
+
+	p_normal = wIn;
+
+	return Centre + surfacePoint * (Radius + 0.01f);
+}
+//----------------------------------------------------------------------------------------------
+Vector3 Sphere::SamplePoint(float p_u, float p_v, Vector3 &p_normal) const
+{
+	throw new Exception("Use point sampling function that specifies a view point!");
 }
 //----------------------------------------------------------------------------------------------

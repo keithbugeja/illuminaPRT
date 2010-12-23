@@ -34,12 +34,12 @@
 #include "Shape/IndexedTriangle.h"
 #include "Shape/Triangle.h"
 #include "Shape/Sphere.h"
-#include "Shape/OctreeMesh.h"
 #include "Shape/BVHMesh.h"
 #include "Shape/KDTreeMesh.h"
 #include "Shape/BIHMesh.h"
 #include "Shape/HybridMesh.h"
 #include "Staging/GeometricPrimitive.h"
+#include "Staging/EmissivePrimitive.h"
 #include "Space/BasicSpace.h"
 #include "Space/BVHSpace.h"
 #include "Material/Material.h"
@@ -56,6 +56,7 @@
 
 #include "Staging/Scene.h"
 #include "Light/PointLight.h"
+#include "Light/DiffuseAreaLight.h"
 #include "Integrator/WhittedIntegrator.h"
 #include "Device/ImageDevice.h"
 #include "Renderer/BasicRenderer.h"
@@ -903,11 +904,11 @@ void RayTracer(int p_nOMPThreads)
 	// Load Model
 	#if defined(__PLATFORM_WINDOWS__)
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\testAxes.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza5.obj");
+		std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza4.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sibenik.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza4.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza_crytek.obj");
-		std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\Kalabsha\\Kalabsha12.obj");
+		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\Kalabsha\\Kalabsha12.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\cornellbox.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\conference3.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\david.obj");
@@ -946,11 +947,16 @@ void RayTracer(int p_nOMPThreads)
 	//std::cout << "Save object : [sibenik.obj]" << std::endl;
 	//ShapeFactory::SaveMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>("D:\\Assets\\object_out.obj", shape_mesh1);
 
+	// Initialise sphere arealight
+	Sphere shape_mesh2(Vector3(0, 15.0f, 0), 4.0f);
+	DiffuseAreaLight diffuseLight(NULL, &shape_mesh2, Spectrum(1000,1000,1000));
+
 	//----------------------------------------------------------------------------------------------
 	// Compute bounding volumes
 	//----------------------------------------------------------------------------------------------
 	std::cout << "Computing bounding volumes..." << std::endl;
 	shape_mesh1->ComputeBoundingVolume();
+	shape_mesh2.ComputeBoundingVolume();
 	std::cout << std::endl;
 
 	//----------------------------------------------------------------------------------------------
@@ -966,7 +972,7 @@ void RayTracer(int p_nOMPThreads)
 	//----------------------------------------------------------------------------------------------
 	// Materials
 	//----------------------------------------------------------------------------------------------
-	BasicMaterial material_mesh1(Spectrum(1,0,0));
+	//BasicMaterial material_mesh1(Spectrum(1,0,0));
 
 	//----------------------------------------------------------------------------------------------
 	// Initialise scene space
@@ -976,10 +982,15 @@ void RayTracer(int p_nOMPThreads)
 
 	GeometricPrimitive pmv_mesh1;
 	pmv_mesh1.SetShape((IShape*)shape_mesh1.get());
-	pmv_mesh1.SetMaterial((IMaterial*)&material_mesh1);
+	//pmv_mesh1.SetMaterial((IMaterial*)&material_mesh1);
 	pmv_mesh1.WorldTransform.SetScaling(Vector3(3.0f, 3.0f, 3.0f));
 	pmv_mesh1.WorldTransform.SetTranslation(Vector3(0.0f, -10.0f, 0.0f));
 	basicSpace.PrimitiveList.PushBack(&pmv_mesh1);
+
+	EmissivePrimitive pmv_mesh2;
+	pmv_mesh2.SetShape(&shape_mesh2);
+	pmv_mesh2.SetLight(&diffuseLight);
+	basicSpace.PrimitiveList.PushBack(&pmv_mesh2);
 
 	// Prepare space
 	basicSpace.Initialise();
@@ -988,11 +999,12 @@ void RayTracer(int p_nOMPThreads)
 	//----------------------------------------------------------------------------------------------
 	// Scene creation complete
 	//----------------------------------------------------------------------------------------------
-	PointLight pointLight(Vector3(0, 5, 0), RGBSpectrum(1000,1000,1000));
+	//PointLight pointLight(Vector3(0, 5, 0), RGBSpectrum(1000,1000,1000));
 	//PointLight pointLight(Vector3(0, 15, 0), RGBSpectrum(1000,1000,1000));
  
 	Scene scene(&basicSpace);
-	scene.LightList.PushBack(&pointLight);
+	//scene.LightList.PushBack(&pointLight);
+	scene.LightList.PushBack(&diffuseLight);
  
 	WhittedIntegrator integrator;
 	integrator.Initialise(&scene, &camera);
@@ -1023,9 +1035,9 @@ void RayTracer(int p_nOMPThreads)
 		renderTimer.restart();
 		alpha += 0.05f;
 	 
-		camera.MoveTo(Vector3(0, 5, -10));
+		//camera.MoveTo(Vector3(0, 5, -10));
 		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 0, Maths::Sin(alpha) * -20));
-		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10, Maths::Sin(alpha) * -20));
+		camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10, Maths::Sin(alpha) * -20));
 		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -30, 0, Maths::Sin(alpha) * -30));
 		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -5, 5, Maths::Sin(alpha) * -5));
 		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10.0, Maths::Sin(alpha) * -10));

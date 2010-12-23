@@ -48,6 +48,8 @@ namespace Illumina
 			Vector3 GetV(void) const;
 			Vector3 GetW(void) const;
 
+			Vector3 Project(const Vector3 &p_vector) const;
+
 			Matrix3x3 GetMatrix(void) const;
 
 			bool operator==(const OrthonormalBasis &p_basis) const;

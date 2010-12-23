@@ -142,6 +142,8 @@
     <ClCompile Include="..\..\..\..\Core\Image\RGBPixel.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\Integrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\WhittedIntegrator.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Light\AreaLight.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Light\DiffuseAreaLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\PointLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Maths\Maths.cpp" />
     <ClCompile Include="..\..\..\..\Core\Maths\Random.cpp" />
@@ -152,6 +154,7 @@
     <ClCompile Include="..\..\..\..\Core\Sampler\RandomSampler.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Sphere.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Triangle.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Staging\EmissivePrimitive.cpp" />
     <ClCompile Include="..\..\..\..\Core\Staging\GeometricPrimitive.cpp" />
     <ClCompile Include="..\..\..\..\Core\Staging\Scene.cpp" />
     <ClCompile Include="..\..\..\..\Core\Staging\Visibility.cpp" />
@@ -191,6 +194,8 @@
     <ClInclude Include="..\..\..\..\Core\Image\RGBPixel.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\Integrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\WhittedIntegrator.h" />
+    <ClInclude Include="..\..\..\..\Core\Light\AreaLight.h" />
+    <ClInclude Include="..\..\..\..\Core\Light\DiffuseAreaLight.h" />
     <ClInclude Include="..\..\..\..\Core\Light\Light.h" />
     <ClInclude Include="..\..\..\..\Core\Light\PointLight.h" />
     <ClInclude Include="..\..\..\..\Core\Material\Material.h" />
@@ -211,7 +216,6 @@
     <ClInclude Include="..\..\..\..\Core\Shape\HybridMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\IndexedTriangle.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\KDTreeMesh.h" />
-    <ClInclude Include="..\..\..\..\Core\Shape\OctreeMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\Shape.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\ShapeFactory.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\Sphere.h" />
@@ -226,6 +230,7 @@
     <ClInclude Include="..\..\..\..\Core\Spectrum\RGBSpectrum.h" />
     <ClInclude Include="..\..\..\..\Core\Spectrum\Spectrum.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\Aggregate.h" />
+    <ClInclude Include="..\..\..\..\Core\Staging\EmissivePrimitive.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\GeometricPrimitive.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\Primitive.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\Scene.h" />

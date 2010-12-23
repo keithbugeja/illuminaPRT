@@ -19,10 +19,10 @@ namespace Illumina
 		class BSDF
 		{
 		public:
-			static LocalToSurface(const DifferentialSurface p_surface, const Vector3 &p_vector, Vector3 &p_out);
-			static WorldToSurface(const Transformation p_worldTransform, const DifferentialSurface, p_surface, const Vector3 &p_vector, Vector3 &p_out);
-			static SurfaceToLocal(const DifferentialSurface p_surface, const Vector3 &p_vector, Vector3 &p_out);
-			static SurfaceToWorld(const Transformation p_worldTransform, const DifferentialSurface, p_surface, const Vector3 &p_vector, Vector3 &p_out);
+			//static LocalToSurface(const DifferentialSurface p_surface, const Vector3 &p_vector, Vector3 &p_out);
+			//static WorldToSurface(const Transformation p_worldTransform, const DifferentialSurface, p_surface, const Vector3 &p_vector, Vector3 &p_out);
+			//static SurfaceToLocal(const DifferentialSurface p_surface, const Vector3 &p_vector, Vector3 &p_out);
+			//static SurfaceToWorld(const Transformation p_worldTransform, const DifferentialSurface, p_surface, const Vector3 &p_vector, Vector3 &p_out);
 
 			virtual double F(const Vector3 &wIn, const Vector3 &wOut) { return 0.0f; }
 			virtual double SampleF(const Vector3 &wIn, Vector3 &wOut) { return 0.0f; }
@@ -30,9 +30,11 @@ namespace Illumina
 			virtual double Rho(Vector3 &wOut) const { return 0.0f; } // Reflectance function
 		};
 
+		/*
 		class BSDFDiffuse : public BSDF
 		{
 		}
+		*/
 
 		class IMaterial
 		{
@@ -40,6 +42,7 @@ namespace Illumina
 			virtual const BSDF& GetBSDF(void) const;
 		};
 
+		/*
 		class BasicMaterial : public IMaterial
 		{
 		protected:
@@ -56,5 +59,6 @@ namespace Illumina
 				return m_bsdf;
 			}
 		};
+		*/
 	}
 }
