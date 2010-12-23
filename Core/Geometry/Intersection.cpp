@@ -14,10 +14,19 @@ using namespace Illumina::Core;
 Intersection::Intersection(void)
 	: m_pPrimitive(NULL)
 	, m_pMaterial(NULL)
+	, m_pLight(NULL)
 	, Surface()
 	, WorldTransform()
 	, RayEpsilon(0.0f)
 { }
+//----------------------------------------------------------------------------------------------
+bool Intersection::IsEmissive(void) const {
+	return m_pLight != NULL;
+}
+//----------------------------------------------------------------------------------------------
+bool Intersection::IsMaterialDefined(void) const {
+	return m_pMaterial != NULL;
+}
 //----------------------------------------------------------------------------------------------
 IPrimitive* Intersection::GetPrimitive(void) const { 
 	return m_pPrimitive; 
@@ -33,5 +42,13 @@ IMaterial* Intersection::GetMaterial(void) const {
 //----------------------------------------------------------------------------------------------
 void Intersection::SetMaterial(IMaterial* p_pMaterial) { 
 	m_pMaterial = p_pMaterial; 
+}
+//----------------------------------------------------------------------------------------------
+ILight* Intersection::GetLight(void) const {
+	return m_pLight;
+}
+//----------------------------------------------------------------------------------------------
+void Intersection::SetLight(ILight* p_pLight) {
+	m_pLight = p_pLight;
 }
 //----------------------------------------------------------------------------------------------

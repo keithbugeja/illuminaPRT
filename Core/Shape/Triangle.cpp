@@ -144,3 +144,23 @@ bool Triangle::Intersects(const Ray &p_ray, float p_fTime)
 	return true;
 }
 //----------------------------------------------------------------------------------------------
+float Triangle::GetArea(void) const
+{
+	return Vector3::Cross(Vertex[1] - Vertex[0], Vertex[2] - Vertex[0]).Length() * 0.5;
+}
+//----------------------------------------------------------------------------------------------
+float Triangle::GetPdf(const Vector3 &p_point) const
+{
+	return 1.0f / GetArea();
+}
+//----------------------------------------------------------------------------------------------
+Vector3 Triangle::SamplePoint(float p_u, float p_v, Vector3 &p_normal) const
+{
+	float temp = Maths::Sqrt(1.0f - p_u);
+	float beta = 1.0f - temp;
+	float gamma = temp * p_v;
+
+	p_normal = Vector3::Cross(Vertex[1] - Vertex[0], Vertex[2] - Vertex[0]);
+	return (1.0f - beta - gamma) * Vertex[0] + beta * Vertex[1] + gamma * Vertex[2];
+}
+//----------------------------------------------------------------------------------------------

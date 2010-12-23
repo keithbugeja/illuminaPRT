@@ -6,7 +6,11 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+#include <string>
+#include <boost/format.hpp>
+
 #include "Spectrum/BaseSpectrum.h"
+#include "Maths/Maths.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {
@@ -19,7 +23,7 @@ namespace Illumina
 			float m_fSamples[SampleCount];
 
 		public:
-			RGBSpectrum()
+			RGBSpectrum(void)
 			{
 				m_fSamples[0] = m_fSamples[1] = m_fSamples[2] = 0.0f;
 			}

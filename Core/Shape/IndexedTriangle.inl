@@ -5,8 +5,10 @@
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 
-namespace Illumina {
-namespace Core {
+namespace Illumina 
+{
+	namespace Core 
+	{
 
 //----------------------------------------------------------------------------------------------
 template<class TVertex> 
@@ -227,6 +229,37 @@ bool IndexedTriangle<TVertex>::Intersects(const Ray &p_ray, float p_fTime)
 }
 //----------------------------------------------------------------------------------------------
 template<class TVertex>
+float IndexedTriangle<TVertex>::GetArea(void) const
+{
+	const TVertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
+		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
+		&v2 = m_pMesh->VertexList[m_nVertexID[2]];
+
+	return Vector3::Cross(v1.Position - v0.Position, v2.Position - v0.Position).Length() * 0.5;
+}
+//----------------------------------------------------------------------------------------------
+template<class TVertex>
+float IndexedTriangle<TVertex>::GetPdf(const Vector3 &p_point) const
+{
+	return 1.0f / GetArea();
+}
+//----------------------------------------------------------------------------------------------
+template<class TVertex>
+Vector3 IndexedTriangle<TVertex>::SamplePoint(float p_u, float p_v, Vector3 &p_normal) const
+{
+	const TVertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
+		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
+		&v2 = m_pMesh->VertexList[m_nVertexID[2]];
+
+	float temp = Maths::Sqrt(1.0f - p_u);
+	float beta = 1.0f - temp;
+	float gamma = temp * p_v;
+
+	p_normal = Vector3::Cross(v1.Position - v0.Position, v2.Position - v0.Position);
+	return (1.0f - beta - gamma) * v0.Position + beta * v1.Position + gamma * v2.Position;
+}
+//----------------------------------------------------------------------------------------------
+template<class TVertex>
 IndexedTriangle<TVertex>& IndexedTriangle<TVertex>::operator=(const IndexedTriangle<TVertex>& p_indexedTriangle)
 {
 	m_nVertexID[0] = p_indexedTriangle.m_nVertexID[0];
@@ -239,6 +272,5 @@ IndexedTriangle<TVertex>& IndexedTriangle<TVertex>::operator=(const IndexedTrian
 	return *this;
 }
 //----------------------------------------------------------------------------------------------
-
-}
+	}
 }

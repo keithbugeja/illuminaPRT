@@ -32,6 +32,11 @@ namespace Illumina
 
 			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface);
 			bool Intersects(const Ray &p_ray, float p_fTime);
+
+			float GetArea(void) const;
+			float GetPdf(const Vector3 &p_point) const;
+			Vector3 SamplePoint(float p_u, float p_v, Vector3 &p_normal) const;
+			Vector3 SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) const;
 		};
 	} 
 }

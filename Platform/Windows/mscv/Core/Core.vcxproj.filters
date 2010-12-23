@@ -201,6 +201,15 @@
     <ClCompile Include="..\..\..\..\Core\Integrator\Integrator.cpp">
       <Filter>Header Files\Integrator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Light\AreaLight.cpp">
+      <Filter>Header Files\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Light\DiffuseAreaLight.cpp">
+      <Filter>Header Files\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Staging\EmissivePrimitive.cpp">
+      <Filter>Header Files\Staging</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -300,9 +309,6 @@
       <Filter>Header Files\Shape</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Shape\KDTreeMesh.h">
-      <Filter>Header Files\Shape</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Shape\OctreeMesh.h">
       <Filter>Header Files\Shape</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Shape\Shape.h">
@@ -498,6 +504,15 @@
       <Filter>Header Files\Sampler</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Staging\WavefrontLoader.h">
+      <Filter>Header Files\Staging</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Light\AreaLight.h">
+      <Filter>Header Files\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Light\DiffuseAreaLight.h">
+      <Filter>Header Files\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Staging\EmissivePrimitive.h">
       <Filter>Header Files\Staging</Filter>
     </ClInclude>
   </ItemGroup>

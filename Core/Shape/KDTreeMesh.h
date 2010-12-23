@@ -136,6 +136,9 @@ namespace Illumina
 					triangleList.PushBack(&ITriangleMesh<T, U>::TriangleList[idx]);
 				}
 
+				// Area
+				ComputeArea();
+
 				// Build bounding volume hierarchy
 				ComputeBounds(triangleList, m_rootNode.BoundingBox);
 				m_nMinNodeWidth = m_rootNode.BoundingBox.GetRadius() / 1000.0f;

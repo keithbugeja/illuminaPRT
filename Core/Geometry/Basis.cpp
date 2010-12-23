@@ -149,6 +149,11 @@ Vector3 OrthonormalBasis::GetW() const {
 	return W; 
 }
 //----------------------------------------------------------------------------------------------
+Vector3 OrthonormalBasis::Project(const Vector3 &p_vector) const
+{
+	return p_vector.X * U + p_vector.Y * V + p_vector.Z * W;
+}
+//----------------------------------------------------------------------------------------------
 Matrix3x3 OrthonormalBasis::GetMatrix() const { 
 	return Matrix3x3(U, V, W);
 }

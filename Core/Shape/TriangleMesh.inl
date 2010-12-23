@@ -97,3 +97,37 @@ void ITriangleMesh<T, U>::AddIndexedTriangleList(const List<int> &p_indexList)
 		AddIndexedTriangle(p_indexList[0], p_indexList[1], p_indexList[2]);
 }
 //----------------------------------------------------------------------------------------------
+template<class T, class U>
+float ITriangleMesh<T, U>::GetArea(void) const {
+	return m_fArea;
+}
+//----------------------------------------------------------------------------------------------
+template<class T, class U>
+float ITriangleMesh<T, U>::GetPdf(const Vector3 &p_point) const {
+	return 1.0f / m_fArea;
+}
+//----------------------------------------------------------------------------------------------
+template<class T, class U>
+Vector3 ITriangleMesh<T, U>::SamplePoint(float p_u, float p_v, Vector3 &p_normal) const 
+{
+	float sampleBuffer;
+	JitterSampler sampler;
+	sampler.Get1DSamples(&sampleBuffer, 1);
+
+	int triangleToSample = (int)(TriangleList.Size() * sampleBuffer);
+	return TriangleList[triangleToSample].SamplePoint(p_u, p_v, p_normal);
+}
+//----------------------------------------------------------------------------------------------
+template<class T, class U>
+Vector3 ITriangleMesh<T, U>::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) const {
+	return SamplePoint(p_u, p_v, p_normal);
+}
+//----------------------------------------------------------------------------------------------
+template<class T, class U>
+void ITriangleMesh<T, U>::ComputeArea(void)
+{
+	m_fArea = 0;
+
+	for (int triIdx = 0; triIdx < TriangleList.Size(); triIdx++)
+		m_fArea += TriangleList[triIdx].GetArea();
+}

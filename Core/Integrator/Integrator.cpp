@@ -10,23 +10,24 @@
 #include "Geometry/Ray.h"
 #include "Geometry/Intersection.h"
 #include "Spectrum/Spectrum.h"
+#include "Sampler/Sampler.h"
 #include "Staging/Visibility.h"
 #include "Staging/Scene.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, const BSDF &p_bsdf, 
-				const Vector3 &p_point, const Vector3 &p_normal, Vector3 &p_wOut)
+Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight,  
+	const Vector3 &p_point, const Vector3 &p_normal, float p_u, float p_v, Vector3 &p_wOut, int p_nShadowSamples)
 { 
-	Vector3 wIn;
+	//Vector3 wIn;
 
 	VisibilityQuery visibilityQuery(p_pScene);
 
-	Spectrum Li = p_pLight->Radiance(p_point, wIn, visibilityQuery);
+	Spectrum Li = p_pLight->Radiance(p_point, p_u, p_v, p_wOut, visibilityQuery);
 				
+	//if (!Li.IsBlack())
 	if (!Li.IsBlack() && !visibilityQuery.IsOccluded())
 	{
-
 		return Li * Maths::Max(0, Vector3::Dot(p_wOut, p_normal));
 	}
 
@@ -65,27 +66,28 @@ public Spectrum EstimateDirectLighting(ILight light, Vector3 p_point,
 //	return p_transform.Apply(OrthonormalBasis::FromSpherical(spherical));
 //}
 //----------------------------------------------------------------------------------------------
-/*
-		public Spectrum SampleAllLights(Vector3 p_point, Vector3 p_normal, Vector3 p_wOut, BSDF p_bsdf, 
-			Sample1DDistribution p_lightSamples, Sample1DDistribution p_bxdfSamples)
+Spectrum IIntegrator::SampleAllLights(Scene *p_pScene, 
+	const Vector3 &p_point, 
+	const Vector3 &p_normal, 
+	ISampler* p_sampler,
+	int p_nSampleCount)
+{
+	Vector2 sample;
+	Vector3 wOut;
+	Spectrum L(0);
+
+	for (int lightIdx = 0, lightCount = p_pScene->LightList.Size(); lightIdx < lightCount; lightIdx++)
+	{
+		Spectrum Ld(0);
+
+		for (int sampleIdx = 0; sampleIdx < p_nSampleCount; sampleIdx++)
 		{
-			Spectrum L = Spectrum.Zero;
-
-			for (int lightIdx = 0, lightCount = m_scene.Lights.Count; lightIdx < lightCount; lightIdx++)
-			{
-				ILight light = m_scene.Lights[lightIdx];
-				int sampleCount = (int)p_lightSamples[lightIdx++];
-
-				Spectrum Ld = Spectrum.Zero;
-
-				for (int sampleIdx = 0; sampleIdx < sampleCount; sampleIdx++)
-				{
-					Ld += EstimateDirectLighting(light, p_point, p_normal, p_wOut, p_bsdf, (int)p_bxdfSamples[lightIdx]);
-				}
-
-				L += Ld / sampleCount;
-			}
-
-			return L;
+			p_sampler->Get2DSamples(&sample, 1);
+			Ld += EstimateDirectLighting(p_pScene, p_pScene->LightList[lightIdx], p_point, p_normal, sample.U, sample.V, wOut, p_nSampleCount);
 		}
-		*/
+
+		L += Ld / p_nSampleCount;
+	}
+
+	return L;
+}
