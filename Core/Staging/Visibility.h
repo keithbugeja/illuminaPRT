@@ -32,6 +32,7 @@ namespace Illumina
 
 			void SetSegment(const Vector3 &p_segmentStart, const Vector3 &p_segmentEnd);
 			void SetSegment(const Vector3 &p_segmentStart, float p_fEpsilonStart, const Vector3 &p_segmentEnd, float p_fEpsilonEnd);
+			void SetSegment(const Vector3 &p_segmentStart, const Vector3 &p_segmentDirection, float p_fSegmentLength, float p_fSegmentEpsilon);
 		};
 	}
 }

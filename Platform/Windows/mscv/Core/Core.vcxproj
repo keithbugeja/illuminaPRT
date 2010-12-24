@@ -200,6 +200,7 @@
     <ClInclude Include="..\..\..\..\Core\Light\PointLight.h" />
     <ClInclude Include="..\..\..\..\Core\Material\Material.h" />
     <ClInclude Include="..\..\..\..\Core\Maths\Maths.h" />
+    <ClInclude Include="..\..\..\..\Core\Maths\Montecarlo.h" />
     <ClInclude Include="..\..\..\..\Core\Maths\Random.h" />
     <ClInclude Include="..\..\..\..\Core\Object\Cloneable.h" />
     <ClInclude Include="..\..\..\..\Core\Object\Object.h" />

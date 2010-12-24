@@ -515,6 +515,9 @@
     <ClInclude Include="..\..\..\..\Core\Staging\EmissivePrimitive.h">
       <Filter>Header Files\Staging</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Maths\Montecarlo.h">
+      <Filter>Header Files\Maths</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">
