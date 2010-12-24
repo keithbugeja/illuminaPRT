@@ -52,3 +52,8 @@ void VisibilityQuery::SetSegment(const Vector3 &p_segmentStart, float p_fEpsilon
 	m_queryRay.Set(p_segmentStart, p_segmentEnd - p_segmentStart, p_fEpsilonStart, 1.0f - p_fEpsilonEnd);
 }
 //----------------------------------------------------------------------------------------------
+void VisibilityQuery::SetSegment(const Vector3 &p_segmentStart, const Vector3 &p_segmentDirection, float p_fSegmentLength, float p_fSegmentEpsilon)
+{
+	m_queryRay.Set(p_segmentStart, p_segmentDirection, p_fSegmentEpsilon, p_fSegmentLength - p_fSegmentEpsilon);
+}
+//----------------------------------------------------------------------------------------------

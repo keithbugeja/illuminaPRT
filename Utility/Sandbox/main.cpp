@@ -949,7 +949,7 @@ void RayTracer(int p_nOMPThreads)
 	//ShapeFactory::SaveMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>("D:\\Assets\\object_out.obj", shape_mesh1);
 
 	// Initialise sphere arealight
-	Sphere shape_mesh2(Vector3(0, 30.0f, 0), 5.0f);
+	Sphere shape_mesh2(Vector3(0, 7.0f, 0), 2.0f);
 	DiffuseAreaLight diffuseLight(NULL, &shape_mesh2, Spectrum(10000,10000,10000));
 
 	//----------------------------------------------------------------------------------------------
@@ -984,7 +984,7 @@ void RayTracer(int p_nOMPThreads)
 	GeometricPrimitive pmv_mesh1;
 	pmv_mesh1.SetShape((IShape*)shape_mesh1.get());
 	//pmv_mesh1.SetMaterial((IMaterial*)&material_mesh1);
-	pmv_mesh1.WorldTransform.SetScaling(Vector3(3.0f, 3.0f, 3.0f));
+	//pmv_mesh1.WorldTransform.SetScaling(Vector3(3.0f, 3.0f, 3.0f));
 	//pmv_mesh1.WorldTransform.SetScaling(Vector3(5.0f, 5.0f, 5.0f));
 	pmv_mesh1.WorldTransform.SetTranslation(Vector3(0.0f, -10.0f, 0.0f));
 	basicSpace.PrimitiveList.PushBack(&pmv_mesh1);
@@ -1007,7 +1007,7 @@ void RayTracer(int p_nOMPThreads)
 	// Scene creation complete
 	//----------------------------------------------------------------------------------------------
 	//PointLight pointLight(Vector3(0, 5, 0), RGBSpectrum(1000,1000,1000));
-	//PointLight pointLight(Vector3(0, 15, 0), RGBSpectrum(1000,1000,1000));
+	//PointLight pointLight(Vector3(0, 10, 0), RGBSpectrum(10000,10000,10000));
  
 	Scene scene(&basicSpace, &sampler);
 	//scene.LightList.PushBack(&pointLight);
@@ -1036,16 +1036,17 @@ void RayTracer(int p_nOMPThreads)
 	boost::progress_display renderProgress(height);
 
 	double alpha = 0.0f,
-		totalFPS = 0.0f;
+		totalFPS = 0.0f,
+		cDistX = -10, cDistY = 5, cDistZ = -10;
 
 	for (int iteration = 1; iteration < 10000; iteration++)
 	{
 		renderTimer.restart();
-		alpha += 0.05f;
+		//alpha += 0.05f;
 	 
 		//camera.MoveTo(Vector3(0, 5, -10));
 		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 0, Maths::Sin(alpha) * -20));
-		camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10, Maths::Sin(alpha) * -20));
+		camera.MoveTo(Vector3(Maths::Cos(alpha) * cDistX, cDistY, Maths::Sin(alpha) * cDistZ));
 		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -30, 0, Maths::Sin(alpha) * -30));
 		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -5, 5, Maths::Sin(alpha) * -5));
 		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10.0, Maths::Sin(alpha) * -10));

@@ -62,7 +62,7 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 	}
 	*/
 
-	const int samples = 1;
+	const int samples = 5;
 	m_nMaxRayDepth = 1;
 
 	Vector3 wOut, wIn,
@@ -75,7 +75,7 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 	
 	Ray ray;
 
-	m_bShowNormals = true;
+	//m_bShowNormals = true;
 
 	VisibilityQuery visibilityQuery(p_pScene);
 
@@ -110,20 +110,13 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 				// Sample all scene lights
 				result += SampleAllLights(p_pScene, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, p_pScene->GetSampler(), p_intersection.GetLight(), 1);
 
-
-				/**/
 				//Need method to generate a point on the hemisphere
 				//p_pScene->GetSampler()->Get2DSamples(&sample, 1);
-
-				//Vector3::Reflect(p_intersection.Surface.GeometryBasisWS.W, -ray.Direction, reflectionVector);
-				//reflectionVector = p_intersection.Surface.GeometryBasisWS.Project(OrthonormalBasis::FromSpherical(0, 0));
-
-				//Matrix3x3::Product(p_intersection.Surface.GeometryBasisWS.GetMatrix(), 
-				//	OrthonormalBasis::FromSpherical(sample.U * Maths::PiTwo, sample.V * Maths::PiHalf),
-				//	reflectionVector);
-
-				//ray.Direction = reflectionVector;
-				//ray.Origin = p_intersection.Surface.PointWS + ray.Direction * 0.0001f;
+				//ray.Direction = p_intersection.Surface.GeometryBasisWS.Project(OrthonormalBasis::FromSpherical(sample.U * Maths::PiHalf * 0.1f, sample.V * Maths::PiTwo));
+				//Vector3::Reflect(ray.Direction, p_intersection.Surface.GeometryBasisWS.W, ray.Direction);
+				//ray.Origin = p_intersection.Surface.PointWS;
+				//ray.Min = 0.001f;
+				//ray.Max = Maths::Maximum;
 
 				/**/
 

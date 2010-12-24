@@ -19,47 +19,21 @@ using namespace Illumina::Core;
 Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight,  
 	const Vector3 &p_point, const Vector3 &p_normal, float p_u, float p_v, Vector3 &p_wOut, int p_nShadowSamples)
 { 
-	//Vector3 wIn;
-
 	VisibilityQuery visibilityQuery(p_pScene);
 
 	Spectrum Li = p_pLight->Radiance(p_point, p_u, p_v, p_wOut, visibilityQuery);
 				
-	//if (!Li.IsBlack())
-	if (!Li.IsBlack() && !visibilityQuery.IsOccluded())
+	if (!Li.IsBlack())
 	{
-		return Li * Maths::Max(0, Vector3::Dot(p_wOut, p_normal));
+		if (!visibilityQuery.IsOccluded())
+		{
+			return Li * Maths::Max(0, Vector3::Dot(p_wOut, p_normal));
+		}
 	}
 
 	return 0;
 }
 
-/*
-public Spectrum EstimateDirectLighting(ILight light, Vector3 p_point, 
-	Vector3 p_normal, Vector3 p_wOut, BSDF p_bsdf, int p_bxdfIndex)
-{
-	Sample1DDistribution samples = new Sample1DDistribution();
-	m_scene.Sampler.GetSampleDistribution(samples, 5);
-
-	VisibilityQuery visibilityQuery = new VisibilityQuery(m_scene);
-	Vector3 wIn = new Vector3();
-			
-	Spectrum Li = light.Radiance(p_point, samples[0], samples[1], ref wIn, ref visibilityQuery),
-		Ld = Spectrum.Zero;
-
-	if (!Li.IsZero())
-	{
-		Spectrum f = p_bsdf.F(p_wOut, wIn);
-
-		if (!f.IsZero() && !visibilityQuery.IsOccluded())
-			Ld += f * Li * Vector3.AbsDot(wIn, p_normal);
-	}
-
-	// TODO: Add importance sampling
-
-	return Ld;
-}
-*/
 //----------------------------------------------------------------------------------------------
 //Vector3 IIntegrator::SampleHemisphere(const Transformation p_transform, float p_fU, float p_fV)
 //{

@@ -7,6 +7,7 @@
 #include <iostream>
 #include "Shape/Sphere.h"
 #include "Exception/Exception.h"
+#include "Maths/Montecarlo.h"
 #include "Maths/Random.h"
 
 using namespace Illumina::Core;
@@ -108,25 +109,39 @@ float Sphere::GetArea(void) const
 //----------------------------------------------------------------------------------------------
 float Sphere::GetPdf(const Vector3 &p_point) const
 {
-	return 1.0f / GetArea();
+	return Maths::InvPiTwo * 0.5f;
 }
 //----------------------------------------------------------------------------------------------
 Vector3 Sphere::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal)
 {
-	Vector3 wIn = p_viewPoint - Centre;
-	float distance = wIn.Length();
+	Vector3 viewToCentre = Centre - p_viewPoint;
+	float distanceSquared = viewToCentre.LengthSquared(),
+		radiusSquared = Radius * Radius;
 
-	float alpha = Maths::PiHalf - Maths::Asin(Radius / distance);
+	OrthonormalBasis basis; 
+	basis.InitFromW(viewToCentre);
 
-	OrthonormalBasis basis; basis.InitFromW(wIn);
-	Vector3 point = OrthonormalBasis::FromSpherical(Vector2(alpha * p_u, Maths::PiTwo * p_v));
-	p_normal = basis.Project(point);
+	if (distanceSquared - radiusSquared < 1e-4f)
+		return SamplePoint(p_u, p_v, p_normal);
 
-	return Centre + p_normal * (Radius + 0.0001f);
+	float sinThetaMax2 = radiusSquared / distanceSquared;
+	float cosThetaMax = Maths::Sqrt(Maths::Max(0.0f, 1.0f - sinThetaMax2));
+
+	DifferentialSurface surface;
+	Ray ray(p_viewPoint, Montecarlo::UniformSampleCone(p_u, p_v, cosThetaMax, basis), 1e-3f);
+	
+	if (!Intersects(ray, 0, surface))
+		surface.Distance = Vector3::Dot(viewToCentre, Vector3::Normalize(ray.Direction));
+
+	Vector3 surfacePoint = ray.PointAlongRay(surface.Distance);
+	p_normal = Vector3::Normalize(surfacePoint - Centre);
+
+	return surfacePoint;
 }
 //----------------------------------------------------------------------------------------------
 Vector3 Sphere::SamplePoint(float p_u, float p_v, Vector3 &p_normal)
 {
-	throw new Exception("Use point sampling function that specifies a view point!");
+	p_normal = Montecarlo::UniformSampleSphere(p_u, p_v);
+	return p_normal * Radius + Centre;
 }
 //----------------------------------------------------------------------------------------------
