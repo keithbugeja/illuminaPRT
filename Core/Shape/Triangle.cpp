@@ -154,7 +154,7 @@ float Triangle::GetPdf(const Vector3 &p_point) const
 	return 1.0f / GetArea();
 }
 //----------------------------------------------------------------------------------------------
-Vector3 Triangle::SamplePoint(float p_u, float p_v, Vector3 &p_normal) const
+Vector3 Triangle::SamplePoint(float p_u, float p_v, Vector3 &p_normal)
 {
 	float temp = Maths::Sqrt(1.0f - p_u);
 	float beta = 1.0f - temp;

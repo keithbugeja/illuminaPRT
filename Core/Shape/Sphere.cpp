@@ -111,56 +111,21 @@ float Sphere::GetPdf(const Vector3 &p_point) const
 	return 1.0f / GetArea();
 }
 //----------------------------------------------------------------------------------------------
-Vector3 Sphere::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) const
+Vector3 Sphere::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal)
 {
 	Vector3 wIn = p_viewPoint - Centre;
 	float distance = wIn.Length();
 
-	float alpha = Maths::PiHalf - Maths::Asin(Radius / distance); alpha = 0;
+	float alpha = Maths::PiHalf - Maths::Asin(Radius / distance);
 
 	OrthonormalBasis basis; basis.InitFromW(wIn);
 	Vector3 point = OrthonormalBasis::FromSpherical(Vector2(alpha * p_u, Maths::PiTwo * p_v));
 	p_normal = basis.Project(point);
 
 	return Centre + p_normal * (Radius + 0.0001f);
-
-	//Vector3 point = OrthonormalBasis::FromSpherical(Vector2(Maths::PiTwo * p_u, Maths::Pi * p_v));
-	//p_normal = point - p_viewPoint; p_normal.Normalize();
-
-	//return Centre * point * (Radius + Maths::Epsilon);
-
-	//return Centre + wIn * (Radius + Maths::Epsilon);
-
-	//if (distance < Radius)
-	//	return Vector3::Zero;
-
-	//float sin_alpha_max = Radius / distance;
-	//float cos_alpha_max = (1.0f - sin_alpha_max * sin_alpha_max);
-	//float q = 1.0f / (Maths::PiTwo * (1.0f - cos_alpha_max));
-
-	//float cos_alpha = 1.0 + p_u * (cos_alpha_max - 1.0f);
-	//float sin_alpha = Maths::Sqrt(1.0 - cos_alpha * cos_alpha);
-
-	//float phi = Maths::PiTwo * p_v;
-	//float cos_phi = Maths::Cos(phi);
-	//float sin_phi = Maths::Sin(phi);
-
-	//Vector3 surfacePoint(cos_phi * sin_alpha, sin_alpha * cos_alpha, cos_alpha);
-
-	//OrthonormalBasis basis;
-	//wIn.Normalize(); basis.InitFromW(-(Centre - p_viewPoint));
-	//surfacePoint = basis.Project(surfacePoint);
-
-	//OrthonormalBasis basis; 
-	//wIn.Normalize(); basis.InitFromU(wIn);
-	//surfacePoint = basis.Project(surfacePoint);
-
-	//p_normal = wIn;
-
-	//return Centre + surfacePoint * (Radius + 0.01f);
 }
 //----------------------------------------------------------------------------------------------
-Vector3 Sphere::SamplePoint(float p_u, float p_v, Vector3 &p_normal) const
+Vector3 Sphere::SamplePoint(float p_u, float p_v, Vector3 &p_normal)
 {
 	throw new Exception("Use point sampling function that specifies a view point!");
 }
