@@ -108,7 +108,7 @@ float ITriangleMesh<T, U>::GetPdf(const Vector3 &p_point) const {
 }
 //----------------------------------------------------------------------------------------------
 template<class T, class U>
-Vector3 ITriangleMesh<T, U>::SamplePoint(float p_u, float p_v, Vector3 &p_normal) const 
+Vector3 ITriangleMesh<T, U>::SamplePoint(float p_u, float p_v, Vector3 &p_normal) 
 {
 	float sampleBuffer;
 	JitterSampler sampler;
@@ -119,7 +119,7 @@ Vector3 ITriangleMesh<T, U>::SamplePoint(float p_u, float p_v, Vector3 &p_normal
 }
 //----------------------------------------------------------------------------------------------
 template<class T, class U>
-Vector3 ITriangleMesh<T, U>::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) const {
+Vector3 ITriangleMesh<T, U>::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) {
 	return SamplePoint(p_u, p_v, p_normal);
 }
 //----------------------------------------------------------------------------------------------

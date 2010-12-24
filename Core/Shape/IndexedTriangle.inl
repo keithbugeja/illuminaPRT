@@ -245,7 +245,7 @@ float IndexedTriangle<TVertex>::GetPdf(const Vector3 &p_point) const
 }
 //----------------------------------------------------------------------------------------------
 template<class TVertex>
-Vector3 IndexedTriangle<TVertex>::SamplePoint(float p_u, float p_v, Vector3 &p_normal) const
+Vector3 IndexedTriangle<TVertex>::SamplePoint(float p_u, float p_v, Vector3 &p_normal)
 {
 	const TVertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
 		&v1 = m_pMesh->VertexList[m_nVertexID[1]],

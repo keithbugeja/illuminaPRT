@@ -43,8 +43,9 @@ namespace Illumina
 
 			virtual float GetArea(void) const = 0;
 			virtual float GetPdf(const Vector3 &p_point) const = 0;
-			virtual Vector3 SamplePoint(float p_u, float p_v, Vector3 &p_normal) const = 0;
-			virtual Vector3 SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) const { return SamplePoint(p_u, p_v, p_normal); }
+
+			virtual Vector3 SamplePoint(float p_u, float p_v, Vector3 &p_normal) = 0;
+			virtual Vector3 SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) { return SamplePoint(p_u, p_v, p_normal); }
 
 			virtual std::string ToString(void) const { return "[IShape]"; };
 		};

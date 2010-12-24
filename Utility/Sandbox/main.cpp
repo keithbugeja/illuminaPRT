@@ -906,9 +906,9 @@ void RayTracer(int p_nOMPThreads)
 	#if defined(__PLATFORM_WINDOWS__)
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\testAxes.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza4.obj");
-		std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sibenik.obj");
+		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sibenik.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza4.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza_crytek.obj");
+		std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza_crytek.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\Kalabsha\\Kalabsha12.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\cornellbox.obj");
 		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\conference3.obj");
@@ -949,7 +949,7 @@ void RayTracer(int p_nOMPThreads)
 	//ShapeFactory::SaveMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>("D:\\Assets\\object_out.obj", shape_mesh1);
 
 	// Initialise sphere arealight
-	Sphere shape_mesh2(Vector3(0, 15.0f, 0), 3.0f);
+	Sphere shape_mesh2(Vector3(0, 30.0f, 0), 5.0f);
 	DiffuseAreaLight diffuseLight(NULL, &shape_mesh2, Spectrum(10000,10000,10000));
 
 	//----------------------------------------------------------------------------------------------
