@@ -4,21 +4,22 @@
 //	Date:		22/03/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-
 namespace Illumina 
 {
 	namespace Core 
 	{
-
 //----------------------------------------------------------------------------------------------
 template<class TVertex> 
-IndexedTriangle<TVertex>::IndexedTriangle(const ITriangleMesh<IndexedTriangle, TVertex> *p_pMesh, int p_nV1, int p_nV2, int p_nV3)
+IndexedTriangle<TVertex>::IndexedTriangle(const ITriangleMesh<IndexedTriangle, TVertex> *p_pMesh, 
+	int p_nV1, int p_nV2, int p_nV3, int p_nGroupId)
 {
 	m_pMesh = (ITriangleMesh<IndexedTriangle, TVertex>*)p_pMesh;
 	
 	m_nVertexID[0] = p_nV1;
 	m_nVertexID[1] = p_nV2;
 	m_nVertexID[2] = p_nV3;
+
+	m_nGroupID = p_nGroupId;
 }
 //----------------------------------------------------------------------------------------------
 template<class TVertex> 
@@ -29,6 +30,8 @@ IndexedTriangle<TVertex>::IndexedTriangle(const IndexedTriangle &p_triangle)
 	m_nVertexID[0] = p_triangle.m_nVertexID[0];
 	m_nVertexID[1] = p_triangle.m_nVertexID[1];
 	m_nVertexID[2] = p_triangle.m_nVertexID[2];
+
+	m_nGroupID = p_triangle.m_nGroupID;
 }
 //----------------------------------------------------------------------------------------------
 template<class TVertex> 
@@ -51,6 +54,16 @@ void IndexedTriangle<TVertex>::ComputeBoundingVolume(void)
 	vertex[2] = m_pMesh->VertexList[m_nVertexID[2]].Position;
 
 	m_boundingBox.ComputeFromPoints(vertex, 3);
+}
+//----------------------------------------------------------------------------------------------
+template<class TVertex>
+bool IndexedTriangle<TVertex>::HasGroup(void) const { 
+	return m_nGroupID >= 0;
+}
+//----------------------------------------------------------------------------------------------
+template<class TVertex>
+int IndexedTriangle<TVertex>::GetGroupId(void) const {
+	return m_nGroupID;
 }
 //----------------------------------------------------------------------------------------------
 template<class TVertex>
@@ -168,15 +181,12 @@ bool IndexedTriangle<Vertex>::Intersects(const Ray &p_ray, float p_fTime, Differ
 	p_surface.ShadingNormal.Set(v0.Normal.X * alpha + v1.Normal.X * beta + v2.Normal.X * gamma,
 		v0.Normal.Y * alpha + v1.Normal.Y * beta + v2.Normal.Y * gamma,
 		v0.Normal.Z * alpha + v1.Normal.Z * beta + v2.Normal.Z * gamma);
-
+	
 	p_surface.ShadingNormal.Normalize();
 
 	// Set geometry normal
-	Vector3::Cross(v1.Position - v0.Position, v2.Position - v0.Position, p_surface.GeometryNormal);
+	Vector3::Cross(BA, CA, p_surface.GeometryNormal);
 	p_surface.GeometryNormal.Normalize();
-
-	if (Vector3::Dot(p_ray.Origin - p_surface.Point, p_surface.GeometryNormal) < 0)
-		p_surface.GeometryNormal = -p_surface.GeometryNormal;
 
 	return true;
 }
@@ -247,16 +257,29 @@ float IndexedTriangle<TVertex>::GetPdf(const Vector3 &p_point) const
 template<class TVertex>
 Vector3 IndexedTriangle<TVertex>::SamplePoint(float p_u, float p_v, Vector3 &p_normal)
 {
-	const TVertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
-		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
-		&v2 = m_pMesh->VertexList[m_nVertexID[2]];
+	float b1, b2;
+	Montecarlo::UniformSampleTriangle(p_u, p_v, &b1, &b2);
+	
+	// Get triangle vertices in _p1_, _p2_, and _p3_
+	const Vector3 &p1 = m_pMesh->VertexList[m_nVertexID[0]].Position;
+	const Vector3 &p2 = m_pMesh->VertexList[m_nVertexID[1]].Position;
+	const Vector3 &p3 = m_pMesh->VertexList[m_nVertexID[2]].Position;
 
-	float temp = Maths::Sqrt(1.0f - p_u);
-	float beta = 1.0f - temp;
-	float gamma = temp * p_v;
+	Vector3 p = b1 * p1 + b2 * p2 + (1.f - b1 - b2) * p3;
+	Vector3 n = Vector3::Cross(p2-p1, p3-p1);
+	p_normal = Vector3::Normalize(n);
+	return p;
 
-	p_normal = Vector3::Cross(v1.Position - v0.Position, v2.Position - v0.Position);
-	return (1.0f - beta - gamma) * v0.Position + beta * v1.Position + gamma * v2.Position;
+	//const TVertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
+	//	&v1 = m_pMesh->VertexList[m_nVertexID[1]],
+	//	&v2 = m_pMesh->VertexList[m_nVertexID[2]];
+
+	//float temp = Maths::Sqrt(1.0f - p_u);
+	//float beta = 1.0f - temp;
+	//float gamma = temp * p_v;
+
+	//p_normal = Vector3::Cross(v1.Position - v0.Position, v2.Position - v0.Position);
+	//return (1.0f - beta - gamma) * v0.Position + beta * v1.Position + gamma * v2.Position;
 }
 //----------------------------------------------------------------------------------------------
 template<class TVertex>

@@ -16,9 +16,23 @@ namespace Illumina
 		class ILight
 		{
 		public:
+			virtual float Pdf(const Vector3 &p_point, const Vector3 &p_wOut) = 0;
+
 			virtual Spectrum Power(void) = 0;
-			virtual Spectrum Radiance(const Vector3 &p_point, Vector3 &p_wOut, VisibilityQuery &p_visibilityQuery) = 0;
-			virtual Spectrum Radiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wOut, VisibilityQuery &p_visibilityQuery) = 0;
+			virtual Spectrum Radiance(const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wIn) = 0;
+
+			//----------------------------------------------------------------------------------------------
+			/* 
+			 * Sample radiance methods should return surface radiance on the luminaire compounded with the geometry term:
+			 * Le(x', x - x') * G(x, x'), where G(x, x') = ((x'/|x'|) . n') / (p(x') * |x - x'|^2)
+			 * Note that the foreshortening term (x/|x| . n) missing from G() should be supplied.
+			 *
+			 * The method also populates a VisibilityQuery structure which allows the test for visibility between
+			 * points, v(x, x') to be carried out.
+			 */
+			virtual Spectrum SampleRadiance(const Vector3 &p_point, Vector3 &p_wIn, VisibilityQuery &p_visibilityQuery) = 0;
+			virtual Spectrum SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wIn, VisibilityQuery &p_visibilityQuery) = 0;
+			//----------------------------------------------------------------------------------------------
 		};
 
 		typedef List<ILight*> LightList;

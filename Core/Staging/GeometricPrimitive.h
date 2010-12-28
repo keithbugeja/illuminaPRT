@@ -24,6 +24,8 @@ namespace Illumina
 			Transformation WorldTransform;
 
 		public:
+			GeometricPrimitive(void);
+
 			inline IShape *GetShape(void) const { return m_pShape; }
 			inline void SetShape(IShape *p_pShape) { m_pShape = p_pShape; }
 

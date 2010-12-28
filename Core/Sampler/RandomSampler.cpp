@@ -21,6 +21,14 @@ void RandomSampler::Get1DSamples(float *p_pSamples, int p_nSampleCount)
 		p_pSamples[i] = m_random.NextFloat();
 }
 //----------------------------------------------------------------------------------------------
+float RandomSampler::Get1DSample(void) {
+	return m_random.NextFloat();
+}
+//----------------------------------------------------------------------------------------------
+Vector2 RandomSampler::Get2DSample(void) {
+	return Vector2(m_random.NextFloat(), m_random.NextFloat());
+}
+//----------------------------------------------------------------------------------------------
 std::string RandomSampler::ToString(void) const
 {
 	return "[Random Sampler]";

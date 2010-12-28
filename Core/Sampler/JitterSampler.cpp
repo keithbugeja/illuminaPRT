@@ -31,6 +31,16 @@ void JitterSampler::Get1DSamples(float *p_pSamples, int p_nSampleCount)
 		p_pSamples[i] = (i + m_random.NextFloat()) / p_nSampleCount;
 }
 //----------------------------------------------------------------------------------------------
+float JitterSampler::Get1DSample(void)
+{
+	return m_random.NextFloat();
+}
+//----------------------------------------------------------------------------------------------
+Vector2 JitterSampler::Get2DSample(void)
+{
+	return Vector2(m_random.NextFloat() * 0.5f, (1 + m_random.NextFloat()) * 0.5f);
+}
+//----------------------------------------------------------------------------------------------
 std::string JitterSampler::ToString(void) const
 {
 	return "[Jitter Sampler]";

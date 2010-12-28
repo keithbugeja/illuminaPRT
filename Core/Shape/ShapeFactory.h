@@ -58,9 +58,9 @@ namespace Illumina
 			// Quick and dirty obj loader :
 			// TODO: Make a ModelIO interface and provide an obj implementation
 			template<class TMesh, class TVertex>
-			static boost::shared_ptr<TMesh> LoadMesh(const std::string& p_strMeshFile)
+			static boost::shared_ptr<TMesh> LoadMesh(const std::string& p_strMeshFile, MaterialManager *p_pMaterialManager, MaterialGroup **p_pMaterialGroup)
 			{
-				return WavefrontLoader::LoadMesh<TMesh, TVertex>(p_strMeshFile);
+				return WavefrontLoader::LoadMesh<TMesh, TVertex>(p_strMeshFile, p_pMaterialManager, p_pMaterialGroup);
 			}
 
 			// Quick and dirty obj loader :
@@ -121,6 +121,43 @@ namespace Illumina
 				return mesh;
 			}
 
+			template<class TMesh, class TVertex>
+			static boost::shared_ptr<TMesh> CreateQuad(const Vector3 &p_v0, const Vector3 &p_v1, 
+				const Vector3 &p_v2, const Vector3 &p_v3)
+			{
+				boost::shared_ptr<TMesh> mesh(new TMesh);
+
+				TVertex vertex[4];
+
+				// If vertex has position, initialise
+				if (TVertex::GetDescriptor() & VertexFormat::Position)
+				{
+					vertex[0].Position = p_v0;
+					vertex[1].Position = p_v1;
+					vertex[2].Position = p_v2;
+					vertex[3].Position = p_v3;
+				}
+
+				// If vertex has UVs, initialise
+				if (TVertex::GetDescriptor() & VertexFormat::UV)
+				{
+					vertex[0].UV.Set(0,0);
+					vertex[1].UV.Set(1,0);
+					vertex[2].UV.Set(0,1);
+					vertex[3].UV.Set(1,1);
+				}
+
+				// Add vertices and faces to mesh
+				mesh->AddVertex(vertex[0]);
+				mesh->AddVertex(vertex[1]);
+				mesh->AddVertex(vertex[2]);
+				mesh->AddVertex(vertex[3]);
+
+				mesh->AddIndexedTriangle(0, 2, 1);
+				mesh->AddIndexedTriangle(1, 2, 3);
+
+				return mesh;
+			}
 
 			template<class TMesh, class TVertex>
 			static boost::shared_ptr<TMesh> CreateBox(const Vector3 &p_minExtent, const Vector3 &p_maxExtent)

@@ -27,6 +27,13 @@ namespace Illumina
 				return Vector3(x, y, z);
 			}
 
+			static void UniformSampleTriangle(float p_u, float p_v, float *p_uOut, float *p_vOut) 
+			{
+				float su1 = Maths::Sqrt(p_u);
+				*p_uOut = 1.f - su1;
+				*p_vOut = p_v * su1;
+			}
+
 			static Vector3 UniformSampleCone(float p_u, float p_v, float p_cosThetaMax) 
 			{
 				float cosTheta = (1.0f - p_u) + p_u * p_cosThetaMax;

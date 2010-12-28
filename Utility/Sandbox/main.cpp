@@ -6,28 +6,35 @@
 //#include "tbb/blocked_range.h"
 
 #include "boost/timer.hpp"
-#include "boost/progress.hpp"
 
 #include "System/Platform.h"
+#include "System/EngineKernel.h"
+#include "System/Dummy.h"
+
 #include "Geometry/Vector2.h"
 #include "Geometry/Vector3.h"
 #include "Geometry/Matrix3x3.h"
 #include "Geometry/Matrix4x4.h"
 #include "Geometry/Transform.h"
 #include "Geometry/Ray.h"
+
 #include "Sampler/Sampler.h"
 #include "Sampler/RandomSampler.h"
-#include "Filter/Filter.h"
+#include "Sampler/JitterSampler.h"
+
 #include "Image/ImagePPM.h"
 #include "Image/Image.h"
 #include "Image/RGBPixel.h"
+
 #include "Texture/Texture.h"
 #include "Texture/MarbleTexture.h"
 #include "Texture/ImageTexture.h"
 #include "Texture/NoiseTexture.h"
+
 #include "Camera/Camera.h"
 #include "Camera/PerspectiveCamera.h"
 #include "Camera/ThinLensCamera.h"
+
 #include "Shape/ShapeFactory.h"
 #include "Shape/TriangleMesh.h"
 #include "Shape/BasicMesh.h"
@@ -39,12 +46,20 @@
 #include "Shape/KDTreeMesh.h"
 #include "Shape/BIHMesh.h"
 #include "Shape/HybridMesh.h"
-#include "Staging/GeometricPrimitive.h"
-#include "Staging/EmissivePrimitive.h"
+
 #include "Space/BasicSpace.h"
 #include "Space/BVHSpace.h"
+
 #include "Material/Material.h"
-#include "Object/Object.h"
+#include "Material/DiffuseMaterial.h"
+#include "Material/PhongMaterial.h"
+#include "Material/MaterialGroup.h"
+#include "Material/MaterialManager.h"
+
+#include "Staging/Scene.h"
+#include "Staging/GeometricPrimitive.h"
+#include "Staging/EmissivePrimitive.h"
+
 #include "Threading/Atomic.h"
 #include "Threading/AtomicReference.h"
 #include "Threading/LinkedList.h"
@@ -53,20 +68,22 @@
 #include "Threading/List.h"
 #include "Threading/Queue.h"
 
-#include "Distributed/Tile.h"
-
-#include "Staging/Scene.h"
 #include "Light/PointLight.h"
 #include "Light/DiffuseAreaLight.h"
-#include "Integrator/WhittedIntegrator.h"
-#include "Device/ImageDevice.h"
+
+#include "Integrator/PathIntegrator.h"
+
 #include "Renderer/BasicRenderer.h"
 
-#include "System/EngineKernel.h"
-#include "System/Dummy.h"
+#include "Device/ImageDevice.h"
+
+#include "Filter/Filter.h"
+
+#include "Object/Object.h"
+
+#include "Distributed/Tile.h"
 
 using namespace std;
-//using namespace tbb;
 using namespace Illumina::Core;
 // 
 // void TestLists(void)
@@ -891,10 +908,28 @@ void RayTracer(int p_nOMPThreads)
 	ImagePPM ppmLoader;
 
 	#if defined(__PLATFORM_WINDOWS__)
-		boost::shared_ptr<ITexture> imgTexture(new ImageTexture("D:\\Media\\Assets\\IlluminaRT\\Textures\\texture.ppm", ppmLoader));
+		boost::shared_ptr<ITexture> imgTexture(new ImageTexture("D:\\Development\\IlluminaPRT\\Resource\\Texture\\texture.ppm", ppmLoader));
 	#elif defined(__PLATFORM_LINUX__)
 		boost::shared_ptr<ITexture> imgTexture(new ImageTexture("../../../Resource/Texture/texture.ppm", ppmLoader));
 	#endif
+
+	//----------------------------------------------------------------------------------------------
+	// Materials
+	//----------------------------------------------------------------------------------------------
+	EngineKernel engineKernel;
+
+	engineKernel.GetMaterialManager()->RegisterFactory("Diffuse", new DiffuseMaterialFactory());
+	engineKernel.GetMaterialManager()->RegisterFactory("Phong", new PhongMaterialFactory());
+	engineKernel.GetMaterialManager()->RegisterFactory("Group", new MaterialGroupFactory());
+
+	IMaterial* pMaterial1 = engineKernel.GetMaterialManager()->CreateInstance("Diffuse", "Diffuse Material 1", "Name=Diffuse_Material;Reflectivity=0.75,0.75,0.5;");
+	IMaterial* pMaterial2 = engineKernel.GetMaterialManager()->CreateInstance("Phong", "Phong Material 1", "Name=Phong_Material;Reflectivity=0.75,0.75,0.5;Exponent=32;");
+	MaterialGroup* pMaterialGroup = (MaterialGroup*)engineKernel.GetMaterialManager()->CreateInstance("Group", "Material Group 1", "Name=Group1");
+	pMaterialGroup->Add(pMaterial1, 0);
+	pMaterialGroup->Add(pMaterial2, 1);
+	
+	//DiffuseMaterial material_mesh1(Spectrum(0.75,0.75,0.30));
+	PhongMaterial material_mesh1(Spectrum(0.75,0.75,0.30), 32);
 
 	//----------------------------------------------------------------------------------------------
 	// Setup scene objects
@@ -904,20 +939,13 @@ void RayTracer(int p_nOMPThreads)
 
 	// Load Model
 	#if defined(__PLATFORM_WINDOWS__)
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\testAxes.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza4.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sibenik.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza4.obj");
-		std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\sponza_crytek.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\Kalabsha\\Kalabsha12.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\cornellbox.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\conference3.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\david.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\box.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\bunny2.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\ducky2.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\venusm.obj");
-		//std::string fname_model01("D:\\Media\\Assets\\IlluminaRT\\Models\\torus.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Tests\\testAxes.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sibenik\\sibenik.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\sponza_clean.obj");
+		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\sponza_crytek3.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Kalabsha\\Kalabsha12.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Cornell\\cornellbox.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Bunny\\bunny.obj");
 	#elif defined(__PLATFORM_LINUX__)
 		//std::string fname_model01("../../../Resource/Model/sibenik3.obj");
 		std::string fname_model01("../../../Resource/Model/sponza3.obj");
@@ -932,25 +960,50 @@ void RayTracer(int p_nOMPThreads)
 
 	std::cout << "-- Load object : [" << fname_model01 << "]" << std::endl;
 
+	MaterialGroup *pMeshMaterialGroup = NULL;
+
 	//boost::shared_ptr<BasicMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-	//	ShapeFactory::LoadMesh<BasicMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
+	//	ShapeFactory::LoadMesh<BasicMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
+	//	fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
 	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-		ShapeFactory::LoadMesh<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
+		ShapeFactory::LoadMesh<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
+		fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
 	//boost::shared_ptr<BVHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-	//	ShapeFactory::LoadMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
+	//	ShapeFactory::LoadMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
+	//	fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
 	//boost::shared_ptr<BIHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-	//	ShapeFactory::LoadMesh<BIHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
+	//	ShapeFactory::LoadMesh<BIHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
+	//	fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
 	//boost::shared_ptr<PBIHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-	//	ShapeFactory::LoadMesh<PBIHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
+	//	ShapeFactory::LoadMesh<PBIHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
+	//	fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
 	//boost::shared_ptr<GridMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-	//	ShapeFactory::LoadMesh<GridMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(fname_model01);
+	//	ShapeFactory::LoadMesh<GridMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
+	//  fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
 
 	//std::cout << "Save object : [sibenik.obj]" << std::endl;
 	//ShapeFactory::SaveMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>("D:\\Assets\\object_out.obj", shape_mesh1);
 
-	// Initialise sphere arealight
-	Sphere shape_mesh2(Vector3(0, 7.0f, 0), 2.0f);
-	DiffuseAreaLight diffuseLight(NULL, &shape_mesh2, Spectrum(10000,10000,10000));
+	// teapot light
+	// Load secondary model to use for light
+	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
+	//	ShapeFactory::LoadMesh<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>("D:\\Development\\IlluminaPRT\\Resource\\Model\\Bunny\\bunny.obj");
+	//DiffuseAreaLight diffuseLight1(NULL, (IShape*)shape_mesh3.get(), Spectrum(500, 500, 500));
+
+	// sphere arealight
+	// Sponza, et al.
+	//Sphere shape_mesh2(Vector3(0, 7.0f, 0), 2.0f);
+	Sphere shape_mesh2(Vector3(0.0, 15.0f, 0.0), 0.5f);
+	
+	// Cornell Box
+	//Sphere shape_mesh2(Vector3(0, 30.0f, 0), 2.0f);
+	DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(10000, 10000, 10000));
+	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1000, 1000, 1000));
+
+	// box sky
+	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
+		ShapeFactory::CreateBox<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(Vector3(-5, 14.5, -5), Vector3(5, 15, 5));
+	DiffuseAreaLight diffuseLight1(NULL, (IShape*)shape_mesh3.get(), Spectrum(40000, 40000, 40000));
 
 	//----------------------------------------------------------------------------------------------
 	// Compute bounding volumes
@@ -958,6 +1011,15 @@ void RayTracer(int p_nOMPThreads)
 	std::cout << "Computing bounding volumes..." << std::endl;
 	shape_mesh1->ComputeBoundingVolume();
 	shape_mesh2.ComputeBoundingVolume();
+	shape_mesh3->ComputeBoundingVolume();
+	std::cout << std::endl;
+
+	//----------------------------------------------------------------------------------------------
+	// Compute normals
+	//----------------------------------------------------------------------------------------------
+	std::cout << "Computing mesh normals..." << std::endl;
+	//shape_mesh1->UpdateNormals();
+	//shape_mesh3->UpdateNormals();
 	std::cout << std::endl;
 
 	//----------------------------------------------------------------------------------------------
@@ -968,12 +1030,8 @@ void RayTracer(int p_nOMPThreads)
 	boost::timer compileTimer;
 	compileTimer.restart();
 	shape_mesh1->Compile();
+	shape_mesh3->Compile();
 	std::cout << "-- Model 01 : [" << fname_model01 << "] compiled in " << compileTimer.elapsed() << " seconds." << std::endl;
-
-	//----------------------------------------------------------------------------------------------
-	// Materials
-	//----------------------------------------------------------------------------------------------
-	//BasicMaterial material_mesh1(Spectrum(1,0,0));
 
 	//----------------------------------------------------------------------------------------------
 	// Initialise scene space
@@ -983,15 +1041,20 @@ void RayTracer(int p_nOMPThreads)
 
 	GeometricPrimitive pmv_mesh1;
 	pmv_mesh1.SetShape((IShape*)shape_mesh1.get());
+	pmv_mesh1.SetMaterial(pMeshMaterialGroup);
 	//pmv_mesh1.SetMaterial((IMaterial*)&material_mesh1);
 	//pmv_mesh1.WorldTransform.SetScaling(Vector3(3.0f, 3.0f, 3.0f));
 	//pmv_mesh1.WorldTransform.SetScaling(Vector3(5.0f, 5.0f, 5.0f));
-	pmv_mesh1.WorldTransform.SetTranslation(Vector3(0.0f, -10.0f, 0.0f));
+	//pmv_mesh1.WorldTransform.SetTranslation(Vector3(0.0f, -10.0f, 0.0f));
 	basicSpace.PrimitiveList.PushBack(&pmv_mesh1);
 
 	EmissivePrimitive pmv_mesh2;
 	pmv_mesh2.SetShape(&shape_mesh2);
-	pmv_mesh2.SetLight(&diffuseLight);
+	//pmv_mesh2.SetShape((IShape*)shape_mesh3.get());
+	pmv_mesh2.SetMaterial((IMaterial*)&material_mesh1);
+	//pmv_mesh2.SetLight(&diffuseLight1);
+	pmv_mesh2.SetLight(&diffuseLight2);
+	//pmv_mesh2.WorldTransform.SetTranslation(Vector3(0.0f, 0.0f, 0.0f));
 	basicSpace.PrimitiveList.PushBack(&pmv_mesh2);
 
 	// Prepare space
@@ -1001,27 +1064,32 @@ void RayTracer(int p_nOMPThreads)
 	//----------------------------------------------------------------------------------------------
 	// Initialise sampler
 	//----------------------------------------------------------------------------------------------
-	RandomSampler sampler;
+	JitterSampler sampler;
 
 	//----------------------------------------------------------------------------------------------
 	// Scene creation complete
 	//----------------------------------------------------------------------------------------------
 	//PointLight pointLight(Vector3(0, 5, 0), RGBSpectrum(1000,1000,1000));
-	//PointLight pointLight(Vector3(0, 10, 0), RGBSpectrum(10000,10000,10000));
+	//PointLight pointLight(Vector3(0, 7, 0), RGBSpectrum(10000,10000,10000));
+	PointLight pointLight(Vector3(0, 7.5, 0), RGBSpectrum(100,100,100));
  
 	Scene scene(&basicSpace, &sampler);
 	//scene.LightList.PushBack(&pointLight);
-	scene.LightList.PushBack(&diffuseLight);
+	//scene.LightList.PushBack(&diffuseLight1);
+	scene.LightList.PushBack(&diffuseLight2);
  
-	WhittedIntegrator integrator;
+	PathIntegrator integrator(4, 4, 1, false);
 	integrator.Initialise(&scene, &camera);
  
 	ImagePPM imagePPM;
+	//int width = 64, height = 64;
 	//int width = 256, height = 256;
-	int width = 512, height = 512;
+	//int width = 512, height = 512;
+	int width = 640, height = 480;
+	//int width = 1280, height = 1024;
  
 	#if defined(__PLATFORM_WINDOWS__)
-	ImageDevice device(width, height, &imagePPM, "D:\\Media\\Assets\\IlluminaRT\\Textures\\result.ppm");
+	ImageDevice device(width, height, &imagePPM, "D:\\Development\\IlluminaPRT\\Resource\\Output\\result.ppm");
 	#elif defined(__PLATFORM_LINUX__)
 	ImageDevice device(width, height, &imagePPM, "../../../Resource/Texture/result.ppm");
 	#endif
@@ -1033,24 +1101,35 @@ void RayTracer(int p_nOMPThreads)
 	std::cin >> cKey;
 
 	boost::timer renderTimer;
-	boost::progress_display renderProgress(height);
 
 	double alpha = 0.0f,
 		totalFPS = 0.0f,
-		cDistX = -10, cDistY = 5, cDistZ = -10;
+		// Sponza
+		//cDistX = -10, cDistY = 17.5, cDistZ = -3;
+		//cDistX = -10, cDistY = 12.5, cDistZ = -3;
+		//cDistX = -10, cDistY = 7.5, cDistZ = -3;
+		
+		// Cornell box
+		cDistX = -30, cDistY = 30, cDistZ = -10;
+
+		//cDistX = -10, cDistY = 5, cDistZ = -10;
+		//cDistX = 10, cDistY = -10, cDistZ = 5;
+
+	//Vector3 lookat(0, -10, 0);
+	
+	// Sponza
+	Vector3 lookat(0, 5, 0);
+
+	// Cornell box
+	//Vector3 lookat(0, 14, 0);
 
 	for (int iteration = 1; iteration < 10000; iteration++)
 	{
 		renderTimer.restart();
-		//alpha += 0.05f;
+		alpha += 0.1f;
 	 
-		//camera.MoveTo(Vector3(0, 5, -10));
-		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 0, Maths::Sin(alpha) * -20));
 		camera.MoveTo(Vector3(Maths::Cos(alpha) * cDistX, cDistY, Maths::Sin(alpha) * cDistZ));
-		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -30, 0, Maths::Sin(alpha) * -30));
-		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -5, 5, Maths::Sin(alpha) * -5));
-		//camera.MoveTo(Vector3(Maths::Cos(alpha) * -20, 10.0, Maths::Sin(alpha) * -10));
-		camera.LookAt(Vector3::Zero);
+		camera.LookAt(lookat);
 	 
 		// Here we rebuild the AS
 		basicSpace.Update();

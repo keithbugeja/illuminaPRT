@@ -159,9 +159,6 @@
     <ClCompile Include="..\..\..\..\Core\Staging\Visibility.cpp">
       <Filter>Header Files\Staging</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\Core\Integrator\WhittedIntegrator.cpp">
-      <Filter>Header Files\Integrator</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\Core\Device\ImageDevice.cpp">
       <Filter>Header Files\Device</Filter>
     </ClCompile>
@@ -209,6 +206,15 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\Core\Staging\EmissivePrimitive.cpp">
       <Filter>Header Files\Staging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Material\BSDF.cpp">
+      <Filter>Header Files\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Light\DirectionalLight.cpp">
+      <Filter>Header Files\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Integrator\PathIntegrator.cpp">
+      <Filter>Header Files\Integrator</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -476,9 +482,6 @@
     <ClInclude Include="..\..\..\..\Core\Device\ImageDevice.h">
       <Filter>Header Files\Device</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Integrator\WhittedIntegrator.h">
-      <Filter>Header Files\Integrator</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Shape\DifferentialSurface.h">
       <Filter>Header Files\Shape</Filter>
     </ClInclude>
@@ -517,6 +520,30 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Maths\Montecarlo.h">
       <Filter>Header Files\Maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\BSDF.h">
+      <Filter>Header Files\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Light\DirectionalLight.h">
+      <Filter>Header Files\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\MaterialManager.h">
+      <Filter>Header Files\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\System\ArgumentMap.h">
+      <Filter>Header Files\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\DiffuseMaterial.h">
+      <Filter>Header Files\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\PhongMaterial.h">
+      <Filter>Header Files\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\MaterialGroup.h">
+      <Filter>Header Files\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Integrator\PathIntegrator.h">
+      <Filter>Header Files\Integrator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

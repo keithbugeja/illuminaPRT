@@ -18,9 +18,12 @@ namespace Illumina
 		class PointLight : public ILight
 		{
 		public:
+			float Pdf(const Vector3 &p_point, const Vector3 &p_wOut);
+
 			Spectrum Power(void);
-			Spectrum Radiance(const Vector3 &p_point, Vector3 &p_wOut, VisibilityQuery &p_visibilityQuery);
-			Spectrum Radiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wOut, VisibilityQuery &p_visibilityQuery);
+			Spectrum Radiance(const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wIn);
+			Spectrum SampleRadiance(const Vector3 &p_point, Vector3 &p_wIn, VisibilityQuery &p_visibilityQuery);
+			Spectrum SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wIn, VisibilityQuery &p_visibilityQuery);
 
 			PointLight(const Vector3 &p_position, const Spectrum &p_intensity);
 			PointLight(const PointLight &p_pointLight);

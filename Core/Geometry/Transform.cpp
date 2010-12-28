@@ -20,7 +20,7 @@ Transformation::Transformation(void)
 	m_hasRotation = 
 		m_hasScaling = 
 		m_hasTranslation = false;
-    
+	
 	m_isIdentity = true;
 }
 //----------------------------------------------------------------------------------------------
@@ -37,6 +37,21 @@ Transformation::Transformation(const Matrix3x3 &p_rotation, const Vector3 &p_sca
 	m_hasTranslation = !m_translation.IsZero();
 	m_hasScaling = !m_scaling.IsOnes();
 	m_isIdentity = !(m_hasRotation || m_hasScaling || m_hasTranslation);
+}
+//----------------------------------------------------------------------------------------------
+void Transformation::Reset(void)
+{
+	m_transform = Matrix4x4::Identity;
+	m_rotation = Matrix3x3::Identity;
+	m_rotationInverse = Matrix3x3::Identity;
+	m_translation = Vector3::Zero;
+	m_scaling = Vector3::Ones;
+
+	m_hasRotation = 
+		m_hasScaling = 
+		m_hasTranslation = false;
+	
+	m_isIdentity = true;
 }
 //----------------------------------------------------------------------------------------------
 Vector3 Transformation::Apply(const Vector3 &p_vector) const
@@ -94,7 +109,7 @@ void Transformation::Apply(const Vector3 &p_vector, Vector3 &p_out) const
 
 	if (m_hasScaling)
 		p_out *= m_scaling;
-        
+		
 	if (m_hasRotation)
 		Matrix3x3::Product(m_rotation, p_out, p_out);
 
@@ -184,13 +199,13 @@ void Transformation::GetRotation(Matrix3x3 &p_out) const
 //----------------------------------------------------------------------------------------------
 void Transformation::SetRotation(const Matrix3x3& p_rotation)
 {
-    // Work out rotation and inverse
-    m_rotation = p_rotation;
+	// Work out rotation and inverse
+	m_rotation = p_rotation;
 	Matrix3x3::Transpose(m_rotation, m_rotationInverse);
 
-    // Transform is not longer an identity
-    m_hasRotation = true;
-    m_isIdentity = false;
+	// Transform is not longer an identity
+	m_hasRotation = true;
+	m_isIdentity = false;
 } 
 //----------------------------------------------------------------------------------------------
 Vector3 Transformation::GetTranslation(void) const {
@@ -204,12 +219,12 @@ void Transformation::GetTranslation(Vector3 &p_out) const
 //----------------------------------------------------------------------------------------------
 void Transformation::SetTranslation(const Vector3 &p_translation)
 {
-    // Translation component of transform
-    m_translation = p_translation;
+	// Translation component of transform
+	m_translation = p_translation;
 
-    // Transform is no longer an identity
-    m_hasTranslation = true;
-    m_isIdentity = false;
+	// Transform is no longer an identity
+	m_hasTranslation = true;
+	m_isIdentity = false;
 }
 //----------------------------------------------------------------------------------------------
 Vector3 Transformation::GetScaling(void) const {
@@ -223,12 +238,12 @@ void Transformation::GetScaling(Vector3 &p_out) const
 //----------------------------------------------------------------------------------------------
 void Transformation::SetScaling(const Vector3 &p_scaling)
 { 
-    // Scaling component 
-    m_scaling = p_scaling;
+	// Scaling component 
+	m_scaling = p_scaling;
 
-    // Transform is no longer an identity
-    m_hasScaling = true;
-    m_isIdentity = false;
+	// Transform is no longer an identity
+	m_hasScaling = true;
+	m_isIdentity = false;
 }
 //----------------------------------------------------------------------------------------------
 Matrix4x4 Transformation::GetTransform(void)
@@ -260,7 +275,7 @@ void Transformation::UpdateTransform(void)
 	m_transform._03 = m_translation[0];
 	m_transform._13 = m_translation[1];
 	m_transform._23 = m_translation[2];
-    
+	
 	m_transform._33 = 1.0f;
 }
 //----------------------------------------------------------------------------------------------

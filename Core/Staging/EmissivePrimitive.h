@@ -23,6 +23,8 @@ namespace Illumina
 			AreaLight *m_pLight;
 
 		public:
+			EmissivePrimitive(void);
+
 			AreaLight* GetLight(void) const;
 			void SetLight(AreaLight *p_pLight);
 

@@ -62,7 +62,9 @@ bool Sphere::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_
 		p_surface.SetShape((IShape*)this);
 		p_surface.Distance = (float)t;
 		p_surface.Point = p_ray.PointAlongRay((float)t);
+		
 		Vector3::Subtract(p_surface.Point, Centre, p_surface.GeometryNormal);
+		p_surface.ShadingNormal = p_surface.GeometryNormal;
 
 		// TODO: Make texture wrapping axis to revolve about +Y
 		p_surface.PointUV = OrthonormalBasis::ToSpherical(p_surface.Point, Centre);
@@ -127,7 +129,7 @@ Vector3 Sphere::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Ve
 	float sinThetaMax2 = radiusSquared / distanceSquared;
 	float cosThetaMax = Maths::Sqrt(Maths::Max(0.0f, 1.0f - sinThetaMax2));
 
-	DifferentialSurface surface;
+	DifferentialSurface surface;	
 	Ray ray(p_viewPoint, Montecarlo::UniformSampleCone(p_u, p_v, cosThetaMax, basis), 1e-3f);
 	
 	if (!Intersects(ray, 0, surface))
@@ -142,6 +144,6 @@ Vector3 Sphere::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Ve
 Vector3 Sphere::SamplePoint(float p_u, float p_v, Vector3 &p_normal)
 {
 	p_normal = Montecarlo::UniformSampleSphere(p_u, p_v);
-	return p_normal * Radius + Centre;
+	return p_normal * Radius + Centre + 1;
 }
 //----------------------------------------------------------------------------------------------

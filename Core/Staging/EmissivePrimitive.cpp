@@ -10,6 +10,10 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
+EmissivePrimitive::EmissivePrimitive(void)
+	: m_pLight(NULL)
+{ }
+//----------------------------------------------------------------------------------------------
 AreaLight* EmissivePrimitive::GetLight(void) const {
 	return m_pLight;
 }
@@ -28,7 +32,6 @@ bool EmissivePrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection 
 		return true;
 	}
 
-	p_intersection.SetLight(NULL);
 	return false;
 }
 //----------------------------------------------------------------------------------------------
