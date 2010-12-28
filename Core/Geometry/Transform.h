@@ -36,6 +36,8 @@ namespace Illumina
 			Transformation(void);
 			Transformation(const Matrix3x3 &p_rotation, const Vector3 &p_scaling, const Vector3 &p_translation);
 
+			void Reset(void);
+
 			Vector3 Apply(const Vector3 &p_vector) const;
 			Vector3 ApplyInverse(const Vector3 &p_vector) const;
 

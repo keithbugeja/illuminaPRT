@@ -23,6 +23,9 @@ namespace Illumina
 			void Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount);
 			void Get1DSamples(float *p_pSamples, int p_nSampleCount);
 
+			float Get1DSample(void);
+			Vector2 Get2DSample(void);
+
 			std::string ToString(void) const;
 		};
 	} 

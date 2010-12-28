@@ -5,6 +5,7 @@
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 #include "Staging/Scene.h"
+#include "Geometry/Intersection.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -20,11 +21,15 @@ Scene::Scene(ISpace *p_pSpace, ISampler *p_pSampler)
 //----------------------------------------------------------------------------------------------
 bool Scene::Intersects(const Ray &p_ray, Intersection &p_intersection, IPrimitive *p_pExclude)
 {
+	p_intersection.Reset();
+
 	return m_pSpace->Intersects(p_ray, 0.0f, p_intersection, p_pExclude);
 }
 //----------------------------------------------------------------------------------------------
 bool Scene::Intersects(const Ray &p_ray, Intersection &p_intersection)
 {
+	p_intersection.Reset();
+
 	return m_pSpace->Intersects(p_ray, 0.0f, p_intersection);
 }
 //----------------------------------------------------------------------------------------------

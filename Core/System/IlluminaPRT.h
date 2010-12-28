@@ -19,6 +19,7 @@ namespace Illumina
 		class IDevice;
 		class IShape;
 		class ILight;
+		class BSDF;
 		class RGBSpectrum;
 
 		class Intersection;
@@ -35,6 +36,8 @@ namespace Illumina
 
 		class Image;
 		class IImageIO;
+
+		class PlugInManager;
 
 		typedef RGBSpectrum Spectrum;
 	}

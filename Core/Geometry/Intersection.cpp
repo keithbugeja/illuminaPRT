@@ -20,19 +20,30 @@ Intersection::Intersection(void)
 	, RayEpsilon(0.0f)
 { }
 //----------------------------------------------------------------------------------------------
+void Intersection::Reset(void)
+{
+	m_pLight = NULL;
+	m_pMaterial = NULL;
+	m_pPrimitive = NULL;
+
+	Surface.Reset();
+	WorldTransform.Reset();
+	RayEpsilon = 0.0f;
+}
+//----------------------------------------------------------------------------------------------
 bool Intersection::IsEmissive(void) const {
 	return m_pLight != NULL;
 }
 //----------------------------------------------------------------------------------------------
-bool Intersection::IsMaterialDefined(void) const {
-	return m_pMaterial != NULL;
+bool Intersection::HasMaterial(void) const {
+		return m_pMaterial != NULL;
 }
 //----------------------------------------------------------------------------------------------
 IPrimitive* Intersection::GetPrimitive(void) const { 
 	return m_pPrimitive; 
 }
 //----------------------------------------------------------------------------------------------
-void Intersection::SetPrimitive(IPrimitive* p_pPrimitive) { 
+void Intersection::SetPrimitive(IPrimitive *p_pPrimitive) { 
 	m_pPrimitive = p_pPrimitive; 
 }
 //----------------------------------------------------------------------------------------------
@@ -40,7 +51,7 @@ IMaterial* Intersection::GetMaterial(void) const {
 	return m_pMaterial;
 }
 //----------------------------------------------------------------------------------------------
-void Intersection::SetMaterial(IMaterial* p_pMaterial) { 
+void Intersection::SetMaterial(IMaterial *p_pMaterial) { 
 	m_pMaterial = p_pMaterial; 
 }
 //----------------------------------------------------------------------------------------------

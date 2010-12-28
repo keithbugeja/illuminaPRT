@@ -84,12 +84,22 @@ void OrthonormalBasis::InitFromV(const Vector3 &p_v)
 void OrthonormalBasis::InitFromW(const Vector3 &p_w)
 {
 	W = Vector3::Normalize(p_w);
-	U = Vector3::Cross(W, Vector3::UnitXPos);
-				
-	if (U.LengthSquared() < Epsilon)
-		U = Vector3::Cross(W, Vector3::UnitYPos);
+	U = Vector3::Cross(W, Vector3::UnitYPos);
+
+	if (U.LengthSquared() < 1e-4f)
+		U = Vector3::Cross(W, Vector3::UnitXPos);
 
 	V = Vector3::Cross(W, U);
+   
+	/*
+	W = Vector3::Normalize(p_w);
+	V = Vector3::Cross(W, Vector3::UnitXPos);
+				
+	if (V.LengthSquared() < Epsilon)
+		V = Vector3::Cross(W, Vector3::UnitZNeg);
+
+	U = Vector3::Cross(V, W);
+	*/
 }
 //----------------------------------------------------------------------------------------------
 void OrthonormalBasis::InitFromUV(const Vector3 &p_u, const Vector3 &p_v)

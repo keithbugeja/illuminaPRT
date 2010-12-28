@@ -41,6 +41,11 @@ namespace Illumina
 			{
 				return new Dummy();
 			}
+
+			Illumina::Core::IDummy* CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				return new Dummy();
+			}
 		};
 
 		//----------------------------------------------------------------------------------------------

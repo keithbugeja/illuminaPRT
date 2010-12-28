@@ -4,6 +4,8 @@
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
+#include "boost/progress.hpp"
+
 #include "Renderer/BasicRenderer.h"
 #include "Integrator/Integrator.h"
 #include "Geometry/Intersection.h"
@@ -27,6 +29,8 @@ void BasicRenderer::Render(void)
 		width = m_pDevice->GetWidth();
 
 	m_pDevice->BeginFrame();
+	
+	boost::progress_display renderProgress(height);
 
 	#pragma omp parallel for schedule(guided)
 	for (int y = 0; y < height; ++y)
@@ -39,6 +43,8 @@ void BasicRenderer::Render(void)
 			Spectrum Li = m_pIntegrator->Radiance(m_pScene, ray, intersection);
 			m_pDevice->Set(width - (x + 1), height - (y + 1), Li);
 		}
+
+		++renderProgress;
 	}
 
 	m_pDevice->EndFrame();

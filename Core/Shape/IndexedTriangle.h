@@ -21,18 +21,22 @@ namespace Illumina
 		protected:
 			ITriangleMesh<IndexedTriangle, TVertex> *m_pMesh;
 			int m_nVertexID[3];
+			int m_nGroupID;
 
 			AxisAlignedBoundingBox m_boundingBox;
 		public:
 			int GetVertexIndex(int p_nVertex) { return m_nVertexID[p_nVertex]; }
 
 		public:
-			IndexedTriangle(const ITriangleMesh<IndexedTriangle, TVertex> *p_pMesh, int p_nV1, int p_nV2, int p_nV3);
+			IndexedTriangle(const ITriangleMesh<IndexedTriangle, TVertex> *p_pMesh, int p_nV1, int p_nV2, int p_nV3, int p_nGroupId = -1);
 			IndexedTriangle(const IndexedTriangle &p_triangle);
 			
 			bool IsBounded(void) const;
 			void ComputeBoundingVolume(void);
 			IBoundingVolume* GetBoundingVolume(void) const;
+			
+			bool HasGroup(void) const;
+			int GetGroupId(void) const;
 
 			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface);
 			bool Intersects(const Ray &p_ray, float p_fTime);

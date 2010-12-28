@@ -9,8 +9,17 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
+float PointLight::Pdf(const Vector3 &p_point, const Vector3 &p_wOut) {
+	return 1.0f;
+}
+//----------------------------------------------------------------------------------------------
 Spectrum PointLight::Power(void) {
 	return Spectrum(1.0f);
+}
+//----------------------------------------------------------------------------------------------
+Spectrum PointLight::Radiance(const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wIn)
+{
+	return Vector3::Dot(p_normal, p_wIn) > 0 ? m_intensity : 0.0f;
 }
 //----------------------------------------------------------------------------------------------
 /*
@@ -22,23 +31,23 @@ Spectrum PointLight::Power(void) {
 	(Sp, x), where Sp is the location of the point light.
 	The direction of incident light, denoted by p_direction, is set to (x - Sp).
 */
-Spectrum PointLight::Radiance(const Vector3 &p_point, Vector3 &p_wOut, VisibilityQuery &p_visibilityQuery)
+Spectrum PointLight::SampleRadiance(const Vector3 &p_point, Vector3 &p_wIn, VisibilityQuery &p_visibilityQuery)
 {
 	// Update visibility query information
-	p_visibilityQuery.SetSegment(m_position, 0.0001f, p_point, 0.0001f); 
+	p_visibilityQuery.SetSegment(m_position, 1e-4f, p_point, 1e-4f); 
 
-	Vector3::Subtract(m_position, p_point, p_wOut);
-	double distanceSquared = p_wOut.LengthSquared();
-	p_wOut.Normalize();
+	Vector3::Subtract(p_point, m_position, p_wIn);
+	double distanceSquared = p_wIn.LengthSquared();
+	p_wIn.Normalize();
 
 	// Radiance prop to Energy / (Area of sphere * distance squared)
 	// L = Phi / (4*Pi * |Sp - x| ^ 2)
-	return m_intensity * (1.0f / (4 * Maths::Pi * distanceSquared));
+	return m_intensity / (Maths::InvPi * distanceSquared);
 }
 //----------------------------------------------------------------------------------------------
-Spectrum PointLight::Radiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wOut, VisibilityQuery &p_visibilityQuery)
+Spectrum PointLight::SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wIn, VisibilityQuery &p_visibilityQuery)
 {
-	return Radiance(p_point, p_wOut, p_visibilityQuery);
+	return SampleRadiance(p_point, p_wIn, p_visibilityQuery);
 }
 //----------------------------------------------------------------------------------------------
 PointLight::PointLight(const Vector3 &p_position, const Spectrum &p_intensity)

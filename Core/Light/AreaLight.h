@@ -23,9 +23,12 @@ namespace Illumina
 		public:
 			AreaLight(void);
 
+			float Pdf(const Vector3 &p_point, const Vector3 &p_wOut) = 0;
+
 			Spectrum Power(void) = 0;
-			Spectrum Radiance(const Vector3 &p_point, Vector3 &p_wOut, VisibilityQuery &p_visibilityQuery) = 0;
-			Spectrum Radiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wOut, VisibilityQuery &p_visibilityQuery) = 0;
+			Spectrum Radiance(const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wIn) = 0;
+			Spectrum SampleRadiance(const Vector3 &p_point, Vector3 &p_wIn, VisibilityQuery &p_visibilityQuery) = 0;
+			Spectrum SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wIn, VisibilityQuery &p_visibilityQuery) = 0;
 
 			IShape* GetShape(void) const;
 			void SetShape(IShape* p_pShape);

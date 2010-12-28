@@ -119,6 +119,12 @@
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>
+      </Optimization>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Core\Camera\Camera.cpp" />
     <ClCompile Include="..\..\..\..\Core\Camera\PerspectiveCamera.cpp" />
@@ -141,10 +147,12 @@
     <ClCompile Include="..\..\..\..\Core\Image\Image.cpp" />
     <ClCompile Include="..\..\..\..\Core\Image\RGBPixel.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\Integrator.cpp" />
-    <ClCompile Include="..\..\..\..\Core\Integrator\WhittedIntegrator.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Integrator\PathIntegrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\AreaLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\DiffuseAreaLight.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Light\DirectionalLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\PointLight.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Material\BSDF.cpp" />
     <ClCompile Include="..\..\..\..\Core\Maths\Maths.cpp" />
     <ClCompile Include="..\..\..\..\Core\Maths\Random.cpp" />
     <ClCompile Include="..\..\..\..\Core\Object\Object.cpp" />
@@ -193,12 +201,18 @@
     <ClInclude Include="..\..\..\..\Core\Image\ImagePPM.h" />
     <ClInclude Include="..\..\..\..\Core\Image\RGBPixel.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\Integrator.h" />
-    <ClInclude Include="..\..\..\..\Core\Integrator\WhittedIntegrator.h" />
+    <ClInclude Include="..\..\..\..\Core\Integrator\PathIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Light\AreaLight.h" />
     <ClInclude Include="..\..\..\..\Core\Light\DiffuseAreaLight.h" />
+    <ClInclude Include="..\..\..\..\Core\Light\DirectionalLight.h" />
     <ClInclude Include="..\..\..\..\Core\Light\Light.h" />
     <ClInclude Include="..\..\..\..\Core\Light\PointLight.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\BSDF.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\DiffuseMaterial.h" />
     <ClInclude Include="..\..\..\..\Core\Material\Material.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\MaterialGroup.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\MaterialManager.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\PhongMaterial.h" />
     <ClInclude Include="..\..\..\..\Core\Maths\Maths.h" />
     <ClInclude Include="..\..\..\..\Core\Maths\Montecarlo.h" />
     <ClInclude Include="..\..\..\..\Core\Maths\Random.h" />
@@ -237,6 +251,7 @@
     <ClInclude Include="..\..\..\..\Core\Staging\Scene.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\Visibility.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\WavefrontLoader.h" />
+    <ClInclude Include="..\..\..\..\Core\System\ArgumentMap.h" />
     <ClInclude Include="..\..\..\..\Core\System\Dummy.h" />
     <ClInclude Include="..\..\..\..\Core\System\DummyManager.h" />
     <ClInclude Include="..\..\..\..\Core\System\EngineKernel.h" />

@@ -11,7 +11,7 @@
 #include "Shape/Shape.h"
 #include "Shape/VertexFormats.h"
 #include "Geometry/BoundingBox.h"
-#include "Sampler/JitterSampler.h"
+#include "Maths/Montecarlo.h"
 #include "Threading/List.h"
 
 namespace Illumina 
@@ -46,20 +46,23 @@ namespace Illumina
 			void ComputeArea(void);
 			float GetArea(void) const;
 
+			// Normals
+			bool UpdateNormals(void);
+
 			// Vertex management			
 			size_t AddVertex(const U &p_vertex);
 			void AddVertexList(const U *p_pVertex, int p_nCount);
 			void AddVertexList(const List<U> &p_vertexList);
 
 			// Triangle face management
-			void AddTriangle(const U &p_v1, const U &p_v2, const U &p_v3);
-			void AddTriangleList(const U *p_pVertexList, int p_nTriangleCount);
-			void AddTriangleList(const List<U> &p_uvList);
+			void AddTriangle(const U &p_v1, const U &p_v2, const U &p_v3, int p_nGroupId = -1);
+			void AddTriangleList(const U *p_pVertexList, int p_nTriangleCount, int p_nGroupId = -1);
+			void AddTriangleList(const List<U> &p_uvList, int p_nGroupId = -1);
 
 			// Indexed triangles
-			void AddIndexedTriangle(int p_v1, int p_v2, int p_v3);
-			void AddIndexedTriangleList(const int *p_pIndexList, int p_nTriangleCount);
-			void AddIndexedTriangleList(const List<int> &p_indexList);
+			void AddIndexedTriangle(int p_v1, int p_v2, int p_v3, int p_nGroupId = -1);
+			void AddIndexedTriangleList(const int *p_pIndexList, int p_nTriangleCount, int p_nGroupId = -1);
+			void AddIndexedTriangleList(const List<int> &p_indexList, int p_nGroupId = -1);
 
 			// Compile method used to prepare complex structures for usage (e.g., BVHs)
 			bool Compile(void) { return true; }

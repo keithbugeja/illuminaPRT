@@ -37,9 +37,15 @@ namespace Illumina
 
 			/* Surface point expressed as P = O + tD, where t = Distance */
 			float	Distance;
+			Vector3 RayOrigin,
+				RayDirection;
 
 		public:
-			DifferentialSurface() {}
+			DifferentialSurface(void) : Distance(Maths::Maximum) { }
+
+			inline void Reset(void) {
+				Distance = Maths::Maximum;
+			}
 
 			inline void SetShape(const IShape *p_pShape) { 
 				m_pShape = (IShape*)p_pShape; 

@@ -30,8 +30,10 @@ namespace Illumina
 		public:
 			Intersection(void);
 
+			void Reset(void);
+
 			bool IsEmissive(void) const;
-			bool IsMaterialDefined(void) const;
+			bool HasMaterial(void) const;
 
 			IPrimitive* GetPrimitive(void) const;
 			void SetPrimitive(IPrimitive* p_pPrimitive);

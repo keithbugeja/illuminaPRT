@@ -13,61 +13,73 @@
 #include "Sampler/Sampler.h"
 #include "Staging/Visibility.h"
 #include "Staging/Scene.h"
+#include "Material/BSDF.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight,  
-	const Vector3 &p_point, const Vector3 &p_normal, float p_u, float p_v, Vector3 &p_wOut, int p_nShadowSamples)
+Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, BSDF *p_pBSDF,
+	const Intersection &p_intersection, const Vector3 &p_point, const Vector3 &p_normal, 
+	const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v)
 { 
 	VisibilityQuery visibilityQuery(p_pScene);
 
-	Spectrum Li = p_pLight->Radiance(p_point, p_u, p_v, p_wOut, visibilityQuery);
+	Spectrum Ls = p_pLight->SampleRadiance(p_point, p_u, p_v, p_wIn, visibilityQuery);
 				
-	if (!Li.IsBlack())
-	{
-		if (!visibilityQuery.IsOccluded())
-		{
-			return Li * Maths::Max(0, Vector3::Dot(p_wOut, p_normal));
-		}
-	}
+	if (Ls.IsBlack() || visibilityQuery.IsOccluded())
+		return 0.0f;
+	
+	if (p_pBSDF == NULL)
+		return Ls * Maths::Max(0, Vector3::AbsDot(p_wIn, p_normal));
 
-	return 0;
-}
+	Vector3 bsdfIn, bsdfOut;
 
-//----------------------------------------------------------------------------------------------
-//Vector3 IIntegrator::SampleHemisphere(const Transformation p_transform, float p_fU, float p_fV)
-//{
-//	Vector2 spherical(p_fU * Maths::PiTwo, p_fV * Maths::PiHalf);
-//	return p_transform.Apply(OrthonormalBasis::FromSpherical(spherical));
-//}
-//----------------------------------------------------------------------------------------------
-Spectrum IIntegrator::SampleAllLights(Scene *p_pScene, const Vector3 &p_point, 
-	const Vector3 &p_normal, ISampler* p_pSampler, int p_nSampleCount)
-{
-	return SampleAllLights(p_pScene, p_point, p_normal, p_pSampler, NULL, p_nSampleCount);
+	BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, p_wOut, bsdfOut);
+	BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, p_wIn, bsdfIn);
+
+	return Ls * Vector3::AbsDot(p_wIn, p_normal) * p_pBSDF->F(bsdfOut, bsdfIn);
 }
 //----------------------------------------------------------------------------------------------
-Spectrum IIntegrator::SampleAllLights(Scene *p_pScene, const Vector3 &p_point, 
-	const Vector3 &p_normal, ISampler *p_pSampler, ILight *p_pExclude, int p_nSampleCount)
+Spectrum IIntegrator::SampleAllLights(Scene *p_pScene, const Intersection &p_intersection,
+	const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wOut, 
+	ISampler *p_pSampler, int p_nSampleCount)
 {
-	Vector2 sample;
-	Vector3 wOut;
-	Spectrum L(0);
+	return SampleAllLights(p_pScene, p_intersection, p_point, p_normal, p_wOut, p_pSampler, NULL, p_nSampleCount);
+}
+//----------------------------------------------------------------------------------------------
+Spectrum IIntegrator::SampleAllLights(Scene *p_pScene, const Intersection &p_intersection, 
+	const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wOut, 
+	ISampler *p_pSampler, ILight *p_pExclude, int p_nSampleCount)
+{
+	Spectrum Ls(0);
 
+	Vector3 wIn;
+	Vector2 *lightSample = new Vector2[p_nSampleCount];
+
+	BSDF *pBSDF = p_intersection.HasMaterial() 
+		? (BSDF*)p_intersection.GetMaterial()
+		: NULL;
+
+	// Sample all lights in scene
 	for (int lightIdx = 0, lightCount = p_pScene->LightList.Size(); lightIdx < lightCount; lightIdx++)
 	{
-		if (p_pScene->LightList[lightIdx] == p_pExclude) continue;
-
-		Spectrum Ld(0);
-
-		for (int sampleIdx = 0; sampleIdx < p_nSampleCount; sampleIdx++)
+		// If light is excluded, skip
+		if (p_pScene->LightList[lightIdx] != p_pExclude) 
 		{
-			p_pSampler->Get2DSamples(&sample, 1);
-			Ld += EstimateDirectLighting(p_pScene, p_pScene->LightList[lightIdx], p_point, p_normal, sample.U, sample.V, wOut, p_nSampleCount);
-		}
+			Spectrum Le(0);
+			p_pSampler->Get2DSamples(lightSample, p_nSampleCount);
 
-		L += Ld / p_nSampleCount;
+			// Sample same light a number of times, for a better estimate
+			for (int sampleIdx = 0; sampleIdx < p_nSampleCount; sampleIdx++)
+			{
+				Le += EstimateDirectLighting(p_pScene, p_pScene->LightList[lightIdx], pBSDF, p_intersection,
+					p_point, p_normal, p_wOut, wIn, lightSample[sampleIdx].U, lightSample[sampleIdx].V);
+			}
+
+			Ls += Le / p_nSampleCount;
+		}
 	}
 
-	return L;
+	delete[] lightSample;
+
+	return Ls;
 }

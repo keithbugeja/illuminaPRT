@@ -5,7 +5,9 @@
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 #include <map>
-#include "EngineKernel.h"
+
+#include "System/EngineKernel.h"
+#include "Material/MaterialManager.h"
 
 namespace Illumina
 {
@@ -14,16 +16,19 @@ namespace Illumina
 		struct EngineKernelState
 		{
 			PlugInManager* m_pPlugInManager;
+			MaterialManager* m_pMaterialManager;
 			DummyManager* m_pDummyManager;
 
 			EngineKernelState(EngineKernel* p_pEngineKernel)
 				: m_pPlugInManager(new PlugInManager(p_pEngineKernel))
+				, m_pMaterialManager(new MaterialManager())
 				, m_pDummyManager(new DummyManager())
 			{ }
 
 			~EngineKernelState(void)
 			{
 				delete m_pDummyManager;
+				delete m_pMaterialManager;
 				delete m_pPlugInManager;
 			}
 		};
@@ -48,6 +53,12 @@ EngineKernel::~EngineKernel(void)
 PlugInManager* EngineKernel::GetPlugInManager(void) const
 {
 	return m_pEngineKernelState->m_pPlugInManager;
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+MaterialManager* EngineKernel::GetMaterialManager(void) const
+{
+	return m_pEngineKernelState->m_pMaterialManager;
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------

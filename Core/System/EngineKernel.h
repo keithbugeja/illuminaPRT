@@ -6,10 +6,13 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-#include "PlugInManager.h"
-#include "FactoryManager.h"
+#include "System/IlluminaPRT.h"
 
-#include "DummyManager.h"
+#include "System/PlugInManager.h"
+#include "System/FactoryManager.h"
+#include "System/DummyManager.h"
+
+#include "Material/MaterialManager.h"
 
 namespace Illumina
 {
@@ -27,6 +30,7 @@ namespace Illumina
 			~EngineKernel();
 
 			PlugInManager* GetPlugInManager(void) const;
+			MaterialManager* GetMaterialManager(void) const;
 			DummyManager* GetDummyManager(void) const;
 		};
 	}
