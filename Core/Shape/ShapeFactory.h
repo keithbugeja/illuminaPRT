@@ -58,9 +58,9 @@ namespace Illumina
 			// Quick and dirty obj loader :
 			// TODO: Make a ModelIO interface and provide an obj implementation
 			template<class TMesh, class TVertex>
-			static boost::shared_ptr<TMesh> LoadMesh(const std::string& p_strMeshFile, MaterialManager *p_pMaterialManager, MaterialGroup **p_pMaterialGroup)
+			static boost::shared_ptr<TMesh> LoadMesh(const std::string& p_strMeshFile, EngineKernel *p_pEngineKernel, MaterialGroup **p_pMaterialGroup)
 			{
-				return WavefrontLoader::LoadMesh<TMesh, TVertex>(p_strMeshFile, p_pMaterialManager, p_pMaterialGroup);
+				return WavefrontLoader::LoadMesh<TMesh, TVertex>(p_strMeshFile, p_pEngineKernel, p_pMaterialGroup);
 			}
 
 			// Quick and dirty obj loader :

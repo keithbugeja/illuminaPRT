@@ -7,7 +7,6 @@
 #include <map>
 
 #include "System/EngineKernel.h"
-#include "Material/MaterialManager.h"
 
 namespace Illumina
 {
@@ -17,11 +16,13 @@ namespace Illumina
 		{
 			PlugInManager* m_pPlugInManager;
 			MaterialManager* m_pMaterialManager;
+			TextureManager* m_pTextureManager;
 			DummyManager* m_pDummyManager;
 
 			EngineKernelState(EngineKernel* p_pEngineKernel)
 				: m_pPlugInManager(new PlugInManager(p_pEngineKernel))
 				, m_pMaterialManager(new MaterialManager())
+				, m_pTextureManager(new TextureManager())
 				, m_pDummyManager(new DummyManager())
 			{ }
 
@@ -29,6 +30,7 @@ namespace Illumina
 			{
 				delete m_pDummyManager;
 				delete m_pMaterialManager;
+				delete m_pTextureManager;
 				delete m_pPlugInManager;
 			}
 		};
@@ -59,6 +61,12 @@ PlugInManager* EngineKernel::GetPlugInManager(void) const
 MaterialManager* EngineKernel::GetMaterialManager(void) const
 {
 	return m_pEngineKernelState->m_pMaterialManager;
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+TextureManager* EngineKernel::GetTextureManager(void) const
+{
+	return m_pEngineKernelState->m_pTextureManager;
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------

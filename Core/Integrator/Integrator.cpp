@@ -36,7 +36,7 @@ Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, 
 	BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, p_wOut, bsdfOut);
 	BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, p_wIn, bsdfIn);
 
-	return Ls * Vector3::AbsDot(p_wIn, p_normal) * p_pBSDF->F(bsdfOut, bsdfIn);
+	return Ls * Vector3::AbsDot(p_wIn, p_normal) * p_pBSDF->F(p_intersection.Surface, bsdfOut, bsdfIn);
 }
 //----------------------------------------------------------------------------------------------
 Spectrum IIntegrator::SampleAllLights(Scene *p_pScene, const Intersection &p_intersection,

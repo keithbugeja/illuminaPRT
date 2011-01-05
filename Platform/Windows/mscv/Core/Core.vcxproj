@@ -272,6 +272,7 @@
     <ClInclude Include="..\..\..\..\Core\Texture\NoiseTexture.h" />
     <ClInclude Include="..\..\..\..\Core\Texture\SimpleTexture.h" />
     <ClInclude Include="..\..\..\..\Core\Texture\Texture.h" />
+    <ClInclude Include="..\..\..\..\Core\Texture\TextureManager.h" />
     <ClInclude Include="..\..\..\..\Core\Threading\Atomic.h" />
     <ClInclude Include="..\..\..\..\Core\Threading\AtomicReference.h" />
     <ClInclude Include="..\..\..\..\Core\Threading\LinkedList.h" />

@@ -36,7 +36,7 @@ namespace Illumina
 				return m_reflectivity;
 			}
 
-			Spectrum SampleF(const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float *p_pdf)
+			Spectrum SampleF(const DifferentialSurface &p_surface, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float *p_pdf)
 			{
 				float phi = Maths::PiTwo * p_u;
 				float cosTheta = Maths::Pow(1 - p_v, 1.0 / (m_fExponent + 1));
@@ -61,7 +61,7 @@ namespace Illumina
 				return m_reflectivity * Maths::InvPi;
 			}
 
-			Spectrum F(const Vector3 &p_wOut, const Vector3 &p_wIn)
+			Spectrum F(const DifferentialSurface &p_pSurface, const Vector3 &p_wOut, const Vector3 &p_wIn)
 			{
 				return m_reflectivity * Maths::InvPi;
 			}

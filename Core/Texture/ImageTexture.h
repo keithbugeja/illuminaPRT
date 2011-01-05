@@ -25,7 +25,13 @@ namespace Illumina
 			boost::shared_ptr<Image> m_image;
 
 		public:
-			ImageTexture(std::string p_strFilename, IImageIO &p_imageIO) {
+			ImageTexture(const std::string &p_strName, const std::string &p_strFilename, IImageIO &p_imageIO) 
+				: ITexture(p_strName) 
+			{
+				m_image = boost::shared_ptr<Image>(p_imageIO.Load(p_strFilename));
+			}
+
+			ImageTexture(const std::string &p_strFilename, IImageIO &p_imageIO) {
 				m_image = boost::shared_ptr<Image>(p_imageIO.Load(p_strFilename));
 			}
 
@@ -39,6 +45,9 @@ namespace Illumina
 				v = p_uv.V >= 0	? p_uv.V - (int)p_uv.V
 								: 1.0f + (p_uv.V - (int)p_uv.V);
 
+				//u = Maths::Frac(u);
+				//v = Maths::Frac(v);
+
 				//u = Maths::Max(0.0f, Maths::Min(1.0f, u));
 				//v = Maths::Max(0.0f, Maths::Min(1.0f, v));
 
@@ -47,6 +56,9 @@ namespace Illumina
 
 				int iu = (int)u,
 					iv = (int)v;
+
+				iu = iu % m_image->GetWidth();
+				iv = iv % m_image->GetHeight();
 
 				// Add interpolation w. smoothing function
 				return m_image->Get(iu, iv);
