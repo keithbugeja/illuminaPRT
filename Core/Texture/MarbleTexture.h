@@ -14,6 +14,7 @@ namespace Illumina
 	namespace Core
 	{
 		class MarbleTexture
+			: public ITexture
 		{
 		protected:
 			RGBPixel m_c0, m_c1, m_c2;
@@ -26,6 +27,29 @@ namespace Illumina
 			int m_nOctaves;
 
 		public:
+			MarbleTexture(const std::string &p_strName, float p_fStripesPerUnit, float p_fScale = 5.0f, int p_nOctaves = 8)
+				: ITexture(p_strName)
+			{
+				m_fFrequency = Maths::Pi * p_fStripesPerUnit;
+				m_fScale = p_fScale;
+				m_nOctaves = p_nOctaves;
+				m_c0 = RGBPixel(0.8f, 0.8f, 0.8f);
+				m_c1 = RGBPixel(0.4f, 0.2f, 0.1f);
+				m_c2 = RGBPixel(0.06f, 0.04f, 0.02f);
+			}
+
+			MarbleTexture(const std::string &p_strName, const RGBPixel &p_c0, const RGBPixel &p_c1, const RGBPixel &p_c2, 
+				float p_fStripesPerUnit, float p_fScale = 5.0f, int p_nOctaves = 8)
+				: ITexture(p_strName)
+			{
+				m_fFrequency = Maths::Pi * p_fStripesPerUnit;
+				m_fScale = p_fScale;
+				m_nOctaves = p_nOctaves;
+				m_c0 = p_c0;
+				m_c1 = p_c1;
+				m_c2 = p_c2;
+			}
+
 			MarbleTexture(float p_fStripesPerUnit, float p_fScale = 5.0f, int p_nOctaves = 8)
 			{
 				m_fFrequency = Maths::Pi * p_fStripesPerUnit;

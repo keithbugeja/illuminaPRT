@@ -13,11 +13,10 @@
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "Shape/Shape.h"
+#include "System/EngineKernel.h"
 #include "Shape/VertexFormats.h"
+#include "Shape/Shape.h"
 #include "Spectrum/Spectrum.h"
-#include "Material/MaterialManager.h"
-#include "Threading/List.h"
 
 namespace Illumina
 {
@@ -63,6 +62,7 @@ namespace Illumina
 		//----------------------------------------------------------------------------------------------
 		class WavefrontLoader
 		{
+		protected:
 			static bool LoadMaterials(const std::string &p_strMaterialsFile, std::vector<WavefrontMaterial> &p_materialList)
 			{
 				std::ifstream file;
@@ -153,7 +153,7 @@ namespace Illumina
 
 		public:
 			template<class TMesh, class TVertex>
-			static boost::shared_ptr<TMesh> LoadMesh(const std::string &p_strMeshFile, MaterialManager *p_pMaterialManager, MaterialGroup **p_pMaterialGroup)
+			static boost::shared_ptr<TMesh> LoadMesh(const std::string &p_strMeshFile, EngineKernel *p_pEngineKernel, MaterialGroup **p_pMaterialGroup)
 			{
 				int currentMaterialId = -1;
 
@@ -247,16 +247,30 @@ namespace Illumina
 						filepath = (meshPath.parent_path() / file).string();
 						LoadMaterials(filepath, materialList);
 
-						*p_pMaterialGroup = (MaterialGroup*)p_pMaterialManager->CreateInstance("Group", file);
+						*p_pMaterialGroup = (MaterialGroup*)p_pEngineKernel->GetMaterialManager()->CreateInstance("Group", file);
 
 						for (int matIdx = 0; matIdx < materialList.size(); matIdx++)
 						{
 							const WavefrontMaterial &material = materialList.at(matIdx);
+
 							std::string indexName = material.Name;
+
 							std::stringstream argumentStream;
 							argumentStream<<"Name="<<indexName<<";Reflectivity="<<material.Diffuse[0]<<","<<material.Diffuse[1]<<","<<material.Diffuse[2]<<";";
-							IMaterial *pMaterial = p_pMaterialManager->CreateInstance("Diffuse", indexName, argumentStream.str());
+							IMaterial *pMaterial = p_pEngineKernel->GetMaterialManager()->CreateInstance("Diffuse", indexName, argumentStream.str());
 							(*p_pMaterialGroup)->Add(pMaterial, matIdx);
+
+							if (material.DiffuseMap.size() != 0)
+							{ 
+								std::string diffuseMap = material.DiffuseMap;
+
+								std::stringstream textureArgStream;
+								textureArgStream<<"Name="<<diffuseMap<<";Filename="<<(meshPath.parent_path() / diffuseMap).string()<<";Filetype=PPM;";
+								ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
+							
+								DiffuseMaterial *pDiffuse = (DiffuseMaterial*)pMaterial;
+								pDiffuse->SetDiffuseTexture(pTexture);
+							}
 						} 
 					}
 					else if (strLine.find("usemtl") != string::npos)

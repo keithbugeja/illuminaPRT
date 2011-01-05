@@ -13,6 +13,7 @@
 #include "System/DummyManager.h"
 
 #include "Material/MaterialManager.h"
+#include "Texture/TextureManager.h"
 
 namespace Illumina
 {
@@ -31,6 +32,7 @@ namespace Illumina
 
 			PlugInManager* GetPlugInManager(void) const;
 			MaterialManager* GetMaterialManager(void) const;
+			TextureManager* GetTextureManager(void) const;
 			DummyManager* GetDummyManager(void) const;
 		};
 	}

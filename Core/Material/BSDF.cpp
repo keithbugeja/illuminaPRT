@@ -56,9 +56,9 @@ void BSDF::SurfaceToWorld(const Transformation &p_worldTransform, const Differen
 //----------------------------------------------------------------------------------------------
 Spectrum BSDF::Rho(Vector3 &p_wOut) { return 0.0f; }
 //----------------------------------------------------------------------------------------------
-Spectrum BSDF::SampleF(const Vector3 &p_wIn, Vector3 &p_wOut, float p_u, float p_v, float* p_pdf) { return 0.0f; }
+Spectrum BSDF::SampleF(const DifferentialSurface &p_surface, const Vector3 &p_wIn, Vector3 &p_wOut, float p_u, float p_v, float* p_pdf) { return 0.0f; }
 //----------------------------------------------------------------------------------------------
-Spectrum BSDF::F(const Vector3 &p_wIn, const Vector3 &p_wOut) { return 0.0f; }
+Spectrum BSDF::F(const DifferentialSurface &p_surface, const Vector3 &p_wIn, const Vector3 &p_wOut) { return 0.0f; }
 //----------------------------------------------------------------------------------------------
 float BSDF::Pdf(const Vector3 &p_wIn, const Vector3 &p_wOut) { return 1.0f; }
 //----------------------------------------------------------------------------------------------

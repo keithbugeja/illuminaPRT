@@ -914,10 +914,28 @@ void RayTracer(int p_nOMPThreads)
 	#endif
 
 	//----------------------------------------------------------------------------------------------
-	// Materials
+	// Engine Kernel
 	//----------------------------------------------------------------------------------------------
 	EngineKernel engineKernel;
 
+	//----------------------------------------------------------------------------------------------
+	// Textures
+	//----------------------------------------------------------------------------------------------
+	engineKernel.GetTextureManager()->RegisterFactory("Image", new ImageTextureFactory());
+	engineKernel.GetTextureManager()->RegisterFactory("Noise", new NoiseTextureFactory());
+	engineKernel.GetTextureManager()->RegisterFactory("Marble", new MarbleTextureFactory());
+
+	#if defined(__PLATFORM_WINDOWS__)
+		ITexture* pTexture1 = engineKernel.GetTextureManager()->CreateInstance("Image", "Image Texture 1", "Name=Image_Texture;Filename=D:\\Development\\IlluminaPRT\\Resource\\Texture\\texture.ppm;Filetype=PPM;");
+	#elif defined(__PLATFORM_LINUX__)
+		ITexture* pTexture1 = engineKernel.GetTextureManager()->CreateInstance("Image", "Image Texture 1", "Name=Image_Texture;Filename=../../../Resource/Texture/texture.ppm;Filetype=PPM;");
+	#endif
+
+	ITexture* pTexture2 = engineKernel.GetTextureManager()->CreateInstance("Marble", "Marble Texture 1", "Name=Marble_Texture;Stripes=0.002;Scale=1.0;Octaves=4;");
+
+	//----------------------------------------------------------------------------------------------
+	// Materials
+	//----------------------------------------------------------------------------------------------
 	engineKernel.GetMaterialManager()->RegisterFactory("Diffuse", new DiffuseMaterialFactory());
 	engineKernel.GetMaterialManager()->RegisterFactory("Phong", new PhongMaterialFactory());
 	engineKernel.GetMaterialManager()->RegisterFactory("Group", new MaterialGroupFactory());
@@ -942,8 +960,8 @@ void RayTracer(int p_nOMPThreads)
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Tests\\testAxes.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sibenik\\sibenik.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\sponza_clean.obj");
-		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\sponza_crytek3.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Kalabsha\\Kalabsha12.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\sponza_crytek.obj");
+		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Kalabsha\\Kalabsha12.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Cornell\\cornellbox.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Bunny\\bunny.obj");
 	#elif defined(__PLATFORM_LINUX__)
@@ -967,7 +985,7 @@ void RayTracer(int p_nOMPThreads)
 	//	fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
 	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 		ShapeFactory::LoadMesh<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
-		fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
+		fname_model01, &engineKernel, &pMeshMaterialGroup );
 	//boost::shared_ptr<BVHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 	//	ShapeFactory::LoadMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
 	//	fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
@@ -1078,7 +1096,7 @@ void RayTracer(int p_nOMPThreads)
 	//scene.LightList.PushBack(&diffuseLight1);
 	scene.LightList.PushBack(&diffuseLight2);
  
-	PathIntegrator integrator(4, 4, 1, false);
+	PathIntegrator integrator(1, 1, 1, false);
 	integrator.Initialise(&scene, &camera);
  
 	ImagePPM imagePPM;
@@ -1105,12 +1123,12 @@ void RayTracer(int p_nOMPThreads)
 	double alpha = 0.0f,
 		totalFPS = 0.0f,
 		// Sponza
-		//cDistX = -10, cDistY = 17.5, cDistZ = -3;
+		cDistX = -10, cDistY = 17.5, cDistZ = -3;
 		//cDistX = -10, cDistY = 12.5, cDistZ = -3;
 		//cDistX = -10, cDistY = 7.5, cDistZ = -3;
 		
 		// Cornell box
-		cDistX = -30, cDistY = 30, cDistZ = -10;
+		//cDistX = -30, cDistY = 30, cDistZ = -10;
 
 		//cDistX = -10, cDistY = 5, cDistZ = -10;
 		//cDistX = 10, cDistY = -10, cDistZ = 5;

@@ -13,7 +13,8 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class NoiseTexture
+		class NoiseTexture 
+			: public ITexture
 		{
 		protected:
 			float m_fScale;
@@ -21,6 +22,21 @@ namespace Illumina
 			Noise m_noise;
 
 		public:
+			NoiseTexture(const std::string &p_strName, float p_fScale = 1.0f)
+				: ITexture(p_strName)
+			{
+				m_fScale = p_fScale;
+				m_c0 = RGBPixel(0.8f, 0.0f, 0.0f);
+				m_c1 = RGBPixel(0.0f, 0.0f, 0.8f);
+			}
+
+			NoiseTexture(const std::string &p_strName, const RGBPixel &p_c0, const RGBPixel &p_c1, float p_fScale = 1.0f)
+				: ITexture(p_strName)
+				, m_fScale(p_fScale)
+				, m_c0(p_c0)
+				, m_c1(p_c1)
+			{ }
+
 			NoiseTexture(float p_fScale = 1.0f)
 			{
 				m_fScale = p_fScale;

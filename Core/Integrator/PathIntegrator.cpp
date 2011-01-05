@@ -45,14 +45,6 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 	
 	Spectrum L(0);
 	
-	//m_nMaxRayDepth = 1;
-	//const int maxSampleCount = 1,
-	//	maxShadowSampleCount = 16;//128;
-
-	////m_nMaxRayDepth = 4;
-	////const int maxSampleCount = 100,
-	////	maxShadowSampleCount = 10;
-
 	for (int sampleIdx = 0; sampleIdx < m_nSampleCount; sampleIdx++)
 	{
 		Spectrum pathThroughput(1.0f);
@@ -101,7 +93,7 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 
 				// Sample new direction
 				sample = p_pScene->GetSampler()->Get2DSample();
-				Spectrum f = p_intersection.GetMaterial()->SampleF(wOut, wIn, sample.U, sample.V, &pdf);
+				Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, wOut, wIn, sample.U, sample.V, &pdf);
 
 				if (f.IsBlack() || pdf == 0.0f)
 					break;
