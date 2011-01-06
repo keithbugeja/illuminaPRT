@@ -81,6 +81,13 @@ Factory<T>* FactoryManager<T>::RequestFactory(const std::string& p_strFactoryNam
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 template<class T>
+bool FactoryManager<T>::QueryInstance(const std::string &p_strInstanceName)
+{
+	return ContainsItem(p_strInstanceName);
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+template<class T>
 T* FactoryManager<T>::CreateInstance(const std::string& p_strFactoryName, const std::string& p_strInstanceName)
 {
 	std::cout << "FactoryManager creating instance '" << p_strInstanceName << "' from factory '" << p_strFactoryName << "' ..." << std::endl;
@@ -157,3 +164,5 @@ T* FactoryManager<T>::ReleaseInstance(const std::string& p_strInstanceName)
 	else
 		throw new Exception("Instance does not exist!");
 }
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------

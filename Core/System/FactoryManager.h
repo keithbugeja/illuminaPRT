@@ -37,6 +37,7 @@ namespace Illumina
 			bool QueryFactory(const std::string &p_strFactoryName);
 			Factory<T>* RequestFactory(const std::string &p_strFactoryName);
 
+			bool QueryInstance(const std::string &p_strInstanceName);
 			void RegisterInstance(const std::string &p_strInstanceName, T *p_pInstance);
 			
 			T* CreateInstance(const std::string &p_strFactoryName, const std::string &p_strInstanceName);

@@ -11,8 +11,7 @@ using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 inline int Image::IndexOf(int p_x, int p_y) 
 {
-	BOOST_ASSERT(p_x + p_y * m_nWidth >= 0 &&
-		p_x + p_y * m_nWidth < m_nHeight * m_nWidth);
+	//BOOST_ASSERT(p_x + p_y * m_nWidth >= 0 && p_x + p_y * m_nWidth < m_nHeight * m_nWidth);
 			
 	return p_x + p_y * m_nWidth;
 }
@@ -31,13 +30,13 @@ inline int Image::GetLength(void) const {
 //----------------------------------------------------------------------------------------------
 inline RGBPixel Image::operator[](int p_nIndex) const 
 {
-	BOOST_ASSERT(p_nIndex >= 0 && p_nIndex < m_nWidth * m_nHeight);
+	//BOOST_ASSERT(p_nIndex >= 0 && p_nIndex < m_nWidth * m_nHeight);
 	return RGBPixel(m_bitmap[p_nIndex]);
 }
 //----------------------------------------------------------------------------------------------
 inline RGBPixel& Image::operator[](int p_nIndex) 
 {
-	BOOST_ASSERT(p_nIndex >= 0 && p_nIndex < m_nWidth * m_nHeight);
+	//BOOST_ASSERT(p_nIndex >= 0 && p_nIndex < m_nWidth * m_nHeight);
 	return m_bitmap[p_nIndex];
 }
 //----------------------------------------------------------------------------------------------

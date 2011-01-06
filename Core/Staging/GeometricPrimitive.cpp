@@ -111,7 +111,11 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection
 					MaterialGroup *pGroup = (MaterialGroup*)m_pMaterial;
 					
 					if (p_intersection.Surface.GetShape()->HasGroup())
+					{
 						p_intersection.SetMaterial(pGroup->GetByGroupId(p_intersection.Surface.GetShape()->GetGroupId()));
+						//std::cout << "ID : " << p_intersection.Surface.GetShape()->GetGroupId() << std::endl;
+						//std::cout << "@@ : " << pGroup->GetByGroupId(p_intersection.Surface.GetShape()->GetGroupId()) << std::endl;
+					}
 					else
 						p_intersection.SetMaterial(pGroup->GetByIndex(0));
 				}
