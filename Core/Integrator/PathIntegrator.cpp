@@ -95,6 +95,8 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 				sample = p_pScene->GetSampler()->Get2DSample();
 				Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, wOut, wIn, sample.U, sample.V, &pdf);
 
+				//std::cout << "L = " << L.ToString() << std::endl;
+
 				if (f.IsBlack() || pdf == 0.0f)
 					break;
 

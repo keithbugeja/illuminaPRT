@@ -100,6 +100,38 @@ void ITriangleMesh<T, U>::AddIndexedTriangleList(const List<int> &p_indexList, i
 template<class T, class U>
 bool ITriangleMesh<T, U>::UpdateNormals(void)
 {
+	// Try fixing vertices instead
+	if ((U::GetDescriptor() & VertexFormat::Normal) > 0)
+	{
+		Vector3 vec3Edge1, vec3Edge2, vec3Normal;
+
+		int nVertexCount = VertexList.Size();
+
+		// Find normals
+		for (int nFaceIndex = 0, nFaceCount = TriangleList.Size(); nFaceIndex < nFaceCount; nFaceIndex++)
+		{
+			T& face = TriangleList.At(nFaceIndex);
+			
+			vec3Edge1 = VertexList[face.GetVertexIndex(1)].Position - VertexList[face.GetVertexIndex(0)].Position;
+			vec3Edge2 = VertexList[face.GetVertexIndex(2)].Position - VertexList[face.GetVertexIndex(0)].Position;
+			Vector3::Cross(vec3Edge1, vec3Edge2, vec3Normal);
+
+			for (int vertexIndex = 0; vertexIndex < 3; vertexIndex++)
+			{
+				if (VertexList[face.GetVertexIndex(vertexIndex)].Normal.Dot(vec3Normal) < 0)
+					VertexList[face.GetVertexIndex(vertexIndex)].Normal = -VertexList[face.GetVertexIndex(vertexIndex)].Normal;
+			}
+		}
+
+		// Normalize all vertex normals
+		for (int nVertexIndex = 0; nVertexIndex < nVertexCount; nVertexIndex++)
+		{
+			VertexList[nVertexIndex].Normal = Vector3::Normalize(VertexList[nVertexIndex].Normal);
+		}
+
+		return true;
+	}
+/*
 	// Check for normal semantic before applying normal update
 	if ((U::GetDescriptor() & VertexFormat::Normal) > 0)
 	{
@@ -133,7 +165,7 @@ bool ITriangleMesh<T, U>::UpdateNormals(void)
 
 		return true;
 	}
-
+*/
 	return false;
 }
 //----------------------------------------------------------------------------------------------

@@ -54,11 +54,172 @@ void BSDF::SurfaceToWorld(const Transformation &p_worldTransform, const Differen
 	p_out = p_surface.GeometryBasisWS.Project(p_worldTransform.Apply(p_vector));
 }
 //----------------------------------------------------------------------------------------------
-Spectrum BSDF::Rho(Vector3 &p_wOut) { return 0.0f; }
+int BSDF::GetBxDFCount(BxDF::Type p_bxdfType)
+{
+	if (p_bxdfType == BxDF::All_Combined)
+		return m_bxdfList.Size();
+
+	int bxdfCount = 0;
+
+	for (int bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); bxdfIndex++)
+		if (m_bxdfList[bxdfIndex]->IsType(p_bxdfType))
+			bxdfCount++;
+
+	return bxdfCount;
+}
 //----------------------------------------------------------------------------------------------
-Spectrum BSDF::SampleF(const DifferentialSurface &p_surface, const Vector3 &p_wIn, Vector3 &p_wOut, float p_u, float p_v, float* p_pdf) { return 0.0f; }
+int BSDF::GetBxDF(BxDF::Type p_bxdfType, int p_nBxDFIndex, BxDF **p_pBxDF)
+{
+	if (p_bxdfType == BxDF::All_Combined)
+	{
+		*p_pBxDF = m_bxdfList[p_nBxDFIndex];
+		return p_nBxDFIndex;
+	}
+
+	for (int bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); bxdfIndex++)
+	{
+		if (m_bxdfList[bxdfIndex]->IsType(p_bxdfType))
+		{
+			if (p_nBxDFIndex == 0)
+			{
+				*p_pBxDF = m_bxdfList[bxdfIndex];
+				return bxdfIndex;
+			}
+
+			p_nBxDFIndex--;
+		}
+	}
+
+	*p_pBxDF = NULL;
+	return -1;
+}
 //----------------------------------------------------------------------------------------------
-Spectrum BSDF::F(const DifferentialSurface &p_surface, const Vector3 &p_wIn, const Vector3 &p_wOut) { return 0.0f; }
+Spectrum BSDF::Rho(Vector3 &p_wOut, int p_nSampleCount, float *p_nSampleList, BxDF::Type p_bxdfType)
+{
+	return 0.0f; 
+}
 //----------------------------------------------------------------------------------------------
-float BSDF::Pdf(const Vector3 &p_wIn, const Vector3 &p_wOut) { return 1.0f; }
+Spectrum BSDF::SampleF(const DifferentialSurface& p_surface, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float *p_pdf, BxDF::Type p_bxdfType, BxDF::Type *p_sampledBxDFType)
+{ 
+	int bxdfCount = GetBxDFCount(p_bxdfType);
+
+	if (bxdfCount == 0)
+	{
+		*p_pdf = 0.0f;
+		return 0.0f;
+	}
+
+	// Choose a bxdf to sample
+	#pragma message ("Need to pass random number or a way to generate it")
+	// Need to get a new random number to remove bias!
+	int bxdfIndexFilter = (int)(p_v * bxdfCount - 1),
+		bxdfIndexList;
+
+	BxDF *pBxDF;
+	
+	if ((bxdfIndexList = GetBxDF(p_bxdfType, bxdfIndexFilter, &pBxDF)) == -1)
+		throw new Exception("No BxDF found.");
+
+	// Sample chosen bxdf
+	Spectrum reflectivity = SampleTexture(p_surface, bxdfIndexList);
+	Spectrum f = pBxDF->SampleF(reflectivity, p_wOut, p_wIn, p_u, p_v, p_pdf);
+
+	if (*p_pdf == 0.0f) 
+		return 0.0f;
+	
+	if (p_sampledBxDFType != NULL) 
+		*p_sampledBxDFType = pBxDF->GetType();
+	
+	// Compute PDF with matching BxDFs
+	if (bxdfCount > 1)
+	{
+		if (!pBxDF->IsType(BxDF::Specular)) 
+		{
+			for (int bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); ++bxdfIndex) 
+			{
+				BxDF *pBxDF4Pdf = m_bxdfList[bxdfIndex];
+
+				if (pBxDF4Pdf != pBxDF && pBxDF4Pdf->IsType(p_bxdfType))
+					*p_pdf +=  pBxDF4Pdf->Pdf(p_wOut, p_wIn);
+			}
+		}
+		
+		*p_pdf /= bxdfCount;
+	}
+
+	// Compute value of BSDF for sampled direction
+	if (!pBxDF->IsType(BxDF::Specular))
+	{
+		BxDF::Type bxdfFlags;
+
+		f = 0.0;
+
+		if (p_wIn.Z > 0)
+			bxdfFlags = BxDF::Type(p_bxdfType & ~BxDF::Transmission);
+		else
+			bxdfFlags = BxDF::Type(p_bxdfType & ~BxDF::Reflection);
+
+		for (int bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); ++bxdfIndex)
+		{
+			BxDF *pBxDF4F = m_bxdfList[bxdfIndex];
+			
+			if (pBxDF4F->IsType(bxdfFlags))
+			{
+				f += pBxDF4F->F(reflectivity, p_wOut, p_wIn);
+			}
+		}
+	}
+
+	return f;
+}
+//----------------------------------------------------------------------------------------------
+Spectrum BSDF::F(const DifferentialSurface& p_surface, const Vector3 &p_wOut, const Vector3 &p_wIn, BxDF::Type p_bxdfType)
+{	
+	BxDF::Type bxdfFlags;
+	Spectrum f = 0.0;
+
+	if (p_wIn.Z > 0)
+		bxdfFlags = BxDF::Type(p_bxdfType & ~BxDF::Transmission);
+	else
+		bxdfFlags = BxDF::Type(p_bxdfType & ~BxDF::Reflection);
+
+	for (int bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); ++bxdfIndex)
+	{
+		BxDF *pBxDF4F = m_bxdfList[bxdfIndex];
+			
+		if (pBxDF4F->IsType(bxdfFlags))
+		{
+			f += pBxDF4F->F(SampleTexture(p_surface, bxdfIndex), p_wOut, p_wIn);
+		}
+	}
+
+	return f;
+}
+//----------------------------------------------------------------------------------------------
+float BSDF::Pdf(const Vector3 &p_wIn, const Vector3 &p_wOut, BxDF::Type p_bxdfType) 
+{ 
+	int bxdfCount = m_bxdfList.Size(),
+		bxdfMatchCount = 0;
+	
+	float pdf = 0;
+
+	if (bxdfCount == 0) 
+		return 0;
+
+	for (int bxdfIndex = 0; bxdfIndex < bxdfCount; bxdfIndex++)
+	{
+		if (m_bxdfList[bxdfIndex]->IsType(p_bxdfType))
+		{
+			bxdfMatchCount++;
+			pdf += m_bxdfList[bxdfIndex]->Pdf(p_wIn, p_wOut);
+		}
+	}
+
+	return bxdfMatchCount > 0 ? pdf / bxdfMatchCount : 0; 
+}
+//----------------------------------------------------------------------------------------------
+Spectrum BSDF::SampleTexture(const DifferentialSurface &p_surface, int p_nBxDFIndex)
+{
+	return 1.0;
+}
 //----------------------------------------------------------------------------------------------

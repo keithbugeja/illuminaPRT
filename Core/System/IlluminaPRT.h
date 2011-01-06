@@ -20,6 +20,7 @@ namespace Illumina
 		class IShape;
 		class ILight;
 		class BSDF;
+		class BxDF;
 		class RGBSpectrum;
 
 		class Intersection;

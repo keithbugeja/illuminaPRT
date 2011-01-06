@@ -216,6 +216,9 @@
     <ClCompile Include="..\..\..\..\Core\Integrator\PathIntegrator.cpp">
       <Filter>Header Files\Integrator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Material\LambertianBxDF.cpp">
+      <Filter>Header Files\Material</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -547,6 +550,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Texture\TextureManager.h">
       <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\BxDF.h">
+      <Filter>Header Files\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\LambertianBxDF.h">
+      <Filter>Header Files\Material</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
