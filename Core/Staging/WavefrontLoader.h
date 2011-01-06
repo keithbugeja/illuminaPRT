@@ -3,6 +3,8 @@
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
+//  Loader is a hurried mess of unorganised crap! 
+//  Will have to re-write it soon after I get results from Albert.
 //----------------------------------------------------------------------------------------------
 #pragma once
 
@@ -40,7 +42,7 @@ namespace Illumina
 		struct WavefrontFace
 		{
 			int MaterialIndex;
-			WavefrontVertex Vertex[3];
+			WavefrontVertex Vertex[4];
 		};
 		//----------------------------------------------------------------------------------------------
 		struct WavefrontMaterial
@@ -201,41 +203,93 @@ namespace Illumina
 					}
 					else if(strType == "f")
 					{
-						char separator;
-						int vertexIndex[3];
-						WavefrontFace face;
+						int count = 0;
+						
+						std::string m = meshLine.str();
 
-						for (int i = 0; i < 3; i++)
+						for (int s = 0; s < m.size(); s++)
+							if (m[s] == '/') count++;
+
+						int vertexCount = count / 2;
+
+						if (vertexCount == 3)
 						{
-							meshLine >> face.Vertex[i].Position >> separator
-								>> face.Vertex[i].Texture >> separator
-								>> face.Vertex[i].Normal;
+							char separator;
+							int vertexIndex[3];
+							WavefrontFace face;
 
-							face.Vertex[i].Position--;
-							if (face.Vertex[i].Normal != 0) face.Vertex[i].Normal--;
-							if (face.Vertex[i].Texture != 0) face.Vertex[i].Texture--;
-
-							// Vertex not found in map
-							std::string hash = face.Vertex[i].GetVertexHash();
-							if (vertexMap.find(hash) == vertexMap.end())
+							for (int i = 0; i < 3; i++)
 							{
-								TVertex vertex;								
+								meshLine >> face.Vertex[i].Position >> separator
+									>> face.Vertex[i].Texture >> separator
+									>> face.Vertex[i].Normal;
 
-								vertex.Position = positionList[face.Vertex[i].Position];
-								vertex.Normal = normalList[face.Vertex[i].Normal];
-								if (vertex.Normal == 0) std::cout << "-- Invalid normal for index [" << mesh->VertexList.Size() << "]" << std::endl;
-								if (face.Vertex[i].Texture < textureCoordList.size()) vertex.UV = textureCoordList[face.Vertex[i].Texture];
+
+								face.Vertex[i].Position--;
+								if (face.Vertex[i].Normal != 0) face.Vertex[i].Normal--;
+								if (face.Vertex[i].Texture != 0) face.Vertex[i].Texture--;
+
+								// Vertex not found in map
+								std::string hash = face.Vertex[i].GetVertexHash();
+								if (vertexMap.find(hash) == vertexMap.end())
+								{
+									TVertex vertex;								
+
+									vertex.Position = positionList[face.Vertex[i].Position];
+									vertex.Normal = normalList[face.Vertex[i].Normal];
+									if (vertex.Normal == 0) std::cout << "-- Invalid normal for index [" << mesh->VertexList.Size() << "]" << std::endl;
+									if (face.Vertex[i].Texture < textureCoordList.size()) vertex.UV = textureCoordList[face.Vertex[i].Texture];
 								
-								vertexMap[hash] = vertexIndex[i] = mesh->VertexList.Size();
-								mesh->AddVertex(vertex);
+									vertexMap[hash] = vertexIndex[i] = mesh->VertexList.Size();
+									mesh->AddVertex(vertex);
+								}
+								else
+								{
+									vertexIndex[i] = vertexMap[hash];
+								}
 							}
-							else
-							{
-								vertexIndex[i] = vertexMap[hash];
-							}
-						}
 
-						mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[1], vertexIndex[2], currentMaterialId);
+							mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[1], vertexIndex[2], currentMaterialId);
+						}
+						else
+						{
+							char separator;
+							int vertexIndex[4];
+							WavefrontFace face;
+
+							for (int i = 0; i < 4; i++)
+							{
+								meshLine >> face.Vertex[i].Position >> separator
+									>> face.Vertex[i].Texture >> separator
+									>> face.Vertex[i].Normal;
+
+								face.Vertex[i].Position--;
+								if (face.Vertex[i].Normal != 0) face.Vertex[i].Normal--;
+								if (face.Vertex[i].Texture != 0) face.Vertex[i].Texture--;
+
+								// Vertex not found in map
+								std::string hash = face.Vertex[i].GetVertexHash();
+								if (vertexMap.find(hash) == vertexMap.end())
+								{
+									TVertex vertex;								
+
+									vertex.Position = positionList[face.Vertex[i].Position];
+									vertex.Normal = normalList[face.Vertex[i].Normal];
+									if (vertex.Normal == 0) std::cout << "-- Invalid normal for index [" << mesh->VertexList.Size() << "]" << std::endl;
+									if (face.Vertex[i].Texture < textureCoordList.size()) vertex.UV = textureCoordList[face.Vertex[i].Texture];
+								
+									vertexMap[hash] = vertexIndex[i] = mesh->VertexList.Size();
+									mesh->AddVertex(vertex);
+								}
+								else
+								{
+									vertexIndex[i] = vertexMap[hash];
+								}
+							}
+
+							mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[1], vertexIndex[2], currentMaterialId);
+							mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[2], vertexIndex[3], currentMaterialId);
+						}
 					}
 					else if (strLine.find("mtllib") != string::npos)
 					{
@@ -263,13 +317,21 @@ namespace Illumina
 							if (material.DiffuseMap.size() != 0)
 							{ 
 								std::string diffuseMap = material.DiffuseMap;
-
-								std::stringstream textureArgStream;
-								textureArgStream<<"Name="<<diffuseMap<<";Filename="<<(meshPath.parent_path() / diffuseMap).string()<<";Filetype=PPM;";
-								ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
-							
 								DiffuseMaterial *pDiffuse = (DiffuseMaterial*)pMaterial;
-								pDiffuse->SetDiffuseTexture(pTexture);
+
+								if (!p_pEngineKernel->GetTextureManager()->QueryInstance(diffuseMap))
+								{
+									std::stringstream textureArgStream;
+									textureArgStream<<"Name="<<diffuseMap<<";Filename="<<(meshPath.parent_path() / diffuseMap).string()<<";Filetype=PPM;";
+									ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
+							
+									pDiffuse->SetDiffuseTexture(pTexture);
+								}
+								else
+								{
+									std::cout << "Re-using texture : " << diffuseMap << std::endl;
+									pDiffuse->SetDiffuseTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
+								}
 							}
 						} 
 					}
@@ -278,7 +340,7 @@ namespace Illumina
 						std::string materialName;
 						meshLine >> materialName >> materialName;
 
-						int currentMaterialId = (*p_pMaterialGroup)->GetGroupId(materialName);
+						currentMaterialId = (*p_pMaterialGroup)->GetGroupId(materialName);
 						std::cout<< "-- Using material [" << materialName << ":" << currentMaterialId << "]..." << std::endl;
 					}
 				}
