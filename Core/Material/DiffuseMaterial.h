@@ -6,7 +6,7 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-#include "Material/Material.h"
+#include "Material/LambertianBxDF.h"
 #include "Texture/Texture.h"
 
 namespace Illumina
@@ -17,6 +17,9 @@ namespace Illumina
 			: public IMaterial
 		{
 		protected:
+			using BSDF::m_bxdfList;
+
+		protected:
 			Spectrum m_reflectivity;
 			ITexture *m_pDiffuseTexture;
 
@@ -25,12 +28,21 @@ namespace Illumina
 				: IMaterial(p_strName) 
 				, m_reflectivity(p_reflectivity)
 				, m_pDiffuseTexture(NULL)
-			{ }
+			{
+				m_bxdfList.PushBack(new Lambertian());
+			}
 
 			DiffuseMaterial(const Spectrum& p_reflectivity)
 				: m_reflectivity(p_reflectivity)
 				, m_pDiffuseTexture(NULL)
-			{ }
+			{
+				m_bxdfList.PushBack(new Lambertian());
+			}
+
+			~DiffuseMaterial(void)
+			{
+				delete m_bxdfList.At(0);
+			}
 
 			void SetDiffuseTexture(ITexture* p_pTexture)
 			{
@@ -38,46 +50,15 @@ namespace Illumina
 				m_pDiffuseTexture = p_pTexture;
 			}
 
-			Spectrum Rho(Vector3 &p_wOut)
+			Spectrum SampleTexture(const DifferentialSurface &p_surface, int p_bxdfIndex)
 			{
-				return m_reflectivity;
-			}
-
-			Spectrum SampleF(const DifferentialSurface &p_surface, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float *p_pdf)
-			{
-				BSDF::GenerateVectorInHemisphere(p_u, p_v, p_wIn);
-				
-				// Allahares nidghi, ghax kieku shittha Malta
-				if (Maths::ISgn(p_wIn.Z) == Maths::ISgn(p_wOut.Z))
-					p_wIn.Z = -p_wIn.Z;
-
-				*p_pdf = Maths::InvPi;
-
-				if (m_pDiffuseTexture != NULL)
+				if (m_pDiffuseTexture)
 				{
-					RGBPixel rgb = m_pDiffuseTexture->GetValue(p_surface.PointUV, Vector3::Zero);
-					Spectrum diffuse(rgb.R, rgb.G, rgb.B);
-					return diffuse * m_reflectivity * Maths::InvPi;
+					RGBPixel pixel = m_pDiffuseTexture->GetValue(p_surface.PointUV, p_surface.PointWS);
+					return Spectrum(pixel.R, pixel.G, pixel.B);
 				}
-
-				return m_reflectivity * Maths::InvPi;
-			}
-
-			Spectrum F(const DifferentialSurface &p_surface, const Vector3 &p_wOut, const Vector3 &p_wIn)
-			{
-				if (m_pDiffuseTexture != NULL)
-				{
-					RGBPixel rgb = m_pDiffuseTexture->GetValue(p_surface.PointUV, Vector3::Zero);
-					Spectrum diffuse(rgb.R, rgb.G, rgb.B);
-					return diffuse * m_reflectivity * Maths::InvPi;
-				}
-
-				return m_reflectivity * Maths::InvPi;
-			}
-
-			float Pdf(const Vector3 &p_wOut, const Vector3 &p_wIn)
-			{
-				return Maths::InvPi;
+				else
+					return m_reflectivity;
 			}
 		};
 	}

@@ -16,6 +16,9 @@ namespace Illumina
 		class IMaterial 
 			: public BSDF
 		{ 
+		protected:
+			using BSDF::m_bxdfList;
+
 		public:
 			IMaterial(void) : BSDF() { }
 			IMaterial(const std::string &p_strName) : BSDF(p_strName) { }

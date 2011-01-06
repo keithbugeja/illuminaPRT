@@ -960,8 +960,8 @@ void RayTracer(int p_nOMPThreads)
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Tests\\testAxes.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sibenik\\sibenik.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\sponza_clean.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\Crytek\\sponza.obj");
-		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Kalabsha\\Kalabsha12.obj");
+		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\Crytek\\sponza.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Kalabsha\\Kalabsha12.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Cornell\\cornellbox.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Bunny\\bunny.obj");
 	#elif defined(__PLATFORM_LINUX__)
@@ -1011,12 +1011,12 @@ void RayTracer(int p_nOMPThreads)
 	// sphere arealight
 	// Sponza, et al.
 	//Sphere shape_mesh2(Vector3(0, 7.0f, 0), 2.0f);
-	Sphere shape_mesh2(Vector3(0.0, 15.0f, 0.0), 0.5f);
-	DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
+	//Sphere shape_mesh2(Vector3(0.0, 15.0f, 0.0), 0.5f);
+	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
 	
 	// crytek sponza
-	//Sphere shape_mesh2(Vector3(0.0, 1700.0f, 0.0), 100.0f);
-	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+8, 1e+8, 1e+8));
+	Sphere shape_mesh2(Vector3(0.0, 1700.0f, 0.0), 100.0f);
+	DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+7, 1e+7, 1e+7));
 
 	// Cornell Box
 	//Sphere shape_mesh2(Vector3(0, 30.0f, 0), 2.0f);
@@ -1041,7 +1041,7 @@ void RayTracer(int p_nOMPThreads)
 	// Compute normals
 	//----------------------------------------------------------------------------------------------
 	std::cout << "Computing mesh normals..." << std::endl;
-	//shape_mesh1->UpdateNormals();
+	shape_mesh1->UpdateNormals();
 	//shape_mesh3->UpdateNormals();
 	std::cout << std::endl;
 
@@ -1101,15 +1101,16 @@ void RayTracer(int p_nOMPThreads)
 	//scene.LightList.PushBack(&diffuseLight1);
 	scene.LightList.PushBack(&diffuseLight2);
  
-	PathIntegrator integrator(1, 1, 4, false);
+	//PathIntegrator integrator(4, 16, 1, false);
+	PathIntegrator integrator(4, 16, 2, false);
 	integrator.Initialise(&scene, &camera);
  
 	ImagePPM imagePPM;
 	//int width = 64, height = 64;
 	//int width = 256, height = 256;
 	//int width = 512, height = 512;
-	//int width = 640, height = 480;
-	int width = 1280, height = 1024;
+	int width = 640, height = 480;
+	//int width = 1280, height = 1024;
  
 	#if defined(__PLATFORM_WINDOWS__)
 	ImageDevice device(width, height, &imagePPM, "D:\\Development\\IlluminaPRT\\Resource\\Output\\result.ppm");
@@ -1131,10 +1132,10 @@ void RayTracer(int p_nOMPThreads)
 		//cDistX = -10, cDistY = 17.5, cDistZ = -3;
 		//cDistX = -10, cDistY = 12.5, cDistZ = -3;
 		//cDistX = -10, cDistY = 7.5, cDistZ = -3;
-		cDistX = -5, cDistY = 1.0, cDistZ = -3;
+		//cDistX = -5, cDistY = 1.0, cDistZ = -3;
 
 		// Crytek sponza
-		//cDistX = -1000, cDistY = 750.0, cDistZ = -400;
+		cDistX = -1000, cDistY = 750.0, cDistZ = -400;
 		
 		// Cornell box
 		//cDistX = -30, cDistY = 30, cDistZ = -10;
