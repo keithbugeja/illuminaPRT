@@ -15,6 +15,9 @@ namespace Illumina
 		class IRenderer
 		{
 		public:
+			virtual bool Initialise(void) { return true; }
+			virtual bool Shutdown(void) { return false; }
+
 			virtual void Render(void) = 0;
 		};
 	}
