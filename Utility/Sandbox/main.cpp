@@ -74,6 +74,7 @@
 #include "Integrator/PathIntegrator.h"
 
 #include "Renderer/BasicRenderer.h"
+#include "Renderer/DistributedRenderer.h"
 
 #include "Device/ImageDevice.h"
 
@@ -1138,7 +1139,9 @@ void RayTracer(int p_nOMPThreads)
 	ImageDevice device(width, height, &imagePPM, "../../../Resource/Texture/result.ppm");
 	#endif
 
-	BasicRenderer basicRenderer(&scene, &camera, &integrator, &device, &filter, 1);
+	//BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 1);
+	DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 1);
+	renderer.Initialise();
 	
 	char cKey;
 	std::cout << "Scene creation completed." << std::endl;
@@ -1189,7 +1192,7 @@ void RayTracer(int p_nOMPThreads)
 		basicSpace.Update();
 	 
 		// Render
-		basicRenderer.Render();
+		renderer.Render();
 	 
 		totalFPS += (float)(1.0 / renderTimer.elapsed());
 		std::cout << shape_mesh1->ToString() << std::endl;
