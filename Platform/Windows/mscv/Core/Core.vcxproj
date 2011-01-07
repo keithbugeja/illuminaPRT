@@ -218,7 +218,6 @@
     <ClInclude Include="..\..\..\..\Core\Material\Material.h" />
     <ClInclude Include="..\..\..\..\Core\Material\MaterialGroup.h" />
     <ClInclude Include="..\..\..\..\Core\Material\MaterialManager.h" />
-    <ClInclude Include="..\..\..\..\Core\Material\Mirror.h" />
     <ClInclude Include="..\..\..\..\Core\Material\SpecularReflectionBxDF.h" />
     <ClInclude Include="..\..\..\..\Core\Maths\Maths.h" />
     <ClInclude Include="..\..\..\..\Core\Maths\Montecarlo.h" />

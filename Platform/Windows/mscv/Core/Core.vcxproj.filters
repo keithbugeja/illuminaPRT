@@ -569,9 +569,6 @@
     <ClInclude Include="..\..\..\..\Core\Renderer\DistributedRenderer.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Material\Mirror.h">
-      <Filter>Header Files\Material</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">
