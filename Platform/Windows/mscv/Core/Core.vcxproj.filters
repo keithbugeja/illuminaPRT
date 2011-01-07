@@ -222,6 +222,9 @@
     <ClCompile Include="..\..\..\..\Core\Material\SpecularReflectionBxDF.cpp">
       <Filter>Header Files\Material</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Renderer\DistributedRenderer.cpp">
+      <Filter>Header Files\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -560,10 +563,13 @@
     <ClInclude Include="..\..\..\..\Core\Material\Matte.h">
       <Filter>Header Files\Material</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Material\Mirror.h">
+    <ClInclude Include="..\..\..\..\Core\Material\Glass.h">
       <Filter>Header Files\Material</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Material\Glass.h">
+    <ClInclude Include="..\..\..\..\Core\Renderer\DistributedRenderer.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\Mirror.h">
       <Filter>Header Files\Material</Filter>
     </ClInclude>
   </ItemGroup>
