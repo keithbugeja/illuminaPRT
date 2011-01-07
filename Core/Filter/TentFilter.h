@@ -13,7 +13,8 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class TentFilter
+		class TentFilter 
+			: public IFilter
 		{
 		public:
 			void operator()(Vector2 *p_pSamples, int p_nSampleCount);

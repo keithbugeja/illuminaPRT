@@ -14,8 +14,8 @@
 
 #include "Material/Material.h"
 #include "Material/MaterialGroup.h"
-#include "Material/DiffuseMaterial.h"
-#include "Material/PhongMaterial.h"
+#include "Material/Matte.h"
+#include "Material/Mirror.h"
 
 namespace Illumina
 {
@@ -49,12 +49,12 @@ namespace Illumina
 			}
 		};
 
-		class DiffuseMaterialFactory : public Illumina::Core::Factory<Illumina::Core::IMaterial>
+		class MatteMaterialFactory : public Illumina::Core::Factory<Illumina::Core::IMaterial>
 		{
 		public:
 			Illumina::Core::IMaterial *CreateInstance(void)
 			{
-				return new DiffuseMaterial(Spectrum(0.5));
+				return new MatteMaterial(Spectrum(0.5));
 			}
 
 			Illumina::Core::IMaterial *CreateInstance(ArgumentMap &p_argumentMap)
@@ -65,7 +65,7 @@ namespace Illumina
 				if (p_argumentMap.GetArgument("Name", strName) && 
 					p_argumentMap.GetArgument("Reflectivity", reflectivity))
 				{
-					return new DiffuseMaterial(strName, reflectivity);
+					return new MatteMaterial(strName, reflectivity);
 				}
 
 				throw new Exception("Invalid arguments to DiffuseMaterialFactory!");
@@ -73,37 +73,35 @@ namespace Illumina
 
 			Illumina::Core::IMaterial *CreateInstance(const std::string &p_strName, const Spectrum &p_reflectivity)
 			{
-				return new DiffuseMaterial(p_strName, p_reflectivity);
+				return new MatteMaterial(p_strName, p_reflectivity);
 			}
 		};
 
-		class PhongMaterialFactory : public Illumina::Core::Factory<Illumina::Core::IMaterial>
+		class MirrorMaterialFactory : public Illumina::Core::Factory<Illumina::Core::IMaterial>
 		{
 		public:
-			Illumina::Core::IMaterial* CreateInstance(void)
+			Illumina::Core::IMaterial *CreateInstance(void)
 			{
-				return new PhongMaterial(Spectrum(0.5), 16.0f);
+				return new MirrorMaterial(Spectrum(0.5));
 			}
 
 			Illumina::Core::IMaterial *CreateInstance(ArgumentMap &p_argumentMap)
 			{
 				std::string strName;
 				Spectrum reflectivity;
-				float exponent;
 
 				if (p_argumentMap.GetArgument("Name", strName) && 
-					p_argumentMap.GetArgument("Reflectivity", reflectivity) &&
-					p_argumentMap.GetArgument("Exponent", exponent))
+					p_argumentMap.GetArgument("Reflectivity", reflectivity))
 				{
-					return new PhongMaterial(strName, reflectivity, exponent);
+					return new MirrorMaterial(strName, reflectivity);
 				}
 
-				throw new Exception("Invalid arguments to PhongMaterialFactory!");
+				throw new Exception("Invalid arguments to DiffuseMaterialFactory!");
 			}
 
-			Illumina::Core::IMaterial *CreateInstance(const std::string &p_strName, const Spectrum &p_reflectivity, float p_exponent)
+			Illumina::Core::IMaterial *CreateInstance(const std::string &p_strName, const Spectrum &p_reflectivity)
 			{
-				return new PhongMaterial(p_strName, p_reflectivity, p_exponent);
+				return new MirrorMaterial(p_strName, p_reflectivity);
 			}
 		};
 	}

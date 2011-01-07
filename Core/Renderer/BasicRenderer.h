@@ -18,10 +18,13 @@ namespace Illumina
 			IIntegrator *m_pIntegrator;
 			ICamera *m_pCamera;
 			IDevice *m_pDevice;
+			IFilter *m_pFilter;
 			Scene *m_pScene;
 
+			int m_nSampleCount;
+
 		public:
-			BasicRenderer(Scene *p_pScene, ICamera *p_pCamera, IIntegrator *p_pIntegrator, IDevice *p_pDevice);
+			BasicRenderer(Scene *p_pScene, ICamera *p_pCamera, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount = 1);
 
 			void Render(void);
 		};

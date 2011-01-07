@@ -219,6 +219,9 @@
     <ClCompile Include="..\..\..\..\Core\Material\LambertianBxDF.cpp">
       <Filter>Header Files\Material</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Material\SpecularReflectionBxDF.cpp">
+      <Filter>Header Files\Material</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -536,12 +539,6 @@
     <ClInclude Include="..\..\..\..\Core\System\ArgumentMap.h">
       <Filter>Header Files\System</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Material\DiffuseMaterial.h">
-      <Filter>Header Files\Material</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Material\PhongMaterial.h">
-      <Filter>Header Files\Material</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Material\MaterialGroup.h">
       <Filter>Header Files\Material</Filter>
     </ClInclude>
@@ -555,6 +552,18 @@
       <Filter>Header Files\Material</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Material\LambertianBxDF.h">
+      <Filter>Header Files\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\SpecularReflectionBxDF.h">
+      <Filter>Header Files\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\Matte.h">
+      <Filter>Header Files\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\Mirror.h">
+      <Filter>Header Files\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\Glass.h">
       <Filter>Header Files\Material</Filter>
     </ClInclude>
   </ItemGroup>

@@ -36,8 +36,8 @@ namespace Illumina
 			RGBSpectrum(float p_fRed, float p_fGreen, float p_fBlue)
 			{
 				m_fSamples[0] = p_fRed; 
-				m_fSamples[1] = p_fBlue; 
-				m_fSamples[2] = p_fGreen;
+				m_fSamples[1] = p_fGreen; 
+				m_fSamples[2] = p_fBlue;
 			}
 
 			RGBSpectrum(const RGBSpectrum &p_rgbSpectrum)
