@@ -51,8 +51,8 @@
 #include "Space/BVHSpace.h"
 
 #include "Material/Material.h"
-#include "Material/DiffuseMaterial.h"
-#include "Material/PhongMaterial.h"
+#include "Material/Matte.h"
+#include "Material/Mirror.h"
 #include "Material/MaterialGroup.h"
 #include "Material/MaterialManager.h"
 
@@ -78,6 +78,8 @@
 #include "Device/ImageDevice.h"
 
 #include "Filter/Filter.h"
+#include "Filter/BoxFilter.h"
+#include "Filter/TentFilter.h"
 
 #include "Object/Object.h"
 
@@ -936,18 +938,18 @@ void RayTracer(int p_nOMPThreads)
 	//----------------------------------------------------------------------------------------------
 	// Materials
 	//----------------------------------------------------------------------------------------------
-	engineKernel.GetMaterialManager()->RegisterFactory("Diffuse", new DiffuseMaterialFactory());
-	engineKernel.GetMaterialManager()->RegisterFactory("Phong", new PhongMaterialFactory());
+	engineKernel.GetMaterialManager()->RegisterFactory("Matte", new MatteMaterialFactory());
+	engineKernel.GetMaterialManager()->RegisterFactory("Mirror", new MirrorMaterialFactory());
 	engineKernel.GetMaterialManager()->RegisterFactory("Group", new MaterialGroupFactory());
 
-	IMaterial* pMaterial1 = engineKernel.GetMaterialManager()->CreateInstance("Diffuse", "Diffuse Material 1", "Name=Diffuse_Material;Reflectivity=0.75,0.75,0.5;");
-	IMaterial* pMaterial2 = engineKernel.GetMaterialManager()->CreateInstance("Phong", "Phong Material 1", "Name=Phong_Material;Reflectivity=0.75,0.75,0.5;Exponent=32;");
+	IMaterial* pMaterial1 = engineKernel.GetMaterialManager()->CreateInstance("Matte", "Diffuse Material 1", "Name=Diffuse_Material;Reflectivity=0.75,0.75,0.5;");
+	IMaterial* pMaterial2 = engineKernel.GetMaterialManager()->CreateInstance("Mirror", "Phong Material 1", "Name=Phong_Material;Reflectivity=0.75,0.75,0.5;Exponent=32;");
 	MaterialGroup* pMaterialGroup = (MaterialGroup*)engineKernel.GetMaterialManager()->CreateInstance("Group", "Material Group 1", "Name=Group1");
 	pMaterialGroup->Add(pMaterial1, 0);
 	pMaterialGroup->Add(pMaterial2, 1);
 	
-	//DiffuseMaterial material_mesh1(Spectrum(0.75,0.75,0.30));
-	PhongMaterial material_mesh1(Spectrum(0.75,0.75,0.30), 32);
+	MatteMaterial material_mesh1(Spectrum(0.75,0.75,0.30));
+	//PhongMaterial material_mesh1(Spectrum(0.75,0.75,0.30), 32);
 
 	//----------------------------------------------------------------------------------------------
 	// Setup scene objects
@@ -958,9 +960,10 @@ void RayTracer(int p_nOMPThreads)
 	// Load Model
 	#if defined(__PLATFORM_WINDOWS__)
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Tests\\testAxes.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sibenik\\sibenik.obj");
+		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sibenik\\sibenik.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\original\\sponza.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\sponza_clean.obj");
-		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\Crytek\\sponza.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\Crytek\\sponza.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Kalabsha\\Kalabsha12.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Cornell\\cornellbox.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Bunny\\bunny.obj");
@@ -978,7 +981,8 @@ void RayTracer(int p_nOMPThreads)
 
 	std::cout << "-- Load object : [" << fname_model01 << "]" << std::endl;
 
-	MaterialGroup *pMeshMaterialGroup = NULL;
+	MaterialGroup *pMeshMaterialGroup = NULL, 
+		*pMeshMaterialGroup2 = NULL;
 
 	//boost::shared_ptr<BasicMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 	//	ShapeFactory::LoadMesh<BasicMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
@@ -1005,18 +1009,23 @@ void RayTracer(int p_nOMPThreads)
 	// teapot light
 	// Load secondary model to use for light
 	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
-	//	ShapeFactory::LoadMesh<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>("D:\\Development\\IlluminaPRT\\Resource\\Model\\Bunny\\bunny.obj");
+	//	ShapeFactory::LoadMesh<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
+	//	"D:\\Development\\IlluminaPRT\\Resource\\Model\\Bunny\\bunny.obj",
+	//	&engineKernel, &pMeshMaterialGroup2);
 	//DiffuseAreaLight diffuseLight1(NULL, (IShape*)shape_mesh3.get(), Spectrum(500, 500, 500));
 
 	// sphere arealight
 	// Sponza, et al.
 	//Sphere shape_mesh2(Vector3(0, 7.0f, 0), 2.0f);
 	//Sphere shape_mesh2(Vector3(0.0, 15.0f, 0.0), 0.5f);
+	Sphere shape_mesh2(Vector3(0.0, 16.5f, 0.0), 0.5f);
 	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
+	DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+2, 1e+2, 1e+2));
 	
 	// crytek sponza
-	Sphere shape_mesh2(Vector3(0.0, 1700.0f, 0.0), 100.0f);
-	DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+7, 1e+7, 1e+7));
+	//Sphere shape_mesh2(Vector3(0.0, 1700.0f, 0.0), 100.0f);
+	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+7, 1e+7, 1e+7));
+	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+7, 1e+7, 1e+7));
 
 	// Cornell Box
 	//Sphere shape_mesh2(Vector3(0, 30.0f, 0), 2.0f);
@@ -1071,6 +1080,14 @@ void RayTracer(int p_nOMPThreads)
 	//pmv_mesh1.WorldTransform.SetTranslation(Vector3(0.0f, -10.0f, 0.0f));
 	basicSpace.PrimitiveList.PushBack(&pmv_mesh1);
 
+	//GeometricPrimitive pmv_mesh3;
+	//pmv_mesh3.SetShape((IShape*)shape_mesh3.get());
+	//pmv_mesh3.SetMaterial(pMaterial2);
+	////pmv_mesh1.WorldTransform.SetScaling(Vector3(3.0f, 3.0f, 3.0f));
+	////pmv_mesh1.WorldTransform.SetScaling(Vector3(5.0f, 5.0f, 5.0f));
+	////pmv_mesh1.WorldTransform.SetTranslation(Vector3(0.0f, -10.0f, 0.0f));
+	//basicSpace.PrimitiveList.PushBack(&pmv_mesh3);
+
 	EmissivePrimitive pmv_mesh2;
 	pmv_mesh2.SetShape(&shape_mesh2);
 	//pmv_mesh2.SetShape((IShape*)shape_mesh3.get());
@@ -1085,9 +1102,11 @@ void RayTracer(int p_nOMPThreads)
 	basicSpace.Build();
 
 	//----------------------------------------------------------------------------------------------
-	// Initialise sampler
+	// Initialise sampler and filter
 	//----------------------------------------------------------------------------------------------
-	JitterSampler sampler;
+	//JitterSampler sampler;
+	MultijitterSampler sampler;
+	TentFilter filter;
 
 	//----------------------------------------------------------------------------------------------
 	// Scene creation complete
@@ -1102,23 +1121,24 @@ void RayTracer(int p_nOMPThreads)
 	scene.LightList.PushBack(&diffuseLight2);
  
 	//PathIntegrator integrator(4, 16, 1, false);
-	PathIntegrator integrator(4, 16, 2, false);
+	//PathIntegrator integrator(4, 4, false);
+	PathIntegrator integrator(1, 1, false);
 	integrator.Initialise(&scene, &camera);
  
 	ImagePPM imagePPM;
 	//int width = 64, height = 64;
 	//int width = 256, height = 256;
 	//int width = 512, height = 512;
-	int width = 640, height = 480;
-	//int width = 1280, height = 1024;
- 
+	//int width = 640, height = 480;
+	int width = 1920, height = 1080;
+
 	#if defined(__PLATFORM_WINDOWS__)
 	ImageDevice device(width, height, &imagePPM, "D:\\Development\\IlluminaPRT\\Resource\\Output\\result.ppm");
 	#elif defined(__PLATFORM_LINUX__)
 	ImageDevice device(width, height, &imagePPM, "../../../Resource/Texture/result.ppm");
 	#endif
 
-	BasicRenderer basicRenderer(&scene, &camera, &integrator, &device);
+	BasicRenderer basicRenderer(&scene, &camera, &integrator, &device, &filter, 1);
 	
 	char cKey;
 	std::cout << "Scene creation completed." << std::endl;
@@ -1131,11 +1151,16 @@ void RayTracer(int p_nOMPThreads)
 		// Sponza
 		//cDistX = -10, cDistY = 17.5, cDistZ = -3;
 		//cDistX = -10, cDistY = 12.5, cDistZ = -3;
-		//cDistX = -10, cDistY = 7.5, cDistZ = -3;
+		//cDistX = 10, cDistY = 7.5, cDistZ = -3;
 		//cDistX = -5, cDistY = 1.0, cDistZ = -3;
+		//cDistX = -20, cDistY = 30.5, cDistZ = -20;
+
+		// Sibenik
+		cDistX = 20, cDistY = 7.5, cDistZ = -3;
 
 		// Crytek sponza
-		cDistX = -1000, cDistY = 750.0, cDistZ = -400;
+		//cDistX = -1000, cDistY = 750.0, cDistZ = -400;
+		//cDistX = -400, cDistY = 100.0, cDistZ = -400;
 		
 		// Cornell box
 		//cDistX = -30, cDistY = 30, cDistZ = -10;
@@ -1187,7 +1212,7 @@ int main()
 	//SimplePacketTracer(nCores);
 	//TileBasedTracer(nCores);
 
-	RayTracer(nCores);
+	RayTracer(nCores / 2);
 
 	std::cout << "Complete in " << Platform::GetTime() << " seconds " << std::endl;
 

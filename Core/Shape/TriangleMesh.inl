@@ -100,6 +100,7 @@ void ITriangleMesh<T, U>::AddIndexedTriangleList(const List<int> &p_indexList, i
 template<class T, class U>
 bool ITriangleMesh<T, U>::UpdateNormals(void)
 {
+
 	// Try fixing vertices instead
 	if ((U::GetDescriptor() & VertexFormat::Normal) > 0)
 	{

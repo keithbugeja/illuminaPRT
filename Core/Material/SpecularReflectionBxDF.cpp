@@ -1,58 +1,54 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	LambertianBxDF.cpp
+//	Filename:	SpecularReflectionBxDF.cpp
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 #include <iostream>
 
-#include "Material/LambertianBxDF.h"
+#include "Material/SpecularReflectionBxDF.h"
 #include "Material/BSDF.h"
 
 using namespace Illumina::Core;
 
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-Lambertian::Lambertian(void) 
-	: BxDF(BxDF::Type(BxDF::Reflection | BxDF::Diffuse))
+SpecularReflection::SpecularReflection(void) 
+	: BxDF(BxDF::Type(BxDF::Reflection | BxDF::Specular))
 { }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-Spectrum Lambertian::Rho(const Spectrum &p_reflectance, const Vector3 &p_wOut, int p_nSampleSize, float *p_pSampleList) 
+Spectrum SpecularReflection::Rho(const Spectrum &p_reflectance, const Vector3 &p_wOut, int p_nSampleSize, float *p_pSampleList) 
 { 
 	return p_reflectance; 
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-Spectrum Lambertian::SampleF(const Spectrum &p_reflectance, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float *p_pdf) 
+Spectrum SpecularReflection::SampleF(const Spectrum &p_reflectance, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float *p_pdf) 
 { 
-	BSDF::GenerateVectorInHemisphere(p_u, p_v, p_wIn);
-				
-	// Allahares nidghi, ghax kieku shittha Malta
-	if (Maths::ISgn(p_wIn.Z) == Maths::ISgn(p_wOut.Z))
-		p_wIn.Z = -p_wIn.Z;
+	// Compute perfect specular reflection direction
+	p_wIn.Set(p_wOut.X, p_wOut.Y, -p_wOut.Z);
+	*p_pdf = 1.f;
 
-	*p_pdf = Maths::InvPi;
-
-	return p_reflectance * Maths::InvPi;
+	return p_reflectance / Maths::FAbs(p_wOut.Z);
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-Spectrum Lambertian::F(const Spectrum &p_reflectance, const Vector3 &p_wOut, const Vector3 &p_wIn) 
+Spectrum SpecularReflection::F(const Spectrum &p_reflectance, const Vector3 &p_wOut, const Vector3 &p_wIn) 
 { 
-	return p_reflectance * Maths::InvPi; 
+	return 0.0f; 
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-Spectrum Lambertian::F(const Vector3 &p_wOut, const Vector3 &p_wIn) 
+Spectrum SpecularReflection::F(const Vector3 &p_wOut, const Vector3 &p_wIn) 
 {
-	return Maths::InvPi;
+	return 0.0f;
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-float Lambertian::Pdf(const Vector3 &p_wOut, const Vector3 &p_wIn) 
+float SpecularReflection::Pdf(const Vector3 &p_wOut, const Vector3 &p_wIn) 
 {	
-	return 1.0f; 
+	return 0.0f; 
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------

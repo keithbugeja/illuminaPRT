@@ -15,6 +15,7 @@ namespace Illumina
 		class IRenderer;
 		class IMaterial;
 		class ISampler;
+		class IFilter;
 		class ICamera;
 		class IDevice;
 		class IShape;

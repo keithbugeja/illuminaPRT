@@ -311,13 +311,13 @@ namespace Illumina
 
 							std::stringstream argumentStream;
 							argumentStream<<"Name="<<indexName<<";Reflectivity="<<material.Diffuse[0]<<","<<material.Diffuse[1]<<","<<material.Diffuse[2]<<";";
-							IMaterial *pMaterial = p_pEngineKernel->GetMaterialManager()->CreateInstance("Diffuse", indexName, argumentStream.str());
+							IMaterial *pMaterial = p_pEngineKernel->GetMaterialManager()->CreateInstance("Matte", indexName, argumentStream.str());
 							(*p_pMaterialGroup)->Add(pMaterial, matIdx);
 
 							if (material.DiffuseMap.size() != 0)
 							{ 
 								std::string diffuseMap = material.DiffuseMap;
-								DiffuseMaterial *pDiffuse = (DiffuseMaterial*)pMaterial;
+								MatteMaterial *pMatte = (MatteMaterial*)pMaterial;
 
 								if (!p_pEngineKernel->GetTextureManager()->QueryInstance(diffuseMap))
 								{
@@ -325,12 +325,12 @@ namespace Illumina
 									textureArgStream<<"Name="<<diffuseMap<<";Filename="<<(meshPath.parent_path() / diffuseMap).string()<<";Filetype=PPM;";
 									ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
 							
-									pDiffuse->SetDiffuseTexture(pTexture);
+									pMatte->SetDiffuseTexture(pTexture);
 								}
 								else
 								{
 									std::cout << "Re-using texture : " << diffuseMap << std::endl;
-									pDiffuse->SetDiffuseTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
+									pMatte->SetDiffuseTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
 								}
 							}
 						} 

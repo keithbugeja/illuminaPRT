@@ -13,7 +13,7 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class DiffuseMaterial 
+		class MatteMaterial 
 			: public IMaterial
 		{
 		protected:
@@ -24,7 +24,7 @@ namespace Illumina
 			ITexture *m_pDiffuseTexture;
 
 		public:
-			DiffuseMaterial(const std::string &p_strName, const Spectrum &p_reflectivity)
+			MatteMaterial(const std::string &p_strName, const Spectrum &p_reflectivity)
 				: IMaterial(p_strName) 
 				, m_reflectivity(p_reflectivity)
 				, m_pDiffuseTexture(NULL)
@@ -32,14 +32,14 @@ namespace Illumina
 				m_bxdfList.PushBack(new Lambertian());
 			}
 
-			DiffuseMaterial(const Spectrum& p_reflectivity)
+			MatteMaterial(const Spectrum& p_reflectivity)
 				: m_reflectivity(p_reflectivity)
 				, m_pDiffuseTexture(NULL)
 			{
 				m_bxdfList.PushBack(new Lambertian());
 			}
 
-			~DiffuseMaterial(void)
+			~MatteMaterial(void)
 			{
 				delete m_bxdfList.At(0);
 			}
