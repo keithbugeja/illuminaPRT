@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	Mirror.h
+//	Filename:	Material.h
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ namespace Illumina
 
 			void SetDiffuseTexture(ITexture* p_pTexture)
 			{
-				std::cout << "Setting diffuse texture of " << this->GetName() << " to " << p_pTexture->GetName() << std::endl;
+				std::cout << "Setting specular texture of " << this->GetName() << " to " << p_pTexture->GetName() << std::endl;
 				m_pDiffuseTexture = p_pTexture;
 			}
 
