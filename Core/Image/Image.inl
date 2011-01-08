@@ -40,3 +40,7 @@ inline RGBPixel& Image::operator[](int p_nIndex)
 	return m_bitmap[p_nIndex];
 }
 //----------------------------------------------------------------------------------------------
+inline float* Image::GetImageBuffer(void) const {
+	return (float*)m_bitmap;
+}
+//----------------------------------------------------------------------------------------------

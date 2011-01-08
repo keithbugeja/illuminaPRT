@@ -1140,12 +1140,12 @@ void RayTracer(int p_nOMPThreads)
 	#endif
 
 	//BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 1);
-	DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 1);
+	DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 1, 240, 135);
 	renderer.Initialise();
 	
 	char cKey;
 	std::cout << "Scene creation completed." << std::endl;
-	std::cin >> cKey;
+	//std::cin >> cKey;
 
 	boost::timer renderTimer;
 
