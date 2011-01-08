@@ -11,6 +11,7 @@ namespace mpi = boost::mpi;
 
 #include "Renderer/Renderer.h"
 #include "Geometry/Vector2.h"
+#include "Image/Image.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {
@@ -33,7 +34,7 @@ namespace Illumina
 			// MPI Context information
 			mpi::environment* m_pMPIEnvironment;
 			mpi::communicator* m_pMPICommunicator;
-
+		
 		public:
 			DistributedRenderer(Scene *p_pScene, ICamera *p_pCamera, IIntegrator *p_pIntegrator, 
 					IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount = 1, int p_nTileWidth = 8, int p_nTileHeight = 8);
@@ -73,15 +74,52 @@ namespace Illumina
 			}
 		};
 
-		class RequestTile
+		class Tile
 		{
-			Region Tile;			
-		};
+		protected:
+			char  *m_pSerializationBuffer;
+			int    m_nSerializationBufferSize;
 
-		class ResponseTile
-		{
-			Region Tile;
-			//Image Render;
+			Image *m_pImageData;
+
+		public:
+			Tile(int p_nId, int p_nWidth, int p_nHeight)
+			{ 
+				m_nSerializationBufferSize = p_nWidth * p_nHeight * sizeof(RGBPixel) + sizeof(int);
+				m_pSerializationBuffer = new char[m_nSerializationBufferSize];
+				m_pImageData = new Image(p_nWidth, p_nHeight, (RGBPixel*)(m_pSerializationBuffer + sizeof(int)));
+			}
+
+			~Tile(void)
+			{
+				delete m_pImageData;
+				delete[] m_pSerializationBuffer;
+			}
+
+			int GetId(void) 
+			{
+				return *(int*)m_pSerializationBuffer;
+			}
+
+			void SetId(int p_nId)
+			{
+				*((int*)m_pSerializationBuffer) = p_nId;
+			}
+
+			Image* GetImageData(void)
+			{
+				return m_pImageData;
+			}
+
+			char* GetSerializationBuffer(void) const
+			{
+				return m_pSerializationBuffer;
+			}
+
+			int GetSerializationBufferSize(void) const
+			{
+				return m_nSerializationBufferSize;
+			}
 		};
 	}
 }

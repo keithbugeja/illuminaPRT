@@ -13,6 +13,7 @@ using namespace Illumina::Core;
 Image::Image(int p_nWidth, int p_nHeight)
 	: m_nWidth(p_nWidth)
 	, m_nHeight(p_nHeight)
+	, m_bIsOwner(true)
 {
 	m_bitmap = new RGBPixel[m_nWidth * m_nHeight];
 				
@@ -23,6 +24,7 @@ Image::Image(int p_nWidth, int p_nHeight)
 Image::Image(int p_nWidth, int p_nHeight, const RGBPixel &p_rgb)
 	: m_nWidth(p_nWidth)
 	, m_nHeight(p_nHeight)
+	, m_bIsOwner(true)
 {
 	m_bitmap = new RGBPixel[m_nWidth * m_nHeight];
 
@@ -30,8 +32,20 @@ Image::Image(int p_nWidth, int p_nHeight, const RGBPixel &p_rgb)
 		m_bitmap[i] = p_rgb;
 }
 //----------------------------------------------------------------------------------------------
-Image::~Image(void) {
-	delete[] m_bitmap;
+Image::Image(int p_nWidth, int p_nHeight, RGBPixel *p_pRGBBuffer)
+	: m_nWidth(p_nWidth)
+	, m_nHeight(p_nHeight)
+	, m_bitmap(p_pRGBBuffer)
+	, m_bIsOwner(false)
+{
+	for (int i = 0; i < m_nWidth * m_nHeight; i++)
+		m_bitmap[i].Set(0.0f, 0.0f, 0.0f);
+}
+//----------------------------------------------------------------------------------------------
+Image::~Image(void) 
+{
+	if (m_bIsOwner)
+		delete[] m_bitmap;
 }
 //----------------------------------------------------------------------------------------------
 void Image::Set(int p_x, int p_y, const RGBPixel &p_colour) {

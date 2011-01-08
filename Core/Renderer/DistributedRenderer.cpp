@@ -40,6 +40,8 @@ bool DistributedRenderer::Initialise(void)
 	m_pMPIEnvironment = new mpi::environment();
 	m_pMPICommunicator = new mpi::communicator();
 
+	std::cout << "Initialised peer " << m_pMPICommunicator->rank() << "..." << std::endl;
+
 	m_pMPICommunicator->barrier();
 
 	return true;
@@ -55,110 +57,198 @@ bool DistributedRenderer::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 void DistributedRenderer::Render(void)
 {
-	const int workItemRequest = 0x0020;
-	const int workItemPackage = 0x0010;
-	const int terminate = 0x0001;
+	const int WI_RESULT	= 0x0001;
+	const int WI_REQUEST = 0x0002;
+	const int WI_TASKID = 0x0003;
+	const int WI_TERMINATE = 0x0004;
 
-	int height = m_pDevice->GetHeight(),
-		width = m_pDevice->GetWidth();
+	int deviceWidth = m_pDevice->GetWidth(),
+		deviceHeight = m_pDevice->GetHeight();
 
-	int tileCount = (width / m_nTileWidth) * (height / m_nTileHeight);
+	int tilesPerRow = deviceWidth / m_nTileWidth,
+		tilesPerColumn = deviceHeight / m_nTileHeight,
+		tilesPerScreen = tilesPerRow * tilesPerColumn;
 
+	int tasksRemaining = tilesPerScreen,
+		tileId = -1;
+
+	// Create tile for use within communicator
+	Tile tile(0, m_nTileWidth, m_nTileHeight);
+
+	//--------------------------------------------------
 	// Synchronise all processes
+	//--------------------------------------------------
 	m_pMPICommunicator->barrier();
 
-	// master or slave?
+	//--------------------------------------------------
+	// Master processor should create task queue
+	//--------------------------------------------------
 	if (m_pMPICommunicator->rank() == 0)
 	{
-		int dummy;
+		boost::progress_display renderProgress(tilesPerScreen);
 
+		//--------------------------------------------------
+		// Prepare task queue
+		//--------------------------------------------------
 		std::vector<int> m_taskQueue;
 
 		// generate tiles for rendering
-		for (int taskId = 0; taskId < tileCount; ++taskId)
+		for (int taskId = 0; taskId < tilesPerScreen; ++taskId)
 		{
 			m_taskQueue.push_back(taskId);
 		}
 
-		while(m_taskQueue.size())
-		{
-			mpi::status status = m_pMPICommunicator->recv(mpi::any_source, workItemRequest);
-			
-			dummy = m_taskQueue.back();
-			m_taskQueue.pop_back();
+		//--------------------------------------------------
+		// Prepare device for rendering
+		//--------------------------------------------------
+		m_pDevice->BeginFrame();
 
-			m_pMPICommunicator->send(status.source(), workItemPackage, dummy);
+		//--------------------------------------------------
+		// Start request-response communication with 
+		// worker processors
+		//--------------------------------------------------
+		while(tasksRemaining > 0)
+		{
+			//--------------------------------------------------
+			// Receive request
+			//--------------------------------------------------
+			mpi::status status = m_pMPICommunicator->recv(mpi::any_source, mpi::any_tag, tile.GetSerializationBuffer(), tile.GetSerializationBufferSize());
+
+			//--------------------------------------------------
+			// Identify request type
+			//--------------------------------------------------
+			switch (status.tag())
+			{
+				//--------------------------------------------------
+				// Worker is requesting a new task
+				//--------------------------------------------------
+				case WI_REQUEST:
+				{
+					// Send a new task, if available
+					if (m_taskQueue.size() > 0)
+					{
+						tileId = m_taskQueue.back(); m_taskQueue.pop_back();
+						m_pMPICommunicator->send(status.source(), WI_TASKID, tileId);
+					}
+					
+					break;
+				}
+
+				//--------------------------------------------------
+				// Worker is sending in result
+				//--------------------------------------------------
+				case WI_RESULT:
+				{
+					int startTileX = tile.GetId() % tilesPerRow,
+						startTileY = tile.GetId() / tilesPerRow,
+						startPixelX = startTileX * m_nTileWidth,
+						startPixelY = startTileY * m_nTileHeight;
+
+					for (int y = 0; y < m_nTileHeight; y++)
+					{
+						for (int x = 0; x < m_nTileWidth; x++)
+						{
+							const RGBPixel &pixel = tile.GetImageData()->Get(x,y);
+							Spectrum L(pixel.R, pixel.G, pixel.B);
+
+							m_pDevice->Set(deviceWidth - startPixelX - x - 1, deviceHeight - startPixelY - y - 1, L);
+						}
+					}
+
+					tasksRemaining--;
+					++renderProgress;
+
+					break;
+				}
+			}
 		}
 
+		//--------------------------------------------------
+		// No more tasks remaining - signal termination
+		//--------------------------------------------------
 		for (int rank = 1; rank < m_pMPICommunicator->size(); rank++)
-			m_pMPICommunicator->send(rank, terminate);
+			m_pMPICommunicator->send(rank, WI_TERMINATE);
+
+		//--------------------------------------------------
+		// Frame completed
+		//--------------------------------------------------
+		m_pDevice->EndFrame();
 	}
 	else
 	{
-		while (true)
-		{
-			int dummy = -1;
-
-			m_pMPICommunicator->send(0, workItemRequest);
-			mpi::status status = m_pMPICommunicator->recv(0, mpi::any_tag, dummy);
-
-			if (status.tag() == terminate)
-				break;
-
-			// render something
-			std::cout<<"Rendering tile " << dummy << "..." << std::endl;
-		}
-	}
-
-	m_pMPICommunicator->barrier();
-
-	// Server has work unit queue
-	// Server is ready to furnish slaves with more work
-	// Slaves request work and store it in local ready list
-	
-	// Barrier - Work queue expended 
-	// Slaves send results back to server
-	// Server composits final image
-
-
-	m_pDevice->BeginFrame();
-	
-	boost::progress_display renderProgress(height);
-
-	m_pMPICommunicator->size();
-
-	//#pragma omp parallel for schedule(guided)
-	for (int y = 0; y < height; ++y)
-	{
+		//--------------------------------------------------
+		// Prepare structures for use in rendering
+		//--------------------------------------------------
+		Intersection intersection;
 		Vector2 *pSampleBuffer = new Vector2[m_nSampleCount];
 
-		Intersection intersection;
-
-		for (int x = 0; x < width; x++)
+		while (true)
 		{
-			// Prepare ray samples
-			m_pScene->GetSampler()->Get2DSamples(pSampleBuffer, m_nSampleCount);
-			(*m_pFilter)(pSampleBuffer, m_nSampleCount);
+			//--------------------------------------------------
+			// Request tile
+			//--------------------------------------------------
+			m_pMPICommunicator->send(0, WI_REQUEST);
 
-			// Radiance
-			Spectrum Li = 0;
+			//--------------------------------------------------
+			// Receive tile
+			//--------------------------------------------------
+			mpi::status status = m_pMPICommunicator->recv(0, mpi::any_tag, tileId);
 
-			for (int sample = 0; sample < m_nSampleCount; sample++)
+			//--------------------------------------------------
+			// If termination, stop
+			//--------------------------------------------------
+			if (status.tag() == WI_TERMINATE)
+				break;
+
+			//--------------------------------------------------
+			// We have task id - render
+			//--------------------------------------------------
+			int startTileX = tileId % tilesPerRow,
+				startTileY = tileId / tilesPerRow,
+				startPixelX = startTileX * m_nTileWidth,
+				startPixelY = startTileY * m_nTileHeight;
+		
+			for (int y = 0; y < m_nTileHeight; y++)
 			{
-				Ray ray = m_pCamera->GetRay(((float)x) / width, ((float)y) / height, pSampleBuffer[sample].U, pSampleBuffer[sample].V);
-				Li += m_pIntegrator->Radiance(m_pScene, ray, intersection);
+				for (int x = 0; x < m_nTileWidth; x++)
+				{
+					// Prepare ray samples
+					m_pScene->GetSampler()->Get2DSamples(pSampleBuffer, m_nSampleCount);
+					(*m_pFilter)(pSampleBuffer, m_nSampleCount);
+
+					// Radiance
+					Spectrum Li = 0;
+
+					for (int sample = 0; sample < m_nSampleCount; sample++)
+					{
+						Ray ray = m_pCamera->GetRay(
+							((float)(startPixelX + x)) / deviceWidth, 
+							((float)(startPixelY + y)) / deviceHeight, 
+							pSampleBuffer[sample].U, pSampleBuffer[sample].V);
+
+						Li += m_pIntegrator->Radiance(m_pScene, ray, intersection);
+					}
+
+					Li = Li / m_nSampleCount;
+			
+					tile.GetImageData()->Set(x, y, RGBPixel(Li[0], Li[1], Li[2]));
+				}
 			}
 
-			Li = Li / m_nSampleCount;
-			
-			m_pDevice->Set(width - (x + 1), height - (y + 1), Li);
+			//--------------------------------------------------
+			// Send back result
+			//--------------------------------------------------
+			tile.SetId(tileId);
+			m_pMPICommunicator->send(0, WI_RESULT, tile.GetSerializationBuffer(), tile.GetSerializationBufferSize());
 		}
 
 		delete[] pSampleBuffer;
-		
-		++renderProgress;
 	}
 
-	m_pDevice->EndFrame();
+	//--------------------------------------------------
+	// Render complete
+	//--------------------------------------------------
+	if (m_pMPICommunicator->rank() == 0)
+		std::cout << "Complete ... " << std::endl;
 }
 //----------------------------------------------------------------------------------------------
