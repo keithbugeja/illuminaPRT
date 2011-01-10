@@ -61,7 +61,7 @@ int BSDF::GetBxDFCount(BxDF::Type p_bxdfType)
 
 	int bxdfCount = 0;
 
-	for (int bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); bxdfIndex++)
+	for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); bxdfIndex++)
 		if (m_bxdfList[bxdfIndex]->IsType(p_bxdfType))
 			bxdfCount++;
 
@@ -76,7 +76,7 @@ int BSDF::GetBxDF(BxDF::Type p_bxdfType, int p_nBxDFIndex, BxDF **p_pBxDF)
 		return p_nBxDFIndex;
 	}
 
-	for (int bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); bxdfIndex++)
+	for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); bxdfIndex++)
 	{
 		if (m_bxdfList[bxdfIndex]->IsType(p_bxdfType))
 		{
@@ -110,7 +110,7 @@ Spectrum BSDF::SampleF(const DifferentialSurface& p_surface, const Vector3 &p_wO
 	}
 
 	// Choose a bxdf to sample
-	#pragma message ("Need to pass random number or a way to generate it")
+	// #pragma message ("Need to pass random number or a way to generate it")
 	// Need to get a new random number to remove bias!
 	int bxdfIndexFilter = (int)(p_v * bxdfCount - 1),
 		bxdfIndexList;
@@ -135,7 +135,7 @@ Spectrum BSDF::SampleF(const DifferentialSurface& p_surface, const Vector3 &p_wO
 	{
 		if (!pBxDF->IsType(BxDF::Specular)) 
 		{
-			for (int bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); ++bxdfIndex) 
+			for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); ++bxdfIndex) 
 			{
 				BxDF *pBxDF4Pdf = m_bxdfList[bxdfIndex];
 
@@ -159,7 +159,7 @@ Spectrum BSDF::SampleF(const DifferentialSurface& p_surface, const Vector3 &p_wO
 		else
 			bxdfFlags = BxDF::Type(p_bxdfType & ~BxDF::Reflection);
 
-		for (int bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); ++bxdfIndex)
+		for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); ++bxdfIndex)
 		{
 			BxDF *pBxDF4F = m_bxdfList[bxdfIndex];
 			
@@ -183,7 +183,7 @@ Spectrum BSDF::F(const DifferentialSurface& p_surface, const Vector3 &p_wOut, co
 	else
 		bxdfFlags = BxDF::Type(p_bxdfType & ~BxDF::Reflection);
 
-	for (int bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); ++bxdfIndex)
+	for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); ++bxdfIndex)
 	{
 		BxDF *pBxDF4F = m_bxdfList[bxdfIndex];
 			

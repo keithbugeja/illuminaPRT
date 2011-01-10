@@ -210,7 +210,7 @@ void ITriangleMesh<T, U>::ComputeArea(void)
 {
 	m_fArea = 0;
 
-	for (int triIdx = 0; triIdx < TriangleList.Size(); triIdx++)
+	for (size_t triIdx = 0; triIdx < TriangleList.Size(); triIdx++)
 		m_fArea += TriangleList[triIdx].GetArea();
 }
 //----------------------------------------------------------------------------------------------

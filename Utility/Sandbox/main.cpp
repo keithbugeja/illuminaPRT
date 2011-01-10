@@ -443,6 +443,8 @@ int main()
 
 	//std::cout << "Complete in " << Platform::GetTime() << " seconds " << std::endl;
 
-	char cKey;
-	cin >> cKey;
+	//char cKey;
+	//cin >> cKey;
+
+	exit(0);
 }

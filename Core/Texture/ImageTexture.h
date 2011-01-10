@@ -25,14 +25,14 @@ namespace Illumina
 			boost::shared_ptr<Image> m_image;
 
 		public:
-			ImageTexture(const std::string &p_strName, const std::string &p_strFilename, IImageIO &p_imageIO) 
+			ImageTexture(const std::string &p_strName, const std::string &p_strFilename, IImageIO *p_pImageIO) 
 				: ITexture(p_strName) 
 			{
-				m_image = boost::shared_ptr<Image>(p_imageIO.Load(p_strFilename));
+				m_image = boost::shared_ptr<Image>(p_pImageIO->Load(p_strFilename));
 			}
 
-			ImageTexture(const std::string &p_strFilename, IImageIO &p_imageIO) {
-				m_image = boost::shared_ptr<Image>(p_imageIO.Load(p_strFilename));
+			ImageTexture(const std::string &p_strFilename, IImageIO *p_pImageIO) {
+				m_image = boost::shared_ptr<Image>(p_pImageIO->Load(p_strFilename));
 			}
 
 			RGBPixel GetValue(const Vector2 &p_uv, const Vector3 &p_hitPoint) const

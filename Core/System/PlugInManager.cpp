@@ -57,8 +57,8 @@ IPlugIn* PlugInManager::Load(const std::string& p_strLibrary)
 {
 	IPlugIn* pPlugIn = NULL;
 
-	if (NULL == m_libraryManager.Load(p_strLibrary) ||
-		NULL == (pPlugIn = m_libraryManager.GetPlugInSingleton(p_strLibrary)))
+	if (!m_libraryManager.Load(p_strLibrary) ||
+		(pPlugIn = m_libraryManager.GetPlugInSingleton(p_strLibrary)) == NULL)
 		return NULL;
 
 	Register(pPlugIn);

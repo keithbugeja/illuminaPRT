@@ -24,14 +24,14 @@ using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 DistributedRenderer::DistributedRenderer(Scene *p_pScene, ICamera *p_pCamera, IIntegrator *p_pIntegrator, 
 					IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount, int p_nTileWidth, int p_nTileHeight)
-	: m_pScene(p_pScene)
+	: m_pIntegrator(p_pIntegrator)
 	, m_pCamera(p_pCamera)
-	, m_pIntegrator(p_pIntegrator)
 	, m_pDevice(p_pDevice)
 	, m_pFilter(p_pFilter)
-	, m_nSampleCount(p_nSampleCount)
+	, m_pScene(p_pScene)
 	, m_nTileWidth(p_nTileWidth)
 	, m_nTileHeight(p_nTileHeight)
+	, m_nSampleCount(p_nSampleCount)
 { 
 }
 //----------------------------------------------------------------------------------------------

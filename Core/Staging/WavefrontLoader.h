@@ -208,7 +208,7 @@ namespace Illumina
 						
 						std::string m = meshLine.str();
 
-						for (int s = 0; s < m.size(); s++)
+						for (size_t s = 0; s < m.size(); s++)
 							if (m[s] == '/') count++;
 
 						int vertexCount = count / 2;
@@ -292,7 +292,7 @@ namespace Illumina
 							mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[2], vertexIndex[3], currentMaterialId);
 						}
 					}
-					else if (strLine.find("mtllib") != string::npos)
+					else if (strLine.find("mtllib") != std::string::npos)
 					{
 						std::string file, filepath;
 						meshLine >> file >> file;
@@ -304,7 +304,7 @@ namespace Illumina
 
 						*p_pMaterialGroup = (MaterialGroup*)p_pEngineKernel->GetMaterialManager()->CreateInstance("Group", file);
 
-						for (int matIdx = 0; matIdx < materialList.size(); matIdx++)
+						for (size_t matIdx = 0; matIdx < materialList.size(); matIdx++)
 						{
 							const WavefrontMaterial &material = materialList.at(matIdx);
 
@@ -336,7 +336,7 @@ namespace Illumina
 							}
 						} 
 					}
-					else if (strLine.find("usemtl") != string::npos)
+					else if (strLine.find("usemtl") != std::string::npos)
 					{
 						std::string materialName;
 						meshLine >> materialName >> materialName;

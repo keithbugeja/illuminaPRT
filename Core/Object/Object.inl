@@ -24,7 +24,7 @@ inline void Object::Initialise(UniqueIDType p_uidType)
 			break;
 
         case Illumina::Core::Persistent:
-            #pragma message("Persistent unique-id system not implemented")
+            // #pragma message("Persistent unique-id system not implemented")
             break;
 	}
 }
