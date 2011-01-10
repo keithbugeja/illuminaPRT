@@ -54,7 +54,8 @@ namespace Illumina
 			{
 				if (p_strFiletype.find("PPM") != std::string::npos)
 				{
-					return new ImageTexture(p_strName, p_strFilename, ImagePPM());
+					ImagePPM imagePPM;
+					return new ImageTexture(p_strName, p_strFilename, (IImageIO*)&imagePPM);
 				}
 
 				throw new Exception("Unable to create ImageTexture instance!");

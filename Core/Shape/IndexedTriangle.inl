@@ -119,8 +119,8 @@ bool IndexedTriangle<TVertex>::Intersects(const Ray &p_ray, float p_fTime, Diffe
 		v0.UV.U * alpha + v1.UV.U * beta + v2.UV.U * gamma,
 		v0.UV.V * alpha + v1.UV.V * beta + v2.UV.V * gamma);
 
-	Vector3::Cross(BA, CA, p_surface.Normal);
-	p_surface.Colour = RGBPixel::Green;
+	Vector3::Cross(BA, CA, p_surface.GeometryNormal);
+	p_surface.ShadingNormal = p_surface.GeometryNormal;
 	return true;
 }
 //----------------------------------------------------------------------------------------------

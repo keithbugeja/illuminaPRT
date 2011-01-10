@@ -56,15 +56,15 @@ namespace Illumina
 			KDTreeNode<T> *pNode;
 
 			KDTreeStackElement(KDTreeNode<T> *p_pNode, float p_fMin, float p_fMax)
-				: pNode(p_pNode)
-				, Min(p_fMin)
+				: Min(p_fMin)
 				, Max(p_fMax)
+				, pNode(p_pNode)
 			{ }
 
 			KDTreeStackElement(const KDTreeStackElement &p_stackElement)
-				: pNode(p_stackElement.pNode)
-				, Min(p_stackElement.Min)
+				: Min(p_stackElement.Min)
 				, Max(p_stackElement.Max)
+				, pNode(p_stackElement.pNode)
 			{ }
 		};
 
@@ -137,7 +137,7 @@ namespace Illumina
 				}
 
 				// Area
-				ComputeArea();
+				ITriangleMesh<T, U>::ComputeArea();
 
 				// Build bounding volume hierarchy
 				ComputeBounds(triangleList, m_rootNode.BoundingBox);
@@ -576,7 +576,7 @@ namespace Illumina
 			void BuildHierarchy(KDTreeNode<T*> *p_pNode, List<T*> &p_objectList, int p_nAxis, int p_nDepth = 0)
 			{
 				ComputeBounds(p_objectList, p_pNode->BoundingBox, 0.0001f, 0.0001f);
-				Vector3 &size = p_pNode->BoundingBox.GetExtent();
+				const Vector3 &size = p_pNode->BoundingBox.GetExtent();
 				if (size.X > size.Y) p_nAxis = size.X > size.Z ? 0 : 2;
 				else p_nAxis = size.Y > size.Z ? 1 : 2;
 

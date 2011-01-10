@@ -35,8 +35,8 @@ Image::Image(int p_nWidth, int p_nHeight, const RGBPixel &p_rgb)
 Image::Image(int p_nWidth, int p_nHeight, RGBPixel *p_pRGBBuffer)
 	: m_nWidth(p_nWidth)
 	, m_nHeight(p_nHeight)
-	, m_bitmap(p_pRGBBuffer)
 	, m_bIsOwner(false)
+	, m_bitmap(p_pRGBBuffer)
 {
 	for (int i = 0; i < m_nWidth * m_nHeight; i++)
 		m_bitmap[i].Set(0.0f, 0.0f, 0.0f);

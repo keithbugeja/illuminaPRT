@@ -18,8 +18,8 @@
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 PathIntegrator::PathIntegrator(int p_nMaxRayDepth, int p_nShadowSampleCount, bool p_bShowNormals)
-	: m_nMaxRayDepth(p_nMaxRayDepth)
-	, m_nShadowSampleCount(p_nShadowSampleCount)
+	: m_nShadowSampleCount(p_nShadowSampleCount)
+	, m_nMaxRayDepth(p_nMaxRayDepth)
 	, m_bShowNormals(p_bShowNormals)
 { }
 //----------------------------------------------------------------------------------------------

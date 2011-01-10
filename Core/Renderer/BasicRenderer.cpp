@@ -20,11 +20,11 @@
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 BasicRenderer::BasicRenderer(Scene *p_pScene, ICamera *p_pCamera, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
-	: m_pScene(p_pScene)
+	: m_pIntegrator(p_pIntegrator)
 	, m_pCamera(p_pCamera)
-	, m_pIntegrator(p_pIntegrator)
 	, m_pDevice(p_pDevice)
 	, m_pFilter(p_pFilter)
+	, m_pScene(p_pScene)
 	, m_nSampleCount(p_nSampleCount)
 { }
 //----------------------------------------------------------------------------------------------
