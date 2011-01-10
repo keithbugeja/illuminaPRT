@@ -138,32 +138,12 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	engineKernel.GetTextureManager()->RegisterFactory("Noise", new NoiseTextureFactory());
 	engineKernel.GetTextureManager()->RegisterFactory("Marble", new MarbleTextureFactory());
 
-	/*
-	#if defined(__PLATFORM_WINDOWS__)
-		ITexture* pTexture1 = engineKernel.GetTextureManager()->CreateInstance("Image", "Image Texture 1", "Name=Image_Texture;Filename=D:\\Development\\IlluminaPRT\\Resource\\Texture\\texture.ppm;Filetype=PPM;");
-	#elif defined(__PLATFORM_LINUX__)
-		ITexture* pTexture1 = engineKernel.GetTextureManager()->CreateInstance("Image", "Image Texture 1", "Name=Image_Texture;Filename=../../../Resource/Texture/texture.ppm;Filetype=PPM;");
-	#endif
-
-	ITexture* pTexture2 = engineKernel.GetTextureManager()->CreateInstance("Marble", "Marble Texture 1", "Name=Marble_Texture;Stripes=0.002;Scale=1.0;Octaves=4;");
-	*/
-
 	//----------------------------------------------------------------------------------------------
 	// Materials
 	//----------------------------------------------------------------------------------------------
 	engineKernel.GetMaterialManager()->RegisterFactory("Matte", new MatteMaterialFactory());
 	engineKernel.GetMaterialManager()->RegisterFactory("Mirror", new MirrorMaterialFactory());
 	engineKernel.GetMaterialManager()->RegisterFactory("Group", new MaterialGroupFactory());
-
-	/*
-	IMaterial* pMaterial1 = engineKernel.GetMaterialManager()->CreateInstance("Matte", "Diffuse Material 1", "Name=Diffuse_Material;Reflectivity=0.75,0.75,0.5;");
-	IMaterial* pMaterial2 = engineKernel.GetMaterialManager()->CreateInstance("Mirror", "Phong Material 1", "Name=Phong_Material;Reflectivity=0.75,0.75,0.5;Exponent=32;");
-	MaterialGroup* pMaterialGroup = (MaterialGroup*)engineKernel.GetMaterialManager()->CreateInstance("Group", "Material Group 1", "Name=Group1");
-	pMaterialGroup->Add(pMaterial1, 0);
-	pMaterialGroup->Add(pMaterial2, 1);
-	
-	//PhongMaterial material_mesh1(Spectrum(0.75,0.75,0.30), 32);
-	*/
 
 	MatteMaterial material_mesh2(Spectrum(0.75,0.75,0.30));
 
@@ -176,24 +156,23 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 
 	// Load Model
 	#if defined(__PLATFORM_WINDOWS__)
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Tests\\testAxes.obj");
-		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sibenik\\sibenik.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\original\\sponza.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\sponza_clean.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Sponza\\Crytek\\sponza.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Kalabsha\\Kalabsha12.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Cornell\\cornellbox.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\Bunny\\bunny.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\tests\\testAxes.obj");
+		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sibenik\\sibenik.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\original\\sponza.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\clean\\sponza_clean.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\crytek\\sponza.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\kalabsha\\kalabsha12.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellbox.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\bunny\\bunny.obj");
 	#elif defined(__PLATFORM_LINUX__)
-		//std::string fname_model01("../../../Resource/Model/sibenik3.obj");
-		std::string fname_model01("../../../Resource/Model/sponza3.obj");
-		//std::string fname_model01("../../../Resource/Model/conference3.obj");
-		//std::string fname_model01("../../../Resource/Model/david.obj");
-		//std::string fname_model01("../../../Resource/Model/box.obj");
-		//std::string fname_model01("../../../Resource/Model/bunny2.obj");
-		//std::string fname_model01("../../../Resource/Model/ducky2.obj");
-		//std::string fname_model01("../../../Resource/Model/venusm.obj");
-		//std::string fname_model01("../../../Resource/Model/torus.obj");
+		//std::string fname_model01("../../../Resource/Model/tests/testAxes.obj");
+		std::string fname_model01("../../../Resource/Model/sibenik/sibenik.obj");
+		//std::string fname_model01("../../../Resource/Model/sponza/original/sponza.obj");
+		//std::string fname_model01("../../../Resource/Model/sponza/clean/sponza_clean.obj");
+		//std::string fname_model01("../../../Resource/Model/sponza/crytek/sponza.obj");
+		//std::string fname_model01("../../../Resource/Model/kalabsha/kalabsha12.obj");
+		//std::string fname_model01("../../../Resource/Model/cornell/cornellbox.obj");
+		//std::string fname_model01("../../../Resource/Model/bunny/bunny.obj");
 	#endif
 
 	if (p_bVerbose)
@@ -229,7 +208,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//Sphere shape_mesh2(Vector3(0, 7.0f, 0), 2.0f);
 	//Sphere shape_mesh2(Vector3(0.0, 15.0f, 0.0), 0.5f);
 	Sphere shape_mesh2(Vector3(0.0, 16.5f, 0.0), 0.5f);
-	DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+2, 1e+2, 1e+2));
+	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+2, 1e+2, 1e+2));
+	DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
 	
 	// crytek sponza
 	//Sphere shape_mesh2(Vector3(0.0, 1700.0f, 0.0), 100.0f);
@@ -340,24 +320,24 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
  
 	//PathIntegrator integrator(4, 16, 1, false);
 	//PathIntegrator integrator(4, 4, false);
-	PathIntegrator integrator(1, 1, false);
+	PathIntegrator integrator(4, 1, false);
 	integrator.Initialise(&scene, &camera);
  
 	ImagePPM imagePPM;
 	//int width = 64, height = 64;
 	//int width = 256, height = 256;
 	//int width = 512, height = 512;
-	//int width = 640, height = 480;
-	int width = 1920, height = 1080;
+	int width = 640, height = 480;
+	//int width = 1920, height = 1080;
 
 	#if defined(__PLATFORM_WINDOWS__)
 		ImageDevice device(width, height, &imagePPM, "D:\\Development\\IlluminaPRT\\Resource\\Output\\result.ppm");
 	#elif defined(__PLATFORM_LINUX__)
-		ImageDevice device(width, height, &imagePPM, "../../../Resource/Texture/result.ppm");
+		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
 	#endif
 
 	//BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 1);
-	DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 1, 32, 24);
+	DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4, 8, 8);
 	renderer.Initialise();
 	
 	if (p_bVerbose)
@@ -398,7 +378,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	// Cornell box
 	//Vector3 lookat(0, 14, 0);
 
-	for (int iteration = 0; iteration < 8; iteration++)
+	for (int iteration = 0; iteration < 4; iteration++)
 	{
 		renderTimer.restart();
 		alpha += 0.1f;
@@ -423,6 +403,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	}
 
 	renderer.Shutdown();
+	integrator.Shutdown();
 }
 
 int main()
@@ -445,6 +426,5 @@ int main()
 
 	//char cKey;
 	//cin >> cKey;
-
-	exit(0);
+	return 0;
 }

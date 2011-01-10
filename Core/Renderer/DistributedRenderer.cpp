@@ -4,7 +4,9 @@
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
+#include <time.h>
 #include <vector>
+#include <map>
 
 #include "boost/progress.hpp"
 #include "boost/mpi.hpp"
@@ -50,6 +52,10 @@ bool DistributedRenderer::Initialise(void)
 bool DistributedRenderer::Shutdown(void)
 {
 	m_pMPICommunicator->barrier();
+
+	// Haven't figured out the proper way out of boost MPI
+	m_pMPICommunicator->abort(0);
+	m_pMPIEnvironment->abort(0);
 
 	delete m_pMPICommunicator;
 	delete m_pMPIEnvironment;
@@ -171,8 +177,7 @@ void DistributedRenderer::RenderDebug(void)
 void DistributedRenderer::Render(void)
 {
 	const int WI_RESULT	= 0x0001;
-	const int WI_REQUEST = 0x0002;
-	const int WI_TASKID = 0x0003;
+	const int WI_TASKID = 0x0002;
 
 	int deviceWidth = m_pDevice->GetWidth(),
 		deviceHeight = m_pDevice->GetHeight();
@@ -198,9 +203,15 @@ void DistributedRenderer::Render(void)
 	//--------------------------------------------------
 	if (m_pMPICommunicator->rank() == 0)
 	{
+		std::map<int, time_t> lastJobSent;
+		std::map<int, time_t> jobTime;
+		std::map<int, int> jobsCompleted;
+
 		boost::progress_display renderProgress(tilesPerScreen);
 		boost::timer renderTimer;
 		renderTimer.restart();
+
+		time_t startTime = time(NULL);
 
 		//--------------------------------------------------
 		// Prepare device for rendering
@@ -228,6 +239,10 @@ void DistributedRenderer::Render(void)
 			// Send a new task, if available
 			if (m_taskQueue.size() > 0)
 			{
+				lastJobSent[rank] = time(NULL);
+				jobsCompleted[rank] = 0;
+				jobTime[rank] = 0;
+
 				tileId = m_taskQueue.back(); m_taskQueue.pop_back();
 				m_pMPICommunicator->send(rank, WI_TASKID, tileId);
 			}
@@ -254,6 +269,10 @@ void DistributedRenderer::Render(void)
 			// Send a new task, if available
 			if (m_taskQueue.size() > 0)
 			{
+				jobTime[status.source()] = jobTime[status.source()] + (time(NULL) - lastJobSent[status.source()]);
+				jobsCompleted[status.source()] = jobsCompleted[status.source()] + 1;
+				lastJobSent[status.source()] = time(NULL);
+
 				tileId = m_taskQueue.back(); m_taskQueue.pop_back();
 				m_pMPICommunicator->send(status.source(), WI_TASKID, tileId);
 			}
@@ -291,6 +310,17 @@ void DistributedRenderer::Render(void)
 		m_pDevice->EndFrame();
 
 		std::cout << "Total Render Time : " << renderTimer.elapsed() << " seconds" << std::endl;
+		
+		time_t endTime = time(NULL);
+
+		std::cout << "Total Render Time (system) : " << endTime - startTime << " seconds " << std::endl;
+
+		for (int rank = 1; rank < m_pMPICommunicator->size(); rank++)
+		{
+			std::cout << "Stats for rank [" << rank << "]" << std::endl;
+			std::cout << "-- Jobs completed : " << jobsCompleted[rank] << std::endl;
+			std::cout << "-- Total job time : " << jobTime[rank] << std::endl;
+		}
 	}
 	else
 	{
