@@ -29,7 +29,7 @@ namespace Illumina
 		public:
 			ArgumentMap(const std::string &p_strArgumentList)
 			{
-				std::cout << "Parsing argument map ..." << std::endl;
+				//std::cout << "Parsing argument map ..." << std::endl;
 
 				boost::char_separator<char> separator("=;");
 				boost::tokenizer<boost::char_separator<char> > tokens(p_strArgumentList, separator);
@@ -46,7 +46,7 @@ namespace Illumina
 					// Push into map
 					m_argumentMap[name] = value;
 
-					std::cout << "\t[" << name << " = " << value << "]" << std::endl;
+					//std::cout << "\t[" << name << " = " << value << "]" << std::endl;
 				}
 			}
 

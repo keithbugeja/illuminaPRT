@@ -65,7 +65,7 @@ namespace Illumina
 		class WavefrontLoader
 		{
 		protected:
-			static bool LoadMaterials(const std::string &p_strMaterialsFile, std::vector<WavefrontMaterial> &p_materialList)
+			static bool LoadMaterials(const std::string &p_strMaterialsFile, std::vector<WavefrontMaterial> &p_materialList, bool p_bVerbose = true)
 			{
 				std::ifstream file;
 				file.open(p_strMaterialsFile.c_str());
@@ -148,14 +148,15 @@ namespace Illumina
 
 				file.close();
 
-				std::cout << "-- Material file loaded " << p_materialList.size() << " entries..." << std::endl;
+				if (p_bVerbose)
+					std::cout << "-- Material file loaded " << p_materialList.size() << " entries..." << std::endl;
 
 				return true;
 			}
 
 		public:
 			template<class TMesh, class TVertex>
-			static boost::shared_ptr<TMesh> LoadMesh(const std::string &p_strMeshFile, EngineKernel *p_pEngineKernel, MaterialGroup **p_pMaterialGroup)
+			static boost::shared_ptr<TMesh> LoadMesh(const std::string &p_strMeshFile, EngineKernel *p_pEngineKernel, MaterialGroup **p_pMaterialGroup, bool p_bVerbose = true)
 			{
 				int currentMaterialId = -1;
 
@@ -237,7 +238,7 @@ namespace Illumina
 
 									vertex.Position = positionList[face.Vertex[i].Position];
 									vertex.Normal = normalList[face.Vertex[i].Normal];
-									if (vertex.Normal == 0) std::cout << "-- Invalid normal for index [" << mesh->VertexList.Size() << "]" << std::endl;
+									if (p_bVerbose) if (vertex.Normal == 0) std::cout << "-- Invalid normal for index [" << mesh->VertexList.Size() << "]" << std::endl;
 									if (face.Vertex[i].Texture < textureCoordList.size()) vertex.UV = textureCoordList[face.Vertex[i].Texture];
 								
 									vertexMap[hash] = vertexIndex[i] = mesh->VertexList.Size();
@@ -275,7 +276,7 @@ namespace Illumina
 
 									vertex.Position = positionList[face.Vertex[i].Position];
 									vertex.Normal = normalList[face.Vertex[i].Normal];
-									if (vertex.Normal == 0) std::cout << "-- Invalid normal for index [" << mesh->VertexList.Size() << "]" << std::endl;
+									if (p_bVerbose) if (vertex.Normal == 0) std::cout << "-- Invalid normal for index [" << mesh->VertexList.Size() << "]" << std::endl;
 									if (face.Vertex[i].Texture < textureCoordList.size()) vertex.UV = textureCoordList[face.Vertex[i].Texture];
 								
 									vertexMap[hash] = vertexIndex[i] = mesh->VertexList.Size();
@@ -295,11 +296,11 @@ namespace Illumina
 					{
 						std::string file, filepath;
 						meshLine >> file >> file;
-						std::cout<< "-- Loading materials file '" << file << "'..." << std::endl;
+						if(p_bVerbose) std::cout<< "-- Loading materials file '" << file << "'..." << std::endl;
 						
 						boost::filesystem::path meshPath(p_strMeshFile);
 						filepath = (meshPath.parent_path() / file).string();
-						LoadMaterials(filepath, materialList);
+						LoadMaterials(filepath, materialList, p_bVerbose);
 
 						*p_pMaterialGroup = (MaterialGroup*)p_pEngineKernel->GetMaterialManager()->CreateInstance("Group", file);
 
@@ -329,7 +330,7 @@ namespace Illumina
 								}
 								else
 								{
-									std::cout << "Re-using texture : " << diffuseMap << std::endl;
+									if (p_bVerbose) std::cout << "Re-using texture : " << diffuseMap << std::endl;
 									pMatte->SetDiffuseTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
 								}
 							}
@@ -341,14 +342,14 @@ namespace Illumina
 						meshLine >> materialName >> materialName;
 
 						currentMaterialId = (*p_pMaterialGroup)->GetGroupId(materialName);
-						std::cout<< "-- Using material [" << materialName << ":" << currentMaterialId << "]..." << std::endl;
+						if (p_bVerbose) std::cout<< "-- Using material [" << materialName << ":" << currentMaterialId << "]..." << std::endl;
 					}
 				}
 
 				// Explicit closing of the file
 				meshFile.close();
 
-				std::cout << "-- Parsed " << mesh->VertexList.Size() << " vertices, " << mesh->TriangleList.Size() << " faces... " << std::endl;
+				if (p_bVerbose) std::cout << "-- Parsed " << mesh->VertexList.Size() << " vertices, " << mesh->TriangleList.Size() << " faces... " << std::endl;
 
 				return mesh;
 			}

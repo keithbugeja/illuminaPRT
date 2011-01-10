@@ -24,7 +24,7 @@ void ITriangleMesh<T, U>::ComputeBoundingVolume(void)
 		m_boundingBox.Union(*(triangle.GetBoundingVolume()));
 	}
 
-	std::cout << "Volume : " << m_boundingBox.ToString() << std::endl;
+	//std::cout << "Volume : " << m_boundingBox.ToString() << std::endl;
 }
 //----------------------------------------------------------------------------------------------
 template<class T, class U> 
@@ -100,7 +100,6 @@ void ITriangleMesh<T, U>::AddIndexedTriangleList(const List<int> &p_indexList, i
 template<class T, class U>
 bool ITriangleMesh<T, U>::UpdateNormals(void)
 {
-
 	// Try fixing vertices instead
 	if ((U::GetDescriptor() & VertexFormat::Normal) > 0)
 	{
@@ -204,7 +203,6 @@ Vector3 ITriangleMesh<T, U>::SamplePoint(const Vector3 &p_viewPoint, float p_u, 
 	}
 
 	return samplePoint;
-	//surface.Distance = Vector3::Dot(viewToCentre, Vector3::Normalize(ray.Direction));
 }
 //----------------------------------------------------------------------------------------------
 template<class T, class U>

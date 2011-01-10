@@ -45,7 +45,7 @@ T* FactoryManager<T>::FindItem(const std::string& p_strItemName)
 template<class T>
 void FactoryManager<T>::RegisterFactory(const std::string& p_strFactoryName, Factory<T>* p_pFactory)
 {
-	std::cout << "Factory Manager registering factory '" << p_strFactoryName << "' ..." << std::endl;
+	//std::cout << "Factory Manager registering factory '" << p_strFactoryName << "' ..." << std::endl;
 
 	if (ContainsFactory(p_strFactoryName))
 		throw new Exception("Cannot register factory. Another factory is already registered with the same name!");
@@ -57,7 +57,7 @@ void FactoryManager<T>::RegisterFactory(const std::string& p_strFactoryName, Fac
 template<class T>
 void FactoryManager<T>::UnregisterFactory(const std::string& p_strFactoryName)
 {
-	std::cout << "Factory Manager unregistering factory '" << p_strFactoryName << "' ..." << std::endl;
+	//std::cout << "Factory Manager unregistering factory '" << p_strFactoryName << "' ..." << std::endl;
 
 	if (ContainsFactory(p_strFactoryName))
 		m_factoryInstanceMap.erase(p_strFactoryName);
@@ -90,7 +90,7 @@ bool FactoryManager<T>::QueryInstance(const std::string &p_strInstanceName)
 template<class T>
 T* FactoryManager<T>::CreateInstance(const std::string& p_strFactoryName, const std::string& p_strInstanceName)
 {
-	std::cout << "FactoryManager creating instance '" << p_strInstanceName << "' from factory '" << p_strFactoryName << "' ..." << std::endl;
+	//std::cout << "FactoryManager creating instance '" << p_strInstanceName << "' from factory '" << p_strFactoryName << "' ..." << std::endl;
 
 	// Check that factory exists and instance name is unique.
 	if (!ContainsFactory(p_strFactoryName)) throw new Exception("No factory registered under specified name!");
@@ -115,7 +115,7 @@ T* FactoryManager<T>::CreateInstance(const std::string& p_strFactoryName, const 
 template<class T>
 T* FactoryManager<T>::CreateInstance(const std::string& p_strFactoryName, const std::string& p_strInstanceName, const std::string& p_strArguments)
 {
-	std::cout << "FactoryManager creating instance '" << p_strInstanceName << "' from factory '" << p_strFactoryName << "' ..." << std::endl;
+	//std::cout << "FactoryManager creating instance '" << p_strInstanceName << "' from factory '" << p_strFactoryName << "' ..." << std::endl;
 
 	// Check that factory exists and instance name is unique.
 	if (!ContainsFactory(p_strFactoryName)) throw new Exception("No factory registered under specified name!");

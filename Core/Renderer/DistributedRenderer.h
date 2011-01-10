@@ -43,6 +43,8 @@ namespace Illumina
 			bool Shutdown(void);
 
 			void Render(void);
+			void RenderDebug(void);
+
 		};
 
 		class Region
