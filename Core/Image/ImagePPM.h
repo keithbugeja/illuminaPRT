@@ -50,8 +50,6 @@ namespace Illumina
 				imageFile >> std::noskipws >> colours;
 				imageFile.get(whitespace);
 
-				std::cout << "Image header : [" << width << " x " << height << " x " << colours << "]" << std::endl;
-
 				// Create image
 				Image* pImage = new Image(width, height);
 				Image &image = *pImage;

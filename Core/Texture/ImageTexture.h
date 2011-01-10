@@ -57,8 +57,8 @@ namespace Illumina
 				int iu = (int)u,
 					iv = (int)v;
 
-				iu = iu % m_image->GetWidth();
-				iv = iv % m_image->GetHeight();
+				iu = Maths::FAbs(iu % m_image->GetWidth());
+				iv = Maths::FAbs(iv % m_image->GetHeight());
 
 				// Add interpolation w. smoothing function
 				return m_image->Get(iu, iv);

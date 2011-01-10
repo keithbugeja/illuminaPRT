@@ -458,7 +458,7 @@ namespace Illumina
 					}
 				}
 
-				std::cout << "Cell count : " << cellCount << " : " << m_grid.size() << std::endl;
+				//std::cout << "Cell count : " << cellCount << " : " << m_grid.size() << std::endl;
 			}
 		};
 

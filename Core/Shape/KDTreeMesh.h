@@ -147,7 +147,7 @@ namespace Illumina
 				// Update Stats
 				m_statistics.m_triangleCount = objectCount;
 
-				std::cout << "Compilation complete" << std::endl << ToString() << std::endl;
+				//std::cout << "Compilation complete" << std::endl << ToString() << std::endl;
 
 				return true;
 			}

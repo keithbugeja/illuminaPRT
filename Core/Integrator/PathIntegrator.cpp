@@ -25,13 +25,13 @@ PathIntegrator::PathIntegrator(int p_nMaxRayDepth, int p_nShadowSampleCount, boo
 //----------------------------------------------------------------------------------------------
 bool PathIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 {
-	std::cout << "Path Tracing Integrator :: Initialise()" << std::endl;
+	//std::cout << "Path Tracing Integrator :: Initialise()" << std::endl;
 	return true;
 }
 //----------------------------------------------------------------------------------------------
 bool PathIntegrator::Shutdown(void)
 {
-	std::cout << "Path Tracing Integrator :: Shutdown()" << std::endl;
+	//std::cout << "Path Tracing Integrator :: Shutdown()" << std::endl;
 	return true;
 }
 //----------------------------------------------------------------------------------------------

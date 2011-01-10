@@ -60,7 +60,7 @@ namespace Illumina
 			template<class TMesh, class TVertex>
 			static boost::shared_ptr<TMesh> LoadMesh(const std::string& p_strMeshFile, EngineKernel *p_pEngineKernel, MaterialGroup **p_pMaterialGroup)
 			{
-				return WavefrontLoader::LoadMesh<TMesh, TVertex>(p_strMeshFile, p_pEngineKernel, p_pMaterialGroup);
+				return WavefrontLoader::LoadMesh<TMesh, TVertex>(p_strMeshFile, p_pEngineKernel, p_pMaterialGroup, false);
 			}
 
 			// Quick and dirty obj loader :
