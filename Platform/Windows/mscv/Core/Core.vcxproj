@@ -148,6 +148,7 @@
     <ClCompile Include="..\..\..\..\Core\Image\RGBPixel.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\Integrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\PathIntegrator.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Integrator\WhittedIntegrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\AreaLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\DiffuseAreaLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\DirectionalLight.cpp" />
@@ -205,6 +206,7 @@
     <ClInclude Include="..\..\..\..\Core\Image\RGBPixel.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\Integrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\PathIntegrator.h" />
+    <ClInclude Include="..\..\..\..\Core\Integrator\WhittedIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Light\AreaLight.h" />
     <ClInclude Include="..\..\..\..\Core\Light\DiffuseAreaLight.h" />
     <ClInclude Include="..\..\..\..\Core\Light\DirectionalLight.h" />

@@ -63,7 +63,7 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection
 				// Update primitive and materials
 				p_intersection.SetPrimitive(this);
 
-				if (m_pMaterial->IsComposite())
+				if (m_pMaterial != NULL && m_pMaterial->IsComposite())
 				{
 					MaterialGroup *pGroup = (MaterialGroup*)m_pMaterial;
 					
@@ -75,13 +75,6 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection
 				else
 					p_intersection.SetMaterial(m_pMaterial);
 							
-				/*				
-				if (geometryNormalWS.Dot(-p_ray.Direction) < 0)
-					std::cout << "Std : Normal . dir < 0" << std::endl;
-
-				if (p_intersection.Surface.GeometryNormal.Dot(-invRay.Direction) < 0)
-					std::cout << "Inv : Normal . dir < 0" << std::endl;
-				*/
 				return true;
 			}
 		}
@@ -107,16 +100,12 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection
 				// Update primitive and materials
 				p_intersection.SetPrimitive(this);
 				
-				if (m_pMaterial->IsComposite())
+				if (m_pMaterial != NULL && m_pMaterial->IsComposite())
 				{
 					MaterialGroup *pGroup = (MaterialGroup*)m_pMaterial;
 					
 					if (p_intersection.Surface.GetShape()->HasGroup())
-					{
 						p_intersection.SetMaterial(pGroup->GetByGroupId(p_intersection.Surface.GetShape()->GetGroupId()));
-						//std::cout << "ID : " << p_intersection.Surface.GetShape()->GetGroupId() << std::endl;
-						//std::cout << "@@ : " << pGroup->GetByGroupId(p_intersection.Surface.GetShape()->GetGroupId()) << std::endl;
-					}
 					else
 						p_intersection.SetMaterial(pGroup->GetByIndex(0));
 				}

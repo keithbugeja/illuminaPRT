@@ -29,6 +29,8 @@ namespace Illumina
 			 *
 			 * The method also populates a VisibilityQuery structure which allows the test for visibility between
 			 * points, v(x, x') to be carried out.
+			 *
+			 * Note that the direction of wIn is from the sampled point on the luminaire towards p_point.
 			 */
 			virtual Spectrum SampleRadiance(const Vector3 &p_point, Vector3 &p_wIn, VisibilityQuery &p_visibilityQuery) = 0;
 			virtual Spectrum SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wIn, VisibilityQuery &p_visibilityQuery) = 0;
