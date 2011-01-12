@@ -27,7 +27,7 @@ Spectrum SpecularReflection::Rho(const Spectrum &p_reflectance, const Vector3 &p
 Spectrum SpecularReflection::SampleF(const Spectrum &p_reflectance, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float *p_pdf) 
 { 
 	// Compute perfect specular reflection direction
-	p_wIn.Set(p_wOut.X, p_wOut.Y, -p_wOut.Z);
+	p_wIn.Set(-p_wOut.X, -p_wOut.Y, p_wOut.Z);
 	*p_pdf = 1.f;
 
 	return p_reflectance / Maths::FAbs(p_wOut.Z);

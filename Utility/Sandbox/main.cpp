@@ -53,6 +53,7 @@
 #include "Material/Material.h"
 #include "Material/Matte.h"
 #include "Material/Mirror.h"
+#include "Material/Glass.h"
 #include "Material/MaterialGroup.h"
 #include "Material/MaterialManager.h"
 
@@ -89,6 +90,9 @@
 
 using namespace std;
 using namespace Illumina::Core;
+
+// TODO:
+// DistributedRenderer should not instantiate MPI - change it to have it passed to the object
 
 void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 {
@@ -144,6 +148,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	engineKernel.GetMaterialManager()->RegisterFactory("Matte", new MatteMaterialFactory());
 	engineKernel.GetMaterialManager()->RegisterFactory("Mirror", new MirrorMaterialFactory());
+	engineKernel.GetMaterialManager()->RegisterFactory("Glass", new GlassMaterialFactory());
 	engineKernel.GetMaterialManager()->RegisterFactory("Group", new MaterialGroupFactory());
 
 	MatteMaterial material_mesh2(Spectrum(0.75,0.75,0.30));
@@ -158,13 +163,14 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	// Load Model
 	#if defined(__PLATFORM_WINDOWS__)
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\tests\\test_axes.obj");
-		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sibenik\\sibenik.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sibenik\\sibenik.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\original\\sponza.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\clean\\sponza_clean.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\crytek\\sponza.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\kalabsha\\kalabsha12.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellbox.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell.obj");
+		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_glass.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellsymmetric.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\bunny\\bunny.obj");
 	#elif defined(__PLATFORM_LINUX__)
@@ -211,8 +217,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//Sphere shape_mesh2(Vector3(0, 7.0f, 0), 2.0f);
 	//Sphere shape_mesh2(Vector3(0.0, 15.0f, 0.0), 0.5f);
 	Sphere shape_mesh2(Vector3(0.0, 16.5f, 0.0), 0.5f);
-	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+2, 1e+2, 1e+2));
-	DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
+	DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+2, 1e+2, 1e+2));
+	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
 	
 	// crytek sponza
 	//Sphere shape_mesh2(Vector3(0.0, 1700.0f, 0.0), 100.0f);
@@ -306,7 +312,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	// Initialise sampler and filter
 	//----------------------------------------------------------------------------------------------
 	//JitterSampler sampler;
-	MultijitterSampler sampler;
+	RandomSampler sampler;
 	TentFilter filter;
 
 	//----------------------------------------------------------------------------------------------
@@ -341,7 +347,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
 	#endif
 
-	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4);
+	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 64);
 	//DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4, 8, 8);
 	renderer.Initialise();
 	
@@ -357,8 +363,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 
 	// Sibenik
 	//Vector3 lookFrom(20, 30, -20);
-	Vector3 lookFrom(10, 10, 0);
-	Vector3 lookAt(0, 5, 0);
+	//Vector3 lookFrom(10, 10, 0);
+	//Vector3 lookAt(0, 5, 0);
 
 	// Crytek sponza
 	//Vector3 lookFrom(-1000, 750, -400);
@@ -374,10 +380,9 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//Vector3 lookAt(0, 5, 0);
 
 	// Cornell box
-	//Vector3 lookFrom(0, 20, 40);
-	////Vector3 lookat(0, 14, 0);
+	Vector3 lookFrom(0, 20, 40);
+	Vector3 lookAt(0, 14, 0);
 	//Vector3 lookAt(0, 20, 0);
-
 
 	for (int iteration = 0; iteration < 4e+10; iteration++)
 	{

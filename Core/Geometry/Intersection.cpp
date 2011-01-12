@@ -15,7 +15,6 @@ Intersection::Intersection(void)
 	, m_pLight(NULL)
 	, Surface()
 	, WorldTransform()
-	, RayEpsilon(0.0f)
 { }
 //----------------------------------------------------------------------------------------------
 void Intersection::Reset(void)
@@ -26,7 +25,6 @@ void Intersection::Reset(void)
 
 	Surface.Reset();
 	WorldTransform.Reset();
-	RayEpsilon = 0.0f;
 }
 //----------------------------------------------------------------------------------------------
 bool Intersection::IsEmissive(void) const {
