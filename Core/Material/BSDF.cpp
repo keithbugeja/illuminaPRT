@@ -21,7 +21,7 @@ void BSDF::GenerateVectorInHemisphere(float p_u, float p_v, Vector3 &p_out)
 
 	float cosTheta = Maths::Sqrt(1 - p_u);
 	float sinTheta = Maths::Sqrt(1 - cosTheta * cosTheta);
-	float phi = Maths::PiTwo * p_v;
+	float phi = Maths::PiTwo * p_v * 2;
 	float cosPhi = Maths::Cos(phi);
 	float sinPhi = Maths::Sin(phi);
 
