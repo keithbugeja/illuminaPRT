@@ -27,10 +27,16 @@ Spectrum Lambertian::Rho(const Spectrum &p_reflectance, const Vector3 &p_wOut, i
 Spectrum Lambertian::SampleF(const Spectrum &p_reflectance, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float *p_pdf) 
 { 
 	BSDF::GenerateVectorInHemisphere(p_u, p_v, p_wIn);
-				
+	
+	//p_wIn = p_wOut;
+	//p_wIn.Z = -p_wOut.Z;
+
+	//if (p_wIn.Dot(p_wOut) > 0)
+	//	p_wIn.Z = -p_wIn.Z;
+
 	// Allahares nidghi, ghax kieku shittha Malta
-	if (Maths::ISgn(p_wIn.Z) == Maths::ISgn(p_wOut.Z))
-		p_wIn.Z = -p_wIn.Z;
+	//if (Maths::ISgn(p_wIn.Z) == Maths::ISgn(p_wOut.Z))
+	//	p_wIn.Z = -p_wIn.Z;
 
 	*p_pdf = Maths::InvPi;
 

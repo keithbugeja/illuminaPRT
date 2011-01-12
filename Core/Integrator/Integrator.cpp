@@ -27,16 +27,20 @@ Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, 
 				
 	if (Ls.IsBlack() || visibilityQuery.IsOccluded())
 		return 0.0f;
-	
+
+	p_wIn = -p_wIn;
+
 	if (p_pBSDF == NULL)
-		return Ls * Maths::Max(0, Vector3::AbsDot(p_wIn, p_normal));
+		return Ls * Maths::Max(0, Vector3::Dot(p_wIn, p_normal));
+		//return Ls * Maths::Max(0, Vector3::AbsDot(p_wIn, p_normal));
 
 	Vector3 bsdfIn, bsdfOut;
 
 	BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, p_wOut, bsdfOut);
 	BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, p_wIn, bsdfIn);
 
-	return Ls * Vector3::AbsDot(p_wIn, p_normal) * p_pBSDF->F(p_intersection.Surface, bsdfOut, bsdfIn);
+	return Ls * Maths::Max(0, Vector3::Dot(p_wIn, p_normal)) * p_pBSDF->F(p_intersection.Surface, bsdfOut, bsdfIn);
+	//return Ls * Vector3::AbsDot(p_wIn, p_normal) * p_pBSDF->F(p_intersection.Surface, bsdfOut, bsdfIn);
 }
 //----------------------------------------------------------------------------------------------
 Spectrum IIntegrator::SampleAllLights(Scene *p_pScene, const Intersection &p_intersection,

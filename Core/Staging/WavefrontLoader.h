@@ -188,6 +188,7 @@ namespace Illumina
 					{
 						Vector3 position;
 						meshLine >> position.X >> position.Y >> position.Z;
+						//position.X = -position.X;
 						positionList.push_back(position);
 					}
 					else if(strType == "vt")
@@ -200,6 +201,7 @@ namespace Illumina
 					{
 						Vector3 normal;
 						meshLine >> normal.X >> normal.Y >> normal.Z;
+						//normal.X = -normal.X;
 						normalList.push_back(normal);
 					}
 					else if(strType == "f")

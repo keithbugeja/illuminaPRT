@@ -119,7 +119,7 @@ bool IndexedTriangle<TVertex>::Intersects(const Ray &p_ray, float p_fTime, Diffe
 		v0.UV.U * alpha + v1.UV.U * beta + v2.UV.U * gamma,
 		v0.UV.V * alpha + v1.UV.V * beta + v2.UV.V * gamma);
 
-	Vector3::Cross(BA, CA, p_surface.GeometryNormal);
+	Vector3::Cross(CA, BA, p_surface.GeometryNormal);
 	p_surface.ShadingNormal = p_surface.GeometryNormal;
 	return true;
 }
@@ -185,8 +185,12 @@ bool IndexedTriangle<Vertex>::Intersects(const Ray &p_ray, float p_fTime, Differ
 	p_surface.ShadingNormal.Normalize();
 
 	// Set geometry normal
-	Vector3::Cross(BA, CA, p_surface.GeometryNormal);
-	p_surface.GeometryNormal.Normalize();
+	//Vector3::Cross(CA, BA, p_surface.GeometryNormal);
+	//p_surface.GeometryNormal.Normalize();
+	p_surface.GeometryNormal = Vector3::Normalize(Vector3::Cross((v2.Position - v0.Position), (v1.Position - v0.Position)));
+
+	if (p_surface.GeometryNormal.Dot(p_surface.ShadingNormal) < 0)
+		p_surface.GeometryNormal = -p_surface.GeometryNormal;
 
 	return true;
 }

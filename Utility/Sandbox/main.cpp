@@ -72,6 +72,7 @@
 #include "Light/DiffuseAreaLight.h"
 
 #include "Integrator/PathIntegrator.h"
+#include "Integrator/WhittedIntegrator.h"
 
 #include "Renderer/BasicRenderer.h"
 #include "Renderer/DistributedRenderer.h"
@@ -156,13 +157,15 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 
 	// Load Model
 	#if defined(__PLATFORM_WINDOWS__)
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\tests\\testAxes.obj");
-		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sibenik\\sibenik.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\tests\\test_axes.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sibenik\\sibenik.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\original\\sponza.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\clean\\sponza_clean.obj");
+		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\clean\\sponza_clean.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\crytek\\sponza.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\kalabsha\\kalabsha12.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellbox.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellsymmetric.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\bunny\\bunny.obj");
 	#elif defined(__PLATFORM_LINUX__)
 		//std::string fname_model01("../../../Resource/Model/tests/testAxes.obj");
@@ -243,7 +246,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	if (p_bVerbose)
 		std::cout << "Computing mesh normals..." << std::endl;
 	
-	shape_mesh1->UpdateNormals();
+	//shape_mesh1->UpdateNormals();
 	//shape_mesh3->UpdateNormals();
 	//std::cout << std::endl;
 
@@ -321,14 +324,15 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//PathIntegrator integrator(4, 16, 1, false);
 	//PathIntegrator integrator(4, 4, false);
 	PathIntegrator integrator(4, 1, false);
+	//WhittedIntegrator integrator(2, 1);
 	integrator.Initialise(&scene, &camera);
  
 	ImagePPM imagePPM;
 	//int width = 64, height = 64;
 	//int width = 256, height = 256;
 	//int width = 512, height = 512;
-	int width = 640, height = 480;
-	//int width = 1920, height = 1080;
+	//int width = 640, height = 480;
+	int width = 1920, height = 1080;
 
 	#if defined(__PLATFORM_WINDOWS__)
 		ImageDevice device(width, height, &imagePPM, "D:\\Development\\IlluminaPRT\\Resource\\Output\\result.ppm");
@@ -336,8 +340,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
 	#endif
 
-	//BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 1);
-	DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4, 8, 8);
+	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 512);
+	//DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4, 8, 8);
 	renderer.Initialise();
 	
 	if (p_bVerbose)
@@ -347,43 +351,39 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 
 	boost::timer renderTimer;
 
-	double alpha = 0.0f,
-		totalFPS = 0.0f,
-		// Sponza
-		//cDistX = -10, cDistY = 17.5, cDistZ = -3;
-		//cDistX = -10, cDistY = 12.5, cDistZ = -3;
-		//cDistX = 10, cDistY = 7.5, cDistZ = -3;
-		//cDistX = -5, cDistY = 1.0, cDistZ = -3;
-		//cDistX = -20, cDistY = 30.5, cDistZ = -20;
+	double alpha = Maths::Pi,
+		totalFPS = 0.0f;
 
-		// Sibenik
-		cDistX = 20, cDistY = 7.5, cDistZ = -3;
+	// Sibenik
+	//Vector3 lookFrom(20, 30, -20);
+	//Vector3 lookAt(0, 5, 0);
 
-		// Crytek sponza
-		//cDistX = -1000, cDistY = 750.0, cDistZ = -400;
-		//cDistX = -400, cDistY = 100.0, cDistZ = -400;
+	// Crytek sponza
+	//Vector3 lookFrom(-1000, 750, -400);
+	//Vector3 lookFrom(-400, 100, -400);
+	//Vecotr3 lookAt(0, 25, 0);
 		
-		// Cornell box
-		//cDistX = -30, cDistY = 30, cDistZ = -10;
-
-		//cDistX = -10, cDistY = 5, cDistZ = -10;
-		//cDistX = 10, cDistY = -10, cDistZ = 5;
-
-	//Vector3 lookat(0, -10, 0);
+	// Cornell box
+	//cDistX = -30, cDistY = 30, cDistZ = -10;
 	
 	// Sponza
-	//Vector3 lookat(0, 5, 0);
+	Vector3 lookFrom(10, 7.5, 0);
 	Vector3 lookat(0, 0, 0);
+	//Vector3 lookat(0, 5, 0);
 
 	// Cornell box
+	//Vector3 lookFrom(0, 20, 40);
 	//Vector3 lookat(0, 14, 0);
+	//Vector3 lookat(0, 20, 0);
 
-	for (int iteration = 0; iteration < 4; iteration++)
+
+	for (int iteration = 0; iteration < 4e+10; iteration++)
 	{
 		renderTimer.restart();
-		alpha += 0.1f;
+		alpha += 0.05f;
 	 
-		camera.MoveTo(Vector3(Maths::Cos(alpha) * cDistX, cDistY, Maths::Sin(alpha) * cDistZ));
+		camera.MoveTo(lookFrom);
+		//camera.MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
 		camera.LookAt(lookat);
 	 
 		// Here we rebuild the AS
@@ -420,7 +420,7 @@ int main()
 	//SimplePacketTracer(nCores);
 	//TileBasedTracer(nCores);
 
-	RayTracer(nCores / 2, false);
+	RayTracer(nCores / 2, true);
 
 	//std::cout << "Complete in " << Platform::GetTime() << " seconds " << std::endl;
 

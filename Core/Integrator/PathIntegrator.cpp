@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	WhittedIntegrator.cpp
+//	Filename:	PathIntegrator.cpp
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
@@ -59,36 +59,22 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		{
 			wOut = -Vector3::Normalize(ray.Direction);
 
-			//Spectrum Le(0);
-			//Le[0] = 0.5 * (p_intersection.Surface.GeometryBasisWS.W[0] + 1);
-			//Le[1] = 0.5 * (p_intersection.Surface.GeometryBasisWS.W[1] + 1);
-			//Le[2] = 0.5 * (p_intersection.Surface.GeometryBasisWS.W[2] + 1);
-
-			//Le[0] = p_intersection.Surface.GeometryBasisWS.W[0];
-			//Le[1] = p_intersection.Surface.GeometryBasisWS.W[1];
-			//Le[2] = p_intersection.Surface.GeometryBasisWS.W[2];
-
-			//Le[0] = 0.5 * (wOut[0] + 1);
-			//Le[1] = 0.5 * (wOut[1] + 1);
-			//Le[2] = 0.5 * (wOut[2] + 1);
-
-			//L = Le;
-
 			// Add emitted light : only on first bounce or specular to avoid double counting
 			if (rayDepth == 0 || specularBounce)
 			{
 				if (p_intersection.IsEmissive()) 
+					//L += pathThroughput  * p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut);
 					L += pathThroughput  * p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
 			}
 
 			// Sample all scene lights
-			L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
-			//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+			//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+			L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
 
 			// Sample bsdf for next direction
 			if (!p_intersection.HasMaterial())
 				break;
-
+			
 			// Convert to surface cs
 			BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, ray.Direction, wOut);
 
@@ -101,13 +87,37 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 
 			// Convert to world cs
 			BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, wIn, ray.Direction);
-					
-			// Compute new ray
-			ray.Min = 1e-4f;
-			ray.Max = Maths::Maximum;
-			ray.Origin = p_intersection.Surface.PointWS + ray.Direction * ray.Min;
 
-			pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
+			wIn = ray.Direction;
+
+			// Compute new ray
+			ray.Min = 1E-4f;
+			ray.Max = Maths::Maximum;
+			ray.Origin = p_intersection.Surface.PointWS + p_intersection.Surface.GeometryBasisWS.W * 1E-4f;
+
+			//L=f;
+
+			/*if (wIn.ArgMaxAbsComponent() == 0)
+			{
+				L[0] = wIn.MaxAbsComponent();
+				L[1] = 0;
+				L[2] = 0;
+			}
+			if (wIn.ArgMaxAbsComponent() == 1)
+			{
+				L[1] = wIn.MaxAbsComponent();
+				L[0] = 0;
+				L[2] = 0;
+			}
+			if (wIn.ArgMaxAbsComponent() == 2)
+			{
+				L[2] = wIn.MaxAbsComponent();
+				L[1] = 0;
+				L[0] = 0;
+			}*/
+
+			pathThroughput *= f * Vector3::Dot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
+			//pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
 			specularBounce = (bxdfType & BxDF::Specular) != 0;
 
 			// Possibly terminate the path

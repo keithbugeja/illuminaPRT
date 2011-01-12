@@ -25,10 +25,10 @@ namespace Illumina
 			int GetBxDF(BxDF::Type p_bxdfType, int p_nBxDFIndex, BxDF **p_pBxDF);
 
 		public:
-			static void LocalToSurface(const DifferentialSurface &p_surface, const Vector3 &p_vector, Vector3 &p_out);
-			static void WorldToSurface(const Transformation &p_worldTransform, const DifferentialSurface &p_surface, const Vector3 &p_vector, Vector3 &p_out);
-			static void SurfaceToLocal(const DifferentialSurface &p_surface, const Vector3 &p_vector, Vector3 &p_out);
-			static void SurfaceToWorld(const Transformation &p_worldTransform, const DifferentialSurface &p_surface, const Vector3 &p_vector, Vector3 &p_out);
+			static void LocalToSurface(const DifferentialSurface &p_surface, const Vector3 &p_vector, Vector3 &p_out, bool p_bUseShadingNormals = false);
+			static void WorldToSurface(const Transformation &p_worldTransform, const DifferentialSurface &p_surface, const Vector3 &p_vector, Vector3 &p_out, bool p_bUseShadingNormals = false);
+			static void SurfaceToLocal(const DifferentialSurface &p_surface, const Vector3 &p_vector, Vector3 &p_out, bool p_bUseShadingNormals = false);
+			static void SurfaceToWorld(const Transformation &p_worldTransform, const DifferentialSurface &p_surface, const Vector3 &p_vector, Vector3 &p_out, bool p_bUseShadingNormals = false);
 
 			static void GenerateVectorInHemisphere(float p_u, float p_v, Vector3 &p_out);
 
