@@ -158,9 +158,9 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	// Load Model
 	#if defined(__PLATFORM_WINDOWS__)
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\tests\\test_axes.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sibenik\\sibenik.obj");
+		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sibenik\\sibenik.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\original\\sponza.obj");
-		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\clean\\sponza_clean.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\clean\\sponza_clean.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\crytek\\sponza.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\kalabsha\\kalabsha12.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellbox.obj");
@@ -192,7 +192,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		fname_model01, &engineKernel, &pMeshMaterialGroup );
 	//boost::shared_ptr<BVHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 	//	ShapeFactory::LoadMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
-	//	fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
+	//	fname_model01, &engineKernel, &pMeshMaterialGroup );
 	//boost::shared_ptr<BIHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 	//	ShapeFactory::LoadMesh<BIHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
 	//	fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
@@ -324,15 +324,16 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//PathIntegrator integrator(4, 16, 1, false);
 	//PathIntegrator integrator(4, 4, false);
 	PathIntegrator integrator(4, 1, false);
-	//WhittedIntegrator integrator(2, 1);
+	//WhittedIntegrator integrator(4, 1);
 	integrator.Initialise(&scene, &camera);
  
 	ImagePPM imagePPM;
 	//int width = 64, height = 64;
 	//int width = 256, height = 256;
-	//int width = 512, height = 512;
+	int width = 512, height = 512;
 	//int width = 640, height = 480;
-	int width = 1920, height = 1080;
+	//int width = 1920, height = 1080;
+	//int width = 1920, height = 1200;
 
 	#if defined(__PLATFORM_WINDOWS__)
 		ImageDevice device(width, height, &imagePPM, "D:\\Development\\IlluminaPRT\\Resource\\Output\\result.ppm");
@@ -340,7 +341,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
 	#endif
 
-	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 512);
+	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4);
 	//DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4, 8, 8);
 	renderer.Initialise();
 	
@@ -356,7 +357,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 
 	// Sibenik
 	//Vector3 lookFrom(20, 30, -20);
-	//Vector3 lookAt(0, 5, 0);
+	Vector3 lookFrom(10, 10, 0);
+	Vector3 lookAt(0, 5, 0);
 
 	// Crytek sponza
 	//Vector3 lookFrom(-1000, 750, -400);
@@ -367,14 +369,14 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//cDistX = -30, cDistY = 30, cDistZ = -10;
 	
 	// Sponza
-	Vector3 lookFrom(10, 7.5, 0);
-	Vector3 lookat(0, 0, 0);
-	//Vector3 lookat(0, 5, 0);
+	//Vector3 lookFrom(10, 7.5, 0);
+	//Vector3 lookAt(0, 0, 0);
+	//Vector3 lookAt(0, 5, 0);
 
 	// Cornell box
 	//Vector3 lookFrom(0, 20, 40);
-	//Vector3 lookat(0, 14, 0);
-	//Vector3 lookat(0, 20, 0);
+	////Vector3 lookat(0, 14, 0);
+	//Vector3 lookAt(0, 20, 0);
 
 
 	for (int iteration = 0; iteration < 4e+10; iteration++)
@@ -384,7 +386,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	 
 		camera.MoveTo(lookFrom);
 		//camera.MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
-		camera.LookAt(lookat);
+		camera.LookAt(lookAt);
 	 
 		// Here we rebuild the AS
 		basicSpace.Update();

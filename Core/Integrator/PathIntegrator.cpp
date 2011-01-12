@@ -63,13 +63,13 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 			if (rayDepth == 0 || specularBounce)
 			{
 				if (p_intersection.IsEmissive()) 
-					//L += pathThroughput  * p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut);
-					L += pathThroughput  * p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
+					L += pathThroughput  * p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut);
+					//L += pathThroughput  * p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
 			}
 
 			// Sample all scene lights
-			//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
-			L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+			L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+			//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
 
 			// Sample bsdf for next direction
 			if (!p_intersection.HasMaterial())
@@ -94,27 +94,6 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 			ray.Min = 1E-4f;
 			ray.Max = Maths::Maximum;
 			ray.Origin = p_intersection.Surface.PointWS + p_intersection.Surface.GeometryBasisWS.W * 1E-4f;
-
-			//L=f;
-
-			/*if (wIn.ArgMaxAbsComponent() == 0)
-			{
-				L[0] = wIn.MaxAbsComponent();
-				L[1] = 0;
-				L[2] = 0;
-			}
-			if (wIn.ArgMaxAbsComponent() == 1)
-			{
-				L[1] = wIn.MaxAbsComponent();
-				L[0] = 0;
-				L[2] = 0;
-			}
-			if (wIn.ArgMaxAbsComponent() == 2)
-			{
-				L[2] = wIn.MaxAbsComponent();
-				L[1] = 0;
-				L[0] = 0;
-			}*/
 
 			pathThroughput *= f * Vector3::Dot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
 			//pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
