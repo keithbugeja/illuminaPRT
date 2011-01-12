@@ -21,20 +21,20 @@ namespace Illumina
 
 		protected:
 			Spectrum m_reflectivity;
-			ITexture *m_pDiffuseTexture;
+			ITexture *m_pTexture;
 
 		public:
-			MatteMaterial(const std::string &p_strName, const Spectrum &p_reflectivity)
+			MatteMaterial(const std::string &p_strName, const Spectrum &p_reflectivity, ITexture *p_pTexture = NULL)
 				: IMaterial(p_strName) 
 				, m_reflectivity(p_reflectivity)
-				, m_pDiffuseTexture(NULL)
+				, m_pTexture(p_pTexture)
 			{
 				m_bxdfList.PushBack(new Lambertian());
 			}
 
-			MatteMaterial(const Spectrum& p_reflectivity)
+			MatteMaterial(const Spectrum& p_reflectivity, ITexture *p_pTexture = NULL)
 				: m_reflectivity(p_reflectivity)
-				, m_pDiffuseTexture(NULL)
+				, m_pTexture(p_pTexture)
 			{
 				m_bxdfList.PushBack(new Lambertian());
 			}
@@ -44,17 +44,16 @@ namespace Illumina
 				delete m_bxdfList.At(0);
 			}
 
-			void SetDiffuseTexture(ITexture* p_pTexture)
+			void SetTexture(ITexture* p_pTexture)
 			{
-				//std::cout << "Setting diffuse texture of " << this->GetName() << " to " << p_pTexture->GetName() << std::endl;
-				m_pDiffuseTexture = p_pTexture;
+				m_pTexture = p_pTexture;
 			}
 
 			Spectrum SampleTexture(const DifferentialSurface &p_surface, int p_bxdfIndex)
 			{
-				if (m_pDiffuseTexture)
+				if (m_pTexture)
 				{
-					RGBPixel pixel = m_pDiffuseTexture->GetValue(p_surface.PointUV, p_surface.PointWS);
+					RGBPixel pixel = m_pTexture->GetValue(p_surface.PointUV, p_surface.PointWS);
 					return Spectrum(pixel.R, pixel.G, pixel.B);
 				}
 				else

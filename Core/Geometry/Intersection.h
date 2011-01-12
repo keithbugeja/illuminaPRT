@@ -25,7 +25,6 @@ namespace Illumina
 		public:
 			DifferentialSurface Surface;
 			Transformation WorldTransform;
-			float RayEpsilon;
 
 		public:
 			Intersection(void);

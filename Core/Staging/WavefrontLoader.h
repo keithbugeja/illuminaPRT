@@ -5,7 +5,10 @@
 //----------------------------------------------------------------------------------------------
 //  Loader is a hurried mess of unorganised crap! 
 //  Will have to re-write it soon after I get results from Albert.
+//
+//  Update: This loader has become an abomination unto the canons of programming... re-write asap.
 //----------------------------------------------------------------------------------------------
+
 #pragma once
 
 #include <iostream>
@@ -47,6 +50,13 @@ namespace Illumina
 		//----------------------------------------------------------------------------------------------
 		struct WavefrontMaterial
 		{
+			enum MaterialType
+			{
+				Matte,
+				Mirror,
+				Glass
+			} Type;
+
 			std::string Name;
 
 			float Shininess;
@@ -68,6 +78,7 @@ namespace Illumina
 			static bool LoadMaterials(const std::string &p_strMaterialsFile, std::vector<WavefrontMaterial> &p_materialList, bool p_bVerbose = true)
 			{
 				std::ifstream file;
+
 				file.open(p_strMaterialsFile.c_str());
 
 				// If file couldn't be opened, report error and quit
@@ -77,8 +88,9 @@ namespace Illumina
 					exit(-1);
 				}
 
-				std::string strLine, strDummy;
-				float value[3];
+				std::string strLine, strValue;
+				float fValue[3];
+				int nValue;
 
 				while(std::getline(file, strLine))
 				{
@@ -87,62 +99,66 @@ namespace Illumina
 					// New material
 					if (strLine.find("newmtl") != std::string::npos)
 					{
-						line>>strDummy>>strDummy;
+						line>>strValue>>strValue;
+
 						WavefrontMaterial material;
-						material.Name = strDummy;
+						material.Name = strValue;
+						material.Type = WavefrontMaterial::Matte;
 
 						p_materialList.push_back(material);
+					}
+					else if (strLine.find("illum") != std::string::npos)
+					{
+						line>>strValue>>nValue;
 
-						//std::cout<<"Newmtl " << strDummy << std::endl;
+						switch (nValue)
+						{
+						case 4:
+							p_materialList.back().Type = WavefrontMaterial::Glass;
+							break;
+
+						case 5:
+							p_materialList.back().Type = WavefrontMaterial::Mirror;
+							break;
+
+						default:
+							p_materialList.back().Type = WavefrontMaterial::Matte;
+						}
 					}
 					else if (strLine.find("map_Kd") != std::string::npos)
 					{
-						line>>strDummy>>strDummy;
-						p_materialList.back().DiffuseMap = strDummy;
-
-						//std::cout<<"map_Kd " << strDummy << std::endl;
+						line>>strValue>>strValue;
+						p_materialList.back().DiffuseMap = strValue;
 					}
 					else if (strLine.find("Kd") != std::string::npos)
 					{
-						line>>strDummy>>value[0]>>value[1]>>value[2];
-						p_materialList.back().Diffuse.Set(value);
-
-						//std::cout<<"Kd " << value[0] << " " << value[1] << " " << value[2] << std::endl;
+						line>>strValue>>fValue[0]>>fValue[1]>>fValue[2];
+						p_materialList.back().Diffuse.Set(fValue);
 					}
 					else if (strLine.find("Ka") != std::string::npos)
 					{
-						line>>strDummy>>value[0]>>value[1]>>value[2];
-						p_materialList.back().Ambient.Set(value);
-
-						//std::cout<<"Ka " << value[0] << " " << value[1] << " " << value[2] << std::endl;
+						line>>strValue>>fValue[0]>>fValue[1]>>fValue[2];
+						p_materialList.back().Ambient.Set(fValue);
 					}
 					else if (strLine.find("Ks") != std::string::npos)
 					{
-						line>>strDummy>>value[0]>>value[1]>>value[2];
-						p_materialList.back().Specular.Set(value);
-
-						//std::cout<<"Ks " << value[0] << " " << value[1] << " " << value[2] << std::endl;
+						line>>strValue>>fValue[0]>>fValue[1]>>fValue[2];
+						p_materialList.back().Specular.Set(fValue);
 					}
 					else if (strLine.find("Ke") != std::string::npos)
 					{
-						line>>strDummy>>value[0]>>value[1]>>value[2];
-						p_materialList.back().Emissive.Set(value);
-
-						//std::cout<<"Ke " << value[0] << " " << value[1] << " " << value[2] << std::endl;
+						line>>strValue>>fValue[0]>>fValue[1]>>fValue[2];
+						p_materialList.back().Emissive.Set(fValue);
 					}
 					else if (strLine.find("Ns") != std::string::npos)
 					{
-						line>>strDummy>>value[0];
-						p_materialList.back().Shininess = value[0];
-
-						//std::cout<<"Ns " << value[0] << std::endl;
+						line>>strValue>>fValue[0];
+						p_materialList.back().Shininess = fValue[0];
 					}
 					else if (strLine.find("Ni") != std::string::npos)
 					{
-						line>>strDummy>>value[0];
-						p_materialList.back().RefractiveIndex = value[0];
-
-						//std::cout<<"Ni " << value[0] << std::endl;
+						line>>strValue>>fValue[0];
+						p_materialList.back().RefractiveIndex = fValue[0];
 					}
 				}
 
@@ -227,7 +243,6 @@ namespace Illumina
 									>> face.Vertex[i].Texture >> separator
 									>> face.Vertex[i].Normal;
 
-
 								face.Vertex[i].Position--;
 								if (face.Vertex[i].Normal != 0) face.Vertex[i].Normal--;
 								if (face.Vertex[i].Texture != 0) face.Vertex[i].Texture--;
@@ -310,30 +325,101 @@ namespace Illumina
 						{
 							const WavefrontMaterial &material = materialList.at(matIdx);
 
+							std::stringstream argumentStream;
 							std::string indexName = material.Name;
 
-							std::stringstream argumentStream;
-							argumentStream<<"Name="<<indexName<<";Reflectivity="<<material.Diffuse[0]<<","<<material.Diffuse[1]<<","<<material.Diffuse[2]<<";";
-							IMaterial *pMaterial = p_pEngineKernel->GetMaterialManager()->CreateInstance("Matte", indexName, argumentStream.str());
-							(*p_pMaterialGroup)->Add(pMaterial, matIdx);
-
-							if (material.DiffuseMap.size() != 0)
-							{ 
-								std::string diffuseMap = material.DiffuseMap;
-								MatteMaterial *pMatte = (MatteMaterial*)pMaterial;
-
-								if (!p_pEngineKernel->GetTextureManager()->QueryInstance(diffuseMap))
+							switch(material.Type)
+							{
+								case WavefrontMaterial::Matte:
 								{
-									std::stringstream textureArgStream;
-									textureArgStream<<"Name="<<diffuseMap<<";Filename="<<(meshPath.parent_path() / diffuseMap).string()<<";Filetype=PPM;";
-									ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
+									argumentStream<<"Name=" << indexName << ";Reflectivity=" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << ";";
+									IMaterial *pMaterial = p_pEngineKernel->GetMaterialManager()->CreateInstance("Matte", indexName, argumentStream.str());
+									
+									(*p_pMaterialGroup)->Add(pMaterial, matIdx);
+									
+									if (material.DiffuseMap.size() != 0)
+									{ 
+										std::string diffuseMap = material.DiffuseMap;
+										MatteMaterial *pMatte = (MatteMaterial*)pMaterial;
+
+										if (!p_pEngineKernel->GetTextureManager()->QueryInstance(diffuseMap))
+										{
+											std::stringstream textureArgStream;
+											textureArgStream << "Name=" << diffuseMap << ";Filename=" << (meshPath.parent_path() / diffuseMap).string() << ";Filetype=PPM;";
+											ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
 							
-									pMatte->SetDiffuseTexture(pTexture);
+											pMatte->SetTexture(pTexture);
+										}
+										else
+										{
+											if (p_bVerbose) std::cout << "Re-using texture : " << diffuseMap << std::endl;
+											pMatte->SetTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
+										}
+									}
+
+									break;
 								}
-								else
+
+								case WavefrontMaterial::Mirror:
 								{
-									if (p_bVerbose) std::cout << "Re-using texture : " << diffuseMap << std::endl;
-									pMatte->SetDiffuseTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
+									argumentStream<<"Name=" << indexName << ";Reflectivity=" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << ";";
+									IMaterial *pMaterial = p_pEngineKernel->GetMaterialManager()->CreateInstance("Mirror", indexName, argumentStream.str());
+									
+									(*p_pMaterialGroup)->Add(pMaterial, matIdx);
+
+									if (material.DiffuseMap.size() != 0)
+									{ 
+										std::string diffuseMap = material.DiffuseMap;
+										MirrorMaterial *pMirror = (MirrorMaterial*)pMaterial;
+
+										if (!p_pEngineKernel->GetTextureManager()->QueryInstance(diffuseMap))
+										{
+											std::stringstream textureArgStream;
+											textureArgStream << "Name=" << diffuseMap << ";Filename=" << (meshPath.parent_path() / diffuseMap).string() << ";Filetype=PPM;";
+											ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
+							
+											pMirror->SetTexture(pTexture);
+										}
+										else
+										{
+											if (p_bVerbose) std::cout << "Re-using texture : " << diffuseMap << std::endl;
+											pMirror->SetTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
+										}
+									}
+									
+									break;
+								}
+
+								case WavefrontMaterial::Glass:
+								{
+									argumentStream<<"Name=" << indexName << ";"
+										<< "Reflectivity=" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << ";" 
+										<< "Absorption=" << 1.0f << ";EtaI=" << 1.0f << ";EtaT=" << material.RefractiveIndex << ";";
+									IMaterial *pMaterial = p_pEngineKernel->GetMaterialManager()->CreateInstance("Glass", indexName, argumentStream.str());
+									
+									(*p_pMaterialGroup)->Add(pMaterial, matIdx);
+
+									if (material.DiffuseMap.size() != 0)
+									{ 
+										std::string diffuseMap = material.DiffuseMap;
+										GlassMaterial *pGlass = (GlassMaterial*)pMaterial;
+
+										if (!p_pEngineKernel->GetTextureManager()->QueryInstance(diffuseMap))
+										{
+											std::stringstream textureArgStream;
+											textureArgStream << "Name=" << diffuseMap << ";Filename=" << (meshPath.parent_path() / diffuseMap).string() << ";Filetype=PPM;";
+											ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
+							
+											pGlass->SetTexture(pTexture);
+										}
+										else
+										{
+											if (p_bVerbose) std::cout << "Re-using texture : " << diffuseMap << std::endl;
+											pGlass->SetTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
+										}
+									}
+									
+									break;
 								}
 							}
 						} 

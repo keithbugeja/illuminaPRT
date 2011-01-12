@@ -7,6 +7,7 @@
 #pragma once
 
 #include "System/IlluminaPRT.h"
+#include "Spectrum/Spectrum.h"
 #include "Threading/List.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
@@ -20,6 +21,7 @@ namespace Illumina
 
 			virtual Spectrum Power(void) = 0;
 			virtual Spectrum Radiance(const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wIn) = 0;
+			virtual Spectrum Radiance(const Ray &p_ray) { return 0.0f; }
 
 			//----------------------------------------------------------------------------------------------
 			/* 

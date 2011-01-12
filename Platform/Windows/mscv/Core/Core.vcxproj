@@ -156,6 +156,7 @@
     <ClCompile Include="..\..\..\..\Core\Material\BSDF.cpp" />
     <ClCompile Include="..\..\..\..\Core\Material\LambertianBxDF.cpp" />
     <ClCompile Include="..\..\..\..\Core\Material\SpecularReflectionBxDF.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Material\SpecularTransmissionBxDF.cpp" />
     <ClCompile Include="..\..\..\..\Core\Maths\Maths.cpp" />
     <ClCompile Include="..\..\..\..\Core\Maths\Random.cpp" />
     <ClCompile Include="..\..\..\..\Core\Object\Object.cpp" />
@@ -222,6 +223,7 @@
     <ClInclude Include="..\..\..\..\Core\Material\MaterialManager.h" />
     <ClInclude Include="..\..\..\..\Core\Material\Mirror.h" />
     <ClInclude Include="..\..\..\..\Core\Material\SpecularReflectionBxDF.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\SpecularTransmissionBxDF.h" />
     <ClInclude Include="..\..\..\..\Core\Maths\Maths.h" />
     <ClInclude Include="..\..\..\..\Core\Maths\Montecarlo.h" />
     <ClInclude Include="..\..\..\..\Core\Maths\Random.h" />

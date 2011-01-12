@@ -228,6 +228,9 @@
     <ClCompile Include="..\..\..\..\Core\Integrator\WhittedIntegrator.cpp">
       <Filter>Header Files\Integrator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Material\SpecularTransmissionBxDF.cpp">
+      <Filter>Header Files\Material</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -577,6 +580,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Integrator\WhittedIntegrator.h">
       <Filter>Header Files\Integrator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\SpecularTransmissionBxDF.h">
+      <Filter>Header Files\Material</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

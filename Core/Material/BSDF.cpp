@@ -136,7 +136,7 @@ Spectrum BSDF::SampleF(const DifferentialSurface& p_surface, const Vector3 &p_wO
 	// Choose a bxdf to sample
 	// #pragma message ("Need to pass random number or a way to generate it")
 	// Need to get a new random number to remove bias!
-	int bxdfIndexFilter = (int)(p_v * bxdfCount - 1),
+	int bxdfIndexFilter = (int)(p_v * bxdfCount),
 		bxdfIndexList;
 
 	BxDF *pBxDF;

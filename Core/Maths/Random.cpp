@@ -8,6 +8,7 @@
 //	Reference: http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/CODES/mt19937ar.c
 //----------------------------------------------------------------------------------------------
 #include "Maths/Random.h"
+#include "Maths/Maths.h"
 
 using namespace Illumina::Core;
 
@@ -115,7 +116,7 @@ unsigned int Random::Next(unsigned int p_unRangeMin, unsigned int p_unRangeMax)
 //----------------------------------------------------------------------------------------------
 float Random::NextFloat(void) 
 {
-	return (float)(Next() * MERSENNE_INVERSE_RNG);
+	return ((float)(Next() * MERSENNE_INVERSE_RNG)) * (1.0f - Maths::Epsilon);
 }
 
 //----------------------------------------------------------------------------------------------
@@ -124,5 +125,5 @@ float Random::NextFloat(void)
 //----------------------------------------------------------------------------------------------
 double Random::NextDouble(void) 
 {
-	return (double)(Next() * MERSENNE_INVERSE_RNG);
+	return ((double)(Next() * MERSENNE_INVERSE_RNG)) * (1.0f - Maths::Epsilon);
 }
