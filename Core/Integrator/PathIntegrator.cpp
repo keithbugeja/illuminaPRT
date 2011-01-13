@@ -56,7 +56,7 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 	for (int rayDepth = 0; rayDepth < m_nMaxRayDepth; rayDepth++)
 	{
 		//----------------------------------------------------------------------------------------------
-		// No intersection
+		// No intersection - light from sky/distant luminaires
 		//----------------------------------------------------------------------------------------------
 		if(!p_pScene->Intersects(ray, p_intersection))
 		{
@@ -86,6 +86,7 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		// Add emitted light : only on first bounce or specular to avoid double counting
 		if (rayDepth == 0 || specularBounce)
 		{
+			// wOut is the direction of surface radiance at the point of intersection on the emissive primitive
 			if (p_intersection.IsEmissive()) 
 				L += pathThroughput  * p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
 		}

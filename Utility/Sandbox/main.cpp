@@ -170,7 +170,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\kalabsha\\kalabsha12.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellbox.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell.obj");
-		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_glass.obj");
+		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_empty.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_glass.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellsymmetric.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\bunny\\bunny.obj");
 	#elif defined(__PLATFORM_LINUX__)
@@ -216,8 +217,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	// Sponza, et al.
 	//Sphere shape_mesh2(Vector3(0, 7.0f, 0), 2.0f);
 	//Sphere shape_mesh2(Vector3(0.0, 15.0f, 0.0), 0.5f);
-	Sphere shape_mesh2(Vector3(0.0, 16.5f, 0.0), 0.5f);
-	DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+2, 1e+2, 1e+2));
+	//Sphere shape_mesh2(Vector3(0.0, 16.5f, 0.0), 0.5f);
+	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+2, 1e+2, 1e+2));
 	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
 	
 	// crytek sponza
@@ -229,6 +230,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//Sphere shape_mesh2(Vector3(0, 30.0f, 0), 2.0f);
 	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+4, 1e+4, 1e+4));
 	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1000, 1000, 1000));
+	Sphere shape_mesh2(Vector3(0.0, 40.0f, 0.0), 2.0f);
+	DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
 
 	// box sky
 	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
@@ -304,6 +307,28 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//pmv_mesh2.WorldTransform.SetTranslation(Vector3(0.0f, 0.0f, 0.0f));
 	basicSpace.PrimitiveList.PushBack(&pmv_mesh2);
 
+	//----------------------------------------------------------------------------------------------
+	// Add spheres for cornell box tests
+	//----------------------------------------------------------------------------------------------
+	Sphere shape_cornell_metal_sphere(Vector3(-10.0, 7.5f, -5.0), 7.5f);
+	shape_cornell_metal_sphere.ComputeBoundingVolume();
+
+	IMaterial *pMaterial_cornell_metal_sphere = engineKernel.GetMaterialManager()->CreateInstance("Mirror", "metalsphere", "Name=metalsphere;Reflectivity=0.9,0.9,0.9");
+	GeometricPrimitive pmv_cornell_metal_sphere;
+	pmv_cornell_metal_sphere.SetShape(&shape_cornell_metal_sphere);
+	pmv_cornell_metal_sphere.SetMaterial(pMaterial_cornell_metal_sphere);
+	basicSpace.PrimitiveList.PushBack(&pmv_cornell_metal_sphere);
+
+	Sphere shape_cornell_glass_sphere(Vector3(10.0, 7.5f, -5.0), 7.5f);
+	shape_cornell_glass_sphere.ComputeBoundingVolume();
+
+	IMaterial *pMaterial_cornell_glass_sphere = engineKernel.GetMaterialManager()->CreateInstance("Mirror", "glasssphere", "Name=glasssphere;Reflectivity=0.9,0.9,0.9;Absorption=1.0;EtaI=1.0;EtaT=1.52;");
+	GeometricPrimitive pmv_cornell_glass_sphere;
+	pmv_cornell_glass_sphere.SetShape(&shape_cornell_glass_sphere);
+	pmv_cornell_glass_sphere.SetMaterial(pMaterial_cornell_glass_sphere);
+	basicSpace.PrimitiveList.PushBack(&pmv_cornell_glass_sphere);
+
+
 	// Prepare space
 	basicSpace.Initialise();
 	basicSpace.Build();
@@ -336,8 +361,9 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	ImagePPM imagePPM;
 	//int width = 64, height = 64;
 	//int width = 256, height = 256;
-	int width = 512, height = 512;
+	//int width = 512, height = 512;
 	//int width = 640, height = 480;
+	int width = 1280, height = 1024;
 	//int width = 1920, height = 1080;
 	//int width = 1920, height = 1200;
 
@@ -347,7 +373,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
 	#endif
 
-	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 64);
+	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 32);
 	//DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4, 8, 8);
 	renderer.Initialise();
 	
