@@ -41,7 +41,9 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 
 	Spectrum pathThroughput(1.0f), 
 		L(0.0f);
-	
+
+	IMaterial *pMaterial = NULL;
+
 	bool specularBounce = false;
 
 	BxDF::Type bxdfType;
@@ -56,7 +58,7 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 	for (int rayDepth = 0; rayDepth < m_nMaxRayDepth; rayDepth++)
 	{
 		//----------------------------------------------------------------------------------------------
-		// No intersection - light from sky/distant luminaires
+		// No intersection
 		//----------------------------------------------------------------------------------------------
 		if(!p_pScene->Intersects(ray, p_intersection))
 		{
@@ -77,6 +79,17 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 
 			break;
 		}
+		
+		//----------------------------------------------------------------------------------------------
+		// Primitive has no material assigned - terminate
+		//----------------------------------------------------------------------------------------------
+		if (p_intersection.HasMaterial())
+			pMaterial = p_intersection.GetMaterial();
+		else
+			break;
+
+		// Record if bounce is a specular bounce
+		specularBounce = pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular)) != 0; 
 
 		//----------------------------------------------------------------------------------------------
 		// Sample lights for specular / first bounce
@@ -84,57 +97,74 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		wOut = -Vector3::Normalize(ray.Direction);
 
 		// Add emitted light : only on first bounce or specular to avoid double counting
-		if (rayDepth == 0 || specularBounce)
+		if (p_intersection.IsEmissive())
 		{
-			// wOut is the direction of surface radiance at the point of intersection on the emissive primitive
-			if (p_intersection.IsEmissive()) 
+			if (rayDepth == 0 || specularBounce)
+			{
+				// Add contribution from luminaire
+				// -- Captures highlight on specular materials
+				// -- Transmits light through dielectrics
+				// -- Renders light primitive for first bounce intersections
 				L += pathThroughput  * p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
+
+				if (rayDepth == 0) break;
+			}
 		}
 
 		//----------------------------------------------------------------------------------------------
-		// Sample lights (direct lighting)
+		// Sample lights for directl lighting
+		// -- If the currently intersected primitive is a luminaire, do not sample it 
 		//----------------------------------------------------------------------------------------------
-		//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
-		L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+		if (!specularBounce)
+			L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+			//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
 
 		//----------------------------------------------------------------------------------------------
 		// Sample bsdf for next direction
 		//----------------------------------------------------------------------------------------------
-		if (!p_intersection.HasMaterial())
-			break;
-			
 		// Generate random samples
 		sample = p_pScene->GetSampler()->Get2DSample();
 
-		// Convert to surface cs
+		// Convert to surface coordinate system where (0,0,1) represents surface normal
+		// Note: 
+		// -- All Material/BSDF/BxDF operations are carried out in surface coordinates
+		// -- All inputs must be in surface coordinates
+		// -- All outputs are in surface coordinates
 		BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, wOut);
 
-		// Sample new direction
-		Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, wOut, wIn, sample.U, sample.V, &pdf, BxDF::All_Combined, &bxdfType);
+		// Sample new direction in wIn (remember we're tracing backwards)
+		// -- wIn returns the sampled direction
+		// -- pdf returns the reflectivity function's pdf at the sampled point
+		// -- bxdfType returns the type of BxDF sampled
+		Spectrum f = pMaterial->SampleF(p_intersection.Surface, wOut, wIn, sample.U, sample.V, &pdf, BxDF::All_Combined, &bxdfType);
 
+		// If the reflectivity or pdf are zero, terminate path
 		if (f.IsBlack() || pdf == 0.0f)
 			break;
 
-		// Convert to world cs
+		// Convert back to world coordinates
 		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, wIn, wIn);
 
 		//----------------------------------------------------------------------------------------------
-		// Set up new bounce
+		// Adjust path for new bounce
+		// -- ray is moved by a small epsilon in sampled direction
+		// -- ray origin is set to point of intersection
 		//----------------------------------------------------------------------------------------------
 		ray.Min = 1E-4f;
 		ray.Max = Maths::Maximum;
 		ray.Origin = p_intersection.Surface.PointWS + wIn * 1E-4f;
 		ray.Direction = wIn;
-
-		specularBounce = (bxdfType & BxDF::Specular) != 0;
-		pathThroughput *= f * Vector3::Dot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
-		//pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
+		
+		// Update path contribution at current stage
+		//pathThroughput *= f * Vector3::Dot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
+		pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
 
 		//----------------------------------------------------------------------------------------------
-		// Possibly terminate the path
+		// Use Russian roulette to possibly terminate path
 		//----------------------------------------------------------------------------------------------
 		if (rayDepth > 3)
 		{
+			// Base continue probability on luminance approximation
 			float continueProbability = Maths::Min(0.5f, pathThroughput[1]);
 			if (p_pScene->GetSampler()->Get1DSample() > continueProbability)
 				break;
