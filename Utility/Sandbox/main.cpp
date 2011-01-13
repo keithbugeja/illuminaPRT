@@ -236,6 +236,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	// box sky
 	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
 		ShapeFactory::CreateBox<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(Vector3(-5, 14.5, -5), Vector3(5, 15, 5));
+
 	DiffuseAreaLight diffuseLight1(NULL, (IShape*)shape_mesh3.get(), Spectrum(40000, 40000, 40000));
 
 	//----------------------------------------------------------------------------------------------
@@ -313,7 +314,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	Sphere shape_cornell_metal_sphere(Vector3(-10.0, 7.5f, -5.0), 7.5f);
 	shape_cornell_metal_sphere.ComputeBoundingVolume();
 
-	IMaterial *pMaterial_cornell_metal_sphere = engineKernel.GetMaterialManager()->CreateInstance("Mirror", "metalsphere", "Name=metalsphere;Reflectivity=0.9,0.9,0.9");
+	IMaterial *pMaterial_cornell_metal_sphere = engineKernel.GetMaterialManager()->CreateInstance("Matte", "metalsphere", "Name=metalsphere;Reflectivity=0.9,0.9,0.9");
 	GeometricPrimitive pmv_cornell_metal_sphere;
 	pmv_cornell_metal_sphere.SetShape(&shape_cornell_metal_sphere);
 	pmv_cornell_metal_sphere.SetMaterial(pMaterial_cornell_metal_sphere);
@@ -322,7 +323,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	Sphere shape_cornell_glass_sphere(Vector3(10.0, 7.5f, -5.0), 7.5f);
 	shape_cornell_glass_sphere.ComputeBoundingVolume();
 
-	IMaterial *pMaterial_cornell_glass_sphere = engineKernel.GetMaterialManager()->CreateInstance("Mirror", "glasssphere", "Name=glasssphere;Reflectivity=0.9,0.9,0.9;Absorption=1.0;EtaI=1.0;EtaT=1.52;");
+	IMaterial *pMaterial_cornell_glass_sphere = engineKernel.GetMaterialManager()->CreateInstance("Matte", "glasssphere", "Name=glasssphere;Reflectivity=0.9,0.9,0.9;Absorption=1.0;EtaI=1.0;EtaT=1.52;");
 	GeometricPrimitive pmv_cornell_glass_sphere;
 	pmv_cornell_glass_sphere.SetShape(&shape_cornell_glass_sphere);
 	pmv_cornell_glass_sphere.SetMaterial(pMaterial_cornell_glass_sphere);
@@ -359,11 +360,11 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	integrator.Initialise(&scene, &camera);
  
 	ImagePPM imagePPM;
-	//int width = 64, height = 64;
+	int width = 64, height = 64;
 	//int width = 256, height = 256;
 	//int width = 512, height = 512;
 	//int width = 640, height = 480;
-	int width = 1280, height = 1024;
+	//int width = 1280, height = 1024;
 	//int width = 1920, height = 1080;
 	//int width = 1920, height = 1200;
 
@@ -373,7 +374,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
 	#endif
 
-	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 32);
+	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 256);
 	//DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4, 8, 8);
 	renderer.Initialise();
 	
