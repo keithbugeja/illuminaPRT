@@ -52,8 +52,8 @@ Spectrum SpecularTransmission::SampleF(const Spectrum &p_reflectance, const Vect
 	float et2xei2 = (etaT * etaT) / (etaI * etaI);
 
 	// Evaluate Fresnel for dielectric
-	Spectrum fresnel;
-
+	Spectrum fresnel = 0;
+	/*
 	// Compute Fresnel reflectance for dielectric
 	float cosI = Maths::Clamp(cosT, -1.0f, 1.0f);
 
@@ -80,8 +80,11 @@ Spectrum SpecularTransmission::SampleF(const Spectrum &p_reflectance, const Vect
 
 		fresnel = (Rparl * Rparl + Rperp * Rperp) / 2.f;
 	}
-
-	return (Spectrum(1.0) - fresnel) * et2xei2 / Maths::FAbs(p_wIn.Z);
+	*/
+	Spectrum r = Spectrum(0.8) / Maths::FAbs(p_wIn.Z);
+	//std::cout << "Result : " << r.ToString() << std::endl;
+	return r;
+	///*(Spectrum(1.0) - fresnel) * et2xei2*/ 1e-3f / Maths::FAbs(p_wIn.Z);
 	//return p_reflectance * (etaT * etaT) / (etaI * etaI) / Maths::FAbs(p_wIn.Z);
 }
 //----------------------------------------------------------------------------------------------
