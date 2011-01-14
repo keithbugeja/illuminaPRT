@@ -93,6 +93,7 @@ using namespace Illumina::Core;
 
 // TODO:
 // DistributedRenderer should not instantiate MPI - change it to have it passed to the object
+// Scene should provide more than one kind of sampler
 
 void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 {
@@ -150,8 +151,6 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	engineKernel.GetMaterialManager()->RegisterFactory("Mirror", new MirrorMaterialFactory());
 	engineKernel.GetMaterialManager()->RegisterFactory("Glass", new GlassMaterialFactory());
 	engineKernel.GetMaterialManager()->RegisterFactory("Group", new MaterialGroupFactory());
-
-	MatteMaterial material_mesh2(Spectrum(0.75,0.75,0.30));
 
 	//----------------------------------------------------------------------------------------------
 	// Setup scene objects
@@ -230,14 +229,17 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//Sphere shape_mesh2(Vector3(0, 30.0f, 0), 2.0f);
 	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+4, 1e+4, 1e+4));
 	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1000, 1000, 1000));
-	Sphere shape_mesh2(Vector3(0.0, 40.0f, 0.0), 2.0f);
-	DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
+	//Sphere shape_mesh2(Vector3(0.0, 30.0f, 0.0), 5.0f);
+	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
+
+	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
+		ShapeFactory::CreateBox<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(Vector3(-4, 40 - 1E-4, -4), Vector3(4, 40, 4));
+	DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(1e+3, 1e+3, 1e+3));
 
 	// box sky
-	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
-		ShapeFactory::CreateBox<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(Vector3(-5, 14.5, -5), Vector3(5, 15, 5));
-
-	DiffuseAreaLight diffuseLight1(NULL, (IShape*)shape_mesh3.get(), Spectrum(40000, 40000, 40000));
+	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
+	//	ShapeFactory::CreateBox<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(Vector3(-5, 14.5, -5), Vector3(5, 15, 5));
+	//DiffuseAreaLight diffuseLight1(NULL, (IShape*)shape_mesh3.get(), Spectrum(40000, 40000, 40000));
 
 	//----------------------------------------------------------------------------------------------
 	// Compute bounding volumes
@@ -246,8 +248,9 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		std::cout << "Computing bounding volumes..." << std::endl;
 	
 	shape_mesh1->ComputeBoundingVolume();
-	shape_mesh2.ComputeBoundingVolume();
-	shape_mesh3->ComputeBoundingVolume();
+	//shape_mesh2.ComputeBoundingVolume();
+	//shape_mesh3->ComputeBoundingVolume();
+	shape_boxLight->ComputeBoundingVolume();
 	//std::cout << std::endl;
 
 	//----------------------------------------------------------------------------------------------
@@ -269,7 +272,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	boost::timer compileTimer;
 	compileTimer.restart();
 	shape_mesh1->Compile();
-	shape_mesh3->Compile();
+	//shape_mesh3->Compile();
+	shape_boxLight->Compile();
 	
 	if (p_bVerbose)
 		std::cout << "-- Model 01 : [" << fname_model01 << "] compiled in " << compileTimer.elapsed() << " seconds." << std::endl;
@@ -299,14 +303,15 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	////pmv_mesh1.WorldTransform.SetTranslation(Vector3(0.0f, -10.0f, 0.0f));
 	//basicSpace.PrimitiveList.PushBack(&pmv_mesh3);
 
-	EmissivePrimitive pmv_mesh2;
-	pmv_mesh2.SetShape(&shape_mesh2);
-	//pmv_mesh2.SetShape((IShape*)shape_mesh3.get());
-	pmv_mesh2.SetMaterial((IMaterial*)&material_mesh2);
-	//pmv_mesh2.SetLight(&diffuseLight1);
-	pmv_mesh2.SetLight(&diffuseLight2);
-	//pmv_mesh2.WorldTransform.SetTranslation(Vector3(0.0f, 0.0f, 0.0f));
-	basicSpace.PrimitiveList.PushBack(&pmv_mesh2);
+	//EmissivePrimitive pmv_mesh2;
+	//pmv_mesh2.SetShape(&shape_mesh2);
+	////pmv_mesh2.SetShape((IShape*)shape_mesh3.get());
+	//IMaterial *pLightMaterial = engineKernel.GetMaterialManager()->CreateInstance("Matte", "light", "Name=light;Reflectivity=0,0,0;");
+	//pmv_mesh2.SetMaterial(pLightMaterial);
+	////pmv_mesh2.SetLight(&diffuseLight1);
+	//pmv_mesh2.SetLight(&diffuseLight2);
+	////pmv_mesh2.WorldTransform.SetTranslation(Vector3(0.0f, 0.0f, 0.0f));
+	//basicSpace.PrimitiveList.PushBack(&pmv_mesh2);
 
 	//----------------------------------------------------------------------------------------------
 	// Add spheres for cornell box tests
@@ -329,6 +334,11 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	pmv_cornell_glass_sphere.SetMaterial(pMaterial_cornell_glass_sphere);
 	basicSpace.PrimitiveList.PushBack(&pmv_cornell_glass_sphere);
 
+	EmissivePrimitive pmv_cornell_box_light;
+	pmv_cornell_box_light.SetShape((IShape*)shape_boxLight.get());
+	pmv_cornell_box_light.SetMaterial(engineKernel.GetMaterialManager()->CreateInstance("Matte", "boxlight", "Name=light;Reflectivity=0,0,0;"));
+	pmv_cornell_box_light.SetLight(&diffuseBoxLight);
+	basicSpace.PrimitiveList.PushBack(&pmv_cornell_box_light);
 
 	// Prepare space
 	basicSpace.Initialise();
@@ -339,7 +349,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	//JitterSampler sampler;
 	RandomSampler sampler;
-	TentFilter filter;
+	BoxFilter filter;
 
 	//----------------------------------------------------------------------------------------------
 	// Scene creation complete
@@ -351,7 +361,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	Scene scene(&basicSpace, &sampler);
 	//scene.LightList.PushBack(&pointLight);
 	//scene.LightList.PushBack(&diffuseLight1);
-	scene.LightList.PushBack(&diffuseLight2);
+	//scene.LightList.PushBack(&diffuseLight2);
+	scene.LightList.PushBack(&diffuseBoxLight);
  
 	//PathIntegrator integrator(4, 16, 1, false);
 	//PathIntegrator integrator(4, 4, false);
@@ -360,10 +371,11 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	integrator.Initialise(&scene, &camera);
  
 	ImagePPM imagePPM;
-	int width = 64, height = 64;
+	//int width = 64, height = 64;
 	//int width = 256, height = 256;
-	//int width = 512, height = 512;
+	int width = 512, height = 512;
 	//int width = 640, height = 480;
+	//int width = 800, height = 600;
 	//int width = 1280, height = 1024;
 	//int width = 1920, height = 1080;
 	//int width = 1920, height = 1200;
@@ -408,7 +420,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 
 	// Cornell box
 	Vector3 lookFrom(0, 20, 40);
-	Vector3 lookAt(0, 14, 0);
+	Vector3 lookAt(0, 19.5, 0);
 	//Vector3 lookAt(0, 20, 0);
 
 	for (int iteration = 0; iteration < 4e+10; iteration++)

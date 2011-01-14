@@ -83,6 +83,7 @@ Spectrum DiffuseAreaLight::SampleRadiance(const Vector3 &p_point, double p_u, do
 	// Return radiance + part of geometry term
 	return (m_emit * Maths::Max(0.0f, Vector3::Dot(p_wIn, surfaceNormal))) / (Pdf(surfacePoint, p_wIn) * distanceSquared);
 	//return (m_emit * Pdf(surfaceNormal, surfaceOmega) * Maths::Max(0.0f, Vector3::Dot(surfaceOmega, surfaceNormal))) / (Pdf(surfacePoint, surfaceOmega) * distanceSquared);
+	//return (m_emit * Pdf(surfacePoint, p_wIn) * Maths::Max(0.0f, Vector3::Dot(p_wIn, surfaceNormal))) / distanceSquared;
 }
 
 //----------------------------------------------------------------------------------------------
