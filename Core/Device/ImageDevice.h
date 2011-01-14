@@ -33,6 +33,7 @@ namespace Illumina
 			void Set(float p_fX, float p_fY, const Spectrum &p_spectrum);
 
 		protected:
+			void ToneMap(void);
 			float HDRToLDR(float p_fValue);
 		};
 	}

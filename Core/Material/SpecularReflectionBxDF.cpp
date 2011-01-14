@@ -30,7 +30,7 @@ Spectrum SpecularReflection::SampleF(const Spectrum &p_reflectance, const Vector
 	p_wIn.Set(-p_wOut.X, -p_wOut.Y, p_wOut.Z);
 	*p_pdf = 1.f;
 
-	return p_reflectance / Maths::FAbs(p_wOut.Z);
+	return p_reflectance / Maths::FAbs(p_wIn.Z);
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------

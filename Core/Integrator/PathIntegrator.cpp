@@ -109,11 +109,13 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		}
 
 		//----------------------------------------------------------------------------------------------
-		// Sample lights for directl lighting
+		// Sample lights for direct lighting
 		// -- If the currently intersected primitive is a luminaire, do not sample it 
 		//----------------------------------------------------------------------------------------------
-		L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
-		//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+		//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+		if (!pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Reflection), true) &&
+			!pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Transmission), true))
+			L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
 
 		//----------------------------------------------------------------------------------------------
 		// Sample bsdf for next direction
@@ -155,14 +157,19 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		
 		// Update path contribution at current stage
 		pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
-
+		/*
+		if (pathThroughput[0] > 1.0f ||
+			pathThroughput[1] > 1.0f ||
+			pathThroughput[2] > 1.0f)
+			std::cout << "Buzilles with path throughput : " << pathThroughput.ToString() << std::endl;
+		*/
 		//----------------------------------------------------------------------------------------------
 		// Use Russian roulette to possibly terminate path
 		//----------------------------------------------------------------------------------------------
 		if (rayDepth > 3)
 		{
-			// Base continue probability on luminance approximation
-			float continueProbability = Maths::Min(0.5f, pathThroughput[1]);
+			float continueProbability = Maths::Min(0.5f, 0.33f * pathThroughput[0] + pathThroughput[1] + pathThroughput[2]);
+
 			if (p_pScene->GetSampler()->Get1DSample() > continueProbability)
 				break;
 			pathThroughput /= continueProbability;

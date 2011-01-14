@@ -63,64 +63,6 @@ namespace Illumina
 				return WavefrontLoader::LoadMesh<TMesh, TVertex>(p_strMeshFile, p_pEngineKernel, p_pMaterialGroup, false);
 			}
 
-			// Quick and dirty obj loader :
-			// TODO: Make a ModelIO interface and provide an obj implementation
-			template<class TMesh, class TVertex>
-			static boost::shared_ptr<TMesh> LoadMesh2(const std::string& p_strMeshFile)
-			{
-				boost::shared_ptr<TMesh> mesh(new TMesh);
-
-				std::ifstream meshFile;
-
-				// Open image file
-				meshFile.open(p_strMeshFile.c_str());
-
-				// If file couldn't be opened, report error and quit
-				if (!meshFile.is_open())
-				{
-					std::cerr << "ERROR -- Couldn't open file \'" << p_strMeshFile << "\'" << std::endl;
-					exit(-1);
-				}
-
-				float x, y, z;
-				int v1, v2, v3, iDummy;
-				char strLine[256], cDummy;
-				TVertex vertex;
-
-				while(meshFile.getline(strLine, 80))
-				{
-					switch(strLine[0])
-					{
-						case 'v':
-							if (strLine[1] != ' ') break;
-
-							sscanf(strLine, "%c %f %f %f", &cDummy, &x, &y, &z);
-							vertex.Position.Set(x, y, z);
-							vertex.UV.Set(0, 0);
-
-							mesh->AddVertex(vertex);
-							break;
-
-						case 'f':
-							for (char* p = strLine; *p != '\0'; p++) if (*p == '/') *p = 32;
-
-							sscanf(strLine, "%c %d %d %d %d %d %d %d %d %d",
-								&cDummy,
-								&v1, &iDummy, &iDummy,
-								&v2, &iDummy, &iDummy,
-								&v3, &iDummy, &iDummy);
-
-							mesh->AddIndexedTriangle(v1 - 1, v2 - 1, v3 - 1);
-							break;
-
-						default:
-							break;
-					}
-				}
-
-				return mesh;
-			}
-
 			template<class TMesh, class TVertex>
 			static boost::shared_ptr<TMesh> CreateQuad(const Vector3 &p_v0, const Vector3 &p_v1, 
 				const Vector3 &p_v2, const Vector3 &p_v3)

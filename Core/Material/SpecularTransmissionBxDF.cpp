@@ -51,39 +51,11 @@ Spectrum SpecularTransmission::SampleF(const Spectrum &p_reflectance, const Vect
 
 	float et2xei2 = (etaT * etaT) / (etaI * etaI);
 
-	// Evaluate Fresnel for dielectric
-	Spectrum fresnel = 0;
-	/*
-	// Compute Fresnel reflectance for dielectric
-	float cosI = Maths::Clamp(cosT, -1.0f, 1.0f);
+	return p_reflectance * et2xei2 / Maths::FAbs(p_wIn.Z);
 
-	// Compute indices of refraction for dielectric
-	bEntering = cosI > 0;
-
-	if (!bEntering) Maths::Swap(etaI, etaT);
-
-	// Compute _sint_ using Snell's law
-	float sinT = etaI/etaT * Maths::Sqrt(Maths::Max(0.0f, 1.0f - cosI * cosI));
-
-	if (sinT > 1.) 
-	{
-		fresnel = 1.0f;
-	}
-	else 
-	{
-		cosT = Maths::Sqrt(Maths::Max(0.0f, 1.0f - sinT * sinT));
-
-		Spectrum Rparl = ((etaT * cosI) - (etaI * cosT)) /
-						 ((etaT * cosI) + (etaI * cosT));
-		Spectrum Rperp = ((etaI * cosI) - (etaT * cosT)) /
-						 ((etaI * cosI) + (etaT * cosT));
-
-		fresnel = (Rparl * Rparl + Rperp * Rperp) / 2.f;
-	}
-	*/
-	Spectrum r = Spectrum(0.8) / Maths::FAbs(p_wIn.Z);
+	//Spectrum r = Spectrum(0.8) / Maths::FAbs(p_wIn.Z);
 	//std::cout << "Result : " << r.ToString() << std::endl;
-	return r;
+	//return r;
 	///*(Spectrum(1.0) - fresnel) * et2xei2*/ 1e-3f / Maths::FAbs(p_wIn.Z);
 	//return p_reflectance * (etaT * etaT) / (etaI * etaI) / Maths::FAbs(p_wIn.Z);
 }
