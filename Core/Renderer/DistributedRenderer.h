@@ -44,7 +44,6 @@ namespace Illumina
 
 			void Render(void);
 			void RenderDebug(void);
-
 		};
 
 		class Region

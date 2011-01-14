@@ -38,7 +38,7 @@ Spectrum Lambertian::SampleF(const Spectrum &p_reflectance, const Vector3 &p_wOu
 	//if (Maths::ISgn(p_wIn.Z) == Maths::ISgn(p_wOut.Z))
 	//	p_wIn.Z = -p_wIn.Z;
 
-	*p_pdf = Maths::InvPi;
+	*p_pdf = Pdf(p_wOut, p_wIn); // Maths::InvPi;
 
 	return p_reflectance * Maths::InvPi;
 }
@@ -58,7 +58,7 @@ Spectrum Lambertian::F(const Vector3 &p_wOut, const Vector3 &p_wIn)
 //----------------------------------------------------------------------------------------------
 float Lambertian::Pdf(const Vector3 &p_wOut, const Vector3 &p_wIn) 
 {	
-	return 1.0f; 
+	return Maths::FAbs(p_wIn.Z) * Maths::InvPi;
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------

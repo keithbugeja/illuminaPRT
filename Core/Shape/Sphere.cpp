@@ -58,7 +58,6 @@ bool Sphere::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_
 		if (t < p_ray.Min || t > p_ray.Max)
 			return false;
 
-
 		p_surface.SetShape((IShape*)this);
 		p_surface.Distance = (float)t;
 		p_surface.Point = p_ray.PointAlongRay((float)t);
