@@ -169,8 +169,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\kalabsha\\kalabsha12.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellbox.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell.obj");
-		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_empty.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_glass.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_empty.obj");
+		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_glass.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellsymmetric.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\bunny\\bunny.obj");
 	#elif defined(__PLATFORM_LINUX__)
@@ -232,9 +232,14 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//Sphere shape_mesh2(Vector3(0.0, 30.0f, 0.0), 5.0f);
 	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
 
+	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
+	//	ShapeFactory::CreateBox<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(Vector3(-4, 40 - 1E-2, -4), Vector3(4, 40, 4));
+	//DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(1e+3, 1e+3, 1e+3));
+
 	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
-		ShapeFactory::CreateBox<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(Vector3(-4, 40 - 1E-4, -4), Vector3(4, 40, 4));
-	DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(1e+3, 1e+3, 1e+3));
+		ShapeFactory::CreateQuad<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>
+		(Vector3(-6, 40 - 1E-4, -6), Vector3(6, 40 - 1E-4, -6), Vector3(-6, 40 - 1E-4, 6), Vector3(6, 40 - 1E-4, 6));
+	DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(1e+2, 1e+2, 1e+2));
 
 	// box sky
 	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
@@ -316,19 +321,19 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	// Add spheres for cornell box tests
 	//----------------------------------------------------------------------------------------------
-	Sphere shape_cornell_metal_sphere(Vector3(-10.0, 7.5f, -5.0), 7.5f);
+	Sphere shape_cornell_metal_sphere(Vector3(-15.0, 7.5f, -5.0), 7.5f);
 	shape_cornell_metal_sphere.ComputeBoundingVolume();
 
-	IMaterial *pMaterial_cornell_metal_sphere = engineKernel.GetMaterialManager()->CreateInstance("Matte", "metalsphere", "Name=metalsphere;Reflectivity=0.9,0.9,0.9");
+	IMaterial *pMaterial_cornell_metal_sphere = engineKernel.GetMaterialManager()->CreateInstance("Mirror", "metalsphere", "Name=metalsphere;Reflectivity=0.9,0.9,0.9");
 	GeometricPrimitive pmv_cornell_metal_sphere;
 	pmv_cornell_metal_sphere.SetShape(&shape_cornell_metal_sphere);
 	pmv_cornell_metal_sphere.SetMaterial(pMaterial_cornell_metal_sphere);
 	basicSpace.PrimitiveList.PushBack(&pmv_cornell_metal_sphere);
 
-	Sphere shape_cornell_glass_sphere(Vector3(10.0, 7.5f, -5.0), 7.5f);
+	Sphere shape_cornell_glass_sphere(Vector3(15.0, 7.5f, 2.0), 7.5f);
 	shape_cornell_glass_sphere.ComputeBoundingVolume();
 
-	IMaterial *pMaterial_cornell_glass_sphere = engineKernel.GetMaterialManager()->CreateInstance("Matte", "glasssphere", "Name=glasssphere;Reflectivity=0.9,0.9,0.9;Absorption=1.0;EtaI=1.0;EtaT=1.52;");
+	IMaterial *pMaterial_cornell_glass_sphere = engineKernel.GetMaterialManager()->CreateInstance("Mirror", "glasssphere", "Name=glasssphere;Reflectivity=0.3,0.3,0.3;Absorption=1.0;EtaI=1.0;EtaT=1.52;");
 	GeometricPrimitive pmv_cornell_glass_sphere;
 	pmv_cornell_glass_sphere.SetShape(&shape_cornell_glass_sphere);
 	pmv_cornell_glass_sphere.SetMaterial(pMaterial_cornell_glass_sphere);
@@ -386,7 +391,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
 	#endif
 
-	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 256);
+	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4);
 	//DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4, 8, 8);
 	renderer.Initialise();
 	
@@ -419,8 +424,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//Vector3 lookAt(0, 5, 0);
 
 	// Cornell box
-	Vector3 lookFrom(0, 20, 40);
-	Vector3 lookAt(0, 19.5, 0);
+	Vector3 lookFrom(0, 20, 35);
+	Vector3 lookAt(0, 20, 0);
 	//Vector3 lookAt(0, 20, 0);
 
 	for (int iteration = 0; iteration < 4e+10; iteration++)

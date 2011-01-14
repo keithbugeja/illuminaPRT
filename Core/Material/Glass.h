@@ -75,7 +75,8 @@ namespace Illumina
 					return Spectrum(pixel.R, pixel.G, pixel.B);
 				}
 				else
-					return m_reflectivity;
+					return p_bxdfIndex == 0 ? m_reflectivity : Spectrum(1.0f) - m_reflectivity;
+
 			}
 		};
 	}

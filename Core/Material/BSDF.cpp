@@ -78,7 +78,12 @@ void BSDF::SurfaceToWorld(const Transformation &p_worldTransform, const Differen
 		p_out = p_surface.GeometryBasisWS.Project(p_worldTransform.Apply(p_vector));
 }
 //----------------------------------------------------------------------------------------------
-int BSDF::GetBxDFCount(BxDF::Type p_bxdfType)
+bool BSDF::HasBxDFType(BxDF::Type p_bxdfType, bool p_bExactMatch) 
+{ 
+	return BSDF::GetBxDFCount(p_bxdfType, p_bExactMatch) != 0; 
+}
+//----------------------------------------------------------------------------------------------
+int BSDF::GetBxDFCount(BxDF::Type p_bxdfType, bool p_bExactMatch)
 {
 	if (p_bxdfType == BxDF::All_Combined)
 		return m_bxdfList.Size();
@@ -86,13 +91,13 @@ int BSDF::GetBxDFCount(BxDF::Type p_bxdfType)
 	int bxdfCount = 0;
 
 	for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); bxdfIndex++)
-		if (m_bxdfList[bxdfIndex]->IsType(p_bxdfType))
+		if (m_bxdfList[bxdfIndex]->IsType(p_bxdfType, p_bExactMatch))
 			bxdfCount++;
 
 	return bxdfCount;
 }
 //----------------------------------------------------------------------------------------------
-int BSDF::GetBxDF(BxDF::Type p_bxdfType, int p_nBxDFIndex, BxDF **p_pBxDF)
+int BSDF::GetBxDF(BxDF::Type p_bxdfType, int p_nBxDFIndex, BxDF **p_pBxDF, bool p_bExactMatch)
 {
 	if (p_bxdfType == BxDF::All_Combined)
 	{
@@ -102,7 +107,7 @@ int BSDF::GetBxDF(BxDF::Type p_bxdfType, int p_nBxDFIndex, BxDF **p_pBxDF)
 
 	for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); bxdfIndex++)
 	{
-		if (m_bxdfList[bxdfIndex]->IsType(p_bxdfType))
+		if (m_bxdfList[bxdfIndex]->IsType(p_bxdfType, p_bExactMatch))
 		{
 			if (p_nBxDFIndex == 0)
 			{

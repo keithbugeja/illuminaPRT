@@ -24,7 +24,6 @@ namespace Illumina
 			IMaterial(const std::string &p_strName) : BSDF(p_strName) { }
 
 			virtual bool IsComposite(void) const { return false; }
-			virtual bool HasBxDFType(BxDF::Type p_bxdfType) { return BSDF::GetBxDFCount(p_bxdfType) != 0; }
 		};
 	}
 }

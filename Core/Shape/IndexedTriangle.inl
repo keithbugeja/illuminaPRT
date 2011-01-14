@@ -271,20 +271,9 @@ Vector3 IndexedTriangle<TVertex>::SamplePoint(float p_u, float p_v, Vector3 &p_n
 	const Vector3 &p3 = m_pMesh->VertexList[m_nVertexID[2]].Position;
 
 	Vector3 p = b1 * p1 + b2 * p2 + (1.f - b1 - b2) * p3;
-	Vector3 n = Vector3::Cross(p2-p1, p3-p1);
+	Vector3 n = Vector3::Cross(p3-p1, p2-p1);
 	p_normal = Vector3::Normalize(n);
 	return p;
-
-	//const TVertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
-	//	&v1 = m_pMesh->VertexList[m_nVertexID[1]],
-	//	&v2 = m_pMesh->VertexList[m_nVertexID[2]];
-
-	//float temp = Maths::Sqrt(1.0f - p_u);
-	//float beta = 1.0f - temp;
-	//float gamma = temp * p_v;
-
-	//p_normal = Vector3::Cross(v1.Position - v0.Position, v2.Position - v0.Position);
-	//return (1.0f - beta - gamma) * v0.Position + beta * v1.Position + gamma * v2.Position;
 }
 //----------------------------------------------------------------------------------------------
 template<class TVertex>

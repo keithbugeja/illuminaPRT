@@ -26,7 +26,7 @@ namespace Illumina
 		{
 		protected:
 			float m_fArea;
-
+			Random m_random;
 			AxisAlignedBoundingBox m_boundingBox;
 
 		public:

@@ -150,15 +150,40 @@ float ITriangleMesh<T, U>::GetPdf(const Vector3 &p_point) const {
 template<class T, class U>
 Vector3 ITriangleMesh<T, U>::SamplePoint(float p_u, float p_v, Vector3 &p_normal) 
 {
-	int triangleToSample = (int)(TriangleList.Size() * ((p_u + p_v) * 0.5f));
+	// Use CDF (pdf ~ area) to determine which face to use.
+	
+	/*
+	int triangleId = 0;
+	float v = m_random.NextFloat(), 
+		cdf = 0;
+
+	for (size_t idx = 0; idx < TriangleList.Size(); ++idx)
+	{
+		if (v < cdf) 
+		{
+			return TriangleList[idx].SamplePoint(p_u, p_v, p_normal);
+		}
+
+		cdf += TriangleList[idx].GetArea() / m_fArea;
+	}*/
+	
+	int triangleToSample = (int)(TriangleList.Size() * m_random.NextFloat());
 	return TriangleList[triangleToSample].SamplePoint(p_u, p_v, p_normal);
 }
 //----------------------------------------------------------------------------------------------
 template<class T, class U>
 Vector3 ITriangleMesh<T, U>::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) 
 {
-	Vector3 samplePoint = SamplePoint(p_u, p_v, p_normal);
+	Vector3 samplePoint;
 
+	samplePoint = SamplePoint(p_u, p_v, p_normal);
+
+	float cosTheta = Vector3::Dot((samplePoint - p_viewPoint), p_normal);
+
+	if (cosTheta > 0)
+		p_normal = -p_normal;
+
+	/*
 	DifferentialSurface surface;	
 	Ray ray(p_viewPoint, Vector3::Normalize(samplePoint - p_viewPoint), 1e-4f);
 	
@@ -166,10 +191,14 @@ Vector3 ITriangleMesh<T, U>::SamplePoint(const Vector3 &p_viewPoint, float p_u, 
 	{
 		Vector3 surfacePoint = ray.PointAlongRay(surface.Distance);
 		p_normal = surface.GeometryNormal; 
-
+		
+		if (Vector3::Dot((surfacePoint - p_viewPoint), p_normal) > 0)
+			p_normal = -p_normal;
+		
 		return surfacePoint;
 	}
 
+	*/
 	return samplePoint;
 }
 //----------------------------------------------------------------------------------------------
