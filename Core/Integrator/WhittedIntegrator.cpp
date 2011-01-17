@@ -90,7 +90,10 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 			ray.Max = Maths::Maximum;
 
 			if (!f.IsBlack() && pdf != 0.f)
-				Ls = f * Radiance(p_pScene, ray, Intersection(), p_nRayDepth + 1);
+			{
+				Intersection intersection;
+				Ls = f * Radiance(p_pScene, ray, intersection, p_nRayDepth + 1);
+			}
 		}
 		//*/
 		/**/
@@ -120,7 +123,11 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 			ray.Min = 1e-4f;
 			ray.Max = Maths::Maximum;
 
-			Lt = f * Radiance(p_pScene, ray, Intersection(), p_nRayDepth + 1);
+			if (!f.IsBlack() && pdf != 0.f)
+			{
+				Intersection intersection;
+				Lt = f * Radiance(p_pScene, ray, intersection, p_nRayDepth + 1);
+			}
 		}
 	/**/
 		
