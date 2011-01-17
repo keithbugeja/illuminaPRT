@@ -183,8 +183,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		//std::string fname_model01("../../../Resource/Model/kalabsha/kalabsha12.obj");
 		//std::string fname_model01("../../../Resource/Model/cornell/cornellbox.obj");
 		//std::string fname_model01("../../../Resource/Model/cornell/cornell.obj");
-		//std::string fname_model01("../../../Resource/Model/cornell/cornell_empty.obj");
-		std::string fname_model01("../../../Resource/Model/cornell/cornell_glass.obj");
+		std::string fname_model01("../../../Resource/Model/cornell/cornell_empty.obj");
+		//std::string fname_model01("../../../Resource/Model/cornell/cornell_glass.obj");
 		//std::string fname_model01("../../../Resource/Model/cornell/cornellsymmetric.obj");
 		//std::string fname_model01("../../../Resource/Model/bunny/bunny.obj");
 	#endif
@@ -389,10 +389,10 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//int width = 64, height = 64;
 	//int width = 256, height = 256;
 	//int width = 512, height = 384;
-	//int width = 512, height = 512;
+	int width = 512, height = 512;
 	//int width = 640, height = 480;
 	//int width = 800, height = 600;
-	int width = 1024, height = 1024;
+	//int width = 1024, height = 1024;
 	//int width = 1280, height = 1024;
 	//int width = 1920, height = 1080;
 	//int width = 1920, height = 1200;
@@ -403,8 +403,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
 	#endif
 
-	//BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4);
-	DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 64, 8, 8);
+	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4096);
+	//DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 64, 8, 8);
 	renderer.Initialise();
 	
 	if (p_bVerbose)
@@ -439,7 +439,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//Vector3 lookFrom(20, 20, 40);
 	camera.SetFieldOfView(50, 1.0f);
 
-	Vector3 lookFrom(0, 20, 80);
+	Vector3 lookFrom(0, 20, 70);
 	Vector3 lookAt(0, 20, 0);
 
 	alpha = Maths::PiHalf;
@@ -447,7 +447,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	for (int iteration = 0; iteration < 4e+10; iteration++)
 	{
 		renderTimer.restart();
-		alpha += 0.05f;
+		//alpha += 0.05f;
 	 
 		camera.MoveTo(lookFrom);
 		camera.MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
