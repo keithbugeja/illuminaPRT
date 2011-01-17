@@ -106,9 +106,10 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	// Setup camera
 	//----------------------------------------------------------------------------------------------
-	PerspectiveCamera camera(
-		Vector3(-20.0, 10.0, -20.0), Vector3(1.0f, -0.5f, 1.0f), Vector3::UnitYPos,
-		-2.0f, 2.0f, -2.0f, 2.0f, 2.0f);
+	//PerspectiveCamera camera(
+		ThinLensCamera camera(
+		Vector3(-20.0, 10.0, -20.0), Vector3(1.0f, -0.5f, 1.0f), Vector3::UnitYPos, 
+		0.0f, -1.3f, 1.3f, -1.f, 1.f, 1.0f);
 
 	if (p_bVerbose)
 		std::cout << "Setting up camera : [" << camera.ToString() << "]" << std::endl;
@@ -169,18 +170,22 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\kalabsha\\kalabsha12.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellbox.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_empty.obj");
-		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_glass.obj");
+		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_empty.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_glass.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellsymmetric.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\bunny\\bunny.obj");
 	#elif defined(__PLATFORM_LINUX__)
 		//std::string fname_model01("../../../Resource/Model/tests/testAxes.obj");
-		std::string fname_model01("../../../Resource/Model/sibenik/sibenik.obj");
+		//std::string fname_model01("../../../Resource/Model/sibenik/sibenik.obj");
 		//std::string fname_model01("../../../Resource/Model/sponza/original/sponza.obj");
 		//std::string fname_model01("../../../Resource/Model/sponza/clean/sponza_clean.obj");
 		//std::string fname_model01("../../../Resource/Model/sponza/crytek/sponza.obj");
 		//std::string fname_model01("../../../Resource/Model/kalabsha/kalabsha12.obj");
 		//std::string fname_model01("../../../Resource/Model/cornell/cornellbox.obj");
+		//std::string fname_model01("../../../Resource/Model/cornell/cornell.obj");
+		//std::string fname_model01("../../../Resource/Model/cornell/cornell_empty.obj");
+		std::string fname_model01("../../../Resource/Model/cornell/cornell_glass.obj");
+		//std::string fname_model01("../../../Resource/Model/cornell/cornellsymmetric.obj");
 		//std::string fname_model01("../../../Resource/Model/bunny/bunny.obj");
 	#endif
 
@@ -239,9 +244,13 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
 		ShapeFactory::CreateQuad<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>
 		(Vector3(-6, 40 - 1E-4, -6), Vector3(6, 40 - 1E-4, -6), Vector3(-6, 40 - 1E-4, 6), Vector3(6, 40 - 1E-4, 6));
-	DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(1e+2, 1e+2, 1e+2));
+	DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(4.5e+2, 4.5e+2, 4.5e+2));
 
 	// box sky
+	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
+	//	ShapeFactory::CreateQuad<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>
+	//	(Vector3(-6, 15 - 1E-4, -6), Vector3(6, 15 - 1E-4, -6), Vector3(-6, 15 - 1E-4, 6), Vector3(6, 15 - 1E-4, 6));
+	//DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(1.5e+3, 1.5e+3, 1.5e+3));
 	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
 	//	ShapeFactory::CreateBox<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(Vector3(-5, 14.5, -5), Vector3(5, 15, 5));
 	//DiffuseAreaLight diffuseLight1(NULL, (IShape*)shape_mesh3.get(), Spectrum(40000, 40000, 40000));
@@ -321,19 +330,20 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	// Add spheres for cornell box tests
 	//----------------------------------------------------------------------------------------------
-	Sphere shape_cornell_metal_sphere(Vector3(-15.0, 7.5f, -5.0), 7.5f);
+	Sphere shape_cornell_metal_sphere(Vector3(12.0, 7.5f, -5.0), 7.5f);
 	shape_cornell_metal_sphere.ComputeBoundingVolume();
 
-	IMaterial *pMaterial_cornell_metal_sphere = engineKernel.GetMaterialManager()->CreateInstance("Mirror", "metalsphere", "Name=metalsphere;Reflectivity=0.9,0.9,0.9");
+	IMaterial *pMaterial_cornell_metal_sphere = engineKernel.GetMaterialManager()->CreateInstance("Mirror", "metalsphere", "Name=metalsphere;Reflectivity=0.9,0.9,0.9;Absorption=1.0;EtaI=1.0;EtaT=1.55;");
 	GeometricPrimitive pmv_cornell_metal_sphere;
 	pmv_cornell_metal_sphere.SetShape(&shape_cornell_metal_sphere);
 	pmv_cornell_metal_sphere.SetMaterial(pMaterial_cornell_metal_sphere);
 	basicSpace.PrimitiveList.PushBack(&pmv_cornell_metal_sphere);
 
-	Sphere shape_cornell_glass_sphere(Vector3(15.0, 7.5f, 2.0), 7.5f);
+	Sphere shape_cornell_glass_sphere(Vector3(-15.0, 20.0f, 2.0), 7.5f);
+	//Sphere shape_cornell_glass_sphere(Vector3(10.0, 7.5f, 2.0), 7.5f);
 	shape_cornell_glass_sphere.ComputeBoundingVolume();
 
-	IMaterial *pMaterial_cornell_glass_sphere = engineKernel.GetMaterialManager()->CreateInstance("Mirror", "glasssphere", "Name=glasssphere;Reflectivity=0.3,0.3,0.3;Absorption=1.0;EtaI=1.0;EtaT=1.52;");
+	IMaterial *pMaterial_cornell_glass_sphere = engineKernel.GetMaterialManager()->CreateInstance("Glass", "glasssphere", "Name=glasssphere;Reflectivity=0.92,0.92,0.92;Absorption=1.0;EtaI=1.0;EtaT=1.55;");
 	GeometricPrimitive pmv_cornell_glass_sphere;
 	pmv_cornell_glass_sphere.SetShape(&shape_cornell_glass_sphere);
 	pmv_cornell_glass_sphere.SetMaterial(pMaterial_cornell_glass_sphere);
@@ -371,16 +381,18 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
  
 	//PathIntegrator integrator(4, 16, 1, false);
 	//PathIntegrator integrator(4, 4, false);
-	PathIntegrator integrator(4, 1, false);
-	//WhittedIntegrator integrator(4, 1);
+	PathIntegrator integrator(6, 1, false);
+	//WhittedIntegrator integrator(6, 1);
 	integrator.Initialise(&scene, &camera);
  
 	ImagePPM imagePPM;
 	//int width = 64, height = 64;
 	//int width = 256, height = 256;
-	int width = 512, height = 512;
+	//int width = 512, height = 384;
+	//int width = 512, height = 512;
 	//int width = 640, height = 480;
 	//int width = 800, height = 600;
+	int width = 1024, height = 1024;
 	//int width = 1280, height = 1024;
 	//int width = 1920, height = 1080;
 	//int width = 1920, height = 1200;
@@ -391,8 +403,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
 	#endif
 
-	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4);
-	//DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4, 8, 8);
+	//BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4);
+	DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 64, 8, 8);
 	renderer.Initialise();
 	
 	if (p_bVerbose)
@@ -424,9 +436,13 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//Vector3 lookAt(0, 5, 0);
 
 	// Cornell box
-	Vector3 lookFrom(0, 20, 35);
+	//Vector3 lookFrom(20, 20, 40);
+	camera.SetFieldOfView(50, 1.0f);
+
+	Vector3 lookFrom(0, 20, 80);
 	Vector3 lookAt(0, 20, 0);
-	//Vector3 lookAt(0, 20, 0);
+
+	alpha = Maths::PiHalf;
 
 	for (int iteration = 0; iteration < 4e+10; iteration++)
 	{
@@ -434,7 +450,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		alpha += 0.05f;
 	 
 		camera.MoveTo(lookFrom);
-		//camera.MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
+		camera.MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
 		camera.LookAt(lookAt);
 	 
 		// Here we rebuild the AS
@@ -471,7 +487,7 @@ int main()
 	//SimplePacketTracer(nCores);
 	//TileBasedTracer(nCores);
 
-	RayTracer(nCores / 2, true);
+	RayTracer(nCores / 2, false);
 
 	//std::cout << "Complete in " << Platform::GetTime() << " seconds " << std::endl;
 

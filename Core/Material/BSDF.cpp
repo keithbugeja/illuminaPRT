@@ -59,7 +59,8 @@ void BSDF::WorldToSurface(const Transformation &p_worldTransform, const Differen
 				  Vector3::Dot(p_surface.GeometryBasisWS.W, p_vector));
 	}
 
-	p_out = p_worldTransform.ApplyInverse(p_out);
+	if (!p_worldTransform.IsIdentity()) 
+		p_out = p_worldTransform.ApplyInverse(p_out);
 }
 //----------------------------------------------------------------------------------------------
 void BSDF::SurfaceToLocal(const DifferentialSurface &p_surface, const Vector3 &p_vector, Vector3 &p_out, bool p_bUseShadingNormals)
@@ -72,15 +73,25 @@ void BSDF::SurfaceToLocal(const DifferentialSurface &p_surface, const Vector3 &p
 //----------------------------------------------------------------------------------------------
 void BSDF::SurfaceToWorld(const Transformation &p_worldTransform, const DifferentialSurface &p_surface, const Vector3 &p_vector, Vector3 &p_out, bool p_bUseShadingNormals)
 {
-	if (p_bUseShadingNormals)
-		p_out = p_surface.ShadingBasisWS.Project(p_worldTransform.Apply(p_vector));
+	if (p_worldTransform.IsIdentity())
+	{
+		if (p_bUseShadingNormals)
+			p_out = p_surface.ShadingBasisWS.Project(p_vector);
+		else
+			p_out = p_surface.GeometryBasisWS.Project(p_vector);
+	}
 	else
-		p_out = p_surface.GeometryBasisWS.Project(p_worldTransform.Apply(p_vector));
+	{
+		if (p_bUseShadingNormals)
+			p_out = p_surface.ShadingBasisWS.Project(p_worldTransform.Apply(p_vector));
+		else
+			p_out = p_surface.GeometryBasisWS.Project(p_worldTransform.Apply(p_vector));
+	}
 }
 //----------------------------------------------------------------------------------------------
 bool BSDF::HasBxDFType(BxDF::Type p_bxdfType, bool p_bExactMatch) 
 { 
-	return BSDF::GetBxDFCount(p_bxdfType, p_bExactMatch) != 0; 
+	return BSDF::GetBxDFCount(p_bxdfType, p_bExactMatch) > 0; 
 }
 //----------------------------------------------------------------------------------------------
 int BSDF::GetBxDFCount(BxDF::Type p_bxdfType, bool p_bExactMatch)

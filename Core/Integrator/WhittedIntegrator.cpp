@@ -36,62 +36,97 @@ bool WhittedIntegrator::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
 {
-	VisibilityQuery visibilityQuery(p_pScene);
-
-	Spectrum pathThroughput(1.0f), 
-		L(0.0f);
-	
-	bool specularBounce = false;
-
-	BxDF::Type bxdfType;
-
-	Vector3 wIn, wOut; 
-	Vector2 sample;
+	return Radiance(p_pScene, p_ray, p_intersection, 0);
+}
+//----------------------------------------------------------------------------------------------
+Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, int p_nRayDepth)
+{
+	if (p_nRayDepth > m_nMaxRayDepth) 
+		return 0;
 
 	Ray ray(p_ray); 
 
-	float pdf;
-	L=0;
-	Spectrum Ld;
-	Spectrum pc = 1.0;
-
-	for (int rayDepth = 0; rayDepth < m_nMaxRayDepth; rayDepth++)
+	if(p_pScene->Intersects(ray, p_intersection))
 	{
-		if(p_pScene->Intersects(ray, p_intersection))
+		VisibilityQuery visibilityQuery(p_pScene);
+
+		Spectrum Ls(0.0f), Lt(0.0f), Ld(0.0f);
+	
+		Vector3 wIn, 
+			wOut = -ray.Direction; 
+		
+		Vector2 sample;
+		BxDF::Type bxdfType;
+		float pdf;
+
+		IMaterial *pMaterial = p_intersection.GetMaterial();
+
+		if (p_intersection.IsEmissive() && (p_nRayDepth == 0 || pMaterial->HasBxDFType(BxDF::Specular))) return p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
+
+		// Diffuse next
+		if (!pMaterial->HasBxDFType(BxDF::Specular))
+			Ld = SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), 1);
+
+		bool IsSpecularReflective = false,
+			IsSpecularTransmissive = false;
+
+		// Reflection
+		/**/
+		if (pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Reflection)))
 		{
-			VisibilityQuery query(p_pScene);
-
-			Ld = 0;
-
-			for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); lightIndex++)
-			{
-				p_pScene->LightList[lightIndex]->SampleRadiance(p_intersection.Surface.PointWS, 0.5, 0.5, wIn, query);
-				
-				if (!query.IsOccluded())
-					Ld += Maths::Max(0, Vector3::Dot(p_intersection.Surface.GeometryBasisWS.W, -wIn));
-			}
-
-			if (!p_intersection.HasMaterial())
-				break;
+			IsSpecularReflective = true;
 
 			sample = p_pScene->GetSampler()->Get2DSample();
+			
+			Vector3 i,o;
 
-			BxDF::Type bxdfType;
-			wOut = -ray.Direction;
-			Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, wOut, wIn, sample.X, sample.Y, &pdf, BxDF::All_Combined, &bxdfType);
+			BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, o);
+			Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, o, i, sample.U, sample.V, &pdf, BxDF::Type(BxDF::Reflection), &bxdfType);
+			BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, i, wIn);
 
-			L = f ;//+= f;//f * Ld;
+			ray.Origin = p_intersection.Surface.PointWS;// + p_intersection.Surface.GeometryBasisWS.W * 1E-6f;
+			ray.Direction = wIn;
+			ray.Min = 1e-4f;
+			ray.Max = Maths::Maximum;
 
-			if (bxdfType & BxDF::Specular == 0)
-				break;
+			if (!f.IsBlack() && pdf != 0.f)
+				Ls = f * Radiance(p_pScene, ray, Intersection(), p_nRayDepth + 1);
+		}
+		//*/
+		/**/
+		// Refraction
+	/**/
+		if (pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Transmission)))
+		{
+			IsSpecularTransmissive = true;
+
+			sample = p_pScene->GetSampler()->Get2DSample();
+			
+			Vector3 i,o;
+
+			BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, o);
+			Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, o, i, sample.U, sample.V, &pdf, BxDF::Type(BxDF::Transmission), &bxdfType);
+			//i = -o;
+			//Spectrum f(1,0,0);
+			//pdf = 1.0f;
+			BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, i, wIn);
+
+			Vector3 j = -wOut;
+
+			//wIn = -wOut;
 
 			ray.Direction = wIn;
-			ray.Origin = p_intersection.Surface.PointWS + wIn * 1E-4f;
-			ray.Min = 1E-4f;
+			ray.Origin = p_intersection.Surface.PointWS; // + wIn * 1E-6f;
+			ray.Min = 1e-4f;
 			ray.Max = Maths::Maximum;
+
+			Lt = f * Radiance(p_pScene, ray, Intersection(), p_nRayDepth + 1);
 		}
+	/**/
+		
+		return Ld + Ls + Lt;
 	}
 
-	return L;
+	return 0.0f;
 }
 //----------------------------------------------------------------------------------------------

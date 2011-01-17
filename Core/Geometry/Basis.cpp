@@ -4,6 +4,7 @@
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
+#include <iostream>
 #include "Geometry/Basis.h"
 
 using namespace Illumina::Core;
@@ -83,6 +84,30 @@ void OrthonormalBasis::InitFromV(const Vector3 &p_v)
 //----------------------------------------------------------------------------------------------
 void OrthonormalBasis::InitFromW(const Vector3 &p_w)
 {
+	// Using Gram-Schmidt
+	W = Vector3::Normalize(p_w);
+	V = Vector3::UnitYPos - Vector3::Dot(Vector3::UnitYPos, W) * W;
+
+	// Do we choose another axis?
+	if (V.LengthSquared() <= 1e-4f)
+	{
+		V = Vector3::Cross(Vector3::UnitXPos, W);
+		V = V - Vector3::Dot(V, W) * W;
+	}
+
+	V.Normalize();
+
+	U = Vector3::Cross(V, W);
+
+	//if (Maths::FAbs(U.Dot(V)) > 1e-5f || 
+	//	Maths::FAbs(U.Dot(W)) > 1e-5f  || 
+	//	Maths::FAbs(V.Dot(W)) > 1e-5f)
+	//{
+	//	std::cout<<"Basis not orthonormal!"<<std::endl
+	//		<<ToString()<<std::endl;
+	//}
+
+	/*
 	W = Vector3::Normalize(p_w);
 	U = Vector3::Cross(W, Vector3::UnitYPos);
 
@@ -90,7 +115,9 @@ void OrthonormalBasis::InitFromW(const Vector3 &p_w)
 		U = Vector3::Cross(W, Vector3::UnitXPos);
 
 	V = Vector3::Cross(W, U);
-   
+	V.Normalize();
+	*/
+
 	/*
 	W = Vector3::Normalize(p_w);
 	V = Vector3::Cross(W, Vector3::UnitXPos);

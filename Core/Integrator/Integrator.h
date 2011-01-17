@@ -20,7 +20,7 @@ namespace Illumina
 
 			virtual Spectrum Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection) = 0;
 
-			static Spectrum EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, BSDF *p_pBsdf, 
+			static Spectrum EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, IMaterial *p_pMaterial, 
 				const Intersection &p_intersection, const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wOut, 
 				Vector3 &p_wIn, float p_u, float p_v);
 

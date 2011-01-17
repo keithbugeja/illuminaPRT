@@ -47,7 +47,7 @@ namespace Illumina
 
 			BxDF::Type GetType(void) const { return m_bxdfType; }
 			bool IsType(BxDF::Type p_bxdfType, bool p_bExactMatch = false) const { 
-				return p_bExactMatch ? (p_bxdfType & m_bxdfType) == p_bxdfType : (p_bxdfType & m_bxdfType) != 0; 
+				return p_bExactMatch ? (int)(p_bxdfType & m_bxdfType) == (int)p_bxdfType : (int)(p_bxdfType & m_bxdfType) != 0; 
 			}
 
 			virtual Spectrum Rho(const Spectrum &p_reflectance, const Vector3 &p_wOut, int p_nSampleSize = 1, float *p_pSampleList = NULL) { return 0.0f; }

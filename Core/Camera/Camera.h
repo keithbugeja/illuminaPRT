@@ -25,8 +25,12 @@ namespace Illumina
 			float m_d;
 			float m_u0, m_u1, m_v0, m_v1;
 
+			float m_fov,
+				m_aspect;			
+
 		public:
 			void SetProjection(float p_fLeft, float p_fRight, float p_fTop, float p_fBottom, float p_fDistance);
+			void SetFieldOfView(float p_fDegrees, float p_fAspectRatio);
 
 			void Move(const Vector3 &p_displacement);
 			void MoveTo(const Vector3 &p_position);

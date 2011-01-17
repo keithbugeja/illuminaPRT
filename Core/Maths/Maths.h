@@ -149,7 +149,7 @@ namespace Illumina
 				return 3*t*t - 2*t*t*t;
 			}
 
-			template<class type> inline static void Swap(type p_fValue1, type p_fValue2)
+			template<class type> inline static void Swap(type &p_fValue1, type &p_fValue2)
 			{
 				type temp = p_fValue1;
 				p_fValue1 = p_fValue2;
