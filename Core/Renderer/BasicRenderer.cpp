@@ -55,7 +55,7 @@ void BasicRenderer::Render(void)
 
 			for (int sample = 0; sample < m_nSampleCount; sample++)
 			{
-				Ray ray = m_pCamera->GetRay(((float)x) / width, ((float)y) / height, pSampleBuffer[sample].U, pSampleBuffer[sample].V);
+				Ray ray = m_pCamera->GetRay((x + pSampleBuffer[sample].U) / width, (y + pSampleBuffer[sample].V) / height, pSampleBuffer[sample].U, pSampleBuffer[sample].V);
 				Li += m_pIntegrator->Radiance(m_pScene, ray, intersection);
 			}
 

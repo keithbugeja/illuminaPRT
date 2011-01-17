@@ -48,7 +48,8 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 
 	BxDF::Type bxdfType;
 
-	Vector3 wIn, wOut; 
+	Vector3 wIn, wOut,
+		wInLocal, wOutLocal; 
 	Vector2 sample;
 
 	Ray ray(p_ray); 
@@ -102,7 +103,7 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 				// -- Captures highlight on specular materials
 				// -- Transmits light through dielectrics
 				// -- Renders light primitive for first bounce intersections
-				L += pathThroughput  * p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
+				L += pathThroughput * p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
 
 				//if (rayDepth == 0) break;
 			}
@@ -113,10 +114,9 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		// -- If the currently intersected primitive is a luminaire, do not sample it 
 		//----------------------------------------------------------------------------------------------
 		//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
-		if (!pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Reflection), true) &&
-			!pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Transmission), true))
+		if (!specularBounce)
 			L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
-
+			
 		//----------------------------------------------------------------------------------------------
 		// Sample bsdf for next direction
 		//----------------------------------------------------------------------------------------------
@@ -128,22 +128,37 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		// -- All Material/BSDF/BxDF operations are carried out in surface coordinates
 		// -- All inputs must be in surface coordinates
 		// -- All outputs are in surface coordinates
-		BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, wOut);
+		Vector3 test1, test2;
+
+		BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, wOutLocal);
+		BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, test1);
 
 		// Sample new direction in wIn (remember we're tracing backwards)
 		// -- wIn returns the sampled direction
 		// -- pdf returns the reflectivity function's pdf at the sampled point
 		// -- bxdfType returns the type of BxDF sampled
-		Spectrum f = pMaterial->SampleF(p_intersection.Surface, wOut, wIn, sample.U, sample.V, &pdf, BxDF::All_Combined, &bxdfType);
+		Spectrum f = pMaterial->SampleF(p_intersection.Surface, wOutLocal, wInLocal, sample.U, sample.V, &pdf, BxDF::All_Combined, &bxdfType);
 
 		// If the reflectivity or pdf are zero, terminate path
 		if (f.IsBlack() || pdf == 0.0f) break;
 
 		// Record if bounce is a specular bounce
-		specularBounce = pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular)); 
+		specularBounce = ((int)(bxdfType & BxDF::Specular)) != 0;
 
 		// Convert back to world coordinates
-		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, wIn, wIn);
+		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, wInLocal, wIn);
+		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, wOutLocal, test2);
+
+		//if (wOut != test2)
+		//{
+		//	OrthonormalBasis b;
+		//	b.InitFromW(p_intersection.Surface.GeometryBasisWS.W);
+
+		//	std::cout << p_intersection.GetMaterial()->GetName() << std::endl;
+		//	std::cout << "Before : " << wOut.ToString() << ", after : " << test2.ToString() << std::endl
+		//		<< "Transform :" << p_intersection.Surface.GeometryBasisWS.ToString() << std::endl 
+		//		<< "Redone :" << b.ToString() << std::endl;
+		//}
 
 		//----------------------------------------------------------------------------------------------
 		// Adjust path for new bounce
@@ -157,12 +172,7 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		
 		// Update path contribution at current stage
 		pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
-		/*
-		if (pathThroughput[0] > 1.0f ||
-			pathThroughput[1] > 1.0f ||
-			pathThroughput[2] > 1.0f)
-			std::cout << "Buzilles with path throughput : " << pathThroughput.ToString() << std::endl;
-		*/
+
 		//----------------------------------------------------------------------------------------------
 		// Use Russian roulette to possibly terminate path
 		//----------------------------------------------------------------------------------------------

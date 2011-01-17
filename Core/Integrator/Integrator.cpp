@@ -13,11 +13,11 @@
 #include "Sampler/Sampler.h"
 #include "Staging/Visibility.h"
 #include "Staging/Scene.h"
-#include "Material/BSDF.h"
+#include "Material/Material.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, BSDF *p_pBSDF,
+Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, IMaterial *p_pMaterial,
 	const Intersection &p_intersection, const Vector3 &p_point, const Vector3 &p_normal, 
 	const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v)
 { 
@@ -30,7 +30,7 @@ Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, 
 
 	p_wIn = -p_wIn;
 
-	if (p_pBSDF == NULL)
+	if (p_pMaterial == NULL)
 		return Ls * Maths::Max(0, Vector3::Dot(p_wIn, p_normal));
 		//return Ls * Maths::Max(0, Vector3::AbsDot(p_wIn, p_normal));
 
@@ -39,8 +39,8 @@ Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, 
 	BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, p_wOut, bsdfOut);
 	BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, p_wIn, bsdfIn);
 
-	return Ls * Maths::Max(0, Vector3::Dot(p_wIn, p_normal)) * p_pBSDF->F(p_intersection.Surface, bsdfOut, bsdfIn);
-	//return Ls * Vector3::AbsDot(p_wIn, p_normal) * p_pBSDF->F(p_intersection.Surface, bsdfOut, bsdfIn);
+	return Ls * Maths::Max(0, Vector3::Dot(p_wIn, p_normal)) * p_pMaterial->F(p_intersection.Surface, bsdfOut, bsdfIn);
+	//return Ls * Maths::Max(0, Vector3::AbsDot(p_wIn, p_normal)) * p_pMaterial->F(p_intersection.Surface, bsdfOut, bsdfIn);
 }
 //----------------------------------------------------------------------------------------------
 Spectrum IIntegrator::SampleAllLights(Scene *p_pScene, const Intersection &p_intersection,
@@ -59,8 +59,8 @@ Spectrum IIntegrator::SampleAllLights(Scene *p_pScene, const Intersection &p_int
 	Vector3 wIn;
 	Vector2 *lightSample = new Vector2[p_nSampleCount];
 
-	BSDF *pBSDF = p_intersection.HasMaterial() 
-		? (BSDF*)p_intersection.GetMaterial()
+	IMaterial *pBSDF = p_intersection.HasMaterial() 
+		? p_intersection.GetMaterial()
 		: NULL;
 
 	// Sample all lights in scene
