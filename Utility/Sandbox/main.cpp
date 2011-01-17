@@ -166,11 +166,11 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sibenik\\sibenik.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\original\\sponza.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\clean\\sponza_clean.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\crytek\\sponza.obj");
+		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\crytek\\sponza.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\kalabsha\\kalabsha12.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellbox.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell.obj");
-		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_empty.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_empty.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_glass.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellsymmetric.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\bunny\\bunny.obj");
@@ -229,6 +229,10 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//Sphere shape_mesh2(Vector3(0.0, 1700.0f, 0.0), 100.0f);
 	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+7, 1e+7, 1e+7));
 	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+7, 1e+7, 1e+7));
+	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
+		ShapeFactory::CreateQuad<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>
+		(Vector3(-100, 1700, -100), Vector3(100, 1700, -100), Vector3(-100, 1700, 100), Vector3(100, 1700, 100));
+	DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(4.5e+3, 4.5e+3, 4.5e+3));
 
 	// Cornell Box
 	//Sphere shape_mesh2(Vector3(0, 30.0f, 0), 2.0f);
@@ -241,10 +245,10 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//	ShapeFactory::CreateBox<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(Vector3(-4, 40 - 1E-2, -4), Vector3(4, 40, 4));
 	//DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(1e+3, 1e+3, 1e+3));
 
-	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
-		ShapeFactory::CreateQuad<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>
-		(Vector3(-6, 40 - 1E-4, -6), Vector3(6, 40 - 1E-4, -6), Vector3(-6, 40 - 1E-4, 6), Vector3(6, 40 - 1E-4, 6));
-	DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(4.5e+2, 4.5e+2, 4.5e+2));
+	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
+	//	ShapeFactory::CreateQuad<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>
+	//	(Vector3(-6, 40 - 1E-4, -6), Vector3(6, 40 - 1E-4, -6), Vector3(-6, 40 - 1E-4, 6), Vector3(6, 40 - 1E-4, 6));
+	//DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(4.5e+2, 4.5e+2, 4.5e+2));
 
 	// box sky
 	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
@@ -337,7 +341,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	GeometricPrimitive pmv_cornell_metal_sphere;
 	pmv_cornell_metal_sphere.SetShape(&shape_cornell_metal_sphere);
 	pmv_cornell_metal_sphere.SetMaterial(pMaterial_cornell_metal_sphere);
-	basicSpace.PrimitiveList.PushBack(&pmv_cornell_metal_sphere);
+	//basicSpace.PrimitiveList.PushBack(&pmv_cornell_metal_sphere);
 
 	Sphere shape_cornell_glass_sphere(Vector3(-15.0, 20.0f, 2.0), 7.5f);
 	//Sphere shape_cornell_glass_sphere(Vector3(10.0, 7.5f, 2.0), 7.5f);
@@ -347,7 +351,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	GeometricPrimitive pmv_cornell_glass_sphere;
 	pmv_cornell_glass_sphere.SetShape(&shape_cornell_glass_sphere);
 	pmv_cornell_glass_sphere.SetMaterial(pMaterial_cornell_glass_sphere);
-	basicSpace.PrimitiveList.PushBack(&pmv_cornell_glass_sphere);
+	//basicSpace.PrimitiveList.PushBack(&pmv_cornell_glass_sphere);
 
 	EmissivePrimitive pmv_cornell_box_light;
 	pmv_cornell_box_light.SetShape((IShape*)shape_boxLight.get());
@@ -381,7 +385,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
  
 	//PathIntegrator integrator(4, 16, 1, false);
 	//PathIntegrator integrator(4, 4, false);
-	PathIntegrator integrator(6, 1, false);
+	PathIntegrator integrator(4, 1, false);
 	//WhittedIntegrator integrator(6, 1);
 	integrator.Initialise(&scene, &camera);
  
@@ -403,8 +407,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
 	#endif
 
-	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4096);
-	//DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 64, 8, 8);
+	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 32);
+	//DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 32, 8, 8);
 	renderer.Initialise();
 	
 	if (p_bVerbose)
@@ -424,8 +428,10 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 
 	// Crytek sponza
 	//Vector3 lookFrom(-1000, 750, -400);
-	//Vector3 lookFrom(-400, 100, -400);
-	//Vecotr3 lookAt(0, 25, 0);
+	Vector3 lookFrom(-800, 700, -400);
+	//Vector3 lookFrom(-900, 1600, -600);
+	//Vector3 lookFrom(-900, 1600, -600);
+	Vector3 lookAt(0, 400, 0);
 		
 	// Cornell box
 	//cDistX = -30, cDistY = 30, cDistZ = -10;
@@ -436,13 +442,11 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//Vector3 lookAt(0, 5, 0);
 
 	// Cornell box
-	//Vector3 lookFrom(20, 20, 40);
-	camera.SetFieldOfView(50, 1.0f);
+	//Vector3 lookFrom(0, 20, 70);
+	//Vector3 lookAt(0, 20, 0);
 
-	Vector3 lookFrom(0, 20, 70);
-	Vector3 lookAt(0, 20, 0);
-
-	alpha = Maths::PiHalf;
+	camera.SetFieldOfView(60, 1.0f);
+	//alpha = Maths::PiHalf;
 
 	for (int iteration = 0; iteration < 4e+10; iteration++)
 	{
