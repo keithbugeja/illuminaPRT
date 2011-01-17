@@ -125,8 +125,8 @@ void DistributedRenderer::RenderDebug(void)
 					for (int sample = 0; sample < m_nSampleCount; sample++)
 					{
 						Ray ray = m_pCamera->GetRay(
-							((float)(startPixelX + x)) / deviceWidth, 
-							((float)(startPixelY + y)) / deviceHeight, 
+							(startPixelX + x + pSampleBuffer[sample].U) / deviceWidth, 
+							(startPixelY + y + pSampleBuffer[sample].V) / deviceHeight, 
 							pSampleBuffer[sample].U, pSampleBuffer[sample].V);
 
 						Li += m_pIntegrator->Radiance(m_pScene, ray, intersection);

@@ -185,9 +185,6 @@ bool IndexedTriangle<Vertex>::Intersects(const Ray &p_ray, float p_fTime, Differ
 	p_surface.ShadingNormal.Normalize();
 
 	// Set geometry normal
-	//Vector3::Cross(CA, BA, p_surface.GeometryNormal);
-	//p_surface.GeometryNormal.Normalize();
-	//p_surface.GeometryNormal = Vector3::Normalize(Vector3::Cross((v2.Position - v0.Position), (v1.Position - v0.Position)));
 	p_surface.GeometryNormal = Vector3::Normalize(Vector3::Cross(CA, BA));
 
 	if (p_surface.GeometryNormal.Dot(p_surface.ShadingNormal) < 0)

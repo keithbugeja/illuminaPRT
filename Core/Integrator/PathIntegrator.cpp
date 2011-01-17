@@ -84,7 +84,8 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		//----------------------------------------------------------------------------------------------
 		// Primitive has no material assigned - terminate
 		//----------------------------------------------------------------------------------------------
-		if (!p_intersection.HasMaterial()) break;
+		if (!p_intersection.HasMaterial()) 
+			break;
 		
 		// Get material for intersection primitive
 		pMaterial = p_intersection.GetMaterial();
@@ -105,7 +106,7 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 				// -- Renders light primitive for first bounce intersections
 				L += pathThroughput * p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
 
-				//if (rayDepth == 0) break;
+				if (rayDepth == 0) break;
 			}
 		}
 
@@ -113,9 +114,9 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		// Sample lights for direct lighting
 		// -- If the currently intersected primitive is a luminaire, do not sample it 
 		//----------------------------------------------------------------------------------------------
-		//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
 		if (!specularBounce)
 			L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+			//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
 			
 		//----------------------------------------------------------------------------------------------
 		// Sample bsdf for next direction
@@ -128,10 +129,8 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		// -- All Material/BSDF/BxDF operations are carried out in surface coordinates
 		// -- All inputs must be in surface coordinates
 		// -- All outputs are in surface coordinates
-		Vector3 test1, test2;
 
 		BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, wOutLocal);
-		BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, test1);
 
 		// Sample new direction in wIn (remember we're tracing backwards)
 		// -- wIn returns the sampled direction
@@ -147,18 +146,6 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 
 		// Convert back to world coordinates
 		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, wInLocal, wIn);
-		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, wOutLocal, test2);
-
-		//if (wOut != test2)
-		//{
-		//	OrthonormalBasis b;
-		//	b.InitFromW(p_intersection.Surface.GeometryBasisWS.W);
-
-		//	std::cout << p_intersection.GetMaterial()->GetName() << std::endl;
-		//	std::cout << "Before : " << wOut.ToString() << ", after : " << test2.ToString() << std::endl
-		//		<< "Transform :" << p_intersection.Surface.GeometryBasisWS.ToString() << std::endl 
-		//		<< "Redone :" << b.ToString() << std::endl;
-		//}
 
 		//----------------------------------------------------------------------------------------------
 		// Adjust path for new bounce

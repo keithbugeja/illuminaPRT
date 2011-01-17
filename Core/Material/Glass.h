@@ -65,22 +65,19 @@ namespace Illumina
 				m_pTexture = p_pTexture;
 			}
 			
-			/**//**/
 			Spectrum SampleF(const DifferentialSurface &p_surface, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, 
 				float *p_pdf, BxDF::Type p_bxdfType = BxDF::All_Combined, BxDF::Type *p_sampledBxDFType = NULL)
 			{
 				Spectrum F = BSDF::SampleF(p_surface, p_wOut, p_wIn, p_u, p_v, p_pdf, p_bxdfType, p_sampledBxDFType);
-				Spectrum Fresnel = FresnelEval(p_wOut.Z, m_fEtaI, m_fEtaT);
+				Spectrum fresnel = EvaluateFresnelTerm(p_wOut.Z, m_fEtaI, m_fEtaT);
 
 				if (*p_sampledBxDFType & BxDF::Reflection)
-					return F * Fresnel;
+					return F * fresnel;
 
-				return F * (Spectrum(1.0f) - Fresnel);
+				return F * (Spectrum(1.0f) - fresnel);
 			}
-			//*//**/
 			
-			/**/
-			Spectrum FresnelEval(float cosi, float etai, float etat) const
+			Spectrum EvaluateFresnelTerm(float cosi, float etai, float etat) const
 			{
 				// Compute Fresnel reflectance for dielectric
 				cosi = Maths::Clamp(cosi, -1.0f, 1.0f);
@@ -103,11 +100,11 @@ namespace Illumina
 				else
 				{
 					float cost = Maths::Sqrt(Maths::Max(0.0f, 1.0f - sint*sint));
-					return FrDiel(Maths::FAbs(cosi), cost, ei, et);
+					return FresnelDielectric(Maths::FAbs(cosi), cost, ei, et);
 				}
 			}
 
-			Spectrum FrDiel(const float cosi, 
+			Spectrum FresnelDielectric(const float cosi, 
 						  const float cost, 
 						  const float &etai, 
 						  const float &etat) const
@@ -120,7 +117,6 @@ namespace Illumina
 
 				return (Rparl * Rparl + Rperp * Rperp) / 2.0f;
 			}
-			//*/
 
 			Spectrum SampleTexture(const DifferentialSurface &p_surface, int p_bxdfIndex)
 			{
