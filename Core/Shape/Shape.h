@@ -10,6 +10,8 @@
 #include <boost/format.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include "Object/Object.h"
+
 #include "Geometry/Ray.h"
 #include "Geometry/Basis.h"
 #include "Geometry/BoundingVolume.h"
@@ -21,9 +23,13 @@ namespace Illumina
 	namespace Core
 	{
 		/* Base class for all shape primitives */
-		class IShape
+		class IShape 
+			: public Object
 		{
 		public:
+			IShape(void) : Object() { }
+			IShape(const std::string& p_strName) : Object(p_strName) { }
+
 			virtual bool IsBounded(void) const = 0;
 			virtual void ComputeBoundingVolume(void) = 0;
 			virtual IBoundingVolume* GetBoundingVolume(void) const = 0;

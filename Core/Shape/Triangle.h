@@ -14,7 +14,8 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class Triangle : public IShape
+		class Triangle 
+			: public IShape
 		{
 		protected:
 			AxisAlignedBoundingBox	m_boundingBox;
@@ -24,6 +25,10 @@ namespace Illumina
 			Vector2 UV[3];
 
 		public:
+			Triangle(const std::string &p_strName, const Vector3 &p_vertex1, 
+				const Vector3 &p_vertex2, const Vector3 &p_vertex3);
+			Triangle(const std::string &p_strName, const Vector3 &p_vertex1, const Vector3 &p_vertex2, 
+				const Vector3 &p_vertex3, const Vector2 &p_uv1, const Vector2 &p_uv2, const Vector2 &p_uv3);
 			Triangle(const Vector3 &p_vertex1, 
 				const Vector3 &p_vertex2, const Vector3 &p_vertex3);
 			Triangle(const Vector3 &p_vertex1, const Vector3 &p_vertex2, const Vector3 &p_vertex3,

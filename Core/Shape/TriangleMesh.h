@@ -9,10 +9,11 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Shape/Shape.h"
+#include "Maths/Random.h"
+#include "Threading/List.h"
+#include "Maths/Montecarlo.h"
 #include "Shape/VertexFormats.h"
 #include "Geometry/BoundingBox.h"
-#include "Maths/Montecarlo.h"
-#include "Threading/List.h"
 
 namespace Illumina 
 {
@@ -33,7 +34,11 @@ namespace Illumina
 			// Triangle array
 			List<T> TriangleList;
 			List<U> VertexList;
-			
+
+		public:
+			ITriangleMesh(void) : IShape() { }
+			ITriangleMesh(const std::string &p_strName) : IShape(p_strName) { }
+
 			// Methods for instance creation
 			virtual boost::shared_ptr<ITriangleMesh<T, U>> CreateInstance(void) = 0;
 

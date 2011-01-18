@@ -19,7 +19,12 @@ namespace Illumina
 {
 	namespace Core
 	{
+		//----------------------------------------------------------------------------------------------
 		// KD-Tree Node
+		//----------------------------------------------------------------------------------------------
+		// Represents a single node in the kd-tree structure. Note that only leaf nodes in the 
+		// structure contain any geometry.
+		//----------------------------------------------------------------------------------------------
 		template<class T>
 		struct KDTreeNode
 		{
@@ -46,7 +51,9 @@ namespace Illumina
 			~KDTreeNode() { }
 		};
 
+		//----------------------------------------------------------------------------------------------
 		// Stack Element for stack-based traversal of KD-Tree
+		//----------------------------------------------------------------------------------------------
 		template<class T>
 		struct KDTreeStackElement
 		{
@@ -68,7 +75,9 @@ namespace Illumina
 			{ }
 		};
 
+		//----------------------------------------------------------------------------------------------
 		// KD-Tree Mesh
+		//----------------------------------------------------------------------------------------------
 		template<class T, class U> 
 		class KDTreeMesh
 			: public ITriangleMesh<T, U>
@@ -82,6 +91,9 @@ namespace Illumina
 			float m_nMinNodeWidth;
 
 		protected:
+			//----------------------------------------------------------------------------------------------
+			// Helper functions for allocation and deallocation of KDTree nodes
+			//----------------------------------------------------------------------------------------------
 			KDTreeNode<T*>* RequestNode(void)
 			{
 				return new KDTreeNode<T*>();
@@ -91,7 +103,7 @@ namespace Illumina
 			{
 				int nodesFreed = 0;
 
-				if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
+				if (p_pNode->Type == Internal)
 				{
 					nodesFreed += ReleaseNode(p_pNode->m_pChild[0]);
 					nodesFreed += ReleaseNode(p_pNode->m_pChild[1]);
@@ -106,29 +118,49 @@ namespace Illumina
 			}
 
 		public:
+			//----------------------------------------------------------------------------------------------
+			// Constructors and destructor
+			//----------------------------------------------------------------------------------------------
 			KDTreeMesh(void)
-				: m_nMaxLeafObjects(20)
+				: ITriangleMesh<T, U>() 
+				, m_nMaxLeafObjects(20)
 				, m_nMaxTreeDepth(20)
 			{ }
-
+			//----------------------------------------------------------------------------------------------
 			KDTreeMesh(int p_nMaxObjectsPerLeaf, int p_nMaxTreeDepth)
-				: m_nMaxLeafObjects(p_nMaxObjectsPerLeaf)
+				: ITriangleMesh<T, U>() 
+				, m_nMaxLeafObjects(p_nMaxObjectsPerLeaf)
 				, m_nMaxTreeDepth(p_nMaxTreeDepth)
 			{ }
-
+			//----------------------------------------------------------------------------------------------
+			KDTreeMesh(const std::string &p_strName, int p_nMaxObjectsPerLeaf, int p_nMaxTreeDepth)
+				: ITriangleMesh<T, U>(p_strName) 
+				, m_nMaxLeafObjects(p_nMaxObjectsPerLeaf)
+				, m_nMaxTreeDepth(p_nMaxTreeDepth)
+			{ }
+			//----------------------------------------------------------------------------------------------
 			~KDTreeMesh()
 			{
 				ReleaseNode(m_rootNode.m_pChild[0]);
 				ReleaseNode(m_rootNode.m_pChild[1]);
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Method for creating an instance of the KDTreeMesh
+			// TODO: Should be replaced through ICloneable interface inherited through Object.
+			//----------------------------------------------------------------------------------------------
 			boost::shared_ptr<ITriangleMesh<T, U>> CreateInstance(void) {
 				return boost::shared_ptr<ITriangleMesh<T, U>>(new KDTreeMesh<T, U>());
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Compile : This method is used to transform the raw triangle mesh into a kD-Tree 
+			// acceleration structure.
+			//----------------------------------------------------------------------------------------------
 			bool Compile(void) 
 			{
-				// Create a list of pointers to indexed triangles
+				// Area
+				ITriangleMesh<T, U>::ComputeArea();
+
+				// Generate a list of triangle pointers 
 				int objectCount = (int)ITriangleMesh<T, U>::TriangleList.Size();
 				List<T*> triangleList(objectCount);
 
@@ -136,30 +168,26 @@ namespace Illumina
 					triangleList.PushBack(&ITriangleMesh<T, U>::TriangleList[idx]);
 				}
 
-				// Area
-				ITriangleMesh<T, U>::ComputeArea();
-
-				// Build bounding volume hierarchy
+				// Compute the bounds for triangle list
 				ComputeBounds(triangleList, m_rootNode.BoundingBox);
+
+				// Compute the minimum dimensions constraint for a node 				
+				// TODO: Should be parameterised!
 				m_nMinNodeWidth = m_rootNode.BoundingBox.GetRadius() / 1000.0f;
+				
+				// Build kd-tree hierarchy
 				BuildHierarchy(&m_rootNode, triangleList, 0); 
 
 				// Update Stats
 				m_statistics.m_triangleCount = objectCount;
 
-				//std::cout << "Compilation complete" << std::endl << ToString() << std::endl;
-
 				return true;
 			}
-
-			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface, float &p_fTestDensity)
-			{
-				Ray ray(p_ray);
-
-				//return Intersect_Recursive(&m_rootNode, ray, p_fTime, p_surface);
-				return Intersect_Stack(&m_rootNode, ray, p_fTime, p_surface);
-			}
-
+			//----------------------------------------------------------------------------------------------
+			// Returns the result of an intersection between a ray and the kD-Tree. The method also
+			// populates a DifferentialSurface structure with all the details of the intersected
+			// surface.
+			//----------------------------------------------------------------------------------------------
 			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 			{
 				Ray ray(p_ray);
@@ -167,20 +195,28 @@ namespace Illumina
 				//return Intersect_Recursive(&m_rootNode, ray, p_fTime, p_surface);
 				return Intersect_Stack(&m_rootNode, ray, p_fTime, p_surface);
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Performs a quick intersection test, returning whether an intersection has occurred
+			// or not, but providing no further details as to the intersection itself.
+			//----------------------------------------------------------------------------------------------
 			bool Intersects(const Ray &p_ray, float p_fTime)
 			{
 				Ray ray(p_ray);
 
 				return Intersect_Recursive(&m_rootNode, ray, p_fTime);
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Returns a literal with information on the acceleration structure.
+			//----------------------------------------------------------------------------------------------
 			std::string ToString(void) const
 			{
 				return boost::str(boost::format("\nKDTreeMesh %s") % m_statistics.ToString());
 			}
 
 		protected:
+			//----------------------------------------------------------------------------------------------
+			// Performs intersection testing using a stack-based tree traversal method.
+			//----------------------------------------------------------------------------------------------
 			bool Intersect_Stack(KDTreeNode<T*> *p_pNode, Ray &p_ray, float p_fTime)
 			{
 				AxisAlignedBoundingBox *pAABB = 
@@ -255,7 +291,9 @@ namespace Illumina
 
 				return false;
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Performs intersection testing using stack-based traversal.
+			//----------------------------------------------------------------------------------------------
 			bool Intersect_Stack(KDTreeNode<T*> *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 			{
 				AxisAlignedBoundingBox *pAABB = 
@@ -290,7 +328,7 @@ namespace Illumina
 					tOut = nodeElement.Max;
 					tIn = nodeElement.Min;
 
-					while (pNode->Type == /*TreeMeshNodeType::*/Internal)
+					while (pNode->Type == Internal)
 					{
 						direction = p_ray.Direction[pNode->Axis];
 						intercept = p_ray.Origin[pNode->Axis] + tIn * direction;
@@ -345,7 +383,9 @@ namespace Illumina
 
 				return bIntersect;
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Performs intersection testing using recursive traversal.
+			//----------------------------------------------------------------------------------------------
 			bool Intersect_Recursive(KDTreeNode<T*> *p_pNode, Ray &p_ray, float p_fTime)
 			{
 				float in, out;
@@ -369,7 +409,9 @@ namespace Illumina
 
 				return false;
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Performs intersection testing using recursive traversal.
+			//----------------------------------------------------------------------------------------------
 			bool Intersect_Recursive(KDTreeNode<T*> *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 			{
 				
@@ -427,7 +469,11 @@ namespace Illumina
 
 				return false;
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Computes the axis-aligned bounding box for the specified list of triangles.
+			// TODO: This could be useful at a higher level, to be shared by tree/hierarchy-based 
+			//		 acceleration structures.
+			//----------------------------------------------------------------------------------------------
 			void ComputeBounds(const List<T*> &p_objectList, AxisAlignedBoundingBox &p_aabb, float p_fMinEpsilon = 0.0f, float p_fMaxEpsilon = 0.0f)
 			{
 				p_aabb.Invalidate();
@@ -444,12 +490,13 @@ namespace Illumina
 					p_aabb.SetMaxExtent(p_aabb.GetMaxExtent() + p_fMaxEpsilon);
 				}
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Distributes the provided triangle list between two objects depending on a the partitioning
+			// specified by the parameters (Axis, Partition).
+			// TODO: Same as above, consider moving upwards (to a TreeTriangleMesh base or something similar).
+			//----------------------------------------------------------------------------------------------
 			int Distribute(const List<T*> &p_objectList, float p_fPartition, int p_nAxis, List<T*> &p_outLeftList, List<T*> &p_outRightList)
 			{
-				//std::cout << "Object count = " << p_objectList.Size() << std::endl;
-				//std::cout << "Part. plane = " << p_fPartition << ", on " << p_nAxis << std::endl;
-
 				int count = (int)p_objectList.Size();
 				for (int n = 0; n < count; n++)
 				{
@@ -460,10 +507,13 @@ namespace Illumina
 					if (p_fPartition <= max) p_outRightList.PushBack(p_objectList[n]);
 				}
 
-				//std::cout << "Distributing objects as [" << (int)p_outLeftList.Size() << ", " << (int)p_outRightList.Size() << "]" << std::endl;
 				return (int)p_outLeftList.Size();
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Distributes the provided triangle list between two objects depending on which axis-aligned
+			// bounding box they intersect (left AABB or right AABB).
+			// TODO: Same as above, consider moving upwards (to a TreeTriangleMesh base or something similar).
+			//----------------------------------------------------------------------------------------------
 			int Distribute(const List<T*> &p_objectList, AxisAlignedBoundingBox &p_leftAABB, AxisAlignedBoundingBox &p_rightAABB, List<T*> &p_outLeftList, List<T*> &p_outRightList)
 			{
 				int count = (int)p_objectList.Size();
@@ -478,21 +528,9 @@ namespace Illumina
 
 				return (int)p_outLeftList.Size();
 			}
-
-			int Split(const List<T*> &p_objectList, float p_fPartition, int p_nAxis, List<T*> &p_outLeftList, List<T*> &p_outRightList)
-			{
-				int count = (int)p_objectList.Size();
-				for (int n = 0; n < count; n++)
-				{
-					if (p_objectList[n]->GetBoundingVolume()->GetCentre()[p_nAxis] >= p_fPartition)
-						p_outRightList.PushBack(p_objectList[n]);
-					else 
-						p_outLeftList.PushBack(p_objectList[n]);
-				}
-
-				return (int)p_outLeftList.Size();
-			}
-
+			//----------------------------------------------------------------------------------------------
+			// Determines a plane by which to partition two half spaces.
+			//----------------------------------------------------------------------------------------------
 			float FindPartitionPlane(const List<T*> &p_objectList, AxisAlignedBoundingBox &p_aabb, int p_nAxis)
 			{
 				//float fPartition = FindPartitionPlane_Centroid(p_objectList, p_nAxis);
@@ -503,12 +541,16 @@ namespace Illumina
 				//std::cout << "In terms of AABB : [" << (fPartition - p_aabb.GetMinExtent(p_nAxis)) / (p_aabb.GetMaxExtent(p_nAxis) - p_aabb.GetMinExtent(p_nAxis)) << "]" << std::endl;
 				return fPartition;
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Returns a partition based on the spatian median of the object list.
+			//----------------------------------------------------------------------------------------------
 			float FindPartitionPlane_SpatialMedian(const List<T*> &p_objectList, AxisAlignedBoundingBox &p_aabb, int p_nAxis)
 			{
 				return p_aabb.GetCentre()[p_nAxis];
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Returns a partition baed on the (modified) SAH applied to the object list.
+			//----------------------------------------------------------------------------------------------
 			float FindPartitionPlane_SAH(const List<T*> &p_objectList, AxisAlignedBoundingBox &p_aabb, int p_nAxis)
 			{
 				const int Bins = 128;
@@ -539,9 +581,6 @@ namespace Illumina
 						maxBins[right]++;
 				}
 
-				//for (int j = 0; j < Bins; j++)
-				//	std::cout << "[" << j << ": " << minBins[j] << ", " << maxBins[j] << "]" << std::endl;
-
 				int leftPrims, rightPrims, bestSplit;
 				float cost, bestCost = Maths::Maximum;
 
@@ -556,11 +595,6 @@ namespace Illumina
 						rightPrims += maxBins[k];
 
 					cost = (float)((rightPrims * (Bins - j) + leftPrims * j)) / Bins;
-					//cost = (float)rightPrims / (float)(j) + 
-					//	(float)leftPrims / (float)(Bins - j);
-					/* + 1.0f - (count / (leftPrims + rightPrims)) ;*/
-
-					//std::cout << "Split Point @ " << j << " : [" << leftPrims << " : " << rightPrims << "] -> [" << cost << "]" << std::endl;
 
 					if (cost < bestCost)
 					{
@@ -569,10 +603,11 @@ namespace Illumina
 					}
 				}
 
-				//std::cout << "Optimal split point @ " << bestSplit << " -> [" << bestCost << "]" << std::endl;
 				return start + (bestSplit * extent) / Bins;
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Builds the kd-tree hierarchy
+			//----------------------------------------------------------------------------------------------
 			void BuildHierarchy(KDTreeNode<T*> *p_pNode, List<T*> &p_objectList, int p_nAxis, int p_nDepth = 0)
 			{
 				ComputeBounds(p_objectList, p_pNode->BoundingBox, 0.0001f, 0.0001f);
@@ -582,7 +617,9 @@ namespace Illumina
 
 				BuildHierarchy_S2(p_pNode, p_objectList, p_nAxis, 0);
 			}
-
+			//----------------------------------------------------------------------------------------------
+			// Builds the kd-tree hierarchy
+			//----------------------------------------------------------------------------------------------
 			void BuildHierarchy_S2(KDTreeNode<T*> *p_pNode, List<T*> &p_objectList, int p_nAxis, int p_nDepth = 0)
 			{
 				// Update stats
@@ -635,6 +672,7 @@ namespace Illumina
 					m_statistics.m_internalNodeCount++;
 				}
 			}
+			//----------------------------------------------------------------------------------------------
 		};
 	} 
 }

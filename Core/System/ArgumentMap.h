@@ -14,6 +14,8 @@
 
 #include "System/IlluminaPRT.h"
 #include "Exception/Exception.h"
+#include "Geometry/Vector3.h"
+#include "Geometry/Vector2.h"
 #include "Spectrum/Spectrum.h"
 #include "Image/RGBPixel.h"
 
@@ -63,6 +65,42 @@ namespace Illumina
 					std::stringstream argumentValue(m_argumentMap[p_strArgumentName]);
 					if (argumentValue >> p_argumentValue)
 						return true;
+				}
+
+				return false;
+			}
+
+			bool GetArgument(const std::string &p_strArgumentName, Vector2 &p_argumentValue)
+			{
+				if (ContainsArgument(p_strArgumentName))
+				{
+					float value[2];
+					char separator;
+
+					std::stringstream argumentValue(m_argumentMap[p_strArgumentName]);
+					if(argumentValue>>value[0]>>separator>>value[1])
+					{
+						p_argumentValue.Set(value[0], value[1]);
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			bool GetArgument(const std::string &p_strArgumentName, Vector3 &p_argumentValue)
+			{
+				if (ContainsArgument(p_strArgumentName))
+				{
+					float value[3];
+					char separator;
+
+					std::stringstream argumentValue(m_argumentMap[p_strArgumentName]);
+					if(argumentValue>>value[0]>>separator>>value[1]>>separator>>value[2])
+					{
+						p_argumentValue.Set(value[0], value[1], value[2]);
+						return true;
+					}
 				}
 
 				return false;

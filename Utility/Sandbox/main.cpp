@@ -139,6 +139,13 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	EngineKernel engineKernel;
 
 	//----------------------------------------------------------------------------------------------
+	// Shapes
+	//----------------------------------------------------------------------------------------------
+	engineKernel.GetShapeManager()->RegisterFactory("KDTreeMesh", new KDTreeShapeFactory());
+	engineKernel.GetShapeManager()->RegisterFactory("Triangle", new TriangleShapeFactory());
+	engineKernel.GetShapeManager()->RegisterFactory("Sphere", new SphereShapeFactory());
+
+	//----------------------------------------------------------------------------------------------
 	// Textures
 	//----------------------------------------------------------------------------------------------
 	engineKernel.GetTextureManager()->RegisterFactory("Image", new ImageTextureFactory());
