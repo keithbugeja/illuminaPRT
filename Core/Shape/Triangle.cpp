@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	TriangleUV.cpp
+//	Filename:	Triangle.cpp
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
@@ -8,7 +8,34 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
+Triangle::Triangle(const std::string &p_strName, const Vector3 &p_vertex1, 
+				   const Vector3 &p_vertex2, const Vector3 &p_vertex3)
+	: IShape(p_strName)
+{
+	Vertex[0] = p_vertex1;
+	Vertex[1] = p_vertex2;
+	Vertex[2] = p_vertex3;
+
+	UV[0].Set(0,0);
+	UV[1].Set(1,1);
+	UV[2].Set(1,0);
+}
+//----------------------------------------------------------------------------------------------
+Triangle::Triangle(const std::string &p_strName, const Vector3 &p_vertex1, const Vector3 &p_vertex2, 
+				   const Vector3 &p_vertex3, const Vector2 &p_uv1, const Vector2 &p_uv2, const Vector2 &p_uv3)
+	: IShape(p_strName)
+{
+	Vertex[0] = p_vertex1;
+	Vertex[1] = p_vertex2;
+	Vertex[2] = p_vertex3;
+
+	UV[0] = p_uv1;
+	UV[0] = p_uv2;
+	UV[0] = p_uv3;
+}
+//----------------------------------------------------------------------------------------------
 Triangle::Triangle(const Vector3 &p_vertex1, const Vector3 &p_vertex2, const Vector3 &p_vertex3)
+	: IShape()
 {
 	Vertex[0] = p_vertex1;
 	Vertex[1] = p_vertex2;
@@ -21,6 +48,7 @@ Triangle::Triangle(const Vector3 &p_vertex1, const Vector3 &p_vertex2, const Vec
 //----------------------------------------------------------------------------------------------
 Triangle::Triangle(const Vector3 &p_vertex1, const Vector3 &p_vertex2, const Vector3 &p_vertex3,
 				   const Vector2 &p_uv1, const Vector2 &p_uv2, const Vector2 &p_uv3)
+	: IShape()
 {
 	Vertex[0] = p_vertex1;
 	Vertex[1] = p_vertex2;
@@ -32,6 +60,7 @@ Triangle::Triangle(const Vector3 &p_vertex1, const Vector3 &p_vertex2, const Vec
 }
 //----------------------------------------------------------------------------------------------
 Triangle::Triangle(const Triangle &p_triangle)
+	: IShape()
 {
 	Vertex[0] = p_triangle.Vertex[0];
 	Vertex[1] = p_triangle.Vertex[1];

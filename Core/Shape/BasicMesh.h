@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	AggregateMesh.h
+//	Filename:	BasicMesh.h
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
@@ -7,7 +7,6 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
-
 #include "Shape/TriangleMesh.h"
 
 namespace Illumina 
@@ -18,28 +17,22 @@ namespace Illumina
 		class BasicMesh
 			: public ITriangleMesh<T, U>
 		{
-			//static AtomicInt64 m_intersectionCount;
-
 		public:
-			long long GetIntersectionCount() { return 0; /*m_intersectionCount;*/ }
-
-			BasicMesh(void) {}
-
+			//----------------------------------------------------------------------------------------------
+			BasicMesh(void) : ITriangleMesh<T, U>() { }
+			BasicMesh(const std::string &p_strName) : ITriangleMesh<T, U>(p_strName) { }
+			//----------------------------------------------------------------------------------------------
 			boost::shared_ptr<ITriangleMesh<T, U>> CreateInstance(void) {
 				return boost::shared_ptr<ITriangleMesh<T, U>>(new BasicMesh<T, U>());
 			}
-
+			//----------------------------------------------------------------------------------------------
 			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 			{
-				//int intersectionCount = 0;
-
 				bool bIntersect = false;
 				Ray ray(p_ray);
 
 				for (int idx = 0, count = (int)ITriangleMesh<T, U>::TriangleList.Size(); idx < count; idx++)
 				{
-					//intersectionCount++;
-
 					if (ITriangleMesh<T, U>::TriangleList[idx].Intersects(ray, p_fTime, p_surface))
 					{
 						ray.Max = p_surface.Distance;
@@ -47,10 +40,9 @@ namespace Illumina
 					}
 				}
 
-				//m_intersectionCount += intersectionCount;
 				return bIntersect;
 			}
-
+			//----------------------------------------------------------------------------------------------
 			bool Intersects(const Ray &p_ray, float p_fTime)
 			{
 				for (int idx = 0, count = (int)ITriangleMesh<T, U>::TriangleList.Size(); idx < count; idx++)
@@ -61,8 +53,7 @@ namespace Illumina
 
 				return false;
 			}
+			//----------------------------------------------------------------------------------------------
 		};
-
-		//template<class T, class U> AtomicInt64 BasicMesh<T,U>::m_intersectionCount(0);
 	} 
 }

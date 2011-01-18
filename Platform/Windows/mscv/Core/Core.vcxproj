@@ -236,6 +236,7 @@
     <ClInclude Include="..\..\..\..\Core\Sampler\JitterSampler.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\RandomSampler.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\Sampler.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\Environment.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\BasicMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\BIHMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\BVHMesh.h" />
@@ -245,6 +246,7 @@
     <ClInclude Include="..\..\..\..\Core\Shape\KDTreeMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\Shape.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\ShapeFactory.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\ShapeManager.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\Sphere.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\TreeMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\Triangle.h" />

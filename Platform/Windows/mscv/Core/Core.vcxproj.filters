@@ -76,6 +76,12 @@
     <Filter Include="Header Files\Spectrum">
       <UniqueIdentifier>{894ec314-0244-4716-84dc-3a9d31c227b3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Scene">
+      <UniqueIdentifier>{e685e6de-18c1-46a8-b678-670ccd95b653}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Tonemapper">
+      <UniqueIdentifier>{10341f70-3c5d-4a25-84d8-d43b2b2bbaa6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Core\Camera\Camera.cpp">
@@ -583,6 +589,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Material\SpecularTransmissionBxDF.h">
       <Filter>Header Files\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\ShapeManager.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Scene\Environment.h">
+      <Filter>Header Files\Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

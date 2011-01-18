@@ -12,13 +12,21 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
+Sphere::Sphere(const std::string &p_strName, const Vector3 &p_centre, float p_fRadius)
+	: IShape(p_strName) 
+	, Centre(p_centre)
+	, Radius(p_fRadius)
+{}
+//----------------------------------------------------------------------------------------------
 Sphere::Sphere(const Vector3 &p_centre, float p_fRadius)
-	: Centre(p_centre)
+	: IShape()
+	, Centre(p_centre)
 	, Radius(p_fRadius)
 {}
 //----------------------------------------------------------------------------------------------
 Sphere::Sphere(const Sphere &p_sphere)
-	: Centre(p_sphere.Centre)
+	: IShape() 
+	, Centre(p_sphere.Centre)
 	, Radius(p_sphere.Radius)
 {}
 //----------------------------------------------------------------------------------------------

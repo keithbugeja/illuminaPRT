@@ -23,6 +23,7 @@ namespace Illumina
 			float Radius;
 
 		public:
+			Sphere(const std::string &p_strName, const Vector3 &p_centre, float p_fRadius);
 			Sphere(const Vector3 &p_centre, float p_fRadius);
 			Sphere(const Sphere &p_sphere); 
 
