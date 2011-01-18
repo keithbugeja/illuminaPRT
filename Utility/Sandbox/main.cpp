@@ -179,11 +179,11 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		//std::string fname_model01("../../../Resource/Model/sibenik/sibenik.obj");
 		//std::string fname_model01("../../../Resource/Model/sponza/original/sponza.obj");
 		//std::string fname_model01("../../../Resource/Model/sponza/clean/sponza_clean.obj");
-		//std::string fname_model01("../../../Resource/Model/sponza/crytek/sponza.obj");
+		std::string fname_model01("../../../Resource/Model/sponza/crytek/sponza.obj");
 		//std::string fname_model01("../../../Resource/Model/kalabsha/kalabsha12.obj");
 		//std::string fname_model01("../../../Resource/Model/cornell/cornellbox.obj");
 		//std::string fname_model01("../../../Resource/Model/cornell/cornell.obj");
-		std::string fname_model01("../../../Resource/Model/cornell/cornell_empty.obj");
+		//std::string fname_model01("../../../Resource/Model/cornell/cornell_empty.obj");
 		//std::string fname_model01("../../../Resource/Model/cornell/cornell_glass.obj");
 		//std::string fname_model01("../../../Resource/Model/cornell/cornellsymmetric.obj");
 		//std::string fname_model01("../../../Resource/Model/bunny/bunny.obj");
@@ -407,8 +407,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
 	#endif
 
-	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 32);
-	//DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 32, 8, 8);
+	//BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 512);
+	DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4, 8, 8);
 	renderer.Initialise();
 	
 	if (p_bVerbose)
@@ -448,7 +448,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	camera.SetFieldOfView(60, 1.0f);
 	//alpha = Maths::PiHalf;
 
-	for (int iteration = 0; iteration < 4e+10; iteration++)
+	for (int iteration = 0; iteration < 2 /*4e+10*/; iteration++)
 	{
 		renderTimer.restart();
 		//alpha += 0.05f;
