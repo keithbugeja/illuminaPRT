@@ -21,6 +21,7 @@ namespace Illumina
 		{
 		private:
 			ISpace *m_pSpace;
+			ICamera *m_pCamera;
 			ISampler *m_pSampler;
 			
 		public:
@@ -37,6 +38,9 @@ namespace Illumina
 			
 			ISpace* GetSpace(void) const;
 			void SetSpace(ISpace *p_pSpace);
+
+			ICamera* GetCamera(void) const;
+			void SetCamera(ICamera *p_pCamera);
 
 			ISampler* GetSampler(void) const;
 			void SetSampler(ISampler *p_pSampler);

@@ -53,6 +53,16 @@ void Scene::SetSpace(ISpace *p_pSpace)
 	m_pSpace = p_pSpace;
 }
 //----------------------------------------------------------------------------------------------
+ICamera* Scene::GetCamera(void) const
+{
+	return m_pCamera;
+}
+//----------------------------------------------------------------------------------------------
+void Scene::SetCamera(ICamera *p_pCamera)
+{
+	m_pCamera = p_pCamera;
+}
+//----------------------------------------------------------------------------------------------
 ISampler* Scene::GetSampler(void) const
 {
 	return m_pSampler;

@@ -9,6 +9,7 @@ namespace Illumina
 	namespace Core
 	{
 		class Scene;
+		class Environment;
 		class IBoundingVolume;
 		class IIntegrator;
 		class IPrimitive;

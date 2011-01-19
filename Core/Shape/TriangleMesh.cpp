@@ -3,6 +3,7 @@
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
+//  TODO: Use surface-area based CDF to determine which face should be sampled.
 //----------------------------------------------------------------------------------------------
 #include "Shape/TriangleMesh.h"
 
