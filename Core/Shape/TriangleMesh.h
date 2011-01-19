@@ -9,38 +9,44 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Shape/Shape.h"
+#include "Shape/VertexFormats.h"
+#include "Shape/IndexedTriangle.h"
+
 #include "Maths/Random.h"
 #include "Threading/List.h"
-#include "Maths/Montecarlo.h"
-#include "Shape/VertexFormats.h"
 #include "Geometry/BoundingBox.h"
 
 namespace Illumina 
 {
 	namespace Core
 	{
-		// Note that writes to this class are not thread-safe!
-		// T = IndexedTriangle derivative
-		// U = VertexBase derivative
-		template<class T, class U> class ITriangleMesh
+		// This class is no longer templated.
+		// Format is now fixed at using IndexedTriangles 
+		// and Vertex type vertices
+		class ITriangleMesh 
 			: public IShape
 		{
 		protected:
+			// Triangle mesh area
 			float m_fArea;
-			Random m_random;
+
+			// Model axis-aligned bounding box
 			AxisAlignedBoundingBox m_boundingBox;
+
+			// Uniform random number generator for sampling
+			Random m_random;
 
 		public:
 			// Triangle array
-			List<T> TriangleList;
-			List<U> VertexList;
+			List<IndexedTriangle> TriangleList;
+			List<Vertex> VertexList;
 
 		public:
-			ITriangleMesh(void) : IShape() { }
-			ITriangleMesh(const std::string &p_strName) : IShape(p_strName) { }
+			ITriangleMesh(void);
+			ITriangleMesh(const std::string &p_strName);
 
 			// Methods for instance creation
-			virtual boost::shared_ptr<ITriangleMesh<T, U>> CreateInstance(void) = 0;
+			virtual boost::shared_ptr<ITriangleMesh> CreateInstance(void) = 0;
 
 			// Bounding volume
 			bool IsBounded(void) const;
@@ -55,14 +61,14 @@ namespace Illumina
 			bool UpdateNormals(void);
 
 			// Vertex management			
-			size_t AddVertex(const U &p_vertex);
-			void AddVertexList(const U *p_pVertex, int p_nCount);
-			void AddVertexList(const List<U> &p_vertexList);
+			size_t AddVertex(const Vertex &p_vertex);
+			void AddVertexList(const Vertex *p_pVertex, int p_nCount);
+			void AddVertexList(const List<Vertex> &p_vertexList);
 
 			// Triangle face management
-			void AddTriangle(const U &p_v1, const U &p_v2, const U &p_v3, int p_nGroupId = -1);
-			void AddTriangleList(const U *p_pVertexList, int p_nTriangleCount, int p_nGroupId = -1);
-			void AddTriangleList(const List<U> &p_uvList, int p_nGroupId = -1);
+			void AddTriangle(const Vertex &p_v1, const Vertex &p_v2, const Vertex &p_v3, int p_nGroupId = -1);
+			void AddTriangleList(const Vertex *p_pVertexList, int p_nTriangleCount, int p_nGroupId = -1);
+			void AddTriangleList(const List<Vertex> &p_vertexList, int p_nGroupId = -1);
 
 			// Indexed triangles
 			void AddIndexedTriangle(int p_v1, int p_v2, int p_v3, int p_nGroupId = -1);
@@ -70,6 +76,7 @@ namespace Illumina
 			void AddIndexedTriangleList(const List<int> &p_indexList, int p_nGroupId = -1);
 
 			// Compile method used to prepare complex structures for usage (e.g., BVHs)
+			bool IsCompilationRequired(void) const { return true; }
 			bool Compile(void) { return true; }
 
 			// Update and rebuild methods for dynamic meshes
@@ -87,5 +94,3 @@ namespace Illumina
 		};		
 	} 
 }
-
-#include "TriangleMesh.inl"

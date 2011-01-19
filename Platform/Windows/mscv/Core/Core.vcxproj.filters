@@ -237,6 +237,12 @@
     <ClCompile Include="..\..\..\..\Core\Material\SpecularTransmissionBxDF.cpp">
       <Filter>Header Files\Material</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Shape\TriangleMesh.cpp">
+      <Filter>Header Files\Shape</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Shape\IndexedTriangle.cpp">
+      <Filter>Header Files\Shape</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -603,12 +609,6 @@
     </None>
     <None Include="..\..\..\..\Core\Object\Object.inl">
       <Filter>Header Files\Object</Filter>
-    </None>
-    <None Include="..\..\..\..\Core\Shape\IndexedTriangle.inl">
-      <Filter>Header Files\Shape</Filter>
-    </None>
-    <None Include="..\..\..\..\Core\Shape\TriangleMesh.inl">
-      <Filter>Header Files\Shape</Filter>
     </None>
     <None Include="..\..\..\..\Core\Threading\Spinlock.inl">
       <Filter>Header Files\Threading</Filter>

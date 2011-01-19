@@ -173,6 +173,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sibenik\\sibenik.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\original\\sponza.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\clean\\sponza_clean.obj");
+		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\kiti\\kitiExt\\kiti_87_o.obj");
 		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\crytek\\sponza.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\kalabsha\\kalabsha12.obj");
 		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellbox.obj");
@@ -205,8 +206,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//boost::shared_ptr<BasicMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 	//	ShapeFactory::LoadMesh<BasicMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
 	//	fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
-	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-		ShapeFactory::LoadMesh<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
+	boost::shared_ptr<KDTreeMesh> shape_mesh1 =
+		ShapeFactory::LoadMesh<KDTreeMesh>(
 		fname_model01, &engineKernel, &pMeshMaterialGroup );
 	//boost::shared_ptr<BVHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 	//	ShapeFactory::LoadMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
@@ -233,13 +234,11 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
 	
 	// crytek sponza
-	//Sphere shape_mesh2(Vector3(0.0, 1700.0f, 0.0), 100.0f);
-	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+7, 1e+7, 1e+7));
-	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+7, 1e+7, 1e+7));
-	boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
-		ShapeFactory::CreateQuad<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>
-		(Vector3(-100, 1700, -100), Vector3(100, 1700, -100), Vector3(-100, 1700, 100), Vector3(100, 1700, 100));
+	// -- > Last used
+	boost::shared_ptr<KDTreeMesh> shape_boxLight =
+		ShapeFactory::CreateQuad<KDTreeMesh>(Vector3(-100, 1700, -100), Vector3(100, 1700, -100), Vector3(-100, 1700, 100), Vector3(100, 1700, 100));
 	DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(4.5e+3, 4.5e+3, 4.5e+3));
+	// -- > Last used
 
 	// Cornell Box
 	//Sphere shape_mesh2(Vector3(0, 30.0f, 0), 2.0f);
@@ -252,18 +251,18 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//	ShapeFactory::CreateBox<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(Vector3(-4, 40 - 1E-2, -4), Vector3(4, 40, 4));
 	//DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(1e+3, 1e+3, 1e+3));
 
-	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
-	//	ShapeFactory::CreateQuad<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>
+	//boost::shared_ptr<KDTreeMesh> shape_boxLight =
+	//	ShapeFactory::CreateQuad<KDTreeMesh>
 	//	(Vector3(-6, 40 - 1E-4, -6), Vector3(6, 40 - 1E-4, -6), Vector3(-6, 40 - 1E-4, 6), Vector3(6, 40 - 1E-4, 6));
-	//DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(4.5e+2, 4.5e+2, 4.5e+2));
+	//DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(4.5e+4, 4.5e+4, 4.5e+4));
 
 	// box sky
 	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
 	//	ShapeFactory::CreateQuad<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>
 	//	(Vector3(-6, 15 - 1E-4, -6), Vector3(6, 15 - 1E-4, -6), Vector3(-6, 15 - 1E-4, 6), Vector3(6, 15 - 1E-4, 6));
 	//DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(1.5e+3, 1.5e+3, 1.5e+3));
-	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh3 =
-	//	ShapeFactory::CreateBox<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(Vector3(-5, 14.5, -5), Vector3(5, 15, 5));
+	//boost::shared_ptr<KDTreeMesh> shape_mesh3 =
+	//	ShapeFactory::CreateBox<KDTreeMesh>(Vector3(-5, 14.5, -5), Vector3(5, 15, 5));
 	//DiffuseAreaLight diffuseLight1(NULL, (IShape*)shape_mesh3.get(), Spectrum(40000, 40000, 40000));
 
 	//----------------------------------------------------------------------------------------------
@@ -414,8 +413,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
 	#endif
 
-	//BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 512);
-	DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4, 8, 8);
+	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 16);
+	//DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4, 8, 8);
 	renderer.Initialise();
 	
 	if (p_bVerbose)
@@ -435,10 +434,12 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 
 	// Crytek sponza
 	//Vector3 lookFrom(-1000, 750, -400);
-	Vector3 lookFrom(-800, 700, -400);
 	//Vector3 lookFrom(-900, 1600, -600);
 	//Vector3 lookFrom(-900, 1600, -600);
-	Vector3 lookAt(0, 400, 0);
+	// --> Last used
+	 Vector3 lookFrom(-800, 700, -400);
+	 Vector3 lookAt(0, 400, 0);
+	// --> Last used
 		
 	// Cornell box
 	//cDistX = -30, cDistY = 30, cDistZ = -10;
@@ -498,7 +499,7 @@ int main()
 	//SimplePacketTracer(nCores);
 	//TileBasedTracer(nCores);
 
-	RayTracer(nCores / 2, false);
+	RayTracer(nCores / 2, true);
 
 	//std::cout << "Complete in " << Platform::GetTime() << " seconds " << std::endl;
 

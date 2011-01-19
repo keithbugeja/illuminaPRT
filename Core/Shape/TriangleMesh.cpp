@@ -1,60 +1,60 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	MeshTriangle.inl
+//	Filename:	TriangleMesh.cpp
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-using namespace Illumina::Core;
+#include "Shape/TriangleMesh.h"
 
+using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-template<class T, class U> 
-bool ITriangleMesh<T, U>::IsBounded(void) const {
+ITriangleMesh::ITriangleMesh(void) 
+	: IShape() 
+{ }
+//----------------------------------------------------------------------------------------------
+ITriangleMesh::ITriangleMesh(const std::string &p_strName) 
+	: IShape(p_strName) 
+{ }
+//----------------------------------------------------------------------------------------------
+bool ITriangleMesh::IsBounded(void) const {
 	return false;
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U> 
-void ITriangleMesh<T, U>::ComputeBoundingVolume(void) 
+void ITriangleMesh::ComputeBoundingVolume(void) 
 {
 	m_boundingBox.Invalidate();
 
 	for (int nIdx = 0, count = (int)TriangleList.Size(); nIdx < count; nIdx++)
 	{
-		T& triangle = TriangleList.At(nIdx);
+		IndexedTriangle& triangle = TriangleList.At(nIdx);
 		triangle.ComputeBoundingVolume();	
 		m_boundingBox.Union(*(triangle.GetBoundingVolume()));
 	}
-
-	//std::cout << "Volume : " << m_boundingBox.ToString() << std::endl;
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U> 
-IBoundingVolume* ITriangleMesh<T, U>::GetBoundingVolume(void) const {
+IBoundingVolume* ITriangleMesh::GetBoundingVolume(void) const {
 	return (IBoundingVolume*)&m_boundingBox;
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U> 
-size_t ITriangleMesh<T, U>::AddVertex(const U &p_vertex)
+size_t ITriangleMesh::AddVertex(const Vertex &p_vertex)
 {
 	VertexList.PushBack(p_vertex);
 	return VertexList.Size() - 1;
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U> 
-void ITriangleMesh<T, U>::AddVertexList(const U *p_pVertex, int p_nCount)
+void ITriangleMesh::AddVertexList(const Vertex *p_pVertex, int p_nCount)
 {
 	for (int idx = 0; idx < p_nCount; idx++, p_pVertex++)
 		AddVertex(*p_pVertex);
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U> 
-void ITriangleMesh<T, U>::AddVertexList(const List<U> &p_vertexList)
+void ITriangleMesh::AddVertexList(const List<Vertex> &p_vertexList)
 {
 	for (int idx = 0; idx < p_vertexList.Size(); idx++)
 		AddVertex(p_vertexList[idx]);
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U> 
-void ITriangleMesh<T, U>::AddTriangle(const U &p_v1, const U &p_v2, const U &p_v3, int p_nGroupId)
+void ITriangleMesh::AddTriangle(const Vertex &p_v1, const Vertex &p_v2, const Vertex &p_v3, int p_nGroupId)
 {
 	int  i1 = (int)AddVertex(p_v1),
 		 i2 = (int)AddVertex(p_v2),
@@ -63,45 +63,39 @@ void ITriangleMesh<T, U>::AddTriangle(const U &p_v1, const U &p_v2, const U &p_v
 	AddIndexedTriangle(i1, i2, i3, p_nGroupId);
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U>
-void ITriangleMesh<T, U>::AddTriangleList(const U *p_pVertexList, int p_nTriangleCount, int p_nGroupId)
+void ITriangleMesh::AddTriangleList(const Vertex *p_pVertexList, int p_nTriangleCount, int p_nGroupId)
 {
 	for (int idx = 0; idx < p_nTriangleCount; idx++, p_pVertexList+=3)
 		AddTriangle(p_pVertexList[0], p_pVertexList[1], p_pVertexList[2], p_nGroupId);
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U>
-void ITriangleMesh<T, U>::AddTriangleList(const List<U> &p_vertexList, int p_nGroupId)
+void ITriangleMesh::AddTriangleList(const List<Vertex> &p_vertexList, int p_nGroupId)
 {
 	for (int idx = 0; idx < p_vertexList.Size(); idx+=3)
 		AddTriangle(p_vertexList[0], p_vertexList[1], p_vertexList[2], p_nGroupId);
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U>
-void ITriangleMesh<T, U>::AddIndexedTriangle(int p_v1, int p_v2, int p_v3, int p_nGroupId)
+void ITriangleMesh::AddIndexedTriangle(int p_v1, int p_v2, int p_v3, int p_nGroupId)
 {
-	TriangleList.PushBack(T(this, p_v1, p_v2, p_v3, p_nGroupId));
+	TriangleList.PushBack(IndexedTriangle(this, p_v1, p_v2, p_v3, p_nGroupId));
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U>
-void ITriangleMesh<T, U>::AddIndexedTriangleList(const int *p_pIndexList, int p_nTriangleCount, int p_nGroupId)
+void ITriangleMesh::AddIndexedTriangleList(const int *p_pIndexList, int p_nTriangleCount, int p_nGroupId)
 {
 	for (int idx = 0; idx < p_nTriangleCount; idx++, p_pIndexList+=3)
 		AddIndexedTriangle(p_pIndexList[0], p_pIndexList[1], p_pIndexList[2], p_nGroupId);
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U>
-void ITriangleMesh<T, U>::AddIndexedTriangleList(const List<int> &p_indexList, int p_nGroupId)
+void ITriangleMesh::AddIndexedTriangleList(const List<int> &p_indexList, int p_nGroupId)
 {
 	for (int idx = 0; idx < p_indexList.Size(); idx+=3)
 		AddIndexedTriangle(p_indexList[0], p_indexList[1], p_indexList[2], p_nGroupId);
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U>
-bool ITriangleMesh<T, U>::UpdateNormals(void)
+bool ITriangleMesh::UpdateNormals(void)
 {
 	// Check for normal semantic before applying normal update
-	if ((U::GetDescriptor() & VertexFormat::Normal) > 0)
+	if ((Vertex::GetDescriptor() & VertexFormat::Normal) > 0)
 	{
 		Vector3 vec3Edge1, vec3Edge2, vec3Normal;
 		
@@ -114,7 +108,7 @@ bool ITriangleMesh<T, U>::UpdateNormals(void)
 		// Find normals
 		for (int nFaceIndex = 0, nFaceCount = TriangleList.Size(); nFaceIndex < nFaceCount; nFaceIndex++)
 		{
-			T& face = TriangleList.At(nFaceIndex);
+			IndexedTriangle &face = TriangleList.At(nFaceIndex);
 			
 			vec3Edge1 = VertexList[face.GetVertexIndex(1)].Position - VertexList[face.GetVertexIndex(0)].Position;
 			vec3Edge2 = VertexList[face.GetVertexIndex(2)].Position - VertexList[face.GetVertexIndex(0)].Position;
@@ -137,42 +131,23 @@ bool ITriangleMesh<T, U>::UpdateNormals(void)
 	return false;
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U>
-float ITriangleMesh<T, U>::GetArea(void) const {
+float ITriangleMesh::GetArea(void) const {
 	return m_fArea;
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U>
-float ITriangleMesh<T, U>::GetPdf(const Vector3 &p_point) const {
+float ITriangleMesh::GetPdf(const Vector3 &p_point) const {
 	return 1.0f / m_fArea;
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U>
-Vector3 ITriangleMesh<T, U>::SamplePoint(float p_u, float p_v, Vector3 &p_normal) 
+Vector3 ITriangleMesh::SamplePoint(float p_u, float p_v, Vector3 &p_normal) 
 {
-	// Use CDF (pdf ~ area) to determine which face to use.
-	
-	/*
-	int triangleId = 0;
-	float v = m_random.NextFloat(), 
-		cdf = 0;
-
-	for (size_t idx = 0; idx < TriangleList.Size(); ++idx)
-	{
-		if (v < cdf) 
-		{
-			return TriangleList[idx].SamplePoint(p_u, p_v, p_normal);
-		}
-
-		cdf += TriangleList[idx].GetArea() / m_fArea;
-	}*/
-	
+	// TODO: Use CDF (pdf ~ area) to determine which face to use.
+		
 	int triangleToSample = (int)(TriangleList.Size() * m_random.NextFloat());
 	return TriangleList[triangleToSample].SamplePoint(p_u, p_v, p_normal);
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U>
-Vector3 ITriangleMesh<T, U>::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) 
+Vector3 ITriangleMesh::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) 
 {
 	Vector3 samplePoint;
 
@@ -183,27 +158,10 @@ Vector3 ITriangleMesh<T, U>::SamplePoint(const Vector3 &p_viewPoint, float p_u, 
 	if (cosTheta > 0)
 		p_normal = -p_normal;
 
-	/*
-	DifferentialSurface surface;	
-	Ray ray(p_viewPoint, Vector3::Normalize(samplePoint - p_viewPoint), 1e-4f);
-	
-	if (Intersects(ray, 0, surface))
-	{
-		Vector3 surfacePoint = ray.PointAlongRay(surface.Distance);
-		p_normal = surface.GeometryNormal; 
-		
-		if (Vector3::Dot((surfacePoint - p_viewPoint), p_normal) > 0)
-			p_normal = -p_normal;
-		
-		return surfacePoint;
-	}
-
-	*/
 	return samplePoint;
 }
 //----------------------------------------------------------------------------------------------
-template<class T, class U>
-void ITriangleMesh<T, U>::ComputeArea(void)
+void ITriangleMesh::ComputeArea(void)
 {
 	m_fArea = 0;
 

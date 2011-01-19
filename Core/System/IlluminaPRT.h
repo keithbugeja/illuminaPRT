@@ -24,6 +24,8 @@ namespace Illumina
 		class BxDF;
 		class RGBSpectrum;
 
+		class ITriangleMesh;
+
 		class Intersection;
 		class DifferentialSurface;
 		class VisibilityQuery;
