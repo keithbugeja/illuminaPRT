@@ -20,6 +20,7 @@ namespace Illumina
 {
 	namespace Core
 	{
+		/*
 		// Bounding volume hierarchy node
 		template<class T>
 		struct BVHNode
@@ -67,7 +68,7 @@ namespace Illumina
 			{
 				int nodesFreed = 0;
 
-				if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
+				if (p_pNode->Type == Internal)
 				{
 					nodesFreed += ReleaseNode(p_pNode->m_pChild[0]);
 					nodesFreed += ReleaseNode(p_pNode->m_pChild[1]);
@@ -157,7 +158,7 @@ namespace Illumina
 					pNode = traverseStack.top();
 					traverseStack.pop();
 
-					while(pNode->Type == /*TreeMeshNodeType::*/Internal)
+					while(pNode->Type == Internal)
 					{
 						if (pNode->m_pChild[1]->BoundingBox.Intersects(p_ray))
 							traverseStack.push(pNode->m_pChild[1]);
@@ -198,7 +199,7 @@ namespace Illumina
 					pNode = traverseStack.top();
 					traverseStack.pop();
 
-					while(pNode->Type == /*TreeMeshNodeType::*/Internal)
+					while(pNode->Type == Internal)
 					{
 						if (pNode->m_pChild[1]->BoundingBox.Intersects(p_ray))
 							traverseStack.push(pNode->m_pChild[1]);
@@ -231,7 +232,7 @@ namespace Illumina
 
 				if (p_pNode->BoundingBox.Intersect(p_ray, in, out))
 				{
-					if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
+					if (p_pNode->Type == Internal)
 						return Intersect_Recursive(p_pNode->m_pChild[0], p_ray, p_fTime) || Intersect_Recursive(p_pNode->m_pChild[1], p_ray, p_fTime);
 
 					int count = (int)p_pNode->TriangleList.Size();
@@ -255,7 +256,7 @@ namespace Illumina
 
 				if (p_pNode->BoundingBox.Intersect(p_ray, in, out))
 				{
-					if (p_pNode->Type == /*TreeMeshNodeType::*/Internal)
+					if (p_pNode->Type == Internal)
 						return Intersect_Recursive(p_pNode->m_pChild[0], p_ray, p_fTime, p_surface) | Intersect_Recursive(p_pNode->m_pChild[1], p_ray, p_fTime, p_surface);
 
 					int count = (int)p_pNode->TriangleList.Size();
@@ -344,7 +345,7 @@ namespace Illumina
 				// If we have enough objects, we consider this node a leaf
 				if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxDepth)
 				{
-					p_pNode->Type = /*TreeMeshNodeType::*/Leaf; 
+					p_pNode->Type = Leaf; 
 					p_pNode->TriangleList.PushBack(p_objectList);
 
 					m_statistics.m_leafNodeCount++;
@@ -361,7 +362,7 @@ namespace Illumina
 
 					if (leftList.Size() == 0 || rightList.Size() == 0)
 					{
-						p_pNode->Type = /*TreeMeshNodeType::*/Leaf; 
+						p_pNode->Type = Leaf; 
 						p_pNode->TriangleList.PushBack(p_objectList);
 
 						m_statistics.m_leafNodeCount++;
@@ -371,7 +372,7 @@ namespace Illumina
 					}
 					else
 					{
-						p_pNode->Type = /*TreeMeshNodeType::*/Internal;
+						p_pNode->Type = Internal;
 
 						p_pNode->m_pChild[0] = RequestNode();
 						p_pNode->m_pChild[1] = RequestNode();
@@ -387,5 +388,6 @@ namespace Illumina
 				}
 			}
 		};
+		*/
 	} 
 }

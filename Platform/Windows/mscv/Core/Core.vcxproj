@@ -165,8 +165,10 @@
     <ClCompile Include="..\..\..\..\Core\Renderer\DistributedRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Sampler\JitterSampler.cpp" />
     <ClCompile Include="..\..\..\..\Core\Sampler\RandomSampler.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\IndexedTriangle.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Sphere.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Triangle.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\TriangleMesh.cpp" />
     <ClCompile Include="..\..\..\..\Core\Staging\EmissivePrimitive.cpp" />
     <ClCompile Include="..\..\..\..\Core\Staging\GeometricPrimitive.cpp" />
     <ClCompile Include="..\..\..\..\Core\Staging\Scene.cpp" />
@@ -307,8 +309,6 @@
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl" />
     <None Include="..\..\..\..\Core\Image\Image.inl" />
     <None Include="..\..\..\..\Core\Object\Object.inl" />
-    <None Include="..\..\..\..\Core\Shape\IndexedTriangle.inl" />
-    <None Include="..\..\..\..\Core\Shape\TriangleMesh.inl" />
     <None Include="..\..\..\..\Core\System\FactoryManager.inl" />
     <None Include="..\..\..\..\Core\Threading\Spinlock.inl" />
   </ItemGroup>

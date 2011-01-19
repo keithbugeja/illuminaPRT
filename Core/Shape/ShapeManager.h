@@ -138,7 +138,7 @@ namespace Illumina
 		public:
 			Illumina::Core::IShape *CreateInstance(void)
 			{
-				return new KDTreeMesh<IndexedTriangle<Vertex>, Vertex>();
+				return new KDTreeMesh();
 			}
 
 			Illumina::Core::IShape *CreateInstance(ArgumentMap &p_argumentMap)
@@ -162,12 +162,12 @@ namespace Illumina
 
 			Illumina::Core::IShape *CreateInstance(int p_nMaxDepth, int p_nMaxLeafObjects)
 			{
-				return new KDTreeMesh<IndexedTriangle<Vertex>, Vertex>(p_nMaxDepth, p_nMaxLeafObjects);
+				return new KDTreeMesh(p_nMaxDepth, p_nMaxLeafObjects);
 			}
 
 			Illumina::Core::IShape *CreateInstance(const std::string &p_strName, int p_nMaxDepth, int p_nMaxLeafObjects)
 			{
-				return new KDTreeMesh<IndexedTriangle<Vertex>, Vertex>(p_strName, p_nMaxDepth, p_nMaxLeafObjects);
+				return new KDTreeMesh(p_strName, p_nMaxDepth, p_nMaxLeafObjects);
 			}
 		};
 	}

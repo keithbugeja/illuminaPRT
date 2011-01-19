@@ -171,7 +171,7 @@ namespace Illumina
 			}
 
 		public:
-			template<class TMesh, class TVertex>
+			template<class TMesh>
 			static boost::shared_ptr<TMesh> LoadMesh(const std::string &p_strMeshFile, EngineKernel *p_pEngineKernel, MaterialGroup **p_pMaterialGroup, bool p_bVerbose = true)
 			{
 				int currentMaterialId = -1;
@@ -251,7 +251,7 @@ namespace Illumina
 								std::string hash = face.Vertex[i].GetVertexHash();
 								if (vertexMap.find(hash) == vertexMap.end())
 								{
-									TVertex vertex;								
+									Vertex vertex;								
 
 									vertex.Position = positionList[face.Vertex[i].Position];
 									vertex.Normal = normalList[face.Vertex[i].Normal];
@@ -289,7 +289,7 @@ namespace Illumina
 								std::string hash = face.Vertex[i].GetVertexHash();
 								if (vertexMap.find(hash) == vertexMap.end())
 								{
-									TVertex vertex;								
+									Vertex vertex;								
 
 									vertex.Position = positionList[face.Vertex[i].Position];
 									vertex.Normal = normalList[face.Vertex[i].Normal];

@@ -23,7 +23,7 @@ namespace Illumina
 		class ShapeFactory
 		{
 		public:
-			template<class TMesh, class TVertex>
+			template<class TMesh>
 			static void SaveMesh(const std::string& p_strMeshFile, boost::shared_ptr<TMesh> p_pMesh)
 			{
 				int nVertices = p_pMesh->VertexList.Size();
@@ -57,22 +57,22 @@ namespace Illumina
 
 			// Quick and dirty obj loader :
 			// TODO: Make a ModelIO interface and provide an obj implementation
-			template<class TMesh, class TVertex>
+			template<class TMesh>
 			static boost::shared_ptr<TMesh> LoadMesh(const std::string& p_strMeshFile, EngineKernel *p_pEngineKernel, MaterialGroup **p_pMaterialGroup)
 			{
-				return WavefrontLoader::LoadMesh<TMesh, TVertex>(p_strMeshFile, p_pEngineKernel, p_pMaterialGroup, false);
+				return WavefrontLoader::LoadMesh<TMesh>(p_strMeshFile, p_pEngineKernel, p_pMaterialGroup, false);
 			}
 
-			template<class TMesh, class TVertex>
+			template<class TMesh>
 			static boost::shared_ptr<TMesh> CreateQuad(const Vector3 &p_v0, const Vector3 &p_v1, 
 				const Vector3 &p_v2, const Vector3 &p_v3)
 			{
 				boost::shared_ptr<TMesh> mesh(new TMesh);
 
-				TVertex vertex[4];
+				Vertex vertex[4];
 
 				// If vertex has position, initialise
-				if (TVertex::GetDescriptor() & VertexFormat::Position)
+				if (Vertex::GetDescriptor() & VertexFormat::Position)
 				{
 					vertex[0].Position = p_v0;
 					vertex[1].Position = p_v1;
@@ -81,7 +81,7 @@ namespace Illumina
 				}
 
 				// If vertex has UVs, initialise
-				if (TVertex::GetDescriptor() & VertexFormat::UV)
+				if (Vertex::GetDescriptor() & VertexFormat::UV)
 				{
 					vertex[0].UV.Set(0,0);
 					vertex[1].UV.Set(1,0);
@@ -101,15 +101,15 @@ namespace Illumina
 				return mesh;
 			}
 
-			template<class TMesh, class TVertex>
+			template<class TMesh>
 			static boost::shared_ptr<TMesh> CreateBox(const Vector3 &p_minExtent, const Vector3 &p_maxExtent)
 			{
 				boost::shared_ptr<TMesh> mesh(new TMesh);
 
-				TVertex vertex[24];
+				Vertex vertex[24];
 
 				// If vertex has position, initialise
-				if (TVertex::GetDescriptor() & VertexFormat::Position)
+				if (Vertex::GetDescriptor() & VertexFormat::Position)
 				{
 					vertex[0].Position.Set(p_minExtent.X, p_maxExtent.Y, p_maxExtent.Z);
 					vertex[1].Position.Set(p_maxExtent.X, p_maxExtent.Y, p_maxExtent.Z);
@@ -143,7 +143,7 @@ namespace Illumina
 				}
 
 				// If vertex has UVs, initialise
-				if (TVertex::GetDescriptor() & VertexFormat::UV)
+				if (Vertex::GetDescriptor() & VertexFormat::UV)
 				{
 					for (int nQuadGroup=0; nQuadGroup < 23; nQuadGroup+=4)
 					{

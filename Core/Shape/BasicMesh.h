@@ -13,17 +13,16 @@ namespace Illumina
 {
 	namespace Core
 	{
-		template<class T, class U> 
 		class BasicMesh
-			: public ITriangleMesh<T, U>
+			: public ITriangleMesh
 		{
 		public:
 			//----------------------------------------------------------------------------------------------
-			BasicMesh(void) : ITriangleMesh<T, U>() { }
-			BasicMesh(const std::string &p_strName) : ITriangleMesh<T, U>(p_strName) { }
+			BasicMesh(void) : ITriangleMesh() { }
+			BasicMesh(const std::string &p_strName) : ITriangleMesh(p_strName) { }
 			//----------------------------------------------------------------------------------------------
-			boost::shared_ptr<ITriangleMesh<T, U>> CreateInstance(void) {
-				return boost::shared_ptr<ITriangleMesh<T, U>>(new BasicMesh<T, U>());
+			boost::shared_ptr<ITriangleMesh> CreateInstance(void) {
+				return boost::shared_ptr<ITriangleMesh>(new BasicMesh());
 			}
 			//----------------------------------------------------------------------------------------------
 			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
@@ -31,9 +30,9 @@ namespace Illumina
 				bool bIntersect = false;
 				Ray ray(p_ray);
 
-				for (int idx = 0, count = (int)ITriangleMesh<T, U>::TriangleList.Size(); idx < count; idx++)
+				for (int idx = 0, count = (int)ITriangleMesh::TriangleList.Size(); idx < count; idx++)
 				{
-					if (ITriangleMesh<T, U>::TriangleList[idx].Intersects(ray, p_fTime, p_surface))
+					if (ITriangleMesh::TriangleList[idx].Intersects(ray, p_fTime, p_surface))
 					{
 						ray.Max = p_surface.Distance;
 						bIntersect = true;
@@ -45,9 +44,9 @@ namespace Illumina
 			//----------------------------------------------------------------------------------------------
 			bool Intersects(const Ray &p_ray, float p_fTime)
 			{
-				for (int idx = 0, count = (int)ITriangleMesh<T, U>::TriangleList.Size(); idx < count; idx++)
+				for (int idx = 0, count = (int)ITriangleMesh::TriangleList.Size(); idx < count; idx++)
 				{
-					if (ITriangleMesh<T, U>::TriangleList[idx].Intersects(p_ray, p_fTime))
+					if (ITriangleMesh::TriangleList[idx].Intersects(p_ray, p_fTime))
 						return true;					
 				}
 
