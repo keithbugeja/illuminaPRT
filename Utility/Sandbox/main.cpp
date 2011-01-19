@@ -109,7 +109,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//PerspectiveCamera camera(
 		ThinLensCamera camera(
 		Vector3(-20.0, 10.0, -20.0), Vector3(1.0f, -0.5f, 1.0f), Vector3::UnitYPos, 
-		0.0f, -1.3f, 1.3f, -1.f, 1.f, 1.0f);
+		0.4f, -1.3f, 1.3f, -1.f, 1.f, 1.0f);
 
 	if (p_bVerbose)
 		std::cout << "Setting up camera : [" << camera.ToString() << "]" << std::endl;

@@ -6,10 +6,14 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+#include "Shape/TriangleMesh.h"
+
 namespace Illumina 
 {
 	namespace Core
 	{
+		//----------------------------------------------------------------------------------------------
+		// TODO: Since structure members are public, change naming notation
 		struct TreeMeshStatistics 
 		{
 			int m_internalNodeCount,
@@ -21,31 +25,66 @@ namespace Illumina
 				m_minLeafTriangleCount,
 				m_intersectionCount;
 
-			TreeMeshStatistics(void) 
-				: m_internalNodeCount(0)
-				, m_leafNodeCount(0)
-				, m_maxTreeDepth(0)
-				, m_minTreeDepth(0x7FFFFFFF)
-				, m_triangleCount(0)
-				, m_maxLeafTriangleCount(0)
-				, m_minLeafTriangleCount(0x7FFFFFFF)
-				, m_intersectionCount(0)
-			{ }
+			TreeMeshStatistics(void);
 
-			std::string ToString(void) const
-			{
-				return boost::str(boost::format("Internal Nodes : %d \n Leaf Nodes : %d \n Minimum Depth : %d \n Maximum Depth : %d \n Triangles : %d \n Min Tri/Leaf : %d \n Max Tri/Leaf : %d \n I-Tests : %d\n")
-					% m_internalNodeCount % m_leafNodeCount 
-					% m_minTreeDepth % m_maxTreeDepth 
-					% m_triangleCount % m_minLeafTriangleCount % m_maxLeafTriangleCount 
-					% m_intersectionCount);
-			}
+			std::string ToString(void) const;
 		};
 
-		enum TreeMeshNodeType
+		//----------------------------------------------------------------------------------------------
+		class ITreeMesh 
+			: public ITriangleMesh
 		{
-			Internal,
-			Leaf
+		public:
+			//----------------------------------------------------------------------------------------------
+			// Enumeration for representing tree node types 
+			//----------------------------------------------------------------------------------------------
+			enum NodeType
+			{
+				Internal,
+				Leaf
+			};
+
+		protected:
+			//----------------------------------------------------------------------------------------------
+			// Enumeration for selecting partitioning type
+			//----------------------------------------------------------------------------------------------
+			enum PartitionType
+			{
+				SpatialMedian,
+				SurfaceAreaHeuristic
+			};
+
+		protected:
+			//----------------------------------------------------------------------------------------------
+			// Bookkeeping information on tree-based acceleration structure
+			//----------------------------------------------------------------------------------------------
+			TreeMeshStatistics m_statistics;
+		
+		protected:
+			ITreeMesh(void);
+			ITreeMesh(const std::string& p_strName);
+
+			void ComputeBounds(const List<IndexedTriangle*> &p_objectList, AxisAlignedBoundingBox &p_aabb, 
+				float p_fMinEpsilon = 0.0f, float p_fMaxEpsilon = 0.0f);
+
+
+			int Distribute(const List<IndexedTriangle*> &p_objectList, float p_fPartition, int p_nAxis, 
+				List<IndexedTriangle*> &p_outLeftList, List<IndexedTriangle*> &p_outRightList);
+
+			int Distribute(const List<IndexedTriangle*> &p_objectList, 
+				AxisAlignedBoundingBox &p_leftAABB, AxisAlignedBoundingBox &p_rightAABB, 
+				List<IndexedTriangle*> &p_outLeftList, List<IndexedTriangle*> &p_outRightList);
+
+
+			float FindPartitionPlane(const List<IndexedTriangle*> &p_objectList, AxisAlignedBoundingBox &p_aabb, 
+				int p_nAxis, PartitionType p_partitionType);
+
+			float FindPartitionPlaneSpatialMedian(const List<IndexedTriangle*> &p_objectList, 
+				AxisAlignedBoundingBox &p_aabb, int p_nAxis);
+			
+			float FindPartitionPlaneSAH(const List<IndexedTriangle*> &p_objectList, 
+				AxisAlignedBoundingBox &p_aabb, int p_nAxis);
 		};
+		//----------------------------------------------------------------------------------------------
 	}
 }

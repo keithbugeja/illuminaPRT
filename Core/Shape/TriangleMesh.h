@@ -11,18 +11,19 @@
 #include "Shape/Shape.h"
 #include "Shape/VertexFormats.h"
 #include "Shape/IndexedTriangle.h"
-
-#include "Maths/Random.h"
-#include "Threading/List.h"
 #include "Geometry/BoundingBox.h"
+#include "Threading/List.h"
+#include "Maths/Random.h"
 
 namespace Illumina 
 {
 	namespace Core
 	{
+		//----------------------------------------------------------------------------------------------
 		// This class is no longer templated.
 		// Format is now fixed at using IndexedTriangles 
 		// and Vertex type vertices
+		//----------------------------------------------------------------------------------------------
 		class ITriangleMesh 
 			: public IShape
 		{
@@ -37,7 +38,7 @@ namespace Illumina
 			Random m_random;
 
 		public:
-			// Triangle array
+			// Triangle and vertex lists
 			List<IndexedTriangle> TriangleList;
 			List<Vertex> VertexList;
 

@@ -243,6 +243,15 @@
     <ClCompile Include="..\..\..\..\Core\Shape\IndexedTriangle.cpp">
       <Filter>Header Files\Shape</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Shape\KDTreeMesh.cpp">
+      <Filter>Header Files\Shape</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Shape\TreeMesh.cpp">
+      <Filter>Header Files\Shape</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Scene\WavefrontSceneLoader.cpp">
+      <Filter>Header Files\Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -600,6 +609,12 @@
       <Filter>Header Files\Shape</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Scene\Environment.h">
+      <Filter>Header Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Scene\SceneLoader.h">
+      <Filter>Header Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Scene\WavefrontSceneLoader.h">
       <Filter>Header Files\Scene</Filter>
     </ClInclude>
   </ItemGroup>
