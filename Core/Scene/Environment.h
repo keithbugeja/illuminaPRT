@@ -17,44 +17,9 @@ namespace Illumina
 {
 	namespace Core
 	{
-		// Output Device [Image Devices, etc]
-		// Camera type / position etc
-		// Renderer type
-		// Sampler type
-		// Integrator type
-		// Acceleration structure to use
-		// Space structure to use
-		// Geometry
-		// Materials
-		// Textures
-		// Primitives
-		// Lights
-
-		/**/
-		// Loads a scene into the environment
-		
-		class ISceneLoader
+		class Environment 
 		{
-
-		public:
-			enum Flags
-			{
-				Environment	= 1 << 0,
-				Geometry	= 1 << 1,
-				Materials	= 1 << 2,
-				Textures	= 1 << 3,
-				Luminaires	= 1 << 4,
-				World		= Geometry | Materials | Textures | Luminaires,
-				Scene		= Environment | World;
-			};
-
-		public:
-			ISceneLoader(EngineKernel *p_pEngineKernel);
-
-			virtual Import(const std::string &p_strFilename, Environment *p_pEnvironment, Flags p_generalFlags = Scene, unsigned int p_uiLoaderFlags) = 0;
-			virtual Export(const std::string &p_strFilename, Environment *p_pEnvironment, Flags p_generalFlags = Scene, unsigned int p_uiLoaderFlags) = 0;
 		};
-
 
 		/*
 		class WavefrontSceneLoader : public ISceneLoader

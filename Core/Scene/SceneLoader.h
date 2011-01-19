@@ -33,13 +33,13 @@ namespace Illumina
 		public:
 			enum Flags
 			{
-				//Environment	= 1 << 0,
+				Settings	= 1 << 0,
 				Geometry	= 1 << 1,
 				Materials	= 1 << 2,
 				Textures	= 1 << 3,
 				Luminaires	= 1 << 4,
 				World		= Geometry | Materials | Textures | Luminaires,
-				//Scene		= Environment | World;
+				All			= Settings | World
 			};
 
 		public:
