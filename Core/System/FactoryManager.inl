@@ -88,6 +88,20 @@ bool FactoryManager<T>::QueryInstance(const std::string &p_strInstanceName)
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 template<class T>
+void FactoryManager<T>::RegisterInstance(const std::string &p_strInstanceName, T *p_pInstance)
+{
+	// Check that instance name is unique.
+	if (ContainsItem(p_strInstanceName)) throw new Exception("Instance name must be unique!");
+	
+	// If instance creation was unsuccessful, thrown an exception
+	if (p_pInstance == NULL) throw new Exception("Instance must not be NULL!");
+
+	// Add object to managed instances
+	m_instanceMap[p_strInstanceName] = p_pInstance;
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+template<class T>
 T* FactoryManager<T>::CreateInstance(const std::string& p_strFactoryName, const std::string& p_strInstanceName)
 {
 	//std::cout << "FactoryManager creating instance '" << p_strInstanceName << "' from factory '" << p_strFactoryName << "' ..." << std::endl;

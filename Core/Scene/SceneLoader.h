@@ -44,8 +44,8 @@ namespace Illumina
 			};
 
 		public:
-			virtual bool Import(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_generalFlags, ArgumentMap* p_pArgumentMap = NULL) = 0;
-			virtual bool Export(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_generalFlags, ArgumentMap* p_pArgumentMap = NULL) = 0;
+			virtual bool Import(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL) = 0;
+			virtual bool Export(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL) = 0;
 
 		protected:
 			int Tokenise(std::string &p_strText, char *p_pSeparators, std::vector<std::string> &p_tokenList);
