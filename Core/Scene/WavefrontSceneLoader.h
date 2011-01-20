@@ -39,8 +39,8 @@ namespace Illumina
 		public:
 			WavefrontSceneLoader(EngineKernel *p_pEngineKernel);
 
-			bool Import(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap = NULL);
-			bool Export(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap = NULL);
+			bool Import(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL);
+			bool Export(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL);
 		
 		protected:
 			bool LoadMaterials(const std::string &p_strFilename, WavefrontContext &p_context);

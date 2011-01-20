@@ -30,6 +30,11 @@ namespace Illumina
 			Environment(EngineKernel *p_pEngineKernel);
 			~Environment(void);
 
+			void SetRenderer(IRenderer *p_pRenderer);
+			void SetSampler(ISampler *p_pSampler);
+			void SetScene(IScene *p_pScene);
+			void SetSpace(ISpace *p_pSpace);
+
 			//Load(const std::string &p_strEnvironmentName);
 			//Unload(void);
 		};

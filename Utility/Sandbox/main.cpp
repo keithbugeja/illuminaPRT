@@ -97,13 +97,6 @@ using namespace Illumina::Core;
 
 void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 {
-	std::string fname_model("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\crytek\\sponza.obj");
-
-	WavefrontSceneLoader w(NULL);
-	w.Import(fname_model, NULL, 0, 0);
-
-	exit(0);
-
 	//----------------------------------------------------------------------------------------------
 	// Set number of OMP Threads
 	//----------------------------------------------------------------------------------------------
