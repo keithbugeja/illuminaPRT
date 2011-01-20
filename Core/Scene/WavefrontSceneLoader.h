@@ -16,12 +16,9 @@
 #include "System/EngineKernel.h"
 #include "Scene/SceneLoader.h"
 
-/*
-#include "Shape/VertexFormats.h"
-#include "Shape/Shape.h"
-#include "Spectrum/Spectrum.h"
-*/
+class WavefrontContext;
 
+//----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
@@ -42,12 +39,12 @@ namespace Illumina
 		public:
 			WavefrontSceneLoader(EngineKernel *p_pEngineKernel);
 
-			bool Import(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiGeneralFlags, unsigned int p_uiLoaderFlags);
-			bool Export(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiGeneralFlags, unsigned int p_uiLoaderFlags);
+			bool Import(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap = NULL);
+			bool Export(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap = NULL);
 		
 		protected:
-			bool LoadMaterials(const std::string &p_strFilename, Environment *p_pEnvironment);
-			bool LoadGeometry(const std::string &p_strFilename, Environment *p_pEnvironment);
+			bool LoadMaterials(const std::string &p_strFilename, WavefrontContext &p_context);
+			bool LoadGeometry(const std::string &p_strFilename, WavefrontContext &p_context);
 		}; 
 		//----------------------------------------------------------------------------------------------
 	}

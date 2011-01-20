@@ -17,16 +17,6 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class Environment 
-		{
-		};
-
-		/*
-		class WavefrontSceneLoader : public ISceneLoader
-		{
-
-		};
-
 		class Environment
 		{
 		protected:
@@ -40,9 +30,8 @@ namespace Illumina
 			Environment(EngineKernel *p_pEngineKernel);
 			~Environment(void);
 
-			Load(const std::string &p_strEnvironmentName);
-			Unload(void);
+			//Load(const std::string &p_strEnvironmentName);
+			//Unload(void);
 		};
-		*/
 	}
 }

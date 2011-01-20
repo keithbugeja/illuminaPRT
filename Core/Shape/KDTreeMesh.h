@@ -74,9 +74,8 @@ namespace Illumina
 			int ReleaseNode(KDTreeNode *p_pNode);
 
 		public:
-			KDTreeMesh(void);
-			KDTreeMesh(int p_nMaxObjectsPerLeaf, int p_nMaxTreeDepth);
-			KDTreeMesh(const std::string &p_strName, int p_nMaxObjectsPerLeaf, int p_nMaxTreeDepth);
+			KDTreeMesh(int p_nMaxObjectsPerLeaf = 20, int p_nMaxTreeDepth = 20);
+			KDTreeMesh(const std::string &p_strName, int p_nMaxObjectsPerLeaf = 20, int p_nMaxTreeDepth = 20);
 			~KDTreeMesh();
 
 			boost::shared_ptr<ITriangleMesh> CreateInstance(void);

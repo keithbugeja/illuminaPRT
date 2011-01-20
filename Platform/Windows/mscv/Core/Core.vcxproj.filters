@@ -252,6 +252,9 @@
     <ClCompile Include="..\..\..\..\Core\Scene\WavefrontSceneLoader.cpp">
       <Filter>Header Files\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Scene\SceneLoader.cpp">
+      <Filter>Header Files\Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
