@@ -165,6 +165,7 @@
     <ClCompile Include="..\..\..\..\Core\Renderer\DistributedRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Sampler\JitterSampler.cpp" />
     <ClCompile Include="..\..\..\..\Core\Sampler\RandomSampler.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\SceneLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\WavefrontSceneLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\IndexedTriangle.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\KDTreeMesh.cpp" />

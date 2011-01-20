@@ -77,12 +77,6 @@ int KDTreeMesh::ReleaseNode(KDTreeNode *p_pNode)
 // Constructors and destructor
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-KDTreeMesh::KDTreeMesh(void)
-	: ITreeMesh() 
-	, m_nMaxLeafObjects(20)
-	, m_nMaxTreeDepth(20)
-{ }
-//----------------------------------------------------------------------------------------------
 KDTreeMesh::KDTreeMesh(int p_nMaxObjectsPerLeaf, int p_nMaxTreeDepth)
 	: ITreeMesh() 
 	, m_nMaxLeafObjects(p_nMaxObjectsPerLeaf)

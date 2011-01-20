@@ -11,9 +11,10 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/lexical_cast.hpp>
 
-#include "Scene/WavefrontSceneLoader.h"
 #include "System/EngineKernel.h"
+#include "Scene/WavefrontSceneLoader.h"
 #include "Spectrum/Spectrum.h"
 #include "Shape/VertexFormats.h"
 #include "Shape/Shape.h"
@@ -61,682 +62,411 @@ struct WavefrontMaterial
 
 	std::string AmbientMap;
 	std::string DiffuseMap;
+	std::string SpecularMap;
 	std::string BumpMap;
 };
 //----------------------------------------------------------------------------------------------
+struct WavefrontContext
+{
+	std::map<std::string, int> VertexMap;
 
+	std::vector<Vector3> PositionList;
+	std::vector<Vector3> NormalList;
+	std::vector<Vector2> UVList;
+
+	std::vector<WavefrontMaterial> MaterialList;
+
+	ITriangleMesh *Mesh;
+	MaterialGroup *MaterialGroup;
+
+	std::string ObjectName;
+	int CurrentMaterialId;
+
+	WavefrontContext(void)
+		: Mesh(NULL)
+		, MaterialGroup(NULL)
+		, CurrentMaterialId(-1)
+	{ }
+};
 //----------------------------------------------------------------------------------------------
 WavefrontSceneLoader::WavefrontSceneLoader(EngineKernel *p_pEngineKernel)
 	: m_pEngineKernel(p_pEngineKernel)
 { }
 //----------------------------------------------------------------------------------------------
-bool WavefrontSceneLoader::Import(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiGeneralFlags, unsigned int p_uiLoaderFlags)
+bool WavefrontSceneLoader::Import(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap)
 {
-	return true;
-}
-//----------------------------------------------------------------------------------------------
-bool WavefrontSceneLoader::Export(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiGeneralFlags, unsigned int p_uiLoaderFlags)
-{
-	return true;
-}
-//----------------------------------------------------------------------------------------------
-bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Environment *p_pEnvironment)
-{
-	return true;
-}
-//----------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------
-bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Environment *p_pEnvironment)
-{
-	/*
-	int currentMaterialId = -1;
-
-	std::map<std::string, int> vertexMap;
-	std::vector<Vector2> textureCoordList;
-	std::vector<Vector3> positionList, normalList;
-	std::vector<WavefrontMaterial> materialList;
-	std::string strLine, strType;
-
-	boost::shared_ptr<TMesh> mesh(new TMesh);
-
-				std::ifstream meshFile;
-				meshFile.open(p_strMeshFile.c_str());
-
-				// If file couldn't be opened, report error and quit
-				if (!meshFile.is_open())
-				{
-					std::cerr << "ERROR -- Couldn't open file \'" << p_strMeshFile << "\'" << std::endl;
-					exit(-1);
-				}
-
-				while(std::getline(meshFile, strLine))
-				{
-					std::stringstream meshLine(strLine);
-
-					meshLine >> strType;
-
-					if(strType == "v")
-					{
-						Vector3 position;
-						meshLine >> position.X >> position.Y >> position.Z;
-						//position.X = -position.X;
-						positionList.push_back(position);
-					}
-					else if(strType == "vt")
-					{
-						Vector2 textureCoords;
-						meshLine >> textureCoords.U >> textureCoords.V;
-						textureCoordList.push_back(textureCoords);
-					}
-					else if(strType == "vn")
-					{
-						Vector3 normal;
-						meshLine >> normal.X >> normal.Y >> normal.Z;
-						//normal.X = -normal.X;
-						normalList.push_back(normal);
-					}
-					else if(strType == "f")
-					{
-						int count = 0;
-						
-						std::string m = meshLine.str();
-
-						for (size_t s = 0; s < m.size(); s++)
-							if (m[s] == '/') count++;
-
-						int vertexCount = count / 2;
-
-						if (vertexCount == 3)
-						{
-							char separator;
-							int vertexIndex[3];
-							WavefrontFace face;
-
-							for (int i = 0; i < 3; i++)
-							{
-								meshLine >> face.Vertex[i].Position >> separator
-									>> face.Vertex[i].Texture >> separator
-									>> face.Vertex[i].Normal;
-
-								face.Vertex[i].Position--;
-								if (face.Vertex[i].Normal != 0) face.Vertex[i].Normal--;
-								if (face.Vertex[i].Texture != 0) face.Vertex[i].Texture--;
-
-								// Vertex not found in map
-								std::string hash = face.Vertex[i].GetVertexHash();
-								if (vertexMap.find(hash) == vertexMap.end())
-								{
-									Vertex vertex;								
-
-									vertex.Position = positionList[face.Vertex[i].Position];
-									vertex.Normal = normalList[face.Vertex[i].Normal];
-									if (p_bVerbose) if (vertex.Normal == 0) std::cout << "-- Invalid normal for index [" << mesh->VertexList.Size() << "]" << std::endl;
-									if (face.Vertex[i].Texture < textureCoordList.size()) vertex.UV = textureCoordList[face.Vertex[i].Texture];
-								
-									vertexMap[hash] = vertexIndex[i] = mesh->VertexList.Size();
-									mesh->AddVertex(vertex);
-								}
-								else
-								{
-									vertexIndex[i] = vertexMap[hash];
-								}
-							}
-
-							mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[1], vertexIndex[2], currentMaterialId);
-						}
-						else
-						{
-							char separator;
-							int vertexIndex[4];
-							WavefrontFace face;
-
-							for (int i = 0; i < 4; i++)
-							{
-								meshLine >> face.Vertex[i].Position >> separator
-									>> face.Vertex[i].Texture >> separator
-									>> face.Vertex[i].Normal;
-
-								face.Vertex[i].Position--;
-								if (face.Vertex[i].Normal != 0) face.Vertex[i].Normal--;
-								if (face.Vertex[i].Texture != 0) face.Vertex[i].Texture--;
-
-								// Vertex not found in map
-								std::string hash = face.Vertex[i].GetVertexHash();
-								if (vertexMap.find(hash) == vertexMap.end())
-								{
-									Vertex vertex;								
-
-									vertex.Position = positionList[face.Vertex[i].Position];
-									vertex.Normal = normalList[face.Vertex[i].Normal];
-									if (p_bVerbose) if (vertex.Normal == 0) std::cout << "-- Invalid normal for index [" << mesh->VertexList.Size() << "]" << std::endl;
-									if (face.Vertex[i].Texture < textureCoordList.size()) vertex.UV = textureCoordList[face.Vertex[i].Texture];
-								
-									vertexMap[hash] = vertexIndex[i] = mesh->VertexList.Size();
-									mesh->AddVertex(vertex);
-								}
-								else
-								{
-									vertexIndex[i] = vertexMap[hash];
-								}
-							}
-
-							mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[1], vertexIndex[2], currentMaterialId);
-							mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[2], vertexIndex[3], currentMaterialId);
-						}
-					}
-					else if (strLine.find("mtllib") != std::string::npos)
-					{
-						std::string file, filepath;
-						meshLine >> file >> file;
-						if(p_bVerbose) std::cout<< "-- Loading materials file '" << file << "'..." << std::endl;
-						
-						boost::filesystem::path meshPath(p_strMeshFile);
-						filepath = (meshPath.parent_path() / file).string();
-						LoadMaterials(filepath, materialList, p_bVerbose);
-
-						*p_pMaterialGroup = (MaterialGroup*)p_pEngineKernel->GetMaterialManager()->CreateInstance("Group", file);
-
-						for (size_t matIdx = 0; matIdx < materialList.size(); matIdx++)
-						{
-							const WavefrontMaterial &material = materialList.at(matIdx);
-
-							std::stringstream argumentStream;
-							std::string indexName = material.Name;
-
-							switch(material.Type)
-							{
-								case WavefrontMaterial::Matte:
-								{
-									argumentStream<<"Name=" << indexName << ";Reflectivity=" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << ";";
-									IMaterial *pMaterial = p_pEngineKernel->GetMaterialManager()->CreateInstance("Matte", indexName, argumentStream.str());
-									
-									(*p_pMaterialGroup)->Add(pMaterial, matIdx);
-									
-									if (material.DiffuseMap.size() != 0)
-									{ 
-										std::string diffuseMap = material.DiffuseMap;
-										MatteMaterial *pMatte = (MatteMaterial*)pMaterial;
-
-										if (!p_pEngineKernel->GetTextureManager()->QueryInstance(diffuseMap))
-										{
-											std::stringstream textureArgStream;
-											textureArgStream << "Name=" << diffuseMap << ";Filename=" << (meshPath.parent_path() / diffuseMap).string() << ";Filetype=PPM;";
-											ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
-							
-											pMatte->SetTexture(pTexture);
-										}
-										else
-										{
-											if (p_bVerbose) std::cout << "Re-using texture : " << diffuseMap << std::endl;
-											pMatte->SetTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
-										}
-									}
-
-									break;
-								}
-
-								case WavefrontMaterial::Mirror:
-								{
-									argumentStream<<"Name=" << indexName << ";Reflectivity=" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << ";";
-									IMaterial *pMaterial = p_pEngineKernel->GetMaterialManager()->CreateInstance("Mirror", indexName, argumentStream.str());
-									
-									(*p_pMaterialGroup)->Add(pMaterial, matIdx);
-
-									if (material.DiffuseMap.size() != 0)
-									{ 
-										std::string diffuseMap = material.DiffuseMap;
-										MirrorMaterial *pMirror = (MirrorMaterial*)pMaterial;
-
-										if (!p_pEngineKernel->GetTextureManager()->QueryInstance(diffuseMap))
-										{
-											std::stringstream textureArgStream;
-											textureArgStream << "Name=" << diffuseMap << ";Filename=" << (meshPath.parent_path() / diffuseMap).string() << ";Filetype=PPM;";
-											ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
-							
-											pMirror->SetTexture(pTexture);
-										}
-										else
-										{
-											if (p_bVerbose) std::cout << "Re-using texture : " << diffuseMap << std::endl;
-											pMirror->SetTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
-										}
-									}
-									
-									break;
-								}
-
-								case WavefrontMaterial::Glass:
-								{
-									argumentStream<<"Name=" << indexName << ";"
-										<< "Reflectivity=" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << ";" 
-										<< "Absorption=" << 1.0f << ";EtaI=" << 1.0f << ";EtaT=" << material.RefractiveIndex << ";";
-									IMaterial *pMaterial = p_pEngineKernel->GetMaterialManager()->CreateInstance("Glass", indexName, argumentStream.str());
-									
-									(*p_pMaterialGroup)->Add(pMaterial, matIdx);
-
-									if (material.DiffuseMap.size() != 0)
-									{ 
-										std::string diffuseMap = material.DiffuseMap;
-										GlassMaterial *pGlass = (GlassMaterial*)pMaterial;
-
-										if (!p_pEngineKernel->GetTextureManager()->QueryInstance(diffuseMap))
-										{
-											std::stringstream textureArgStream;
-											textureArgStream << "Name=" << diffuseMap << ";Filename=" << (meshPath.parent_path() / diffuseMap).string() << ";Filetype=PPM;";
-											ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
-							
-											pGlass->SetTexture(pTexture);
-										}
-										else
-										{
-											if (p_bVerbose) std::cout << "Re-using texture : " << diffuseMap << std::endl;
-											pGlass->SetTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
-										}
-									}
-									
-									break;
-								}
-							}
-						} 
-					}
-					else if (strLine.find("usemtl") != std::string::npos)
-					{
-						std::string materialName;
-						meshLine >> materialName >> materialName;
-
-						currentMaterialId = (*p_pMaterialGroup)->GetGroupId(materialName);
-						if (p_bVerbose) std::cout<< "-- Using material [" << materialName << ":" << currentMaterialId << "]..." << std::endl;
-					}
-				}
-
-				// Explicit closing of the file
-				meshFile.close();
-
-				if (p_bVerbose) std::cout << "-- Parsed " << mesh->VertexList.Size() << " vertices, " << mesh->TriangleList.Size() << " faces... " << std::endl;
-
-				return mesh;
-			}
-			*/
-	return true;
-}
-//----------------------------------------------------------------------------------------------
-
-/*
-//----------------------------------------------------------------------------------------------
-
-
-
-		//----------------------------------------------------------------------------------------------
-		class WavefrontLoader
-		{
-		protected:
-			static bool LoadMaterials(const std::string &p_strMaterialsFile, std::vector<WavefrontMaterial> &p_materialList, bool p_bVerbose = true)
-			{
-				std::ifstream file;
-
-				file.open(p_strMaterialsFile.c_str());
-
-				// If file couldn't be opened, report error and quit
-				if (!file.is_open())
-				{
-					std::cerr << "ERROR -- Couldn't open file \'" << p_strMaterialsFile << "\'" << std::endl;
-					exit(-1);
-				}
-
-				std::string strLine, strValue;
-				float fValue[3];
-				int nValue;
-
-				while(std::getline(file, strLine))
-				{
-					std::stringstream line(strLine);
-					
-					// New material
-					if (strLine.find("newmtl") != std::string::npos)
-					{
-						line>>strValue>>strValue;
-
-						WavefrontMaterial material;
-						material.Name = strValue;
-						material.Type = WavefrontMaterial::Matte;
-
-						p_materialList.push_back(material);
-					}
-					else if (strLine.find("illum") != std::string::npos)
-					{
-						line>>strValue>>nValue;
-
-						switch (nValue)
-						{
-						case 4:
-							p_materialList.back().Type = WavefrontMaterial::Glass;
-							break;
-
-						case 5:
-							p_materialList.back().Type = WavefrontMaterial::Mirror;
-							break;
-
-						default:
-							p_materialList.back().Type = WavefrontMaterial::Matte;
-						}
-					}
-					else if (strLine.find("map_Kd") != std::string::npos)
-					{
-						line>>strValue>>strValue;
-						p_materialList.back().DiffuseMap = strValue;
-					}
-					else if (strLine.find("Kd") != std::string::npos)
-					{
-						line>>strValue>>fValue[0]>>fValue[1]>>fValue[2];
-						p_materialList.back().Diffuse.Set(fValue);
-					}
-					else if (strLine.find("Ka") != std::string::npos)
-					{
-						line>>strValue>>fValue[0]>>fValue[1]>>fValue[2];
-						p_materialList.back().Ambient.Set(fValue);
-					}
-					else if (strLine.find("Ks") != std::string::npos)
-					{
-						line>>strValue>>fValue[0]>>fValue[1]>>fValue[2];
-						p_materialList.back().Specular.Set(fValue);
-					}
-					else if (strLine.find("Ke") != std::string::npos)
-					{
-						line>>strValue>>fValue[0]>>fValue[1]>>fValue[2];
-						p_materialList.back().Emissive.Set(fValue);
-					}
-					else if (strLine.find("Ns") != std::string::npos)
-					{
-						line>>strValue>>fValue[0];
-						p_materialList.back().Shininess = fValue[0];
-					}
-					else if (strLine.find("Ni") != std::string::npos)
-					{
-						line>>strValue>>fValue[0];
-						p_materialList.back().RefractiveIndex = fValue[0];
-					}
-				}
-
-				file.close();
-
-				if (p_bVerbose)
-					std::cout << "-- Material file loaded " << p_materialList.size() << " entries..." << std::endl;
-
-				return true;
-			}
-
-		public:
-			template<class TMesh>
-			static boost::shared_ptr<TMesh> LoadMesh(const std::string &p_strMeshFile, EngineKernel *p_pEngineKernel, MaterialGroup **p_pMaterialGroup, bool p_bVerbose = true)
-			{
-				int currentMaterialId = -1;
-
-				std::map<std::string, int> vertexMap; 
-				std::vector<Vector2> textureCoordList;
-				std::vector<Vector3> positionList, normalList;
-				std::vector<WavefrontMaterial> materialList;
-				std::string strLine, strType;
-
-				boost::shared_ptr<TMesh> mesh(new TMesh);
-
-				std::ifstream meshFile;
-				meshFile.open(p_strMeshFile.c_str());
-
-				// If file couldn't be opened, report error and quit
-				if (!meshFile.is_open())
-				{
-					std::cerr << "ERROR -- Couldn't open file \'" << p_strMeshFile << "\'" << std::endl;
-					exit(-1);
-				}
-
-				while(std::getline(meshFile, strLine))
-				{
-					std::stringstream meshLine(strLine);
-
-					meshLine >> strType;
-
-					if(strType == "v")
-					{
-						Vector3 position;
-						meshLine >> position.X >> position.Y >> position.Z;
-						//position.X = -position.X;
-						positionList.push_back(position);
-					}
-					else if(strType == "vt")
-					{
-						Vector2 textureCoords;
-						meshLine >> textureCoords.U >> textureCoords.V;
-						textureCoordList.push_back(textureCoords);
-					}
-					else if(strType == "vn")
-					{
-						Vector3 normal;
-						meshLine >> normal.X >> normal.Y >> normal.Z;
-						//normal.X = -normal.X;
-						normalList.push_back(normal);
-					}
-					else if(strType == "f")
-					{
-						int count = 0;
-						
-						std::string m = meshLine.str();
-
-						for (size_t s = 0; s < m.size(); s++)
-							if (m[s] == '/') count++;
-
-						int vertexCount = count / 2;
-
-						if (vertexCount == 3)
-						{
-							char separator;
-							int vertexIndex[3];
-							WavefrontFace face;
-
-							for (int i = 0; i < 3; i++)
-							{
-								meshLine >> face.Vertex[i].Position >> separator
-									>> face.Vertex[i].Texture >> separator
-									>> face.Vertex[i].Normal;
-
-								face.Vertex[i].Position--;
-								if (face.Vertex[i].Normal != 0) face.Vertex[i].Normal--;
-								if (face.Vertex[i].Texture != 0) face.Vertex[i].Texture--;
-
-								// Vertex not found in map
-								std::string hash = face.Vertex[i].GetVertexHash();
-								if (vertexMap.find(hash) == vertexMap.end())
-								{
-									Vertex vertex;								
-
-									vertex.Position = positionList[face.Vertex[i].Position];
-									vertex.Normal = normalList[face.Vertex[i].Normal];
-									if (p_bVerbose) if (vertex.Normal == 0) std::cout << "-- Invalid normal for index [" << mesh->VertexList.Size() << "]" << std::endl;
-									if (face.Vertex[i].Texture < textureCoordList.size()) vertex.UV = textureCoordList[face.Vertex[i].Texture];
-								
-									vertexMap[hash] = vertexIndex[i] = mesh->VertexList.Size();
-									mesh->AddVertex(vertex);
-								}
-								else
-								{
-									vertexIndex[i] = vertexMap[hash];
-								}
-							}
-
-							mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[1], vertexIndex[2], currentMaterialId);
-						}
-						else
-						{
-							char separator;
-							int vertexIndex[4];
-							WavefrontFace face;
-
-							for (int i = 0; i < 4; i++)
-							{
-								meshLine >> face.Vertex[i].Position >> separator
-									>> face.Vertex[i].Texture >> separator
-									>> face.Vertex[i].Normal;
-
-								face.Vertex[i].Position--;
-								if (face.Vertex[i].Normal != 0) face.Vertex[i].Normal--;
-								if (face.Vertex[i].Texture != 0) face.Vertex[i].Texture--;
-
-								// Vertex not found in map
-								std::string hash = face.Vertex[i].GetVertexHash();
-								if (vertexMap.find(hash) == vertexMap.end())
-								{
-									Vertex vertex;								
-
-									vertex.Position = positionList[face.Vertex[i].Position];
-									vertex.Normal = normalList[face.Vertex[i].Normal];
-									if (p_bVerbose) if (vertex.Normal == 0) std::cout << "-- Invalid normal for index [" << mesh->VertexList.Size() << "]" << std::endl;
-									if (face.Vertex[i].Texture < textureCoordList.size()) vertex.UV = textureCoordList[face.Vertex[i].Texture];
-								
-									vertexMap[hash] = vertexIndex[i] = mesh->VertexList.Size();
-									mesh->AddVertex(vertex);
-								}
-								else
-								{
-									vertexIndex[i] = vertexMap[hash];
-								}
-							}
-
-							mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[1], vertexIndex[2], currentMaterialId);
-							mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[2], vertexIndex[3], currentMaterialId);
-						}
-					}
-					else if (strLine.find("mtllib") != std::string::npos)
-					{
-						std::string file, filepath;
-						meshLine >> file >> file;
-						if(p_bVerbose) std::cout<< "-- Loading materials file '" << file << "'..." << std::endl;
-						
-						boost::filesystem::path meshPath(p_strMeshFile);
-						filepath = (meshPath.parent_path() / file).string();
-						LoadMaterials(filepath, materialList, p_bVerbose);
-
-						*p_pMaterialGroup = (MaterialGroup*)p_pEngineKernel->GetMaterialManager()->CreateInstance("Group", file);
-
-						for (size_t matIdx = 0; matIdx < materialList.size(); matIdx++)
-						{
-							const WavefrontMaterial &material = materialList.at(matIdx);
-
-							std::stringstream argumentStream;
-							std::string indexName = material.Name;
-
-							switch(material.Type)
-							{
-								case WavefrontMaterial::Matte:
-								{
-									argumentStream<<"Name=" << indexName << ";Reflectivity=" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << ";";
-									IMaterial *pMaterial = p_pEngineKernel->GetMaterialManager()->CreateInstance("Matte", indexName, argumentStream.str());
-									
-									(*p_pMaterialGroup)->Add(pMaterial, matIdx);
-									
-									if (material.DiffuseMap.size() != 0)
-									{ 
-										std::string diffuseMap = material.DiffuseMap;
-										MatteMaterial *pMatte = (MatteMaterial*)pMaterial;
-
-										if (!p_pEngineKernel->GetTextureManager()->QueryInstance(diffuseMap))
-										{
-											std::stringstream textureArgStream;
-											textureArgStream << "Name=" << diffuseMap << ";Filename=" << (meshPath.parent_path() / diffuseMap).string() << ";Filetype=PPM;";
-											ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
-							
-											pMatte->SetTexture(pTexture);
-										}
-										else
-										{
-											if (p_bVerbose) std::cout << "Re-using texture : " << diffuseMap << std::endl;
-											pMatte->SetTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
-										}
-									}
-
-									break;
-								}
-
-								case WavefrontMaterial::Mirror:
-								{
-									argumentStream<<"Name=" << indexName << ";Reflectivity=" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << ";";
-									IMaterial *pMaterial = p_pEngineKernel->GetMaterialManager()->CreateInstance("Mirror", indexName, argumentStream.str());
-									
-									(*p_pMaterialGroup)->Add(pMaterial, matIdx);
-
-									if (material.DiffuseMap.size() != 0)
-									{ 
-										std::string diffuseMap = material.DiffuseMap;
-										MirrorMaterial *pMirror = (MirrorMaterial*)pMaterial;
-
-										if (!p_pEngineKernel->GetTextureManager()->QueryInstance(diffuseMap))
-										{
-											std::stringstream textureArgStream;
-											textureArgStream << "Name=" << diffuseMap << ";Filename=" << (meshPath.parent_path() / diffuseMap).string() << ";Filetype=PPM;";
-											ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
-							
-											pMirror->SetTexture(pTexture);
-										}
-										else
-										{
-											if (p_bVerbose) std::cout << "Re-using texture : " << diffuseMap << std::endl;
-											pMirror->SetTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
-										}
-									}
-									
-									break;
-								}
-
-								case WavefrontMaterial::Glass:
-								{
-									argumentStream<<"Name=" << indexName << ";"
-										<< "Reflectivity=" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << ";" 
-										<< "Absorption=" << 1.0f << ";EtaI=" << 1.0f << ";EtaT=" << material.RefractiveIndex << ";";
-									IMaterial *pMaterial = p_pEngineKernel->GetMaterialManager()->CreateInstance("Glass", indexName, argumentStream.str());
-									
-									(*p_pMaterialGroup)->Add(pMaterial, matIdx);
-
-									if (material.DiffuseMap.size() != 0)
-									{ 
-										std::string diffuseMap = material.DiffuseMap;
-										GlassMaterial *pGlass = (GlassMaterial*)pMaterial;
-
-										if (!p_pEngineKernel->GetTextureManager()->QueryInstance(diffuseMap))
-										{
-											std::stringstream textureArgStream;
-											textureArgStream << "Name=" << diffuseMap << ";Filename=" << (meshPath.parent_path() / diffuseMap).string() << ";Filetype=PPM;";
-											ITexture *pTexture = p_pEngineKernel->GetTextureManager()->CreateInstance("Image", diffuseMap, textureArgStream.str());
-							
-											pGlass->SetTexture(pTexture);
-										}
-										else
-										{
-											if (p_bVerbose) std::cout << "Re-using texture : " << diffuseMap << std::endl;
-											pGlass->SetTexture(p_pEngineKernel->GetTextureManager()->RequestInstance(diffuseMap));
-										}
-									}
-									
-									break;
-								}
-							}
-						} 
-					}
-					else if (strLine.find("usemtl") != std::string::npos)
-					{
-						std::string materialName;
-						meshLine >> materialName >> materialName;
-
-						currentMaterialId = (*p_pMaterialGroup)->GetGroupId(materialName);
-						if (p_bVerbose) std::cout<< "-- Using material [" << materialName << ":" << currentMaterialId << "]..." << std::endl;
-					}
-				}
-
-				// Explicit closing of the file
-				meshFile.close();
-
-				if (p_bVerbose) std::cout << "-- Parsed " << mesh->VertexList.Size() << " vertices, " << mesh->TriangleList.Size() << " faces... " << std::endl;
-
-				return mesh;
-			}
-		};
+	// Provide wavefront scene context for loader
+	WavefrontContext context;
+	
+	// Load geometry
+	LoadGeometry(p_strFilename, context);
+
+	std::string meshName = context.Mesh->GetName(),
+		materialGroupName = context.MaterialGroup->GetName();
+
+	if (p_pArgumentMap != NULL)
+	{
+		p_pArgumentMap->GetArgument("MeshName", meshName);
+		p_pArgumentMap->GetArgument("MaterialGroupName", materialGroupName);
 	}
+
+	// Register assets
+	m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, context.Mesh);
+	m_pEngineKernel->GetMaterialManager()->RegisterInstance(materialGroupName, context.MaterialGroup);
+
+	return true;
 }
-*/
+//----------------------------------------------------------------------------------------------
+bool WavefrontSceneLoader::Export(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap)
+{
+	return true;
+}
+//----------------------------------------------------------------------------------------------
+bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, WavefrontContext &p_context)
+{
+	// Get material library filename as a path
+	boost::filesystem::path materialPath(p_strFilename);
+
+	// Open wavefront file
+	std::ifstream materialFile;
+	materialFile.open(p_strFilename.c_str());
+	
+	if (!materialFile.is_open())
+	{
+		std::cerr << "Error : Couldn't open file \'" << p_strFilename << "\'" << std::endl;
+		exit(-1);
+	}
+
+	// define some temporary containers
+	Vector2 vector2;
+	Vector3 vector3;
+	int value;
+
+	std::string currentLine;
+	std::vector<std::string> tokenList;
+
+	WavefrontMaterial material;
+
+	while(std::getline(materialFile, currentLine))
+	{
+		tokenList.clear();
+
+		if (Tokenise(currentLine, " ", tokenList) == 0)
+			continue;
+
+		if (tokenList[0] == "newmtl") // New material
+		{
+			if (tokenList.size() != 2)
+				continue;
+			
+			material.Name = tokenList[1];
+			material.Type = WavefrontMaterial::Matte;
+
+			p_context.MaterialList.push_back(material);
+		}
+		else if (tokenList[0] == "illum") // Illumination model
+		{
+			if (tokenList.size() != 4)
+				continue;
+
+			switch (boost::lexical_cast<int>(tokenList[1]))
+			{
+				case 4:
+					p_context.MaterialList.back().Type = WavefrontMaterial::Glass;
+					break;
+
+				case 5:
+					p_context.MaterialList.back().Type = WavefrontMaterial::Mirror;
+					break;
+
+				default:
+					p_context.MaterialList.back().Type = WavefrontMaterial::Matte;
+			}
+		}
+		else if (tokenList[0] == "map_Ka") // Ambient map
+		{
+			if (tokenList.size() != 2)
+				continue;
+
+			p_context.MaterialList.back().AmbientMap = tokenList[1];
+		}
+		else if (tokenList[0] == "map_Kd") // Normal map
+		{
+			if (tokenList.size() != 2)
+				continue;
+
+			p_context.MaterialList.back().DiffuseMap = tokenList[1];
+		}
+		else if (tokenList[0] == "map_Ks") // Specular map
+		{
+			if (tokenList.size() != 2)
+				continue;
+
+			p_context.MaterialList.back().SpecularMap = tokenList[1];
+		}
+		else if (tokenList[0] == "ka") // Ambient values
+		{
+			if (tokenList.size() != 4)
+				continue;
+
+			p_context.MaterialList.back().Ambient.Set(
+				boost::lexical_cast<float>(tokenList[1]),
+				boost::lexical_cast<float>(tokenList[2]),
+				boost::lexical_cast<float>(tokenList[3]));
+		}
+		else if (tokenList[0] == "kd") // Diffuse values
+		{
+			if (tokenList.size() != 4)
+				continue;
+
+			p_context.MaterialList.back().Diffuse.Set(
+				boost::lexical_cast<float>(tokenList[1]),
+				boost::lexical_cast<float>(tokenList[2]),
+				boost::lexical_cast<float>(tokenList[3]));
+		}
+		else if (tokenList[0] == "ks") // Specular values
+		{
+			if (tokenList.size() != 4)
+				continue;
+
+			p_context.MaterialList.back().Specular.Set(
+				boost::lexical_cast<float>(tokenList[1]),
+				boost::lexical_cast<float>(tokenList[2]),
+				boost::lexical_cast<float>(tokenList[3]));
+		}
+		else if (tokenList[0] == "ke") // Emissive values
+		{
+			if (tokenList.size() != 4)
+				continue;
+
+			p_context.MaterialList.back().Emissive.Set(
+				boost::lexical_cast<float>(tokenList[1]),
+				boost::lexical_cast<float>(tokenList[2]),
+				boost::lexical_cast<float>(tokenList[3]));
+		}
+		else if (tokenList[0] == "Ns") // Emissive values
+		{
+			if (tokenList.size() != 2)
+				continue;
+
+			p_context.MaterialList.back().Shininess =
+				boost::lexical_cast<float>(tokenList[1]);
+		}
+		else if (tokenList[0] == "Ni") // Emissive values
+		{
+			if (tokenList.size() != 2)
+				continue;
+
+			p_context.MaterialList.back().RefractiveIndex =
+				boost::lexical_cast<float>(tokenList[1]);
+		}
+	}
+
+	materialFile.close();
+
+	// Add Wavefront materials to context material group
+	if (p_context.MaterialGroup == NULL)
+		p_context.MaterialGroup = new MaterialGroup(materialPath.filename());
+
+	int baseGroupId = p_context.MaterialGroup->Size();
+
+	for (int groupId = 0; groupId < p_context.MaterialList.size(); ++groupId)
+	{
+		IMaterial *pMaterial = NULL;
+		ITexture *pTexture = NULL;
+
+		const WavefrontMaterial& material = p_context.MaterialList.at(groupId); 
+
+		std::stringstream argumentStream;
+		argumentStream << "Name=" << material.Name << ";"
+			<< "Reflectivity=" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << ";"
+			<< "Reflectivity=" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << ";"
+			<< "Shininess=" << material.Shininess << "Absorption=" << 1.0f << ";EtaI=" << 1.0f << ";EtaT=" << material.RefractiveIndex << ";";
+
+		if (!material.DiffuseMap.empty())
+		{
+			if (!m_pEngineKernel->GetTextureManager()->QueryInstance(material.DiffuseMap))
+			{
+				std::stringstream textureArgumentStream;
+				textureArgumentStream << "Name=" << material.DiffuseMap << ";" 
+					<< "Filename=" << (materialPath.parent_path() / material.DiffuseMap).string() << ";"
+					<< "Filetype=PPM;";
+
+				pTexture = m_pEngineKernel->GetTextureManager()->CreateInstance("Image", 
+					material.DiffuseMap, textureArgumentStream.str());
+			}
+			else
+			{
+				pTexture = m_pEngineKernel->GetTextureManager()->RequestInstance(material.DiffuseMap);
+			}
+		}
+
+		switch(material.Type)
+		{
+			case WavefrontMaterial::Matte:
+			{
+				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Matte", material.Name, argumentStream.str());
+				((MatteMaterial*)pMaterial)->SetTexture(pTexture);
+			}
+
+			case WavefrontMaterial::Mirror:
+			{
+				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Mirror", material.Name, argumentStream.str());
+				((MirrorMaterial*)pMaterial)->SetTexture(pTexture);
+			}
+
+			case WavefrontMaterial::Glass:
+			{
+				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Glass", material.Name, argumentStream.str());
+				((GlassMaterial*)pMaterial)->SetTexture(pTexture);
+			}
+		}
+
+		p_context.MaterialGroup->Add(pMaterial, baseGroupId + groupId);
+	}
+
+	return true;
+}
+//----------------------------------------------------------------------------------------------
+bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, WavefrontContext &p_context)
+{
+	// Use filename as the default object name
+	boost::filesystem::path geometryPath(p_strFilename);
+	p_context.ObjectName = geometryPath.filename();
+	p_context.Mesh = new KDTreeMesh(p_context.ObjectName);
+
+	// Open wavefront file
+	std::ifstream wavefrontFile;
+	wavefrontFile.open(p_strFilename.c_str());
+	
+	if (!wavefrontFile.is_open())
+	{
+		std::cerr << "Error : Couldn't open file \'" << p_strFilename << "\'" << std::endl;
+		exit(-1);
+	}
+
+	// define some temporary containers
+	Vector2 vector2;
+	Vector3 vector3;
+
+	std::string currentLine;
+
+	std::vector<std::string> tokenList,
+		faceTokenList;
+
+	while(std::getline(wavefrontFile, currentLine))
+	{
+		tokenList.clear();
+
+		if (Tokenise(currentLine, " ", tokenList) == 0)
+			continue;
+
+		if (tokenList[0] == "o") // Object - set geometry to friendly object name
+		{
+			if (tokenList.size() != 2)
+				continue;
+
+			p_context.ObjectName = tokenList[1];
+		}
+		else if (tokenList[0] == "v") // Position
+		{
+			if (tokenList.size() != 4)
+				continue;
+
+			vector3.Set(boost::lexical_cast<float>(tokenList[1]),
+						boost::lexical_cast<float>(tokenList[2]),
+						boost::lexical_cast<float>(tokenList[3]));
+
+				p_context.PositionList.push_back(vector3);
+		}
+		else if (tokenList[0] == "vn") // Normal
+		{
+			if (tokenList.size() != 4)
+				continue;
+
+			vector3.Set(boost::lexical_cast<float>(tokenList[1]),
+						boost::lexical_cast<float>(tokenList[2]),
+						boost::lexical_cast<float>(tokenList[3]));
+
+			p_context.NormalList.push_back(vector3);
+		}
+		else if (tokenList[0] == "vt") // Texture coordinates
+		{
+			if (tokenList.size() != 3)
+				continue;
+
+			vector2.Set(boost::lexical_cast<float>(tokenList[1]),
+						boost::lexical_cast<float>(tokenList[2]));
+
+			p_context.UVList.push_back(vector2);
+		}
+		else if (tokenList[0] == "f") // Face
+		{
+			// Ignore if there aren't enough vertices to form a surface.
+			// We are interested only in tri/quad faces, so ignore higher
+			// order polygons too.
+			if (tokenList.size() < 4 || tokenList.size() > 5)
+				continue;
+
+			WavefrontVertex vertex;
+			int vertexIndex[4];
+
+			for (size_t index = 1; index < tokenList.size(); index++)
+			{
+				Tokenise(tokenList[1], "/", faceTokenList);
+
+				vertex.Position = boost::lexical_cast<int>(faceTokenList[0]);
+				vertex.Texture = boost::lexical_cast<int>(faceTokenList[1]);
+				vertex.Normal = boost::lexical_cast<int>(faceTokenList[2]);
+
+				// Search for vertex in map
+				std::string hash = vertex.GetVertexHash();
+				if (p_context.VertexMap.find(hash) == p_context.VertexMap.end())
+				{
+					Vertex meshVertex;
+
+					meshVertex.Position = p_context.PositionList[vertex.Position - 1];
+					meshVertex.UV = (vertex.Texture == 0) ? Vector2::Zero : p_context.UVList[vertex.Texture - 1];
+					meshVertex.Normal = (vertex.Normal == 0) ? Vector3::Zero : p_context.NormalList[vertex.Normal - 1];
+					
+					p_context.VertexMap[hash] = vertexIndex[index] = 
+						p_context.Mesh->VertexList.Size();
+
+					// Add vertex to mesh
+					p_context.Mesh->AddVertex(meshVertex);
+				}
+				else
+				{
+					vertexIndex[index] = p_context.VertexMap[hash];
+				}
+			}
+
+			// Add faces to mesh
+			p_context.Mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[1], vertexIndex[2], p_context.CurrentMaterialId);
+			
+			if (tokenList.size() == 5) 
+				p_context.Mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[2], vertexIndex[3], p_context.CurrentMaterialId);
+		}
+		else if (tokenList[0] == "mtlib")
+		{
+			if (tokenList.size() != 2)
+				continue;
+
+			std::string materialLibraryFilename;
+			materialLibraryFilename = (geometryPath.parent_path() / tokenList[1]).string();
+			LoadMaterials(materialLibraryFilename, p_context);
+		}
+		else if (tokenList[0] == "usemtl")
+		{
+			if (tokenList.size() != 2)
+				continue;
+
+			p_context.CurrentMaterialId = p_context.MaterialGroup->GetGroupId(tokenList[1]);
+		}
+	}
+
+	wavefrontFile.close();
+
+	return true;
+}
+//----------------------------------------------------------------------------------------------
