@@ -28,8 +28,7 @@ namespace Illumina
 			List<ILight*> LightList;			
 
 		public:
-			Scene(void);
-			Scene(ISpace *p_pSpace, ISampler *p_pSampler);
+			Scene(ISpace *p_pSpace = NULL, ICamera *p_pCamera = NULL, ISampler *p_pSampler = NULL);
 
 			bool Intersects(const Ray &p_ray);
 			bool Intersects(const Ray &p_ray, IPrimitive *p_pExclude);

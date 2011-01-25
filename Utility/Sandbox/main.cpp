@@ -104,36 +104,6 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//omp_set_num_threads(p_nOMPThreads);
 
 	//----------------------------------------------------------------------------------------------
-	// Setup camera
-	//----------------------------------------------------------------------------------------------
-	//PerspectiveCamera camera(
-		ThinLensCamera camera(
-		Vector3(-20.0, 10.0, -20.0), Vector3(1.0f, -0.5f, 1.0f), Vector3::UnitYPos, 
-		0.4f, -1.3f, 1.3f, -1.f, 1.f, 1.0f);
-
-	if (p_bVerbose)
-		std::cout << "Setting up camera : [" << camera.ToString() << "]" << std::endl;
-
-	//----------------------------------------------------------------------------------------------
-	// Setup textures
-	//----------------------------------------------------------------------------------------------
-
-	/*
-	// Create marble texture
-	std::cout << "Setting up textures..." << std::endl;
-	MarbleTexture marbleTexture(0.002f, 1.0f, 4);
-
-	// Create image texture
-	ImagePPM ppmLoader;
-
-	#if defined(__PLATFORM_WINDOWS__)
-		boost::shared_ptr<ITexture> imgTexture(new ImageTexture("D:\\Development\\IlluminaPRT\\Resource\\Texture\\texture.ppm", ppmLoader));
-	#elif defined(__PLATFORM_LINUX__)
-		boost::shared_ptr<ITexture> imgTexture(new ImageTexture("../../../Resource/Texture/texture.ppm", ppmLoader));
-	#endif
-	*/
-
-	//----------------------------------------------------------------------------------------------
 	// Engine Kernel
 	//----------------------------------------------------------------------------------------------
 	EngineKernel engineKernel;
@@ -159,6 +129,22 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	engineKernel.GetMaterialManager()->RegisterFactory("Mirror", new MirrorMaterialFactory());
 	engineKernel.GetMaterialManager()->RegisterFactory("Glass", new GlassMaterialFactory());
 	engineKernel.GetMaterialManager()->RegisterFactory("Group", new MaterialGroupFactory());
+	
+	//----------------------------------------------------------------------------------------------
+	// Environment
+	//----------------------------------------------------------------------------------------------
+	//Environment environment(&engineKernel);
+
+	//----------------------------------------------------------------------------------------------
+	// Setup camera
+	//----------------------------------------------------------------------------------------------
+	//PerspectiveCamera camera(
+		ThinLensCamera camera(
+		Vector3(-20.0, 10.0, -20.0), Vector3(1.0f, -0.5f, 1.0f), Vector3::UnitYPos, 
+		0.4f, -1.3f, 1.3f, -1.f, 1.f, 1.0f);
+
+	if (p_bVerbose)
+		std::cout << "Setting up camera : [" << camera.ToString() << "]" << std::endl;
 
 	//----------------------------------------------------------------------------------------------
 	// Setup scene objects
@@ -383,7 +369,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//PointLight pointLight(Vector3(0, 7, 0), RGBSpectrum(10000,10000,10000));
 	PointLight pointLight(Vector3(0, 7.5, 0), RGBSpectrum(100,100,100));
  
-	Scene scene(&basicSpace, &sampler);
+	Scene scene(&basicSpace, &camera, &sampler);
 	//scene.LightList.PushBack(&pointLight);
 	//scene.LightList.PushBack(&diffuseLight1);
 	//scene.LightList.PushBack(&diffuseLight2);
@@ -413,10 +399,13 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
 	#endif
 
-	BasicRenderer renderer(&scene, &camera, &integrator, &device, &filter, 16);
-	//DistributedRenderer renderer(&scene, &camera, &integrator, &device, &filter, 4, 8, 8);
+	BasicRenderer renderer(&scene, &integrator, &device, &filter, 16);
+	//DistributedRenderer renderer(&scene, &integrator, &device, &filter, 4, 8, 8);
 	renderer.Initialise();
-	
+
+	//environment.SetRenderer(&renderer);
+	//environment.Initialise();
+
 	if (p_bVerbose)
 		std::cout << "Scene creation completed." << std::endl;
 
