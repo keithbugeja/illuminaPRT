@@ -163,8 +163,10 @@
     <ClCompile Include="..\..\..\..\Core\Object\UniqueID.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\BasicRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\DistributedRenderer.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Renderer\Renderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Sampler\JitterSampler.cpp" />
     <ClCompile Include="..\..\..\..\Core\Sampler\RandomSampler.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\Environment.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\SceneLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\WavefrontSceneLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\IndexedTriangle.cpp" />
@@ -190,7 +192,6 @@
     <ClInclude Include="..\..\..\..\Core\Camera\ThinLensCamera.h" />
     <ClInclude Include="..\..\..\..\Core\Device\Device.h" />
     <ClInclude Include="..\..\..\..\Core\Device\ImageDevice.h" />
-    <ClInclude Include="..\..\..\..\Core\Distributed\Tile.h" />
     <ClInclude Include="..\..\..\..\Core\Exception\Exception.h" />
     <ClInclude Include="..\..\..\..\Core\Filter\BoxFilter.h" />
     <ClInclude Include="..\..\..\..\Core\Filter\Filter.h" />

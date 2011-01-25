@@ -6,11 +6,7 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-#include "Threading/List.h"
-#include "Geometry/Ray.h"
-#include "Light/Light.h"
-#include "Space/Space.h"
-#include "Sampler/Sampler.h"
+#include "System/IlluminaPRT.h"
 //----------------------------------------------------------------------------------------------
 
 namespace Illumina
@@ -21,19 +17,52 @@ namespace Illumina
 		{
 		protected:
 			EngineKernel *m_pEngineKernel;
+
 			IRenderer *m_pRenderer;
-			ISampler *m_pSampler;
-			ISpace *m_pSpace;
 			Scene *m_pScene;
 
+			bool m_bIsInitialised;
+
 		public:
-			Environment(EngineKernel *p_pEngineKernel);
+			Environment(EngineKernel *p_pEngineKernel, IRenderer *p_pRenderer = NULL);
 			~Environment(void);
 
-			void SetRenderer(IRenderer *p_pRenderer);
+			bool IsInitialised(void) const;
+
+			bool Initialise(void);
+			bool Environment::Initialise( std::string *p_pCameraArgs, 
+				std::string *p_pRendererArgs,
+				std::string *p_pIntegratorArgs,
+				std::string *p_pFilterArgs,
+				std::string *p_pDeviceArgs,
+				std::string *p_pSpaceArgs,
+				std::string *p_pSamplerArgs);
+
+			void Shutdown(void);
+
+			void SetIntegrator(IIntegrator *p_pIntegrator);
+			IIntegrator* GetIntegrator(void) const;
+
 			void SetSampler(ISampler *p_pSampler);
-			void SetScene(IScene *p_pScene);
+			ISampler* GetSampler(void) const;
+
+			void SetFilter(IFilter *p_pFilter);
+			IFilter* GetFilter(void) const;
+
+			void SetDevice(IDevice *p_pDevice);
+			IDevice* GetDevice(void) const;
+
+			void SetCamera(ICamera *p_pCamera);
+			ICamera* GetCamera(void) const;
+
 			void SetSpace(ISpace *p_pSpace);
+			ISpace* GetSpace(void) const;
+
+			void SetRenderer(IRenderer *p_pRenderer);
+			IRenderer* GetRenderer(void) const;
+
+			void SetScene(Scene *p_pScene);
+			Scene* GetScene(void) const;
 
 			//Load(const std::string &p_strEnvironmentName);
 			//Unload(void);

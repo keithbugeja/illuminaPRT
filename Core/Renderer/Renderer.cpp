@@ -1,71 +1,53 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	Scene.h
+//	Filename:	Renderer.cpp
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
+#include "Renderer/Renderer.h"
+#include "Integrator/Integrator.h"
 #include "Staging/Scene.h"
-#include "Geometry/Intersection.h"
+#include "Device/Device.h"
+#include "Filter/Filter.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-Scene::Scene(ISpace *p_pSpace, ICamera *p_pCamera, ISampler *p_pSampler)
-	: m_pSpace(p_pSpace)
-	, m_pCamera(p_pCamera)
-	, m_pSampler(p_pSampler)
+IRenderer::IRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter)
+	: m_pIntegrator(p_pIntegrator) 
+	, m_pDevice(p_pDevice)
+	, m_pFilter(p_pFilter)
+	, m_pScene(p_pScene)
 { }
 //----------------------------------------------------------------------------------------------
-bool Scene::Intersects(const Ray &p_ray, Intersection &p_intersection, IPrimitive *p_pExclude)
-{
-	p_intersection.Reset();
-
-	return m_pSpace->Intersects(p_ray, 0.0f, p_intersection, p_pExclude);
+void IRenderer::SetIntegrator(IIntegrator *p_pIntegrator) {
+	m_pIntegrator = p_pIntegrator;
 }
 //----------------------------------------------------------------------------------------------
-bool Scene::Intersects(const Ray &p_ray, Intersection &p_intersection)
-{
-	p_intersection.Reset();
-
-	return m_pSpace->Intersects(p_ray, 0.0f, p_intersection);
+IIntegrator* IRenderer::GetIntegrator(void) const {
+	return m_pIntegrator;
 }
 //----------------------------------------------------------------------------------------------
-bool Scene::Intersects(const Ray &p_ray)
-{
-	return m_pSpace->Intersects(p_ray, 0.0f);
+void IRenderer::SetDevice(IDevice *p_pDevice) {
+	m_pDevice = p_pDevice;
 }
 //----------------------------------------------------------------------------------------------
-bool Scene::Intersects(const Ray &p_ray, IPrimitive *p_pExclude)
-{
-	return m_pSpace->Intersects(p_ray, 0.0f, p_pExclude);
+IDevice* IRenderer::GetDevice(void) const {
+	return m_pDevice;
 }
 //----------------------------------------------------------------------------------------------
-ISpace* Scene::GetSpace(void) const
-{
-	return m_pSpace;
+void IRenderer::SetFilter(IFilter *p_pFilter) {
+	m_pFilter = p_pFilter;
 }
 //----------------------------------------------------------------------------------------------
-void Scene::SetSpace(ISpace *p_pSpace)
-{
-	m_pSpace = p_pSpace;
+IFilter* IRenderer::GetFilter(void) const {
+	return m_pFilter;
 }
 //----------------------------------------------------------------------------------------------
-ICamera* Scene::GetCamera(void) const
-{
-	return m_pCamera;
+void IRenderer::SetScene(Scene *p_pScene) {
+	m_pScene = p_pScene;
 }
 //----------------------------------------------------------------------------------------------
-void Scene::SetCamera(ICamera *p_pCamera)
-{
-	m_pCamera = p_pCamera;
-}
-//----------------------------------------------------------------------------------------------
-ISampler* Scene::GetSampler(void) const
-{
-	return m_pSampler;
-}
-//----------------------------------------------------------------------------------------------
-void Scene::SetSampler(ISampler *p_pSampler)
-{
-	m_pSampler = p_pSampler;
+Scene* IRenderer::GetScene(void) const {
+	return m_pScene;
 }
 //----------------------------------------------------------------------------------------------

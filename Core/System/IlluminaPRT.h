@@ -8,6 +8,8 @@ namespace Illumina
 {
 	namespace Core
 	{
+		class EngineKernel;
+
 		class Scene;
 		class Environment;
 		class IBoundingVolume;
@@ -25,6 +27,7 @@ namespace Illumina
 		class BxDF;
 		class RGBSpectrum;
 
+		class ISpace;
 		class ITriangleMesh;
 
 		class Intersection;

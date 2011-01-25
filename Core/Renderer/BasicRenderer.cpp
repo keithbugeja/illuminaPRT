@@ -19,17 +19,16 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-BasicRenderer::BasicRenderer(Scene *p_pScene, ICamera *p_pCamera, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
-	: m_pIntegrator(p_pIntegrator)
-	, m_pCamera(p_pCamera)
-	, m_pDevice(p_pDevice)
-	, m_pFilter(p_pFilter)
-	, m_pScene(p_pScene)
+BasicRenderer::BasicRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
+	: IRenderer(p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
 	, m_nSampleCount(p_nSampleCount)
 { }
 //----------------------------------------------------------------------------------------------
 void BasicRenderer::Render(void)
 {
+	BOOST_ASSERT(m_pScene != NULL && m_pIntegrator != NULL && m_pFilter != NULL && 
+		m_pScene->GetCamera() != NULL && m_pScene->GetSpace() != NULL && m_pScene->GetSampler() != NULL);
+
 	int height = m_pDevice->GetHeight(),
 		width = m_pDevice->GetWidth();
 
@@ -55,7 +54,8 @@ void BasicRenderer::Render(void)
 
 			for (int sample = 0; sample < m_nSampleCount; sample++)
 			{
-				Ray ray = m_pCamera->GetRay((x + pSampleBuffer[sample].U) / width, (y + pSampleBuffer[sample].V) / height, pSampleBuffer[sample].U, pSampleBuffer[sample].V);
+				Ray ray = m_pScene->GetCamera()->GetRay((x + pSampleBuffer[sample].U) / width, (y + pSampleBuffer[sample].V) / height, pSampleBuffer[sample].U, pSampleBuffer[sample].V);
+				//Ray ray = m_pCamera->GetRay((x + pSampleBuffer[sample].U) / width, (y + pSampleBuffer[sample].V) / height, pSampleBuffer[sample].U, pSampleBuffer[sample].V);
 				Li += m_pIntegrator->Radiance(m_pScene, ray, intersection);
 			}
 
