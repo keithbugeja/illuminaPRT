@@ -623,6 +623,9 @@
     <ClInclude Include="..\..\..\..\Core\Scene\WavefrontSceneLoader.h">
       <Filter>Header Files\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\System\Lexer.h">
+      <Filter>Header Files\System</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">

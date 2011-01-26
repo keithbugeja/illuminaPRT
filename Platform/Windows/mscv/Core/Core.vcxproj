@@ -281,6 +281,7 @@
     <ClInclude Include="..\..\..\..\Core\System\Factory.h" />
     <ClInclude Include="..\..\..\..\Core\System\FactoryManager.h" />
     <ClInclude Include="..\..\..\..\Core\System\IlluminaPRT.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Lexer.h" />
     <ClInclude Include="..\..\..\..\Core\System\Library.h" />
     <ClInclude Include="..\..\..\..\Core\System\LibraryImpl.h" />
     <ClInclude Include="..\..\..\..\Core\System\LibraryManager.h" />

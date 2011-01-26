@@ -3,11 +3,17 @@
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
+#include "boost/spirit/include/qi.hpp"
+
 #include "Scene/Environment.h"
 #include "Staging/Scene.h"
 #include "Renderer/Renderer.h"
 
 using namespace Illumina::Core;
+
+namespace qi = boost::spirit::qi;
+namespace ascii = boost::spirit::ascii;
+
 //----------------------------------------------------------------------------------------------
 Environment::Environment(EngineKernel *p_pEngineKernel, IRenderer *p_pRenderer)
 	: m_pEngineKernel(p_pEngineKernel)
@@ -19,7 +25,7 @@ bool Environment::IsInitialised(void) const {
 	return m_bIsInitialised;
 }
 //----------------------------------------------------------------------------------------------
-bool Environment::Initialise( std::string *p_pCameraArgs, 
+bool Environment::Initialise(std::string *p_pCameraArgs, 
 	std::string *p_pRendererArgs,
 	std::string *p_pIntegratorArgs,
 	std::string *p_pFilterArgs,
@@ -27,6 +33,30 @@ bool Environment::Initialise( std::string *p_pCameraArgs,
 	std::string *p_pSpaceArgs,
 	std::string *p_pSamplerArgs)
 {
+	
+
+
+	// Instantiatiable objects always have id + type
+	// Include can be called at root only
+
+	// Need to parse:
+	// Include, Camera, Light, Material, Geometry, Sampler, Integrator, Filter, Device, Environment, Renderer, Scene, Primitive, Transform
+
+	// Lexemes
+	// Literals w/o quotes = Keywords
+	// { } = block / multiple parameter string
+	// '=' defines key, value pair
+	// ',' separates multiple parameters
+	
+
+	// identifier = char + (char | digit)*
+	// string = '"' + (char | digit)* + '"'
+	// vector4 = '{' + double + ',' + double + ',' + double + ',' + double + '}'
+	// vector3 = '{' + double + ',' + double + ',' + double + '}'
+	// vector2 = '{' + double + ',' + double + ',' + '}'
+
+
+
 	// [Camera:Type] Params -> ArgumentMap
 	// [Integrator:Type] Params
 	// [Sampler:Type] Params

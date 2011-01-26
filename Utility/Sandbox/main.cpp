@@ -88,6 +88,8 @@
 
 #include "Scene/WavefrontSceneLoader.h"
 
+#include "System/Lexer.h"
+
 using namespace std;
 using namespace Illumina::Core;
 
@@ -97,6 +99,31 @@ using namespace Illumina::Core;
 
 void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 {
+	std::ifstream lexerFile;
+	lexerFile.open("");
+	
+	if (!lexerFile.is_open())
+	{
+		std::cerr << "Error : Couldn't open file \'" << lexerFile << "\'" << std::endl;
+		exit(-1);
+	}
+
+	Lexer lexer(lexerFile);
+
+	while (true)
+	{
+		LexerToken t = lexer.ReadToken();
+		
+		if (t.Type == LexerToken::EndOfStream)
+			break;
+
+		std::cout << "[" << t.Value << "]" << std::endl;
+	}
+
+	lexerFile.close();
+
+	exit(0);
+
 	//----------------------------------------------------------------------------------------------
 	// Set number of OMP Threads
 	//----------------------------------------------------------------------------------------------
