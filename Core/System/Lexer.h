@@ -1,12 +1,22 @@
+//----------------------------------------------------------------------------------------------
+//	Filename:	Lexer.h
+//	Author:		Keith Bugeja
+//	Date:		27/02/2010
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 #pragma once
 
 #include <iostream>
 #include "boost/algorithm/string.hpp"
 
+//----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
 	{
+		/*
+		 * Token for hierarchical property map streams
+		 */
 		struct LexerToken
 		{
 			enum TokenType
@@ -20,10 +30,22 @@ namespace Illumina
 			} Type;
 
 			std::string Value;
+
+			LexerToken &operator=(const LexerToken &p_token)
+			{
+				Type = p_token.Type;
+				Value = p_token.Value;
+
+				return *this;
+			}
 		};
 
+		/*
+		 * Lexer for hierarchical property maps
+		 */ 
 		class Lexer
 		{
+		protected:
 			enum LexerState
 			{
 				Start,
@@ -33,118 +55,16 @@ namespace Illumina
 				Error
 			} state;
 
-			std::istream m_inputStream;
+		protected:
+			std::istream *m_pInputStream;
 
-			LexerToken ExtractToken(void)
-			{
-				char ch;
-				std::string property;
-				std::string value;
-				LexerToken lexerToken;
-				state = Lexer::Start;
+		protected:
+			LexerToken ExtractToken(void);
 
-				while(m_inputStream.get(ch))
-				{
-					switch (state)
-					{
-						case Lexer::Start:
-						{
-							if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n')
-								; // ingore whitespace
-							else if (ch == '#')
-							{
-								state = Lexer::Comment;
-							}
-							else if (ch == '{')
-							{
-								lexerToken.Type = LexerToken::LeftCurly;
-								lexerToken.Value = "{";
-								return lexerToken;
-							}
-							else if (ch == '}')
-							{
-								lexerToken.Type = LexerToken::RightCurly;
-								lexerToken.Value = "}";
-								return lexerToken;
-							}
-							else if (ch == '=')
-							{
-								state = Lexer::PropertyValue;
-							
-								property.clear();
-							}
-							else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_')
-							{
-								state = Lexer::PropertyName;
-							
-								value.clear();
-								value += ch;
-							}
-							break;
-						}
-
-						case Lexer::PropertyName:
-						{
-							if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n')
-							{
-								lexerToken.Value = property;
-								lexerToken.Type = LexerToken::PropertyName;
-								
-								return lexerToken;
-							}
-							else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_')
-							{
-								property += ch;
-							}
-
-							break;
-						}
-
-						case Lexer::PropertyValue:
-						{
-							if (ch == '\r' || ch == '\n')
-							{
-								boost::trim(value);
-
-								lexerToken.Value = value;
-								lexerToken.Type = LexerToken::PropertyValue;
-
-								return lexerToken;
-							}
-							else
-							{
-								value += ch;
-							}
-
-							break;
-						}
-
-						case Lexer::Comment:
-						{
-							if (ch == '\n')
-								state = Lexer::Start;
-
-							break;
-						}
-					}
-
-					if (state != Lexer::Start)
-						std::cout << "Parsing error!" << std::endl;
-
-					lexerToken.Type = LexerToken::EndOfStream;
-					return lexerToken;
-				}
-			}
-
-			public:
-			Lexer(std::istream &p_inputStream)
-				: m_inputStream(p_inputStream)
-			{ }
-
-			LexerToken ReadToken(void)
-			{
-				return ExtractToken();
-			}
+		public:
+			Lexer(std::istream *p_pInputStream);
+			bool ReadToken(LexerToken &p_token);
+			bool ReadToken(LexerToken::TokenType p_tokenType, LexerToken &p_token);
 		};
 	}
 }

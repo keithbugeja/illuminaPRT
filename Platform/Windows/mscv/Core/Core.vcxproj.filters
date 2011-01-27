@@ -261,6 +261,9 @@
     <ClCompile Include="..\..\..\..\Core\Scene\Environment.cpp">
       <Filter>Header Files\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\System\Lexer.cpp">
+      <Filter>Header Files\System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
