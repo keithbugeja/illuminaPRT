@@ -264,6 +264,9 @@
     <ClCompile Include="..\..\..\..\Core\System\Lexer.cpp">
       <Filter>Header Files\System</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Scene\EnvironmentLoader.cpp">
+      <Filter>Header Files\Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -628,6 +631,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\System\Lexer.h">
       <Filter>Header Files\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Scene\EnvironmentLoader.h">
+      <Filter>Header Files\Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -13,6 +13,11 @@
 using namespace Illumina::Core;
 
 //----------------------------------------------------------------------------------------------
+ISceneLoader::ISceneLoader(EngineKernel *p_pEngineKernel, Environment *p_pEnvironment)
+	: m_pEngineKernel(p_pEngineKernel)
+	, m_pEnvironment(p_pEnvironment)
+{ }
+//----------------------------------------------------------------------------------------------
 int ISceneLoader::Tokenise(std::string &p_strText, char *p_pSeparators, std::vector<std::string> &p_tokenList)
 {
 	boost::char_separator<char> separator(p_pSeparators);
@@ -28,3 +33,4 @@ int ISceneLoader::Tokenise(std::string &p_strText, char *p_pSeparators, std::vec
 
 	return p_tokenList.size();
 }
+//----------------------------------------------------------------------------------------------

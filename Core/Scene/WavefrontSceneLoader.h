@@ -28,19 +28,20 @@ namespace Illumina
 			: public ISceneLoader
 		{
 		protected:
+			using ISceneLoader::m_pEngineKernel;
+			using ISceneLoader::m_pEnvironment;
+
 			std::map<std::string, int> m_vertexMap;
 
 			std::vector<Vector3> m_positionList;
 			std::vector<Vector3> m_normalList;
 			std::vector<Vector2> m_uvList;
 
-			EngineKernel *m_pEngineKernel;
-
 		public:
-			WavefrontSceneLoader(EngineKernel *p_pEngineKernel);
+			WavefrontSceneLoader(EngineKernel *p_pEngineKernel, Environment *p_pEnvironment);
 
-			bool Import(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL);
-			bool Export(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL);
+			bool Import(const std::string &p_strFilename, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL);
+			bool Export(const std::string &p_strFilename, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL);
 		
 		protected:
 			bool LoadMaterials(const std::string &p_strFilename, WavefrontContext &p_context);

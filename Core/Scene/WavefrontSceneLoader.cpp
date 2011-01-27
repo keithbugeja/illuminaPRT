@@ -89,11 +89,11 @@ struct WavefrontContext
 	{ }
 };
 //----------------------------------------------------------------------------------------------
-WavefrontSceneLoader::WavefrontSceneLoader(EngineKernel *p_pEngineKernel)
-	: m_pEngineKernel(p_pEngineKernel)
+WavefrontSceneLoader::WavefrontSceneLoader(EngineKernel *p_pEngineKernel, Environment *p_pEnvironment)
+	: ISceneLoader(p_pEngineKernel, p_pEnvironment)
 { }
 //----------------------------------------------------------------------------------------------
-bool WavefrontSceneLoader::Import(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap)
+bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap)
 {
 	// Provide wavefront scene context for loader
 	WavefrontContext context;
@@ -117,7 +117,7 @@ bool WavefrontSceneLoader::Import(const std::string &p_strFilename, Environment 
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-bool WavefrontSceneLoader::Export(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap)
+bool WavefrontSceneLoader::Export(const std::string &p_strFilename, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap)
 {
 	return true;
 }

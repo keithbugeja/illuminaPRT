@@ -43,9 +43,15 @@ namespace Illumina
 				All			= Settings | World
 			};
 
+		protected:
+			EngineKernel *m_pEngineKernel;
+			Environment *m_pEnvironment;
+
 		public:
-			virtual bool Import(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL) = 0;
-			virtual bool Export(const std::string &p_strFilename, Environment *p_pEnvironment, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL) = 0;
+			ISceneLoader(EngineKernel *p_pEngineKernel, Environment *p_pEnvironment);
+
+			virtual bool Import(const std::string &p_strFilename, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL) = 0;
+			virtual bool Export(const std::string &p_strFilename, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL) = 0;
 
 		protected:
 			int Tokenise(std::string &p_strText, char *p_pSeparators, std::vector<std::string> &p_tokenList);
