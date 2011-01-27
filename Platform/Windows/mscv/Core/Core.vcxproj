@@ -167,6 +167,7 @@
     <ClCompile Include="..\..\..\..\Core\Sampler\JitterSampler.cpp" />
     <ClCompile Include="..\..\..\..\Core\Sampler\RandomSampler.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\Environment.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\EnvironmentLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\SceneLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\WavefrontSceneLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\IndexedTriangle.cpp" />
@@ -245,6 +246,7 @@
     <ClInclude Include="..\..\..\..\Core\Sampler\RandomSampler.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\Sampler.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\Environment.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\EnvironmentLoader.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\SceneLoader.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\WavefrontSceneLoader.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\BasicMesh.h" />

@@ -137,7 +137,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	// Environment
 	//----------------------------------------------------------------------------------------------
 	Environment environment(&engineKernel);
-	environment.Load("D:\\Share\\My Dropbox\\PhD\\IlluminaPRT\\Resource\\Scene\\default.ilm");
+	environment.Load("D:\\Development\\IlluminaPRT\\Resource\\Scene\\default.ilm");
 
 	char c;
 	cin.get(c);
