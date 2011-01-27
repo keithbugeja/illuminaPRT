@@ -25,19 +25,10 @@ namespace Illumina
 
 		public:
 			Environment(EngineKernel *p_pEngineKernel, IRenderer *p_pRenderer = NULL);
-			~Environment(void);
+			~Environment(void) { };
 
 			bool IsInitialised(void) const;
-
 			bool Initialise(void);
-			bool Environment::Initialise( std::string *p_pCameraArgs, 
-				std::string *p_pRendererArgs,
-				std::string *p_pIntegratorArgs,
-				std::string *p_pFilterArgs,
-				std::string *p_pDeviceArgs,
-				std::string *p_pSpaceArgs,
-				std::string *p_pSamplerArgs);
-
 			void Shutdown(void);
 
 			void SetIntegrator(IIntegrator *p_pIntegrator);
@@ -64,8 +55,8 @@ namespace Illumina
 			void SetScene(Scene *p_pScene);
 			Scene* GetScene(void) const;
 
-			//Load(const std::string &p_strEnvironmentName);
-			//Unload(void);
+			bool Load(const std::string &p_strEnvironmentName);
+			bool Save(const std::string &p_strEnvironmentName);
 		};
 	}
 }
