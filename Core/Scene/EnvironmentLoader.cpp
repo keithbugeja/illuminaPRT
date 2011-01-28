@@ -13,10 +13,101 @@
 #include "System/Lexer.h"
 
 using namespace Illumina::Core;
+
 //----------------------------------------------------------------------------------------------
-EnvironmentLoader::EnvironmentLoader(EngineKernel *p_pEngineKernel, Environment *p_pEnvironment)
-	: ISceneLoader(p_pEngineKernel, p_pEnvironment) 
+//----------------------------------------------------------------------------------------------
+ParseNode::ParseNode(const std::string &p_strName, const std::string &p_strValue)
+	: Name(p_strName)
+	, Value(p_strValue)
+	, Type(ParseNode::Leaf)
 { }
+//----------------------------------------------------------------------------------------------
+ParseNode::ParseNode(const std::string &p_strName)
+	: Name(p_strName)
+	, Type(ParseNode::Internal)
+{ }
+//----------------------------------------------------------------------------------------------
+ParseNode::ParseNode(ParseNode::NodeType p_type)
+	: Type(p_type)
+{ }
+//----------------------------------------------------------------------------------------------
+bool ParseNode::FindByName(const std::string& p_strName, std::vector<ParseNode*> &p_nodeList)
+{
+	p_nodeList.clear();
+
+	std::vector<ParseNode*>::iterator nodeIterator;
+
+	for (nodeIterator = Children.begin(); 
+		 nodeIterator != Children.end();
+		 ++nodeIterator)
+	{
+		if ((*nodeIterator)->Name == p_strName)
+			p_nodeList.push_back(*nodeIterator);
+	}
+
+	return (p_nodeList.size() != 0);
+}
+//----------------------------------------------------------------------------------------------
+bool ParseNode::GetArgumentMap(ArgumentMap &p_argumentMap)
+{
+	std::map<std::string, std::string> argumentMap;
+	std::vector<ParseNode*>::iterator nodeIterator;
+
+	for (nodeIterator = Children.begin(); 
+		 nodeIterator != Children.end();
+		 ++nodeIterator)
+	{
+		if ((*nodeIterator)->Type == ParseNode::Leaf)
+			argumentMap[(*nodeIterator)->Name] = (*nodeIterator)->Value;
+	}
+
+	p_argumentMap.Initialise(argumentMap);
+
+	return (argumentMap.size() != 0);
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------------
+ParseNode* ParseTree::RequestNode(const std::string &p_strName, const std::string &p_strValue)
+{
+	ParseNode *pNode = new ParseNode(p_strName, p_strValue);
+	m_reservedNodeList.push_back(pNode);
+	return pNode;
+}
+//----------------------------------------------------------------------------------------------
+ParseNode* ParseTree::RequestNode(const std::string &p_strName)
+{
+	ParseNode *pNode = new ParseNode(p_strName);
+	m_reservedNodeList.push_back(pNode);
+	return pNode;
+}
+//----------------------------------------------------------------------------------------------
+ParseNode* ParseTree::RequestNode(ParseNode::NodeType p_type)
+{
+	ParseNode *pNode = new ParseNode(p_type);
+	m_reservedNodeList.push_back(pNode);
+	return pNode;
+}
+//----------------------------------------------------------------------------------------------
+void ParseTree::ReleaseNodes(void)
+{
+	for (int nodeIndex = 0; nodeIndex < m_reservedNodeList.size(); ++nodeIndex)
+	{
+		delete m_reservedNodeList.at(nodeIndex);
+	}
+
+	m_reservedNodeList.clear();
+}
+//----------------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------------
+EnvironmentLoader::EnvironmentLoader(Environment *p_pEnvironment)
+	: ISceneLoader(p_pEnvironment) 
+{ 
+	BOOST_ASSERT(p_pEnvironment != NULL);
+	m_pEngineKernel = p_pEnvironment->GetEngineKernel();
+}
 //----------------------------------------------------------------------------------------------
 Lexer* EnvironmentLoader::Top(void) {
 	return m_lexerStack.size() == 0 ? NULL : m_lexerStack.top();
@@ -63,6 +154,53 @@ bool EnvironmentLoader::Load(const std::string p_strFilename)
 //----------------------------------------------------------------------------------------------
 bool EnvironmentLoader::Parse(void)
 {
+	m_parseTree.ReleaseNodes();
+
+	std::stack<ParseNode*> nodeStack;
+	nodeStack.push(&m_parseTree.Root);
+
+	LexerToken nameToken,
+		valueToken;
+
+	Lexer *pLexer = Top();
+
+	while(pLexer->ReadToken(nameToken))
+	{
+		if (nameToken.Type == LexerToken::PropertyName)
+		{
+			std::cout << "Property : [" << nameToken.Value << "]" << std::endl;
+
+			if (!pLexer->ReadToken(valueToken))
+				return false;
+			
+			// Go deeper
+			if (valueToken.Type == LexerToken::LeftCurly)
+			{
+				ParseNode *pNode = m_parseTree.RequestNode(nameToken.Value);
+				nodeStack.top()->Children.push_back(pNode);
+				nodeStack.push(pNode);
+
+				std::cout << " { " << std::endl;
+			}
+			else
+			{
+				ParseNode *pNode = m_parseTree.RequestNode(nameToken.Value, valueToken.Value);
+				nodeStack.top()->Children.push_back(pNode);
+
+				std::cout << "[" << nameToken.Value << " = " << valueToken.Value << "]" << std::endl;
+			}
+		}
+		else if (nameToken.Type == LexerToken::RightCurly)
+		{
+			nodeStack.pop();
+
+			std::cout << " } " << std::endl;
+		}
+	}
+
+	ParseGeometries();
+
+	/*
 	LexerToken token;
 	Lexer *pLexer = Top();
 
@@ -83,7 +221,7 @@ bool EnvironmentLoader::Parse(void)
 			else if (token.Value == "Environment") ParseEnvironment();
 		}
 	}
-
+	*/
 	return true;
 }
 //----------------------------------------------------------------------------------------------
@@ -234,10 +372,19 @@ bool EnvironmentLoader::ParseRenderers(void)
 bool EnvironmentLoader::ParseGeometries(void)
 {
 	std::cout << "[Geometries]" << std::endl;
+	
+	std::vector<ParseNode*> geometryNodes;
+	
+	m_parseTree.Root.FindByName("Geometries", geometryNodes);
 
+	std::cout << geometryNodes.size() << std::endl;
+	
+	return true;
+	/*
 	std::vector<std::map<std::string, std::string>> geometryList;
 	bool result = ParseList("Geometry", geometryList);
-	return result;
+	return result; 
+	*/
 }
 //----------------------------------------------------------------------------------------------
 bool EnvironmentLoader::ParseMaterials(void)
@@ -248,6 +395,7 @@ bool EnvironmentLoader::ParseMaterials(void)
 	bool result = ParseList("Material", materialList);
 	return result;
 }
+/*
 //----------------------------------------------------------------------------------------------
 bool EnvironmentLoader::ParseScene(void)
 {
@@ -263,6 +411,7 @@ bool EnvironmentLoader::ParsePrimitives(void)
 {
 	return true;
 }
+*/
 //----------------------------------------------------------------------------------------------
 bool EnvironmentLoader::ParseEnvironment(void)
 {
@@ -282,7 +431,6 @@ bool EnvironmentLoader::ParseEnvironment(void)
 		// Parse Scene
 		if (token.Value == "Scene")
 		{
-			if (!pLexer->ReadToken(LexerToken::LeftCurly, token))
 		}
 	}
 

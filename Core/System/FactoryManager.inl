@@ -127,7 +127,7 @@ T* FactoryManager<T>::CreateInstance(const std::string& p_strFactoryName, const 
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 template<class T>
-T* FactoryManager<T>::CreateInstance(const std::string& p_strFactoryName, const std::string& p_strInstanceName, const std::string& p_strArguments)
+T* FactoryManager<T>::CreateInstance(const std::string& p_strFactoryName, const std::string& p_strInstanceName, ArgumentMap &p_argumentMap)
 {
 	//std::cout << "FactoryManager creating instance '" << p_strInstanceName << "' from factory '" << p_strFactoryName << "' ..." << std::endl;
 
@@ -135,14 +135,11 @@ T* FactoryManager<T>::CreateInstance(const std::string& p_strFactoryName, const 
 	if (!ContainsFactory(p_strFactoryName)) throw new Exception("No factory registered under specified name!");
 	if (ContainsItem(p_strInstanceName)) throw new Exception("Instance name must be unique!");
 
-	// Load arguments into a map
-	ArgumentMap argumentMap(p_strArguments);
-
 	// Find factory through which instance creation is required
 	Factory<T>* pFactory = FindFactory(p_strFactoryName);
 
 	// Create instance
-	T* pInstance = pFactory->CreateInstance(argumentMap);
+	T* pInstance = pFactory->CreateInstance(p_argumentMap);
 	
 	// If instance creation was unsuccessful, thrown an exception
 	if (pInstance == NULL) throw new Exception("Instance creation failed!");
@@ -151,6 +148,14 @@ T* FactoryManager<T>::CreateInstance(const std::string& p_strFactoryName, const 
 	m_instanceMap[p_strInstanceName] = pInstance;
 
 	return pInstance;
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+template<class T>
+T* FactoryManager<T>::CreateInstance(const std::string& p_strFactoryName, const std::string& p_strInstanceName, const std::string& p_strArguments)
+{
+	ArgumentMap argumentMap(p_strArguments);
+	return CreateInstance(p_strFactoryName, p_strInstanceName, argumentMap);
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
