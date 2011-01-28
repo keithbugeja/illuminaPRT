@@ -96,7 +96,7 @@ namespace Illumina
 			bool ParseSamplers(void);
 			bool ParseIntegrators(void);
 			bool ParseRenderers(void);
-			bool ParseGeometries(void);
+			bool ParseShapes(void);
 			bool ParseMaterials(void);
 			bool ParseEnvironment(void);
 		};

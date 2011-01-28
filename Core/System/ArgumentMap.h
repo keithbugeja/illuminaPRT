@@ -29,6 +29,8 @@ namespace Illumina
 			std::map<std::string, std::string> m_argumentMap;
 
 		public:
+			ArgumentMap(void) { }
+
 			ArgumentMap(const ArgumentMap &p_argumentMap)
 			{
 				Initialise(p_argumentMap.m_argumentMap);
@@ -161,6 +163,19 @@ namespace Illumina
 				}
 
 				return false;
+			}
+
+			std::string ToString(void) const
+			{
+				std::stringstream argumentMap;
+				std::map<std::string, std::string>::const_iterator mapIterator;
+
+				for (mapIterator = m_argumentMap.begin(); mapIterator != m_argumentMap.end(); ++mapIterator)
+				{
+					argumentMap << (*mapIterator).first << '=' << (*mapIterator).second << std::endl;
+				}
+
+				return argumentMap.str();
 			}
 		};
 	}

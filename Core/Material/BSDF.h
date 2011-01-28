@@ -33,7 +33,7 @@ namespace Illumina
 			static void GenerateVectorInHemisphere(float p_u, float p_v, Vector3 &p_out);
 
 			BSDF(void) { }
-			BSDF(const std::string &p_strName) : Object(p_strName) { }
+			BSDF(const std::string &p_strId) : Object(p_strId) { }
 
 			bool HasBxDFType(BxDF::Type p_bxdfType, bool p_bExactMatch = true);
 

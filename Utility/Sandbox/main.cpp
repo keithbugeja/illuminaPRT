@@ -114,7 +114,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	// Shapes
 	//----------------------------------------------------------------------------------------------
-	engineKernel.GetShapeManager()->RegisterFactory("KDTreeMesh", new KDTreeShapeFactory());
+	engineKernel.GetShapeManager()->RegisterFactory("KDTreeMesh", new KDTreeMeshShapeFactory());
 	engineKernel.GetShapeManager()->RegisterFactory("Triangle", new TriangleShapeFactory());
 	engineKernel.GetShapeManager()->RegisterFactory("Sphere", new SphereShapeFactory());
 
@@ -386,7 +386,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
  
 	//PathIntegrator integrator(4, 16, 1, false);
 	//PathIntegrator integrator(4, 4, false);
-	PathIntegrator integrator(4, 1, false);
+	PathIntegrator integrator(4, 1);
 	//WhittedIntegrator integrator(6, 1);
 	integrator.Initialise(&scene, &camera);
  

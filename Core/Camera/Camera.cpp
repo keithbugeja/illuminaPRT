@@ -8,6 +8,14 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
+ICamera::ICamera(void)
+	: Object()
+{ }
+//----------------------------------------------------------------------------------------------
+ICamera::ICamera(const std::string& p_strId)
+	: Object(p_strId)
+{ }
+//----------------------------------------------------------------------------------------------
 void ICamera::SetProjection(float p_fLeft, float p_fRight, float p_fTop, float p_fBottom, float p_fDistance)
 {
 	m_d = p_fDistance;

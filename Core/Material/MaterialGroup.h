@@ -24,7 +24,7 @@ namespace Illumina
 		
 		public:
 			MaterialGroup(void) : IMaterial() { }
-			MaterialGroup(const std::string &p_strName) : IMaterial(p_strName) { }
+			MaterialGroup(const std::string &p_strId) : IMaterial(p_strId) { }
 
 			bool IsComposite(void) const { return true; }
 
@@ -43,6 +43,7 @@ namespace Illumina
 					: NULL; 
 			}
 			
+#pragma message("Refactor method : GetByName is ambiguous -> it should really be GetById or GetByIdString")
 			IMaterial* GetByName(const std::string &p_strName)
 			{ 
 				return (m_materialNameMap.find(p_strName) != m_materialNameMap.end()) 

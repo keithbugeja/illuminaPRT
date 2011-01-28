@@ -10,6 +10,12 @@
 using namespace Illumina::Core;
 
 //----------------------------------------------------------------------------------------------
+TentFilter::TentFilter(void) { }
+//----------------------------------------------------------------------------------------------
+TentFilter::TentFilter(const std::string &p_strId)
+	: IFilter(p_strId)
+{ }
+//----------------------------------------------------------------------------------------------
 void TentFilter::operator()(Vector2 *p_pSamples, int p_nSampleCount)
 {
 	for (int i = 0; i < p_nSampleCount; i++)

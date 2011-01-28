@@ -12,16 +12,28 @@
 #include "Spectrum/Spectrum.h"
 
 using namespace Illumina::Core;
-
 //----------------------------------------------------------------------------------------------
-ImageDevice::ImageDevice(int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename)
+ImageDevice::ImageDevice(int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit)
 	: m_pImage(new Image(p_nWidth, p_nHeight))
 	, m_pImageIO(p_pImageIO)
 	, m_strFilename(p_strFilename)
+	, m_bKillFilterOnExit(p_bKillFilterOnExit)
 { }
 //----------------------------------------------------------------------------------------------
-ImageDevice::~ImageDevice() {
+ImageDevice::ImageDevice(const std::string &p_strId, int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit)
+	: IDevice(p_strId) 
+	, m_pImage(new Image(p_nWidth, p_nHeight))
+	, m_pImageIO(p_pImageIO)
+	, m_strFilename(p_strFilename)
+	, m_bKillFilterOnExit(p_bKillFilterOnExit)
+{ }
+//----------------------------------------------------------------------------------------------
+ImageDevice::~ImageDevice() 
+{
 	delete m_pImage;
+
+	if (m_bKillFilterOnExit)
+		delete m_pImageIO;
 }
 //----------------------------------------------------------------------------------------------
 int ImageDevice::GetWidth(void) const { 

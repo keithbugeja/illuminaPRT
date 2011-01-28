@@ -7,13 +7,19 @@
 #pragma once
 
 #include "System/IlluminaPRT.h"
+#include "Object/Object.h"
 
 namespace Illumina
 {
 	namespace Core
 	{
 		class IDevice
+			: public Object
 		{
+		protected:
+			IDevice(const std::string &p_strId) : Object(p_strId) { }
+			IDevice(void) { }
+
 		public:
 			virtual int GetWidth(void) const = 0;
 			virtual int GetHeight(void) const = 0;

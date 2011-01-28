@@ -25,6 +25,24 @@ ThinLensCamera::ThinLensCamera(const Vector3 &p_centre, const Vector3 &p_directi
 	m_up = (m_v1 - m_v0) * m_uvw.V;
 }
 //----------------------------------------------------------------------------------------------
+ThinLensCamera::ThinLensCamera(const std::string &p_strId, const Vector3 &p_centre, const Vector3 &p_direction, const Vector3 &p_up, 
+	float p_fAperture, float p_fLeft, float p_fRight, float p_fBottom, float p_fTop, float p_fDistance)
+	: ICamera(p_strId)
+{
+	m_centre = p_centre;
+	m_d = p_fDistance;
+	m_u0 = p_fLeft;
+	m_u1 = p_fRight;
+	m_v0 = p_fBottom;
+	m_v1 = p_fTop;
+
+	m_fLensRadius = p_fAperture / 2.0f;
+	m_uvw.InitFromWV(p_direction, p_up);
+	m_corner = m_centre + m_u0 * m_uvw.U + m_v0 * m_uvw.V + m_d * m_uvw.W;
+	m_across = (m_u1 - m_u0) * m_uvw.U;
+	m_up = (m_v1 - m_v0) * m_uvw.V;
+}
+//----------------------------------------------------------------------------------------------
 float ThinLensCamera::GetAperture(void) const {
 	return m_fLensRadius * 2.0f;
 }

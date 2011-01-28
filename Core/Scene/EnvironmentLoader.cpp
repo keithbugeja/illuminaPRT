@@ -8,6 +8,7 @@
 #include <stack>
 #include <map>
 
+#include "System/EngineKernel.h"
 #include "Scene/EnvironmentLoader.h"
 #include "Scene/Environment.h"
 #include "System/Lexer.h"
@@ -198,7 +199,7 @@ bool EnvironmentLoader::Parse(void)
 		}
 	}
 
-	ParseGeometries();
+	ParseShapes();
 
 	/*
 	LexerToken token;
@@ -369,22 +370,52 @@ bool EnvironmentLoader::ParseRenderers(void)
 	return result;
 }
 //----------------------------------------------------------------------------------------------
-bool EnvironmentLoader::ParseGeometries(void)
+bool EnvironmentLoader::ParseShapes(void)
 {
-	std::cout << "[Geometries]" << std::endl;
-	
-	std::vector<ParseNode*> geometryNodes;
-	
-	m_parseTree.Root.FindByName("Geometries", geometryNodes);
+	ArgumentMap argumentMap;
 
-	std::cout << geometryNodes.size() << std::endl;
+	std::vector<ParseNode*> shapes;
+	std::vector<ParseNode*>::iterator shapesIterator;
 	
+	std::vector<ParseNode*> shapeNodes;
+	std::vector<ParseNode*>::iterator shapeNodesIterator;
+
+	m_parseTree.Root.FindByName("Shapes", shapes);
+
+	for (shapesIterator = shapes.begin();
+		 shapesIterator != shapes.end();
+		 ++shapesIterator)
+	{
+		ParseNode *pShapesNode = *shapesIterator;
+
+		// Go throug all shape entries in the shapes node
+		pShapesNode->FindByName("Shape", shapeNodes);
+		
+		for (shapeNodesIterator = shapeNodes.begin();
+			 shapeNodesIterator != shapeNodes.end();
+			 ++shapeNodesIterator)
+		{
+			ParseNode *pShapeNode = *shapeNodesIterator;
+			pShapeNode->GetArgumentMap(argumentMap);
+
+			// If argument map does not specify geometry type or name/id, ignore entry
+			if (!(argumentMap.ContainsArgument("Id") && argumentMap.ContainsArgument("Type")))
+			{
+				std::cout << "Warning :: Ignoring Shape entry because it does not specify Id or Type..." << std::endl;
+				continue;
+			}
+
+			// Get shape factory and create instance
+			std::string strType, strId;
+
+			argumentMap.GetArgument("Id", strId);
+			argumentMap.GetArgument("Type", strType);
+
+			m_pEngineKernel->GetShapeManager()->CreateInstance(strType, strId, argumentMap);
+		}
+	}
+
 	return true;
-	/*
-	std::vector<std::map<std::string, std::string>> geometryList;
-	bool result = ParseList("Geometry", geometryList);
-	return result; 
-	*/
 }
 //----------------------------------------------------------------------------------------------
 bool EnvironmentLoader::ParseMaterials(void)

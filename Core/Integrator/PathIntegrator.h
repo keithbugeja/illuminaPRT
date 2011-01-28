@@ -16,15 +16,14 @@ namespace Illumina
 		class PathIntegrator : public IIntegrator
 		{
 		protected:
-			bool m_bShowNormals;
-
 			int m_nMaxRayDepth,
 				m_nShadowSampleCount;
 
 			Random m_random;
 
 		public:
-			PathIntegrator(int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 16, bool p_bShowNormals = false);
+			PathIntegrator(int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1);
+			PathIntegrator(const std::string &p_strId, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 16);
 
 			bool Initialise(Scene *p_pScene, ICamera *p_pCamera);
 			bool Shutdown(void);
