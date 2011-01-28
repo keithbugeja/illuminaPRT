@@ -29,9 +29,30 @@ namespace Illumina
 			std::map<std::string, std::string> m_argumentMap;
 
 		public:
+			ArgumentMap(const ArgumentMap &p_argumentMap)
+			{
+				Initialise(p_argumentMap.m_argumentMap);
+			}
+
+			ArgumentMap(const std::map<std::string, std::string> p_argumentMap)
+			{
+				Initialise(p_argumentMap);
+			}
+
 			ArgumentMap(const std::string &p_strArgumentList)
 			{
+				Initialise(p_strArgumentList);
+			}
+
+			void Initialise(const std::map<std::string, std::string> p_argumentMap)
+			{
+				m_argumentMap = p_argumentMap;
+			}
+
+			void Initialise(const std::string &p_strArgumentList)
+			{
 				//std::cout << "Parsing argument map ..." << std::endl;
+				m_argumentMap.clear();
 
 				boost::char_separator<char> separator("=;");
 				boost::tokenizer<boost::char_separator<char> > tokens(p_strArgumentList, separator);

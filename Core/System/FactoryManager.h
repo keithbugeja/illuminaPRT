@@ -42,6 +42,7 @@ namespace Illumina
 			
 			T* CreateInstance(const std::string &p_strFactoryName, const std::string &p_strInstanceName);
 			T* CreateInstance(const std::string &p_strFactoryName, const std::string &p_strInstanceName, const std::string& p_strArguments);
+			T* CreateInstance(const std::string &p_strFactoryName, const std::string &p_strInstanceName, ArgumentMap &p_argumentMap);
 			T* RequestInstance(const std::string &p_strInstanceName);
 			T* ReleaseInstance(const std::string &p_strInstanceName);
 		};

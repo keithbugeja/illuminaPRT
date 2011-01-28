@@ -30,6 +30,8 @@ namespace Illumina
 			bool Initialise(void);
 			void Shutdown(void);
 
+			EngineKernel* GetEngineKernel(void) const;
+
 			void SetIntegrator(IIntegrator *p_pIntegrator);
 			IIntegrator* GetIntegrator(void) const;
 

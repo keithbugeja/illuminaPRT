@@ -7,17 +7,19 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
 #include <map>
 
+#include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/lexical_cast.hpp>
+#include <boost/tokenizer.hpp>
 
-#include "System/EngineKernel.h"
+#include "Scene/Environment.h"
 #include "Scene/WavefrontSceneLoader.h"
-#include "Spectrum/Spectrum.h"
 #include "Shape/VertexFormats.h"
 #include "Shape/Shape.h"
+#include "Spectrum/Spectrum.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -89,9 +91,12 @@ struct WavefrontContext
 	{ }
 };
 //----------------------------------------------------------------------------------------------
-WavefrontSceneLoader::WavefrontSceneLoader(EngineKernel *p_pEngineKernel, Environment *p_pEnvironment)
-	: ISceneLoader(p_pEngineKernel, p_pEnvironment)
-{ }
+WavefrontSceneLoader::WavefrontSceneLoader(Environment *p_pEnvironment)
+	: ISceneLoader(p_pEnvironment)
+{ 
+	BOOST_ASSERT(p_pEnvironment != NULL);
+	m_pEngineKernel = p_pEnvironment->GetEngineKernel();
+}
 //----------------------------------------------------------------------------------------------
 bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap)
 {
@@ -468,5 +473,21 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 	wavefrontFile.close();
 
 	return true;
+}
+//----------------------------------------------------------------------------------------------
+int WavefrontSceneLoader::Tokenise(std::string &p_strText, char *p_pSeparators, std::vector<std::string> &p_tokenList)
+{
+	boost::char_separator<char> separator(p_pSeparators);
+	boost::tokenizer<boost::char_separator<char> > tokens(p_strText, separator);
+
+	p_tokenList.clear();
+
+	for (boost::tokenizer<boost::char_separator<char> >::iterator iterator = tokens.begin(); iterator != tokens.end(); ++iterator)
+	{
+		std::string token = *iterator;
+		p_tokenList.push_back(token);
+	}
+
+	return p_tokenList.size();
 }
 //----------------------------------------------------------------------------------------------

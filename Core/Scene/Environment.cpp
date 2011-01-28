@@ -31,6 +31,10 @@ void Environment::Shutdown(void) {
 	m_bIsInitialised = false;
 }
 //----------------------------------------------------------------------------------------------
+EngineKernel* Environment::GetEngineKernel(void) const {
+	return m_pEngineKernel;
+}
+//----------------------------------------------------------------------------------------------
 void Environment::SetIntegrator(IIntegrator *p_pIntegrator) {
 	m_pRenderer->SetIntegrator(p_pIntegrator);
 }
@@ -97,7 +101,7 @@ IRenderer* Environment::GetRenderer(void) const {
 //----------------------------------------------------------------------------------------------
 bool Environment::Load(const std::string &p_strEnvironmentName)
 {
-	EnvironmentLoader loader(m_pEngineKernel, this);
+	EnvironmentLoader loader(this);
 	loader.Import(p_strEnvironmentName, 0);
 	//loader.Load(p_strEnvironmentName);
 

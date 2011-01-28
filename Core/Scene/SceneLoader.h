@@ -44,17 +44,13 @@ namespace Illumina
 			};
 
 		protected:
-			EngineKernel *m_pEngineKernel;
 			Environment *m_pEnvironment;
 
 		public:
-			ISceneLoader(EngineKernel *p_pEngineKernel, Environment *p_pEnvironment);
+			ISceneLoader(Environment *p_pEnvironment);
 
 			virtual bool Import(const std::string &p_strFilename, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL) = 0;
 			virtual bool Export(const std::string &p_strFilename, unsigned int p_uiFlags, ArgumentMap* p_pArgumentMap = NULL) = 0;
-
-		protected:
-			int Tokenise(std::string &p_strText, char *p_pSeparators, std::vector<std::string> &p_tokenList);
 		};
 	}
 }
