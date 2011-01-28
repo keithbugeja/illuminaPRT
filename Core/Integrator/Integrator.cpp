@@ -17,6 +17,13 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
+IIntegrator::IIntegrator(void) 
+{ }
+//----------------------------------------------------------------------------------------------
+IIntegrator::IIntegrator(const std::string &p_strId)
+	: Object(p_strId)
+{ }
+//----------------------------------------------------------------------------------------------
 Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, IMaterial *p_pMaterial,
 	const Intersection &p_intersection, const Vector3 &p_point, const Vector3 &p_normal, 
 	const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v)

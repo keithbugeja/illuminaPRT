@@ -55,6 +55,12 @@ PointLight::PointLight(const Vector3 &p_position, const Spectrum &p_intensity)
 	, m_intensity(p_intensity)
 { }
 //----------------------------------------------------------------------------------------------
+PointLight::PointLight(const std::string& p_strId, const Vector3 &p_position, const Spectrum &p_intensity)
+	: ILight(p_strId) 
+	, m_position(p_position) 
+	, m_intensity(p_intensity)
+{ }
+//----------------------------------------------------------------------------------------------
 PointLight::PointLight(const PointLight &p_pointLight)
 	: m_position(p_pointLight.m_position)
 	, m_intensity(p_pointLight.m_intensity)

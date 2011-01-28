@@ -9,13 +9,19 @@
 #include "System/IlluminaPRT.h"
 #include "Spectrum/Spectrum.h"
 #include "Threading/List.h"
+#include "Object/Object.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
 	{
-		class ILight
+		class ILight 
+			: public Object
 		{
+		protected:
+			ILight(void) { }
+			ILight(const std::string &p_strId) : Object(p_strId) { }
+
 		public:
 			virtual float Pdf(const Vector3 &p_point, const Vector3 &p_wOut) = 0;
 

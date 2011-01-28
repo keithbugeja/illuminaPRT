@@ -24,8 +24,8 @@ namespace Illumina
 			ITexture *m_pTexture;
 
 		public:
-			MirrorMaterial(const std::string &p_strName, const Spectrum &p_reflectivity, ITexture *p_pTexture = NULL)
-				: IMaterial(p_strName) 
+			MirrorMaterial(const std::string &p_strId, const Spectrum &p_reflectivity, ITexture *p_pTexture = NULL)
+				: IMaterial(p_strId) 
 				, m_reflectivity(p_reflectivity)
 				, m_pTexture(p_pTexture)
 			{

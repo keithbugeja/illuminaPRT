@@ -14,11 +14,11 @@ EmissivePrimitive::EmissivePrimitive(void)
 	: m_pLight(NULL)
 { }
 //----------------------------------------------------------------------------------------------
-AreaLight* EmissivePrimitive::GetLight(void) const {
+IAreaLight* EmissivePrimitive::GetLight(void) const {
 	return m_pLight;
 }
 //----------------------------------------------------------------------------------------------
-void EmissivePrimitive::SetLight(AreaLight *p_pLight) 
+void EmissivePrimitive::SetLight(IAreaLight *p_pLight) 
 {
 	m_pLight = p_pLight;
 	m_pLight->SetWorldTransform(&this->WorldTransform);

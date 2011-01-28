@@ -22,6 +22,12 @@ WhittedIntegrator::WhittedIntegrator(int p_nMaxRayDepth, int p_nShadowSampleCoun
 	, m_nMaxRayDepth(p_nMaxRayDepth)
 { }
 //----------------------------------------------------------------------------------------------
+WhittedIntegrator::WhittedIntegrator(const std::string &p_strId, int p_nMaxRayDepth, int p_nShadowSampleCount)
+	: IIntegrator(p_strId) 
+	, m_nShadowSampleCount(p_nShadowSampleCount)
+	, m_nMaxRayDepth(p_nMaxRayDepth)
+{ }
+//----------------------------------------------------------------------------------------------
 bool WhittedIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 {
 	//std::cout << "Path Tracing Integrator :: Initialise()" << std::endl;

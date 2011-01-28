@@ -9,6 +9,7 @@
 
 #include "System/IlluminaPRT.h"
 
+#include "Object/Object.h"
 #include "Geometry/Vector2.h"
 #include "Geometry/Vector3.h"
 
@@ -16,8 +17,13 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class IFilter
+		class IFilter :
+			public Object
 		{
+		protected:
+			IFilter(const std::string &p_strId) : Object(p_strId) { }
+			IFilter(void) { }
+
 		public:
 			virtual void operator()(Vector2 *p_pSamples, int p_nSampleCount) = 0;
 		};

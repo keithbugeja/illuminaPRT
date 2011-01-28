@@ -14,6 +14,7 @@
 
 #include "Shape/Sphere.h"
 #include "Shape/Triangle.h"
+#include "Shape/BasicMesh.h"
 #include "Shape/KDTreeMesh.h"
 #include "Shape/IndexedTriangle.h"
 #include "Shape/VertexFormats.h"
@@ -129,11 +130,40 @@ namespace Illumina
 		};
 
 		//----------------------------------------------------------------------------------------------
+		// BasicMesh shape factory
+		// Note	that the factory produces ITriangleMesh objects with vertex format type Vertex and
+		// IndexedTriangle type faces.
+		//----------------------------------------------------------------------------------------------
+		class BasicMeshShapeFactory : public Illumina::Core::Factory<Illumina::Core::IShape>
+		{
+		public:
+			Illumina::Core::IShape *CreateInstance(void)
+			{
+				return new BasicMesh();
+			}
+
+			Illumina::Core::IShape *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strName;
+
+				if (p_argumentMap.GetArgument("Name", strName))
+					return CreateInstance(strName);
+				
+				return CreateInstance();
+			}
+
+			Illumina::Core::IShape *CreateInstance(const std::string &p_strName)
+			{
+				return new BasicMesh(p_strName);
+			}
+		};
+
+		//----------------------------------------------------------------------------------------------
 		// KD-Tree shape factory
 		// Note	that the factory produces ITriangleMesh objects with vertex format type Vertex and
 		// IndexedTriangle type faces.
 		//----------------------------------------------------------------------------------------------
-		class KDTreeShapeFactory : public Illumina::Core::Factory<Illumina::Core::IShape>
+		class KDTreeMeshShapeFactory : public Illumina::Core::Factory<Illumina::Core::IShape>
 		{
 		public:
 			Illumina::Core::IShape *CreateInstance(void)
@@ -157,7 +187,7 @@ namespace Illumina
 					return CreateInstance(maxDepth, maxObjects);
 				}
 
-				throw new Exception("Invalid arguments to KDTreeShapeFactory!");
+				throw new Exception("Invalid arguments to KDTreeMeshShapeFactory!");
 			}
 
 			Illumina::Core::IShape *CreateInstance(int p_nMaxDepth, int p_nMaxLeafObjects)

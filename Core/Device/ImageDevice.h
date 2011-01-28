@@ -12,15 +12,18 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class ImageDevice : public IDevice
+		class ImageDevice 
+			: public IDevice
 		{
 		protected:
 			Image *m_pImage;
 			IImageIO *m_pImageIO;
 			std::string m_strFilename;
+			bool m_bKillFilterOnExit;
 
 		public:
-			ImageDevice(int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename);
+			ImageDevice(const std::string &p_strId, int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit = false);
+			ImageDevice(int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit = false);
 			~ImageDevice(void);
 
 			int GetWidth(void) const;

@@ -13,15 +13,16 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-DiffuseAreaLight::DiffuseAreaLight(
-	Transformation* p_pWorldTransform, 
-	IShape* p_pShape, 
-	const Spectrum &p_emit)
+DiffuseAreaLight::DiffuseAreaLight(Transformation* p_pWorldTransform, IShape* p_pShape, const Spectrum &p_emit)
+	: IAreaLight(p_pWorldTransform, p_pShape)
 {
 	m_emit = p_emit;
-
-	SetWorldTransform(p_pWorldTransform);
-	SetShape(p_pShape);
+}
+//----------------------------------------------------------------------------------------------
+DiffuseAreaLight::DiffuseAreaLight(const std::string &p_strId, Transformation* p_pWorldTransform, IShape* p_pShape, const Spectrum &p_emit)
+	: IAreaLight(p_strId, p_pWorldTransform, p_pShape)
+{
+	m_emit = p_emit;
 }
 //----------------------------------------------------------------------------------------------
 void DiffuseAreaLight::SetShape(IShape *p_pShape)

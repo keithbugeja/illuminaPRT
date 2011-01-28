@@ -151,7 +151,6 @@
     <ClCompile Include="..\..\..\..\Core\Integrator\WhittedIntegrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\AreaLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\DiffuseAreaLight.cpp" />
-    <ClCompile Include="..\..\..\..\Core\Light\DirectionalLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\PointLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Material\BSDF.cpp" />
     <ClCompile Include="..\..\..\..\Core\Material\LambertianBxDF.cpp" />
@@ -163,6 +162,7 @@
     <ClCompile Include="..\..\..\..\Core\Object\UniqueID.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\BasicRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\DistributedRenderer.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Renderer\MultithreadedRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\Renderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Sampler\JitterSampler.cpp" />
     <ClCompile Include="..\..\..\..\Core\Sampler\RandomSampler.cpp" />
@@ -190,9 +190,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h" />
+    <ClInclude Include="..\..\..\..\Core\Camera\CameraManager.h" />
     <ClInclude Include="..\..\..\..\Core\Camera\PerspectiveCamera.h" />
     <ClInclude Include="..\..\..\..\Core\Camera\ThinLensCamera.h" />
     <ClInclude Include="..\..\..\..\Core\Device\Device.h" />
+    <ClInclude Include="..\..\..\..\Core\Device\DeviceManager.h" />
     <ClInclude Include="..\..\..\..\Core\Device\ImageDevice.h" />
     <ClInclude Include="..\..\..\..\Core\Exception\Exception.h" />
     <ClInclude Include="..\..\..\..\Core\Filter\BoxFilter.h" />
@@ -219,7 +221,6 @@
     <ClInclude Include="..\..\..\..\Core\Integrator\WhittedIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Light\AreaLight.h" />
     <ClInclude Include="..\..\..\..\Core\Light\DiffuseAreaLight.h" />
-    <ClInclude Include="..\..\..\..\Core\Light\DirectionalLight.h" />
     <ClInclude Include="..\..\..\..\Core\Light\Light.h" />
     <ClInclude Include="..\..\..\..\Core\Light\PointLight.h" />
     <ClInclude Include="..\..\..\..\Core\Material\BSDF.h" />
@@ -241,7 +242,9 @@
     <ClInclude Include="..\..\..\..\Core\Object\UniqueID.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\BasicRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\DistributedRenderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\MultithreadedRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\Renderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\RendererManager.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\JitterSampler.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\RandomSampler.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\Sampler.h" />

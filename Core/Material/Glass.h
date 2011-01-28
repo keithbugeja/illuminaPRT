@@ -31,8 +31,8 @@ namespace Illumina
 			ITexture *m_pTexture;
 
 		public:
-			GlassMaterial(const std::string &p_strName, const Spectrum &p_reflectivity, float p_fAbsorption = 1.0f, float p_fEtaI = 1.0f, float p_fEtaT = 1.52f, ITexture *p_pTexture = NULL)
-				: IMaterial(p_strName) 
+			GlassMaterial(const std::string &p_strId, const Spectrum &p_reflectivity, float p_fAbsorption = 1.0f, float p_fEtaI = 1.0f, float p_fEtaT = 1.52f, ITexture *p_pTexture = NULL)
+				: IMaterial(p_strId) 
 				, m_reflectivity(p_reflectivity)
 				, m_fAbsorption(p_fAbsorption)
 				, m_fEtaI(p_fEtaI)

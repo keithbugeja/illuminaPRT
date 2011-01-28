@@ -17,6 +17,9 @@ namespace Illumina
 			: public IFilter
 		{
 		public:
+			BoxFilter(void);
+			BoxFilter(const std::string &p_strId);
+			
 			void operator()(Vector2 *p_pSamples, int p_nSampleCount);
 		};
 	} 

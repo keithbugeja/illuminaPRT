@@ -20,13 +20,13 @@ namespace Illumina
 			using GeometricPrimitive::m_pShape;
 
 		protected:
-			AreaLight *m_pLight;
+			IAreaLight *m_pLight;
 
 		public:
 			EmissivePrimitive(void);
 
-			AreaLight* GetLight(void) const;
-			void SetLight(AreaLight *p_pLight);
+			IAreaLight* GetLight(void) const;
+			void SetLight(IAreaLight *p_pLight);
 
 			bool Intersect(const Ray &p_ray, float p_fTime, Intersection &p_intersection);
 			//bool Intersect(const Ray &p_ray, float p_fTime);

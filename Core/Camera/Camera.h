@@ -8,6 +8,7 @@
 
 #include "System/IlluminaPRT.h"
 
+#include "Object/Object.h"
 #include "Geometry/Vector3.h"
 #include "Geometry/Basis.h"
 #include "Geometry/Ray.h"
@@ -16,7 +17,8 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class ICamera
+		class ICamera 
+			: public Object
 		{
 		protected:
 			OrthonormalBasis m_uvw;
@@ -27,6 +29,10 @@ namespace Illumina
 
 			float m_fov,
 				m_aspect;			
+
+		protected:
+			ICamera(const std::string& p_strId);
+			ICamera(void);
 
 		public:
 			void SetProjection(float p_fLeft, float p_fRight, float p_fTop, float p_fBottom, float p_fDistance);

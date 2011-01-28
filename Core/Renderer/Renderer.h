@@ -7,12 +7,15 @@
 #pragma once
 
 #include "System/IlluminaPRT.h"
+#include "Object/Object.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
 	{
-		class IRenderer
+#pragma message("Renderer should subscribe to a factory pattern but rather a strategy pattern.")
+		class IRenderer 
+			: public Object
 		{
 		protected:
 			IIntegrator *m_pIntegrator;
@@ -22,6 +25,9 @@ namespace Illumina
 
 		protected:
 			IRenderer(Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL,
+				IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL);
+
+			IRenderer(const std::string &p_strId, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL,
 				IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL);
 
 		public:

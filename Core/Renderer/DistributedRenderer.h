@@ -17,7 +17,8 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class DistributedRenderer : public IRenderer
+		class DistributedRenderer 
+			: public IRenderer
 		{
 		protected:			
 			using IRenderer::m_pIntegrator;
@@ -35,7 +36,10 @@ namespace Illumina
 			mpi::communicator* m_pMPICommunicator;
 		
 		public:
-			DistributedRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, 
+			DistributedRenderer(Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, 
+				int p_nSampleCount = 1, int p_nTileWidth = 8, int p_nTileHeight = 8);
+
+			DistributedRenderer(const std::string &p_strId, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, 
 				int p_nSampleCount = 1, int p_nTileWidth = 8, int p_nTileHeight = 8);
 
 			bool Initialise(void);

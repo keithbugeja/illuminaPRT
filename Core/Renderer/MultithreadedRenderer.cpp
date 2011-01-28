@@ -6,7 +6,7 @@
 //----------------------------------------------------------------------------------------------
 #include "boost/progress.hpp"
 
-#include "Renderer/BasicRenderer.h"
+#include "Renderer/MultithreadedRenderer.h"
 #include "Integrator/Integrator.h"
 #include "Geometry/Intersection.h"
 #include "Spectrum/Spectrum.h"
@@ -19,17 +19,17 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-BasicRenderer::BasicRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
+MultithreadedRenderer::MultithreadedRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
 	: IRenderer(p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
 	, m_nSampleCount(p_nSampleCount)
 { }
 //----------------------------------------------------------------------------------------------
-BasicRenderer::BasicRenderer(const std::string &p_strId, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
+MultithreadedRenderer::MultithreadedRenderer(const std::string &p_strId, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
 	: IRenderer(p_strId, p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
 	, m_nSampleCount(p_nSampleCount)
 { }
 //----------------------------------------------------------------------------------------------
-void BasicRenderer::Render(void)
+void MultithreadedRenderer::Render(void)
 {
 	BOOST_ASSERT(m_pScene != NULL && m_pIntegrator != NULL && m_pFilter != NULL && 
 		m_pScene->GetCamera() != NULL && m_pScene->GetSpace() != NULL && m_pScene->GetSampler() != NULL);
@@ -41,6 +41,7 @@ void BasicRenderer::Render(void)
 	
 	boost::progress_display renderProgress(height);
 
+	#pragma omp parallel for schedule(guided)
 	for (int y = 0; y < height; ++y)
 	{
 		Vector2 *pSampleBuffer = new Vector2[m_nSampleCount];
@@ -59,6 +60,7 @@ void BasicRenderer::Render(void)
 			for (int sample = 0; sample < m_nSampleCount; sample++)
 			{
 				Ray ray = m_pScene->GetCamera()->GetRay((x + pSampleBuffer[sample].U) / width, (y + pSampleBuffer[sample].V) / height, pSampleBuffer[sample].U, pSampleBuffer[sample].V);
+				//Ray ray = m_pCamera->GetRay((x + pSampleBuffer[sample].U) / width, (y + pSampleBuffer[sample].V) / height, pSampleBuffer[sample].U, pSampleBuffer[sample].V);
 				Li += m_pIntegrator->Radiance(m_pScene, ray, intersection);
 			}
 

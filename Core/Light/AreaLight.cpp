@@ -7,25 +7,43 @@
 #include "Light/AreaLight.h"
 
 using namespace Illumina::Core;
+
 //----------------------------------------------------------------------------------------------
-AreaLight::AreaLight(void)
+IAreaLight::IAreaLight(void)
 	: m_pShape(NULL)
 	, m_pWorldTransform(NULL)
 { }
 //----------------------------------------------------------------------------------------------
-void AreaLight::SetWorldTransform(Transformation *p_pWorldTransform) {
+IAreaLight::IAreaLight(const std::string &p_strId)
+	: ILight(p_strId) 
+	, m_pShape(NULL)
+	, m_pWorldTransform(NULL)
+{ }
+//----------------------------------------------------------------------------------------------
+IAreaLight::IAreaLight(Transformation *p_pWorldTransform, IShape* p_pShape)
+	: m_pShape(p_pShape)
+	, m_pWorldTransform(p_pWorldTransform)
+{ }
+//----------------------------------------------------------------------------------------------
+IAreaLight::IAreaLight(const std::string &p_strId, Transformation *p_pWorldTransform, IShape* p_pShape)
+	: ILight(p_strId) 
+	, m_pShape(p_pShape)
+	, m_pWorldTransform(p_pWorldTransform)
+{ }
+//----------------------------------------------------------------------------------------------
+void IAreaLight::SetWorldTransform(Transformation *p_pWorldTransform) {
 	m_pWorldTransform = p_pWorldTransform;
 }
 //----------------------------------------------------------------------------------------------
-Transformation* AreaLight::GetWorldTransform(void) const {
+Transformation* IAreaLight::GetWorldTransform(void) const {
 	return m_pWorldTransform;
 }
 //----------------------------------------------------------------------------------------------
-IShape* AreaLight::GetShape(void) const {
+IShape* IAreaLight::GetShape(void) const {
 	return m_pShape;
 }
 //----------------------------------------------------------------------------------------------
-void AreaLight::SetShape(IShape* p_pShape) {
+void IAreaLight::SetShape(IShape* p_pShape) {
 	m_pShape = p_pShape;
 }
 //----------------------------------------------------------------------------------------------

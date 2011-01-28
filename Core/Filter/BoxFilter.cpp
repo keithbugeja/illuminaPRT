@@ -10,6 +10,13 @@
 using namespace Illumina::Core;
 
 //----------------------------------------------------------------------------------------------
+BoxFilter::BoxFilter(void)
+{ }
+//----------------------------------------------------------------------------------------------
+BoxFilter::BoxFilter(const std::string &p_strId)
+	: IFilter(p_strId)
+{ }
+//----------------------------------------------------------------------------------------------
 void BoxFilter::operator()(Vector2 *p_pSamples, int p_nSampleCount)
 {
 	for (int i = 0; i < p_nSampleCount; i++)

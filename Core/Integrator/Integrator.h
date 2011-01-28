@@ -6,14 +6,23 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+#include <string>
+
 #include "System/IlluminaPRT.h"
+#include "Object/Object.h"
+
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
 	{
-		class IIntegrator
+		class IIntegrator 
+			: public Object
 		{
+		protected:
+			IIntegrator(void);
+			IIntegrator(const std::string &p_strId);
+
 		public:
 			virtual bool Initialise(Scene *p_pScene, ICamera *p_pCamera) = 0;
 			virtual bool Shutdown(void) = 0;

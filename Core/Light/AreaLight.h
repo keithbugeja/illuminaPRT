@@ -13,16 +13,20 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class AreaLight : 
+		class IAreaLight : 
 			public ILight
 		{
 		protected:
 			IShape *m_pShape;
 			Transformation *m_pWorldTransform;
 
-		public:
-			AreaLight(void);
+		protected:
+			IAreaLight(void);
+			IAreaLight(const std::string &p_strId);
+			IAreaLight(Transformation *p_pWorldTransform, IShape* p_pShape);
+			IAreaLight(const std::string &p_strId, Transformation *p_pWorldTransform, IShape* p_pShape);
 
+		public:
 			float Pdf(const Vector3 &p_point, const Vector3 &p_wOut) = 0;
 
 			Spectrum Power(void) = 0;

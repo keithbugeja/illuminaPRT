@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	BasicRenderer.h
+//	Filename:	MultithreadedRenderer.h
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
@@ -12,7 +12,7 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class BasicRenderer 
+		class MultithreadedRenderer 
 			: public IRenderer
 		{
 		protected:			
@@ -24,8 +24,8 @@ namespace Illumina
 			int m_nSampleCount;
 
 		public:
-			BasicRenderer(Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, int p_nSampleCount = 1);
-			BasicRenderer(const std::string &p_strId, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, int p_nSampleCount = 1);
+			MultithreadedRenderer(Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, int p_nSampleCount = 1);
+			MultithreadedRenderer(const std::string &p_strId, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, int p_nSampleCount = 1);
 
 			void Render(void);
 		};

@@ -15,17 +15,18 @@ namespace Illumina
 	namespace Core
 	{
 		class DiffuseAreaLight : 
-			public AreaLight
+			public IAreaLight
 		{
-			using AreaLight::m_pShape;
-			using AreaLight::m_pWorldTransform;
+			using IAreaLight::m_pShape;
+			using IAreaLight::m_pWorldTransform;
 
 		protected:
 			Spectrum m_emit;
 			float m_fArea;
 
 		public:
-			DiffuseAreaLight(Transformation *p_worldTransform, IShape* p_pShape, const Spectrum& p_emit);
+			DiffuseAreaLight(Transformation *p_pWorldTransform, IShape* p_pShape, const Spectrum &p_emit);
+			DiffuseAreaLight(const std::string &p_strId, Transformation *p_pWorldTransform, IShape* p_pShape, const Spectrum &p_emit);
 
 			void SetShape(IShape *p_pShape);
 
