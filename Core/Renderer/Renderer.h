@@ -7,13 +7,17 @@
 #pragma once
 
 #include "System/IlluminaPRT.h"
+#include "System/FactoryManager.h"
+
 #include "Object/Object.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
 	{
-#pragma message("Renderer should subscribe to a factory pattern but rather a strategy pattern.")
+		//----------------------------------------------------------------------------------------------
+		// IRenderer : Abstract base class for renderers. 
+		//----------------------------------------------------------------------------------------------
 		class IRenderer 
 			: public Object
 		{
@@ -48,5 +52,10 @@ namespace Illumina
 			void SetScene(Scene *p_pScene);
 			Scene* GetScene(void) const;
 		};
+
+		//----------------------------------------------------------------------------------------------
+		// RendererManager : All Renderer factories must register with object.
+		//----------------------------------------------------------------------------------------------
+		typedef FactoryManager<IRenderer> RendererManager;
 	}
 }

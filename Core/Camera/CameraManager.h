@@ -10,8 +10,6 @@
 #include <string>
 #include <iostream>
 
-#include "System/FactoryManager.h"
-
 #include "Camera/Camera.h"
 #include "Camera/PerspectiveCamera.h"
 #include "Camera/ThinLensCamera.h"
@@ -20,29 +18,29 @@ namespace Illumina
 {
 	namespace Core
 	{
-		typedef FactoryManager<ICamera> CameraManager;
-		
 		class PerspectiveCameraFactory : public Illumina::Core::Factory<Illumina::Core::ICamera>
 		{
 		public:
 			Illumina::Core::ICamera *CreateInstance(void)
 			{
-#pragma message ("Normalise exception messages for factories without default constructors!")
-				throw new Exception("...");
+				throw new Exception("Method not supported!");
 			}
 
-			// Arguments
-			// -- Id {String}
-			// -- Aspect {Float}
-			// -- Fov {Float}
-			// -- Position {Vector3}
-			// -- Target {Vector3}
-			// -- Up {Vector3}
-			// -- Frame {Vector4}
-			// -- Distance {Float}
+			/*
+			 * Arguments
+			 * -- Id {String}
+			 * -- Aspect {Float}
+			 * -- Fov {Float}
+			 * -- Position {Vector3}
+			 * -- Target {Vector3}
+			 * -- Up {Vector3}
+			 * -- Frame {Vector4}
+			 * -- Distance {Float}
+			 */
 			Illumina::Core::ICamera *CreateInstance(ArgumentMap &p_argumentMap)
 			{
-#pragma message ("Camera frame arguments are ignored at the moment.")
+				#pragma message ("Camera frame arguments are ignored at the moment.")
+
 				float aspect = 1.0f,
 					fov = 60.0f,
 					distance = 1.0f,
@@ -99,8 +97,7 @@ namespace Illumina
 		public:
 			Illumina::Core::ICamera *CreateInstance(void)
 			{
-#pragma message ("Normalise exception messages for factories without default constructors!")
-				throw new Exception("...");
+				throw new Exception("Method not supported!");
 			}
 
 			// Arguments
@@ -114,7 +111,8 @@ namespace Illumina
 			// -- Distance {Float}
 			Illumina::Core::ICamera *CreateInstance(ArgumentMap &p_argumentMap)
 			{
-#pragma message ("Camera frame arguments are ignored at the moment.")
+				#pragma message ("Camera frame arguments are ignored at the moment.")
+
 				float aperture = 0.0f, 
 					aspect = 1.0f,
 					fov = 60.0f,

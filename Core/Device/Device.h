@@ -7,12 +7,17 @@
 #pragma once
 
 #include "System/IlluminaPRT.h"
-#include "Object/Object.h"
+#include "System/FactoryManager.h"
 
+#include "Object/Object.h"
+//----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
 	{
+		//----------------------------------------------------------------------------------------------
+		// IDevice : Abstract base class for output render devices.
+		//----------------------------------------------------------------------------------------------
 		class IDevice
 			: public Object
 		{
@@ -30,5 +35,10 @@ namespace Illumina
 			virtual void Set(int p_nX, int p_nY, const Spectrum &p_spectrum) = 0;
 			virtual void Set(float p_fX, float p_fY, const Spectrum &p_spectrum) = 0;
 		};
+
+		//----------------------------------------------------------------------------------------------
+		// DeviceManager : All device classes implementing IDevice should register with DeviceManager.
+		//----------------------------------------------------------------------------------------------
+		typedef FactoryManager<IDevice> DeviceManager;
 	}
 }

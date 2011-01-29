@@ -10,8 +10,6 @@
 #include <string>
 #include <iostream>
 
-#include "System/FactoryManager.h"
-
 #include "Image/ImagePPM.h"
 
 #include "Texture/Texture.h"
@@ -24,8 +22,6 @@ namespace Illumina
 {
 	namespace Core
 	{
-		typedef FactoryManager<ITexture> TextureManager;
-		
 		class ImageTextureFactory : public Illumina::Core::Factory<Illumina::Core::ITexture>
 		{
 		public:

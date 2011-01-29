@@ -89,7 +89,17 @@
 #include "Scene/Environment.h"
 #include "Scene/WavefrontSceneLoader.h"
 
-#include "System/Lexer.h"
+// Factories
+#include "Space/SpaceManager.h"
+#include "Shape/ShapeManager.h"
+#include "Device/DeviceManager.h"
+#include "Camera/CameraManager.h"
+#include "Filter/FilterManager.h"
+#include "Sampler/SamplerManager.h"
+#include "Texture/TextureManager.h"
+#include "Material/MaterialManager.h"
+#include "Renderer/RendererManager.h"
+#include "Integrator/IntegratorManager.h"
 
 using namespace std;
 using namespace Illumina::Core;
@@ -110,6 +120,48 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	// Engine Kernel
 	//----------------------------------------------------------------------------------------------
 	EngineKernel engineKernel;
+
+	//----------------------------------------------------------------------------------------------
+	// Sampler
+	//----------------------------------------------------------------------------------------------
+	engineKernel.GetSamplerManager()->RegisterFactory("Random", new RandomSamplerFactory());
+	engineKernel.GetSamplerManager()->RegisterFactory("Jitter", new JitterSamplerFactory());
+	engineKernel.GetSamplerManager()->RegisterFactory("Multijitter", new MultijitterSamplerFactory());
+
+	//----------------------------------------------------------------------------------------------
+	// Filter
+	//----------------------------------------------------------------------------------------------
+	engineKernel.GetFilterManager()->RegisterFactory("Box", new BoxFilterFactory());
+	engineKernel.GetFilterManager()->RegisterFactory("Tent", new TentFilterFactory());
+
+	//----------------------------------------------------------------------------------------------
+	// Space
+	//----------------------------------------------------------------------------------------------
+	engineKernel.GetSpaceManager()->RegisterFactory("Basic", new BasicSpaceFactory());
+
+	//----------------------------------------------------------------------------------------------
+	// Integrator
+	//----------------------------------------------------------------------------------------------
+	engineKernel.GetIntegratorManager()->RegisterFactory("Path", new PathIntegratorFactory());
+	engineKernel.GetIntegratorManager()->RegisterFactory("Whitted", new PathIntegratorFactory());
+
+	//----------------------------------------------------------------------------------------------
+	// Renderer
+	//----------------------------------------------------------------------------------------------
+	engineKernel.GetRendererManager()->RegisterFactory("Basic", new BasicRendererFactory());
+	engineKernel.GetRendererManager()->RegisterFactory("Multithreaded", new MultithreadedRendererFactory());
+	engineKernel.GetRendererManager()->RegisterFactory("Distributed", new DistributedRendererFactory());
+
+	//----------------------------------------------------------------------------------------------
+	// Device
+	//----------------------------------------------------------------------------------------------
+	engineKernel.GetDeviceManager()->RegisterFactory("Image", new ImageDeviceFactory());
+
+	//----------------------------------------------------------------------------------------------
+	// Cameras
+	//----------------------------------------------------------------------------------------------
+	engineKernel.GetCameraManager()->RegisterFactory("Perspective", new PerspectiveCameraFactory());
+	engineKernel.GetCameraManager()->RegisterFactory("ThinLens", new ThinLensCameraFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Shapes

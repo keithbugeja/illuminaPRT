@@ -15,33 +15,45 @@ namespace Illumina
 		struct EngineKernelState
 		{
 			PlugInManager* m_pPlugInManager;
+			IntegratorManager* m_pIntegratorManager;
 			RendererManager* m_pRendererManager;
 			MaterialManager* m_pMaterialManager;
 			TextureManager* m_pTextureManager;
+			SamplerManager* m_pSamplerManager;
 			CameraManager* m_pCameraManager;
 			DeviceManager* m_pDeviceManager;
+			FilterManager* m_pFilterManager;
 			ShapeManager* m_pShapeManager;
+			SpaceManager* m_pSpaceManager;
 			DummyManager* m_pDummyManager;
 
 			EngineKernelState(EngineKernel* p_pEngineKernel)
 				: m_pPlugInManager(new PlugInManager(p_pEngineKernel))
+				, m_pIntegratorManager(new IntegratorManager())
 				, m_pRendererManager(new RendererManager())
 				, m_pMaterialManager(new MaterialManager())
 				, m_pTextureManager(new TextureManager())
+				, m_pSamplerManager(new SamplerManager())
 				, m_pCameraManager(new CameraManager())
 				, m_pDeviceManager(new DeviceManager())
+				, m_pFilterManager(new FilterManager())
 				, m_pShapeManager(new ShapeManager())
+				, m_pSpaceManager(new SpaceManager())
 				, m_pDummyManager(new DummyManager())
 			{ }
 
 			~EngineKernelState(void)
 			{
 				delete m_pDummyManager;
+				delete m_pSpaceManager;
 				delete m_pShapeManager;
+				delete m_pFilterManager;
 				delete m_pCameraManager;
 				delete m_pDeviceManager;
+				delete m_pSamplerManager;
 				delete m_pMaterialManager;
 				delete m_pTextureManager;
+				delete m_pIntegratorManager;
 				delete m_pRendererManager;
 				delete m_pPlugInManager;
 			}
@@ -68,6 +80,13 @@ PlugInManager* EngineKernel::GetPlugInManager(void) const
 {
 	return m_pEngineKernelState->m_pPlugInManager;
 }
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+IntegratorManager* EngineKernel::GetIntegratorManager(void) const
+{
+	return m_pEngineKernelState->m_pIntegratorManager;
+}
+
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 RendererManager* EngineKernel::GetRendererManager(void) const
@@ -97,6 +116,24 @@ TextureManager* EngineKernel::GetTextureManager(void) const
 DeviceManager* EngineKernel::GetDeviceManager(void) const
 {
 	return m_pEngineKernelState->m_pDeviceManager;
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+FilterManager* EngineKernel::GetFilterManager(void) const
+{
+	return m_pEngineKernelState->m_pFilterManager;
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+SamplerManager* EngineKernel::GetSamplerManager(void) const
+{
+	return m_pEngineKernelState->m_pSamplerManager;
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+SpaceManager* EngineKernel::GetSpaceManager(void) const
+{
+	return m_pEngineKernelState->m_pSpaceManager;
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
