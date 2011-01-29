@@ -7,16 +7,22 @@
 #pragma once
 
 #include "System/IlluminaPRT.h"
+#include "System/FactoryManager.h"
 
 #include "Object/Object.h"
+
 #include "Geometry/Vector3.h"
 #include "Geometry/Basis.h"
 #include "Geometry/Ray.h"
 
+//----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
 	namespace Core
 	{
+		//----------------------------------------------------------------------------------------------
+		// ICamera : Abstract base class for camera models. 
+		//----------------------------------------------------------------------------------------------
 		class ICamera 
 			: public Object
 		{
@@ -45,9 +51,14 @@ namespace Illumina
 			void LookAt(const Vector3 &p_target);
 
 		public:
-			virtual Ray GetRay(float p_fPixelX, float p_fPixelY, float p_fXi1, float p_fXi2) const = 0;
 			virtual void GetRay(float p_fPixelX, float p_fPixelY, float p_fXi1, float p_fXi2, Ray &p_ray) const = 0;
-			virtual std::string ToString(void) const { return "Camera"; }
+			virtual Ray GetRay(float p_fPixelX, float p_fPixelY, float p_fXi1, float p_fXi2) const = 0;
+			virtual std::string ToString(void) const { return "ICamera"; }
 		};
+
+		//----------------------------------------------------------------------------------------------
+		// CameraManager : All Camera model factories must register with the CameraManager object
+		//----------------------------------------------------------------------------------------------
+		typedef FactoryManager<ICamera> CameraManager;
 	} 
 }

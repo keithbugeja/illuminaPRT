@@ -5,14 +5,20 @@
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 #pragma once
-#include <map>
+
 #include "System/IlluminaPRT.h"
+#include "System/FactoryManager.h"
+
 #include "Material/BSDF.h"
 
+//----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
-	{
+	{		
+		//----------------------------------------------------------------------------------------------
+		// IMaterial : Abstract base class system materials. 
+		//----------------------------------------------------------------------------------------------
 		class IMaterial 
 			: public BSDF
 		{ 
@@ -25,5 +31,10 @@ namespace Illumina
 
 			virtual bool IsComposite(void) const { return false; }
 		};
+
+		//----------------------------------------------------------------------------------------------
+		// MaterialManager : All Material factories must register with object.
+		//----------------------------------------------------------------------------------------------
+		typedef FactoryManager<IMaterial> MaterialManager;
 	}
 }

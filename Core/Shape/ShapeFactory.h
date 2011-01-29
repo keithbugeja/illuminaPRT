@@ -13,7 +13,7 @@
 
 #include "Shape/Shape.h"
 #include "Shape/VertexFormats.h"
-#include "Threading/List.h"
+#include "Material/MaterialGroup.h"
 #include "Staging/WavefrontLoader.h"
 
 namespace Illumina

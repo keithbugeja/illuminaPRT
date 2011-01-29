@@ -9,13 +9,20 @@
 #include <string>
 
 #include "System/IlluminaPRT.h"
+#include "System/FactoryManager.h"
+
 #include "Object/Object.h"
 
+#include "Geometry/Vector2.h"
+#include "Geometry/Vector3.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
 	{
+		//----------------------------------------------------------------------------------------------
+		// IIntegrator : Abstract base class for transport integrator methods. 
+		//----------------------------------------------------------------------------------------------
 		class IIntegrator 
 			: public Object
 		{
@@ -40,8 +47,11 @@ namespace Illumina
 			static Spectrum SampleAllLights(Scene *p_pScene, const Intersection &p_intersection,
 				const Vector3 &p_point, const Vector3 &p_pNormal, const Vector3 &p_wOut,
 				ISampler *p_pSampler, ILight *p_pExclude = NULL, int p_nShadowSamples = 1);
-
-			//static Vector3 SampleHemisphere(const Transformation &p_transform, float p_fU, float p_fV);
 		};
+
+		//----------------------------------------------------------------------------------------------
+		// IntegratorManager : All Integrator factories must register with object.
+		//----------------------------------------------------------------------------------------------
+		typedef FactoryManager<IIntegrator> IntegratorManager;
 	}
 }

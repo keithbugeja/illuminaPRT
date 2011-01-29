@@ -12,12 +12,16 @@
 #include "System/FactoryManager.h"
 #include "System/DummyManager.h"
 
-#include "Renderer/RendererManager.h"
-#include "Material/MaterialManager.h"
-#include "Texture/TextureManager.h"
-#include "Camera/CameraManager.h"
-#include "Device/DeviceManager.h"
-#include "Shape/ShapeManager.h"
+#include "Integrator/Integrator.h"
+#include "Renderer/Renderer.h"
+#include "Material/Material.h"
+#include "Texture/Texture.h"
+#include "Sampler/Sampler.h"
+#include "Camera/Camera.h"
+#include "Device/Device.h"
+#include "Filter/Filter.h"
+#include "Space/Space.h"
+#include "Shape/Shape.h"
 
 namespace Illumina
 {
@@ -35,12 +39,16 @@ namespace Illumina
 			~EngineKernel();
 
 			PlugInManager* GetPlugInManager(void) const;
+			IntegratorManager* GetIntegratorManager(void) const;
 			RendererManager* GetRendererManager(void) const;
 			MaterialManager* GetMaterialManager(void) const;
 			TextureManager* GetTextureManager(void) const;
+			SamplerManager* GetSamplerManager(void) const;
 			CameraManager* GetCameraManager(void) const;
 			DeviceManager* GetDeviceManager(void) const;
+			FilterManager* GetFilterManager(void) const;
 			ShapeManager* GetShapeManager(void) const;
+			SpaceManager* GetSpaceManager(void) const;
 			DummyManager* GetDummyManager(void) const;
 		};
 	}

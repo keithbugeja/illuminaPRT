@@ -176,6 +176,7 @@
     <ClCompile Include="..\..\..\..\Core\Shape\TreeMesh.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Triangle.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\TriangleMesh.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Space\BasicSpace.cpp" />
     <ClCompile Include="..\..\..\..\Core\Staging\EmissivePrimitive.cpp" />
     <ClCompile Include="..\..\..\..\Core\Staging\GeometricPrimitive.cpp" />
     <ClCompile Include="..\..\..\..\Core\Staging\Scene.cpp" />
@@ -199,6 +200,7 @@
     <ClInclude Include="..\..\..\..\Core\Exception\Exception.h" />
     <ClInclude Include="..\..\..\..\Core\Filter\BoxFilter.h" />
     <ClInclude Include="..\..\..\..\Core\Filter\Filter.h" />
+    <ClInclude Include="..\..\..\..\Core\Filter\FilterManager.h" />
     <ClInclude Include="..\..\..\..\Core\Filter\TentFilter.h" />
     <ClInclude Include="..\..\..\..\Core\Geometry\Basis.h" />
     <ClInclude Include="..\..\..\..\Core\Geometry\BoundingBox.h" />
@@ -217,6 +219,7 @@
     <ClInclude Include="..\..\..\..\Core\Image\ImagePPM.h" />
     <ClInclude Include="..\..\..\..\Core\Image\RGBPixel.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\Integrator.h" />
+    <ClInclude Include="..\..\..\..\Core\Integrator\IntegratorManager.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\PathIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\WhittedIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Light\AreaLight.h" />
@@ -248,6 +251,7 @@
     <ClInclude Include="..\..\..\..\Core\Sampler\JitterSampler.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\RandomSampler.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\Sampler.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\SamplerManager.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\Environment.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\EnvironmentLoader.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\SceneLoader.h" />
@@ -270,6 +274,7 @@
     <ClInclude Include="..\..\..\..\Core\Space\BasicSpace.h" />
     <ClInclude Include="..\..\..\..\Core\Space\BVHSpace.h" />
     <ClInclude Include="..\..\..\..\Core\Space\Space.h" />
+    <ClInclude Include="..\..\..\..\Core\Space\SpaceManager.h" />
     <ClInclude Include="..\..\..\..\Core\Spectrum\BaseSpectrum.h" />
     <ClInclude Include="..\..\..\..\Core\Spectrum\RGBSpectrum.h" />
     <ClInclude Include="..\..\..\..\Core\Spectrum\Spectrum.h" />

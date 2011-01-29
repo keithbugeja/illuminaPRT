@@ -264,6 +264,9 @@
     <ClCompile Include="..\..\..\..\Core\Renderer\MultithreadedRenderer.cpp">
       <Filter>Header Files\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Space\BasicSpace.cpp">
+      <Filter>Header Files\Space</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -640,6 +643,18 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Device\DeviceManager.h">
       <Filter>Header Files\Device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Filter\FilterManager.h">
+      <Filter>Header Files\Filter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Integrator\IntegratorManager.h">
+      <Filter>Header Files\Integrator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Sampler\SamplerManager.h">
+      <Filter>Header Files\Sampler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Space\SpaceManager.h">
+      <Filter>Header Files\Space</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

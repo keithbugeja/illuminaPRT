@@ -10,8 +10,6 @@
 #include <string>
 #include <iostream>
 
-#include "System/FactoryManager.h"
-
 #include "Material/Material.h"
 #include "Material/MaterialGroup.h"
 #include "Material/Matte.h"
@@ -21,9 +19,7 @@
 namespace Illumina
 {
 	namespace Core
-	{
-		typedef FactoryManager<IMaterial> MaterialManager;
-		
+	{	
 		class MaterialGroupFactory : public Illumina::Core::Factory<Illumina::Core::IMaterial>
 		{
 		public:

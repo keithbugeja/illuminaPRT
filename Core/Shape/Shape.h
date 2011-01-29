@@ -10,6 +10,9 @@
 #include <boost/format.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include "System/IlluminaPRT.h"
+#include "System/FactoryManager.h"
+
 #include "Object/Object.h"
 
 #include "Geometry/Ray.h"
@@ -22,7 +25,9 @@ namespace Illumina
 {
 	namespace Core
 	{
-		/* Base class for all shape primitives */
+		//----------------------------------------------------------------------------------------------
+		// IShape : Abstract base class for class for all shape primitives. 
+		//----------------------------------------------------------------------------------------------
 		class IShape 
 			: public Object
 		{
@@ -56,7 +61,12 @@ namespace Illumina
 			virtual Vector3 SamplePoint(float p_u, float p_v, Vector3 &p_normal) = 0;
 			virtual Vector3 SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) { return SamplePoint(p_u, p_v, p_normal); }
 
-			virtual std::string ToString(void) const { return "[IShape]"; };
+			virtual std::string ToString(void) const { return "IShape"; };
 		};
+
+		//----------------------------------------------------------------------------------------------
+		// ShapeManager : All Shape factories must register with object.
+		//----------------------------------------------------------------------------------------------
+		typedef FactoryManager<IShape> ShapeManager;
 	} 
 }

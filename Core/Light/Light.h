@@ -7,14 +7,20 @@
 #pragma once
 
 #include "System/IlluminaPRT.h"
+#include "System/FactoryManager.h"
+
+#include "Object/Object.h"
+
 #include "Spectrum/Spectrum.h"
 #include "Threading/List.h"
-#include "Object/Object.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
 	{
+		//----------------------------------------------------------------------------------------------
+		// ILight : Abstract base class for luminaires. 
+		//----------------------------------------------------------------------------------------------
 		class ILight 
 			: public Object
 		{
@@ -47,5 +53,10 @@ namespace Illumina
 
 		typedef List<ILight*> LightList;
 		typedef boost::shared_ptr<ILight> LightPtr;
+
+		//----------------------------------------------------------------------------------------------
+		// LightManager : All Light factories must register with object.
+		//----------------------------------------------------------------------------------------------
+		typedef FactoryManager<ILight> LightManager;
 	}
 }

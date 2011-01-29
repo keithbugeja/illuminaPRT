@@ -10,8 +10,6 @@
 #include <string>
 #include <iostream>
 
-#include "System/FactoryManager.h"
-
 #include "Device/Device.h"
 #include "Device/ImageDevice.h"
 #include "Image/ImagePPM.h"
@@ -19,16 +17,13 @@
 namespace Illumina
 {
 	namespace Core
-	{
-		typedef FactoryManager<IDevice> DeviceManager;
-		
+	{		
 		class ImageDeviceFactory : public Illumina::Core::Factory<Illumina::Core::IDevice>
 		{
 		public:
 			Illumina::Core::IDevice *CreateInstance(void)
 			{
-#pragma message ("Normalise exception messages for factories without default constructors!")
-				throw new Exception("...");
+				throw new Exception("Method not supported!");
 			}
 
 			// Arguments

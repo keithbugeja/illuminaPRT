@@ -18,7 +18,14 @@
 #include "Scene/Environment.h"
 #include "Scene/WavefrontSceneLoader.h"
 #include "Shape/VertexFormats.h"
-#include "Shape/Shape.h"
+#include "Shape/TriangleMesh.h"
+#include "Shape/KDTreeMesh.h"
+
+#include "Material/MaterialGroup.h"
+#include "Material/Mirror.h"
+#include "Material/Matte.h"
+#include "Material/Glass.h"
+
 #include "Spectrum/Spectrum.h"
 
 using namespace Illumina::Core;

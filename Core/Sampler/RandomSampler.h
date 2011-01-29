@@ -20,6 +20,9 @@ namespace Illumina
 			Random m_random;
 
 		public:
+			RandomSampler(void) { }
+			RandomSampler(const std::string &p_strId) : ISampler(p_strId) { }
+
 			void Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount);
 			void Get1DSamples(float *p_pSamples, int p_nSampleCount);
 
