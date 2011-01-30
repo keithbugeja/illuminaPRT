@@ -17,7 +17,7 @@
 #include "Spectrum/Spectrum.h"
 #include "Camera/Camera.h"
 #include "Device/Device.h"
-#include "Staging/Scene.h"
+#include "Scene/Scene.h"
 
 #include "Sampler/Sampler.h"
 #include "Filter/Filter.h"

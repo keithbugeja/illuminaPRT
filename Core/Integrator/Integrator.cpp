@@ -9,11 +9,11 @@
 
 #include "Geometry/Ray.h"
 #include "Geometry/Intersection.h"
-#include "Spectrum/Spectrum.h"
-#include "Sampler/Sampler.h"
-#include "Staging/Visibility.h"
-#include "Staging/Scene.h"
 #include "Material/Material.h"
+#include "Spectrum/Spectrum.h"
+#include "Scene/Visibility.h"
+#include "Sampler/Sampler.h"
+#include "Scene/Scene.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------

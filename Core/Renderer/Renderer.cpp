@@ -6,9 +6,9 @@
 //----------------------------------------------------------------------------------------------
 #include "Renderer/Renderer.h"
 #include "Integrator/Integrator.h"
-#include "Staging/Scene.h"
 #include "Device/Device.h"
 #include "Filter/Filter.h"
+#include "Scene/Scene.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------

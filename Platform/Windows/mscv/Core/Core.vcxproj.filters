@@ -135,9 +135,6 @@
     <ClCompile Include="..\..\..\..\Core\Shape\Triangle.cpp">
       <Filter>Header Files\Shape</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\Core\Staging\GeometricPrimitive.cpp">
-      <Filter>Header Files\Staging</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\Core\System\Platform.cpp">
       <Filter>Header Files\System</Filter>
     </ClCompile>
@@ -155,12 +152,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\Core\System\EngineKernel.cpp">
       <Filter>Header Files\System</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\Core\Staging\Scene.cpp">
-      <Filter>Header Files\Staging</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\Core\Staging\Visibility.cpp">
-      <Filter>Header Files\Staging</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Core\Device\ImageDevice.cpp">
       <Filter>Header Files\Device</Filter>
@@ -206,9 +197,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\Core\Light\DiffuseAreaLight.cpp">
       <Filter>Header Files\Light</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\Core\Staging\EmissivePrimitive.cpp">
-      <Filter>Header Files\Staging</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Core\Material\BSDF.cpp">
       <Filter>Header Files\Material</Filter>
@@ -266,6 +254,18 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\Core\Space\BasicSpace.cpp">
       <Filter>Header Files\Space</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Scene\EmissivePrimitive.cpp">
+      <Filter>Header Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Scene\GeometricPrimitive.cpp">
+      <Filter>Header Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Scene\Scene.cpp">
+      <Filter>Header Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Scene\Visibility.cpp">
+      <Filter>Header Files\Scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -371,9 +371,6 @@
     <ClInclude Include="..\..\..\..\Core\Shape\Shape.h">
       <Filter>Header Files\Shape</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Shape\ShapeFactory.h">
-      <Filter>Header Files\Shape</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Shape\Sphere.h">
       <Filter>Header Files\Shape</Filter>
     </ClInclude>
@@ -399,12 +396,6 @@
       <Filter>Header Files\Space</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Staging\Aggregate.h">
-      <Filter>Header Files\Staging</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Staging\GeometricPrimitive.h">
-      <Filter>Header Files\Staging</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Staging\Primitive.h">
       <Filter>Header Files\Staging</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\System\Platform.h">
@@ -497,9 +488,6 @@
     <ClInclude Include="..\..\..\..\Core\System\DummyManager.h">
       <Filter>Header Files\System</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Staging\Scene.h">
-      <Filter>Header Files\Staging</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Light\Light.h">
       <Filter>Header Files\Light</Filter>
     </ClInclude>
@@ -533,9 +521,6 @@
     <ClInclude Include="..\..\..\..\Core\Shape\DifferentialSurface.h">
       <Filter>Header Files\Shape</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Staging\Visibility.h">
-      <Filter>Header Files\Staging</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\Core\System\IlluminaPRT.h">
       <Filter>Header Files\System</Filter>
     </ClInclude>
@@ -563,16 +548,10 @@
     <ClInclude Include="..\..\..\..\Core\Light\DiffuseAreaLight.h">
       <Filter>Header Files\Light</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Staging\EmissivePrimitive.h">
-      <Filter>Header Files\Staging</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Maths\Montecarlo.h">
       <Filter>Header Files\Maths</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Material\BSDF.h">
-      <Filter>Header Files\Material</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Material\MaterialManager.h">
       <Filter>Header Files\Material</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\System\ArgumentMap.h">
@@ -583,9 +562,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Integrator\PathIntegrator.h">
       <Filter>Header Files\Integrator</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Texture\TextureManager.h">
-      <Filter>Header Files\Texture</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Material\BxDF.h">
       <Filter>Header Files\Material</Filter>
@@ -614,9 +590,6 @@
     <ClInclude Include="..\..\..\..\Core\Material\SpecularTransmissionBxDF.h">
       <Filter>Header Files\Material</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Shape\ShapeManager.h">
-      <Filter>Header Files\Shape</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Scene\Environment.h">
       <Filter>Header Files\Scene</Filter>
     </ClInclude>
@@ -635,26 +608,56 @@
     <ClInclude Include="..\..\..\..\Core\Renderer\MultithreadedRenderer.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Renderer\RendererManager.h">
-      <Filter>Header Files\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Camera\CameraManager.h">
+    <ClInclude Include="..\..\..\..\Core\Camera\CameraFactories.h">
       <Filter>Header Files\Camera</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Device\DeviceManager.h">
+    <ClInclude Include="..\..\..\..\Core\Device\DeviceFactories.h">
       <Filter>Header Files\Device</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Filter\FilterManager.h">
+    <ClInclude Include="..\..\..\..\Core\Filter\FilterFactories.h">
       <Filter>Header Files\Filter</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Integrator\IntegratorManager.h">
+    <ClInclude Include="..\..\..\..\Core\Integrator\IntegratorFactories.h">
       <Filter>Header Files\Integrator</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Sampler\SamplerManager.h">
+    <ClInclude Include="..\..\..\..\Core\Light\LightFactories.h">
+      <Filter>Header Files\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Material\MaterialFactories.h">
+      <Filter>Header Files\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Renderer\RendererFactories.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Sampler\SamplerFactories.h">
       <Filter>Header Files\Sampler</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\Space\SpaceManager.h">
+    <ClInclude Include="..\..\..\..\Core\Shape\ShapeFactories.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\ShapeForge.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Space\SpaceFactories.h">
       <Filter>Header Files\Space</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\TextureFactories.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Scene\EmissivePrimitive.h">
+      <Filter>Header Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Scene\GeometricPrimitive.h">
+      <Filter>Header Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Scene\Primitive.h">
+      <Filter>Header Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Scene\Scene.h">
+      <Filter>Header Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Scene\Visibility.h">
+      <Filter>Header Files\Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

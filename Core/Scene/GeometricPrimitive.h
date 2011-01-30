@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Geometry/Transform.h"
-#include "Staging/Primitive.h"
+#include "Scene/Primitive.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina 
 {

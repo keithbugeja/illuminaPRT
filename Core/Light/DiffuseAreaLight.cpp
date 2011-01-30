@@ -6,9 +6,9 @@
 //----------------------------------------------------------------------------------------------
 #include <iostream>
 
-#include "Exception/Exception.h"
 #include "Light/DiffuseAreaLight.h"
-#include "Staging/Visibility.h"
+#include "Exception/Exception.h"
+#include "Scene/Visibility.h"
 #include "Shape/Shape.h"
 
 using namespace Illumina::Core;
@@ -29,10 +29,7 @@ void DiffuseAreaLight::SetShape(IShape *p_pShape)
 {
 	m_pShape = p_pShape;
 
-	if (p_pShape != NULL)
-	{
-		m_fArea = p_pShape->GetArea();
-	}
+	if (p_pShape != NULL) m_fArea = p_pShape->GetArea();
 }
 //----------------------------------------------------------------------------------------------
 float DiffuseAreaLight::Pdf(const Vector3 &p_point, const Vector3 &p_wIn) {

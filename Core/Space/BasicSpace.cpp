@@ -7,8 +7,7 @@
 #include <boost/format.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "Staging/Primitive.h"
-
+#include "Scene/Primitive.h"
 #include "Space/BasicSpace.h"
 #include "Geometry/Intersection.h"
 
