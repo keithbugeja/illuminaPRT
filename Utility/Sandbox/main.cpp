@@ -35,7 +35,7 @@
 #include "Camera/PerspectiveCamera.h"
 #include "Camera/ThinLensCamera.h"
 
-#include "Shape/ShapeFactory.h"
+#include "Shape/ShapeForge.h"
 #include "Shape/TriangleMesh.h"
 #include "Shape/BasicMesh.h"
 #include "Shape/VertexFormats.h"
@@ -55,11 +55,10 @@
 #include "Material/Mirror.h"
 #include "Material/Glass.h"
 #include "Material/MaterialGroup.h"
-#include "Material/MaterialManager.h"
 
-#include "Staging/Scene.h"
-#include "Staging/GeometricPrimitive.h"
-#include "Staging/EmissivePrimitive.h"
+#include "Scene/Scene.h"
+#include "Scene/GeometricPrimitive.h"
+#include "Scene/EmissivePrimitive.h"
 
 #include "Threading/Atomic.h"
 #include "Threading/AtomicReference.h"
@@ -90,23 +89,29 @@
 #include "Scene/WavefrontSceneLoader.h"
 
 // Factories
-#include "Space/SpaceManager.h"
-#include "Shape/ShapeManager.h"
-#include "Device/DeviceManager.h"
-#include "Camera/CameraManager.h"
-#include "Filter/FilterManager.h"
-#include "Sampler/SamplerManager.h"
-#include "Texture/TextureManager.h"
-#include "Material/MaterialManager.h"
-#include "Renderer/RendererManager.h"
-#include "Integrator/IntegratorManager.h"
+#include "Camera/CameraFactories.h"
+#include "Device/DeviceFactories.h"
+
+#include "Space/SpaceFactories.h"
+#include "Shape/ShapeFactories.h"
+#include "Filter/FilterFactories.h"
+#include "Sampler/SamplerFactories.h"
+#include "Texture/TextureFactories.h"
+#include "Material/MaterialFactories.h"
+#include "Renderer/RendererFactories.h"
+#include "Integrator/IntegratorFactories.h"
 
 using namespace std;
 using namespace Illumina::Core;
 
 // TODO:
-// DistributedRenderer should not instantiate MPI - change it to have it passed to the object
-// Scene should provide more than one kind of sampler
+// ?? DistributedRenderer should not instantiate MPI - change it to have it passed to the object
+// ?? Scene should provide more than one kind of sampler
+// Remove old obj loader
+// Refactor *Manager.h files to *Factories.h
+// Finish scene loaders
+// Polish object factories
+// Move factories to CorePlugins.dll
 
 void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 {
@@ -254,7 +259,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//	ShapeFactory::LoadMesh<BasicMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
 	//	fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
 	boost::shared_ptr<KDTreeMesh> shape_mesh1 =
-		ShapeFactory::LoadMesh<KDTreeMesh>(
+		ShapeForge::LoadMesh<KDTreeMesh>(
 		fname_model01, &engineKernel, &pMeshMaterialGroup );
 	//boost::shared_ptr<BVHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
 	//	ShapeFactory::LoadMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
@@ -283,7 +288,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	// crytek sponza
 	// -- > Last used
 	boost::shared_ptr<KDTreeMesh> shape_boxLight =
-		ShapeFactory::CreateQuad<KDTreeMesh>(Vector3(-100, 1700, -100), Vector3(100, 1700, -100), Vector3(-100, 1700, 100), Vector3(100, 1700, 100));
+		ShapeForge::CreateQuad<KDTreeMesh>(Vector3(-100, 1700, -100), Vector3(100, 1700, -100), Vector3(-100, 1700, 100), Vector3(100, 1700, 100));
 	DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(4.5e+3, 4.5e+3, 4.5e+3));
 	// -- > Last used
 

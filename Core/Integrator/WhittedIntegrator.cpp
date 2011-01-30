@@ -12,8 +12,8 @@
 #include "Sampler/JitterSampler.h"
 #include "Material/Material.h"
 #include "Spectrum/Spectrum.h"
-#include "Staging/Visibility.h"
-#include "Staging/Scene.h"
+#include "Scene/Visibility.h"
+#include "Scene/Scene.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------

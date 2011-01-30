@@ -4,9 +4,9 @@
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-#include "Staging/GeometricPrimitive.h"
-#include "Material/MaterialGroup.h"
+#include "Scene/GeometricPrimitive.h"
 #include "Geometry/Intersection.h"
+#include "Material/MaterialGroup.h"
 #include "Shape/Shape.h"
 
 #include <iostream>

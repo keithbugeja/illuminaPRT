@@ -4,7 +4,7 @@
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-#include "Staging/EmissivePrimitive.h"
+#include "Scene/EmissivePrimitive.h"
 #include "Geometry/Intersection.h"
 #include "Shape/Shape.h"
 

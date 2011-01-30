@@ -4,9 +4,9 @@
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-#include "Staging/Visibility.h"
 #include "Geometry/Vector3.h"
-#include "Staging/Scene.h"
+#include "Scene/Visibility.h"
+#include "Scene/Scene.h"
 #include "Space/Space.h"
 
 using namespace Illumina::Core;

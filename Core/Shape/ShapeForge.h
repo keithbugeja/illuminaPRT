@@ -20,7 +20,7 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class ShapeFactory
+		class ShapeForge
 		{
 		public:
 			template<class TMesh>

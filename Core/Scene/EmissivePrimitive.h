@@ -6,7 +6,7 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-#include "Staging/GeometricPrimitive.h"
+#include "Scene/GeometricPrimitive.h"
 #include "Light/AreaLight.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina 

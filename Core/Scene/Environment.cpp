@@ -3,11 +3,11 @@
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
+#include "Scene/Scene.h"
 #include "Scene/Environment.h"
 #include "Scene/EnvironmentLoader.h"
 
 #include "Renderer/Renderer.h"
-#include "Staging/Scene.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
