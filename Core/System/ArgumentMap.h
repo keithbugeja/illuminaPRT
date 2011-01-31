@@ -9,6 +9,7 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <iostream>
 
 #include <boost/tokenizer.hpp>
 
@@ -101,7 +102,8 @@ namespace Illumina
 					char separator;
 
 					std::stringstream argumentValue(m_argumentMap[p_strArgumentName]);
-					if(argumentValue>>value[0]>>separator>>value[1])
+					// argument type : {0.0f, 0.0f}
+					if(argumentValue>>separator>>value[0]>>separator>>value[1])
 					{
 						p_argumentValue.Set(value[0], value[1]);
 						return true;
@@ -119,7 +121,8 @@ namespace Illumina
 					char separator;
 
 					std::stringstream argumentValue(m_argumentMap[p_strArgumentName]);
-					if(argumentValue>>value[0]>>separator>>value[1]>>separator>>value[2])
+					// argument type : {0.0f, 0.0f, 0.0f}
+					if(argumentValue>>separator>>value[0]>>separator>>value[1]>>separator>>value[2])
 					{
 						p_argumentValue.Set(value[0], value[1], value[2]);
 						return true;
@@ -127,6 +130,31 @@ namespace Illumina
 				}
 
 				return false;
+			}
+
+			bool GetArgument(const std::string &p_strArgumentName, std::vector<Vector3> &p_argumentValue)
+			{
+				if (ContainsArgument(p_strArgumentName))
+				{
+					float value[3];
+					char separator;
+					
+					std::stringstream argumentValue(m_argumentMap[p_strArgumentName]);
+					// argument type : {{0.0f, 0.0f, 0.0f}, ... , {0.0f, 0.0f, 0.0f}}
+					do 
+					{
+						argumentValue>>separator; // {
+
+						// argument type : {0.0f, 0.0f, 0.0f}
+						argumentValue>>separator>>value[0]>>separator>>value[1]>>separator>>value[2]>>separator;
+						p_argumentValue.push_back(Vector3(value[0], value[1], value[2]));
+
+						argumentValue>>separator; // , -or- }
+					} 
+					while (separator == ',');
+				}
+
+				return true;
 			}
 
 			bool GetArgument(const std::string &p_strArgumentName, RGBPixel &p_argumentValue)
@@ -137,7 +165,8 @@ namespace Illumina
 					char separator;
 
 					std::stringstream argumentValue(m_argumentMap[p_strArgumentName]);
-					if(argumentValue>>value[0]>>separator>>value[1]>>separator>>value[2])
+					// argument type : {0.0f, 0.0f, 0.0f}
+					if(argumentValue>>separator>>value[0]>>separator>>value[1]>>separator>>value[2])
 					{
 						p_argumentValue.Set(value[0], value[1], value[2]);
 						return true;
@@ -155,7 +184,8 @@ namespace Illumina
 					char separator;
 
 					std::stringstream argumentValue(m_argumentMap[p_strArgumentName]);
-					if(argumentValue>>value[0]>>separator>>value[1]>>separator>>value[2])
+					// argument type : {0.0f, 0.0f, 0.0f}
+					if(argumentValue>>separator>>value[0]>>separator>>value[1]>>separator>>value[2])
 					{
 						p_argumentValue.Set(value);
 						return true;

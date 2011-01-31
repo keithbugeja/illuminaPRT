@@ -290,9 +290,9 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 		const WavefrontMaterial& material = p_context.MaterialList.at(groupId); 
 
 		std::stringstream argumentStream;
-		argumentStream << "Name=" << material.Name << ";"
-			<< "Reflectivity=" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << ";"
-			<< "Reflectivity=" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << ";"
+		argumentStream << "Id=" << material.Name << ";"
+			<< "Reflectivity={" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "}, "
+			<< "{" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "};"
 			<< "Shininess=" << material.Shininess << "Absorption=" << 1.0f << ";EtaI=" << 1.0f << ";EtaT=" << material.RefractiveIndex << ";";
 
 		if (!material.DiffuseMap.empty())
@@ -300,7 +300,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 			if (!m_pEngineKernel->GetTextureManager()->QueryInstance(material.DiffuseMap))
 			{
 				std::stringstream textureArgumentStream;
-				textureArgumentStream << "Name=" << material.DiffuseMap << ";" 
+				textureArgumentStream << "Id=" << material.DiffuseMap << ";" 
 					<< "Filename=" << (materialPath.parent_path() / material.DiffuseMap).string() << ";"
 					<< "Filetype=PPM;";
 
