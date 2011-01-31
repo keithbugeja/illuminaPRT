@@ -27,7 +27,7 @@ namespace Illumina
 
 			PointLight(const PointLight &p_pointLight);
 			PointLight(const Vector3 &p_position, const Spectrum &p_intensity);
-			PointLight(const std::string& p_strId, const Vector3 &p_position, const Spectrum &p_intensity);
+			PointLight(const std::string& p_strName, const Vector3 &p_position, const Spectrum &p_intensity);
 		
 			Vector3 GetPosition(void) const;
 			void SetPosition(const Vector3 &p_position);

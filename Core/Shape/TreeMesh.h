@@ -61,8 +61,8 @@ namespace Illumina
 			TreeMeshStatistics m_statistics;
 		
 		protected:
-			ITreeMesh(void);
 			ITreeMesh(const std::string& p_strName);
+			ITreeMesh(void);
 
 			void ComputeBounds(const List<IndexedTriangle*> &p_objectList, AxisAlignedBoundingBox &p_aabb, 
 				float p_fMinEpsilon = 0.0f, float p_fMaxEpsilon = 0.0f);

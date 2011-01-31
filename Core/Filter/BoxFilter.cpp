@@ -13,8 +13,8 @@ using namespace Illumina::Core;
 BoxFilter::BoxFilter(void)
 { }
 //----------------------------------------------------------------------------------------------
-BoxFilter::BoxFilter(const std::string &p_strId)
-	: IFilter(p_strId)
+BoxFilter::BoxFilter(const std::string &p_strName)
+	: IFilter(p_strName)
 { }
 //----------------------------------------------------------------------------------------------
 void BoxFilter::operator()(Vector2 *p_pSamples, int p_nSampleCount)

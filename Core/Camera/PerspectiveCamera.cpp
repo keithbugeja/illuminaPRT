@@ -24,9 +24,9 @@ PerspectiveCamera::PerspectiveCamera(const Vector3 &p_centre, const Vector3 &p_d
 	m_up = (m_v1 - m_v0) * m_uvw.V;
 }
 //----------------------------------------------------------------------------------------------
-PerspectiveCamera::PerspectiveCamera(const std::string &p_strId, const Vector3 &p_centre, const Vector3 &p_direction, const Vector3 &p_up, 
+PerspectiveCamera::PerspectiveCamera(const std::string &p_strName, const Vector3 &p_centre, const Vector3 &p_direction, const Vector3 &p_up, 
 	float p_fLeft, float p_fRight, float p_fBottom, float p_fTop, float p_fDistance)
-	: ICamera(p_strId)
+	: ICamera(p_strName)
 {
 	m_centre = p_centre;
 	m_d = p_fDistance;

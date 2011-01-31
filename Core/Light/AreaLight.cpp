@@ -14,8 +14,8 @@ IAreaLight::IAreaLight(void)
 	, m_pWorldTransform(NULL)
 { }
 //----------------------------------------------------------------------------------------------
-IAreaLight::IAreaLight(const std::string &p_strId)
-	: ILight(p_strId) 
+IAreaLight::IAreaLight(const std::string &p_strName)
+	: ILight(p_strName) 
 	, m_pShape(NULL)
 	, m_pWorldTransform(NULL)
 { }
@@ -25,8 +25,8 @@ IAreaLight::IAreaLight(Transformation *p_pWorldTransform, IShape* p_pShape)
 	, m_pWorldTransform(p_pWorldTransform)
 { }
 //----------------------------------------------------------------------------------------------
-IAreaLight::IAreaLight(const std::string &p_strId, Transformation *p_pWorldTransform, IShape* p_pShape)
-	: ILight(p_strId) 
+IAreaLight::IAreaLight(const std::string &p_strName, Transformation *p_pWorldTransform, IShape* p_pShape)
+	: ILight(p_strName)
 	, m_pShape(p_pShape)
 	, m_pWorldTransform(p_pWorldTransform)
 { }

@@ -24,7 +24,7 @@ namespace Illumina
 		
 		public:
 			MaterialGroup(void) : IMaterial() { }
-			MaterialGroup(const std::string &p_strId) : IMaterial(p_strId) { }
+			MaterialGroup(const std::string &p_strName) : IMaterial(p_strName) { }
 
 			bool IsComposite(void) const { return true; }
 

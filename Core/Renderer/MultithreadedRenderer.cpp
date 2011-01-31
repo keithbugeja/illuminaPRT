@@ -24,8 +24,8 @@ MultithreadedRenderer::MultithreadedRenderer(Scene *p_pScene, IIntegrator *p_pIn
 	, m_nSampleCount(p_nSampleCount)
 { }
 //----------------------------------------------------------------------------------------------
-MultithreadedRenderer::MultithreadedRenderer(const std::string &p_strId, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
-	: IRenderer(p_strId, p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
+MultithreadedRenderer::MultithreadedRenderer(const std::string &p_strName, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
+	: IRenderer(p_strName, p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
 	, m_nSampleCount(p_nSampleCount)
 { }
 //----------------------------------------------------------------------------------------------

@@ -28,7 +28,7 @@ namespace Illumina
 
 		public:
 			Object(UniqueIDType p_uidType = Illumina::Core::Transient);
-			Object(std::string p_strObjectID, UniqueIDType p_uidType = Illumina::Core::Transient);
+			Object(std::string p_strObjectName, UniqueIDType p_uidType = Illumina::Core::Transient);
 
 			virtual ~Object();
 

@@ -19,8 +19,8 @@ IRenderer::IRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDe
 	, m_pScene(p_pScene)
 { }
 //----------------------------------------------------------------------------------------------
-IRenderer::IRenderer(const std::string &p_strId, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter)
-	: Object(p_strId) 
+IRenderer::IRenderer(const std::string &p_strName, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter)
+	: Object(p_strName) 
 	, m_pIntegrator(p_pIntegrator) 
 	, m_pDevice(p_pDevice)
 	, m_pFilter(p_pFilter)

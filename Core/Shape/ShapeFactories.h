@@ -18,6 +18,7 @@
 #include "Shape/KDTreeMesh.h"
 #include "Shape/IndexedTriangle.h"
 #include "Shape/VertexFormats.h"
+#include "Shape/ShapeForge.h"
 
 namespace Illumina
 {
@@ -158,12 +159,16 @@ namespace Illumina
 
 			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, std::vector<Vector3> &p_vertices)
 			{
-				return new BasicMesh(p_strId);
+				ITriangleMesh *pMesh = new BasicMesh(p_strId);
+				ShapeForge::CreateQuad(p_vertices[0], p_vertices[1], p_vertices[2], p_vertices[3], pMesh);
+				return pMesh;
 			}
 
 			Illumina::Core::IShape *CreateInstance(std::vector<Vector3> &p_vertices)
 			{
-				return new BasicMesh();
+				ITriangleMesh *pMesh = new BasicMesh();
+				ShapeForge::CreateQuad(p_vertices[0], p_vertices[1], p_vertices[2], p_vertices[3], pMesh);
+				return pMesh;
 			}
 		};
 

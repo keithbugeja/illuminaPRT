@@ -18,7 +18,7 @@ namespace Illumina
 		{
 		public:
 			TentFilter(void);
-			TentFilter(const std::string &p_strId);
+			TentFilter(const std::string &p_strName);
 
 			void operator()(Vector2 *p_pSamples, int p_nSampleCount);
 		};

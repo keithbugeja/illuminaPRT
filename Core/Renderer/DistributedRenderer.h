@@ -39,7 +39,7 @@ namespace Illumina
 			DistributedRenderer(Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, 
 				int p_nSampleCount = 1, int p_nTileWidth = 8, int p_nTileHeight = 8);
 
-			DistributedRenderer(const std::string &p_strId, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, 
+			DistributedRenderer(const std::string &p_strName, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, 
 				int p_nSampleCount = 1, int p_nTileWidth = 8, int p_nTileHeight = 8);
 
 			bool Initialise(void);

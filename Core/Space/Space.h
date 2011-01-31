@@ -24,7 +24,7 @@ namespace Illumina
 			: public Object
 		{
 		protected:
-			ISpace(const std::string &p_strId) : Object(p_strId) { }
+			ISpace(const std::string &p_strName) : Object(p_strName) { }
 			ISpace(void) { }
 
 		public:

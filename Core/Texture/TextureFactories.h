@@ -27,31 +27,31 @@ namespace Illumina
 		public:
 			Illumina::Core::ITexture *CreateInstance(void)
 			{
-				throw new Exception("ImageTextureFactory cannot create ImageTexture instance without a specified filename!");
+				throw new Exception("Method not supported!");
 			}
 
 			Illumina::Core::ITexture *CreateInstance(ArgumentMap &p_argumentMap)
 			{
-				std::string strName, 
+				std::string strId, 
 					strFilename,
 					strFiletype;
 
-				if (p_argumentMap.GetArgument("Name", strName) && 
+				if (p_argumentMap.GetArgument("Id", strId) && 
 					p_argumentMap.GetArgument("Filename", strFilename) && 
 					p_argumentMap.GetArgument("Filetype", strFiletype))
 				{
-					return CreateInstance(strName, strFilename, strFiletype);
+					return CreateInstance(strId, strFilename, strFiletype);
 				}
 
 				throw new Exception("Invalid arguments to ImageTextureFactory!");
 			}
 
-			Illumina::Core::ITexture *CreateInstance(const std::string &p_strName, const std::string &p_strFilename, const std::string &p_strFiletype)
+			Illumina::Core::ITexture *CreateInstance(const std::string &p_strId, const std::string &p_strFilename, const std::string &p_strFiletype)
 			{
 				if (p_strFiletype.find("PPM") != std::string::npos)
 				{
 					ImagePPM imagePPM;
-					return new ImageTexture(p_strName, p_strFilename, (IImageIO*)&imagePPM);
+					return new ImageTexture(p_strId, p_strFilename, (IImageIO*)&imagePPM);
 				}
 
 				throw new Exception("Unable to create ImageTexture instance!");
@@ -77,7 +77,7 @@ namespace Illumina
 
 				RGBPixel rgb[3]; 
 
-				if (p_argumentMap.GetArgument("Name", strName) && 
+				if (p_argumentMap.GetArgument("Id", strName) && 
 					p_argumentMap.GetArgument("Stripes", fStripes) && 
 					p_argumentMap.GetArgument("Scale", fScale) &&
 					p_argumentMap.GetArgument("Octaves", nOctaves))
@@ -123,7 +123,7 @@ namespace Illumina
 				RGBPixel rgb[2]; 
 				float fScale;
 
-				if (p_argumentMap.GetArgument("Name", strName) && 
+				if (p_argumentMap.GetArgument("Id", strName) && 
 					p_argumentMap.GetArgument("Scale", fScale))
 				{
 					if (p_argumentMap.GetArgument("RGBLow", rgb[0]) &&

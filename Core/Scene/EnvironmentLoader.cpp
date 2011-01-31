@@ -10,6 +10,7 @@
 
 #include "System/EngineKernel.h"
 #include "Scene/EnvironmentLoader.h"
+#include "Scene/WavefrontSceneLoader.h"
 #include "Scene/Environment.h"
 #include "System/Lexer.h"
 
@@ -411,7 +412,22 @@ bool EnvironmentLoader::ParseShapes(void)
 			argumentMap.GetArgument("Id", strId);
 			argumentMap.GetArgument("Type", strType);
 
-			m_pEngineKernel->GetShapeManager()->CreateInstance(strType, strId, argumentMap);
+			// Filter some types like model filters
+			if (strType == "WavefrontModel")
+			{
+				std::string strFilename;
+				argumentMap.GetArgument("Filename", strFilename);
+
+				WavefrontSceneLoader wavefrontLoader(m_pEnvironment);
+				wavefrontLoader.Import(strFilename, 0, &argumentMap);
+
+				std::cout << "Model loaded!" << std::endl;
+			}
+			else
+			{
+				IShape *pShape = m_pEngineKernel->GetShapeManager()->CreateInstance(strType, strId, argumentMap);
+				std::cout << pShape->ToString() << ", " << pShape->GetName() << std::endl;
+			}
 		}
 	}
 

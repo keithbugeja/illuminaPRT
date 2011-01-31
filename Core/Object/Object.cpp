@@ -16,10 +16,10 @@ Object::Object(UniqueIDType p_uidType)
 	m_strName = m_uid.ToString();
 }
 //----------------------------------------------------------------------------------------------
-Object::Object(std::string p_strObjectID, UniqueIDType p_uidType)
+Object::Object(std::string p_strObjectName, UniqueIDType p_uidType)
 {
 	Object::Initialise(p_uidType);
-	m_strName = p_strObjectID;
+	m_strName = p_strObjectName;
 }
 //----------------------------------------------------------------------------------------------
 size_t Object::GetHashCode(void) const 

@@ -37,7 +37,7 @@ namespace Illumina
 				m_aspect;			
 
 		protected:
-			ICamera(const std::string& p_strId);
+			ICamera(const std::string& p_strName);
 			ICamera(void);
 
 		public:

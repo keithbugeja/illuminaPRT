@@ -43,8 +43,8 @@ namespace Illumina
 			List<Vertex> VertexList;
 
 		public:
-			ITriangleMesh(void);
 			ITriangleMesh(const std::string &p_strName);
+			ITriangleMesh(void);
 
 			// Methods for instance creation
 			virtual boost::shared_ptr<ITriangleMesh> CreateInstance(void) = 0;

@@ -27,8 +27,8 @@ namespace Illumina
 			: public Object
 		{
 		protected:
-			IIntegrator(void);
-			IIntegrator(const std::string &p_strId);
+			IIntegrator(const std::string &p_strName) : Object(p_strName) { }
+			IIntegrator(void) { }
 
 		public:
 			virtual bool Initialise(Scene *p_pScene, ICamera *p_pCamera) = 0;

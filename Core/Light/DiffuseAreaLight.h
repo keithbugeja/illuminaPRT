@@ -25,8 +25,8 @@ namespace Illumina
 			float m_fArea;
 
 		public:
+			DiffuseAreaLight(const std::string &p_strName, Transformation *p_pWorldTransform, IShape* p_pShape, const Spectrum &p_emit);
 			DiffuseAreaLight(Transformation *p_pWorldTransform, IShape* p_pShape, const Spectrum &p_emit);
-			DiffuseAreaLight(const std::string &p_strId, Transformation *p_pWorldTransform, IShape* p_pShape, const Spectrum &p_emit);
 
 			void SetShape(IShape *p_pShape);
 
