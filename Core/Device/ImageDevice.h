@@ -22,7 +22,7 @@ namespace Illumina
 			bool m_bKillFilterOnExit;
 
 		public:
-			ImageDevice(const std::string &p_strId, int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit = false);
+			ImageDevice(const std::string &p_strName, int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit = false);
 			ImageDevice(int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit = false);
 			~ImageDevice(void);
 

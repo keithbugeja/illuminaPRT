@@ -22,7 +22,7 @@ namespace Illumina
 			: public Object
 		{
 		protected:
-			ISampler(const std::string &p_strId) : Object(p_strId) { }
+			ISampler(const std::string &p_strName) : Object(p_strName) { }
 			ISampler(void) { }
 
 		public:

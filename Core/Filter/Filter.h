@@ -26,7 +26,7 @@ namespace Illumina
 			public Object
 		{
 		protected:
-			IFilter(const std::string &p_strId) : Object(p_strId) { }
+			IFilter(const std::string &p_strName) : Object(p_strName) { }
 			IFilter(void) { }
 
 		public:

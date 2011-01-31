@@ -25,8 +25,8 @@ namespace Illumina
 			: public Object
 		{
 		protected:
+			ILight(const std::string &p_strName) : Object(p_strName) { }
 			ILight(void) { }
-			ILight(const std::string &p_strId) : Object(p_strId) { }
 
 		public:
 			virtual float Pdf(const Vector3 &p_point, const Vector3 &p_wOut) = 0;

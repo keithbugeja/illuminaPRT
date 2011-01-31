@@ -12,6 +12,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Shape/Shape.h"
+#include "Shape/TriangleMesh.h"
 #include "Shape/VertexFormats.h"
 #include "Material/MaterialGroup.h"
 #include "Staging/WavefrontLoader.h"
@@ -101,6 +102,41 @@ namespace Illumina
 				return mesh;
 			}
 
+			static bool CreateQuad(const Vector3 &p_v0, const Vector3 &p_v1, 
+				const Vector3 &p_v2, const Vector3 &p_v3, ITriangleMesh *p_pMesh)
+			{
+				Vertex vertex[4];
+
+				// If vertex has position, initialise
+				if (Vertex::GetDescriptor() & VertexFormat::Position)
+				{
+					vertex[0].Position = p_v0;
+					vertex[1].Position = p_v1;
+					vertex[2].Position = p_v2;
+					vertex[3].Position = p_v3;
+				}
+
+				// If vertex has UVs, initialise
+				if (Vertex::GetDescriptor() & VertexFormat::UV)
+				{
+					vertex[0].UV.Set(0,0);
+					vertex[1].UV.Set(1,0);
+					vertex[2].UV.Set(0,1);
+					vertex[3].UV.Set(1,1);
+				}
+
+				// Add vertices and faces to mesh
+				p_pMesh->AddVertex(vertex[0]);
+				p_pMesh->AddVertex(vertex[1]);
+				p_pMesh->AddVertex(vertex[2]);
+				p_pMesh->AddVertex(vertex[3]);
+
+				p_pMesh->AddIndexedTriangle(0, 2, 1);
+				p_pMesh->AddIndexedTriangle(1, 2, 3);
+
+				return true;
+			}
+
 			template<class TMesh>
 			static boost::shared_ptr<TMesh> CreateBox(const Vector3 &p_minExtent, const Vector3 &p_maxExtent)
 			{
@@ -168,6 +204,72 @@ namespace Illumina
 
 				return mesh;
 			}
+
+			static bool CreateBox(const Vector3 &p_minExtent, const Vector3 &p_maxExtent, ITriangleMesh *p_pMesh)
+			{
+				Vertex vertex[24];
+
+				// If vertex has position, initialise
+				if (Vertex::GetDescriptor() & VertexFormat::Position)
+				{
+					vertex[0].Position.Set(p_minExtent.X, p_maxExtent.Y, p_maxExtent.Z);
+					vertex[1].Position.Set(p_maxExtent.X, p_maxExtent.Y, p_maxExtent.Z);
+					vertex[2].Position.Set(p_minExtent.X, p_minExtent.Y, p_maxExtent.Z);
+					vertex[3].Position.Set(p_maxExtent.X, p_minExtent.Y, p_maxExtent.Z);
+
+					vertex[4].Position.Set(p_minExtent.X, p_maxExtent.Y, p_minExtent.Z);
+					vertex[5].Position.Set(p_maxExtent.X, p_maxExtent.Y, p_minExtent.Z);
+					vertex[6].Position.Set(p_minExtent.X, p_minExtent.Y, p_minExtent.Z);
+					vertex[7].Position.Set(p_maxExtent.X, p_minExtent.Y, p_minExtent.Z);
+
+					vertex[8].Position.Set(p_minExtent.X, p_maxExtent.Y, p_minExtent.Z);
+					vertex[9].Position.Set(p_maxExtent.X, p_maxExtent.Y, p_minExtent.Z);
+					vertex[10].Position.Set(p_minExtent.X, p_maxExtent.Y, p_maxExtent.Z);
+					vertex[11].Position.Set(p_maxExtent.X, p_maxExtent.Y, p_maxExtent.Z);
+
+					vertex[12].Position.Set(p_maxExtent.X, p_minExtent.Y, p_minExtent.Z);
+					vertex[13].Position.Set(p_minExtent.X, p_minExtent.Y, p_minExtent.Z);
+					vertex[14].Position.Set(p_maxExtent.X, p_minExtent.Y, p_maxExtent.Z);
+					vertex[15].Position.Set(p_minExtent.X, p_minExtent.Y, p_maxExtent.Z);
+
+					vertex[16].Position.Set(p_minExtent.X, p_minExtent.Y, p_minExtent.Z);
+					vertex[17].Position.Set(p_minExtent.X, p_minExtent.Y, p_maxExtent.Z);
+					vertex[18].Position.Set(p_minExtent.X, p_maxExtent.Y, p_minExtent.Z);
+					vertex[19].Position.Set(p_minExtent.X, p_maxExtent.Y, p_maxExtent.Z);
+
+					vertex[20].Position.Set(p_maxExtent.X, p_maxExtent.Y, p_maxExtent.Z);
+					vertex[21].Position.Set(p_maxExtent.X, p_maxExtent.Y, p_minExtent.Z);
+					vertex[22].Position.Set(p_maxExtent.X, p_minExtent.Y, p_maxExtent.Z);
+					vertex[23].Position.Set(p_maxExtent.X, p_minExtent.Y, p_minExtent.Z);
+				}
+
+				// If vertex has UVs, initialise
+				if (Vertex::GetDescriptor() & VertexFormat::UV)
+				{
+					for (int nQuadGroup=0; nQuadGroup < 23; nQuadGroup+=4)
+					{
+						vertex[nQuadGroup + 0].UV.Set(0,0);
+						vertex[nQuadGroup + 1].UV.Set(1,0);
+						vertex[nQuadGroup + 2].UV.Set(0,1);
+						vertex[nQuadGroup + 3].UV.Set(1,1);
+					}
+				}
+
+				// Add vertices and faces to mesh
+				for (int nQuadGroup=0; nQuadGroup < 23; nQuadGroup+=4)
+				{
+					p_pMesh->AddVertex(vertex[nQuadGroup + 0]);
+					p_pMesh->AddVertex(vertex[nQuadGroup + 1]);
+					p_pMesh->AddVertex(vertex[nQuadGroup + 2]);
+					p_pMesh->AddVertex(vertex[nQuadGroup + 3]);
+
+					p_pMesh->AddIndexedTriangle(nQuadGroup + 0, nQuadGroup + 2, nQuadGroup + 1);
+					p_pMesh->AddIndexedTriangle(nQuadGroup + 1, nQuadGroup + 2, nQuadGroup + 3);
+				}
+
+				return true;
+			}
+
 		};
 	}
 }

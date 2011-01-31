@@ -63,10 +63,10 @@ namespace Illumina
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-DistributedRenderer::DistributedRenderer(const std::string &p_strId, 
+DistributedRenderer::DistributedRenderer(const std::string &p_strName, 
 	Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, 
 	IFilter *p_pFilter, int p_nSampleCount, int p_nTileWidth, int p_nTileHeight)
-	: IRenderer(p_strId, p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
+	: IRenderer(p_strName, p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
 	, m_nTileWidth(p_nTileWidth)
 	, m_nTileHeight(p_nTileHeight)
 	, m_nSampleCount(p_nSampleCount)

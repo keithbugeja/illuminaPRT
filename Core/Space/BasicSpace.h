@@ -16,8 +16,8 @@ namespace Illumina
 			: public ISpace
 		{
 		public:
-			BasicSpace(const std::string &p_strId);
-			BasicSpace(void);
+			BasicSpace(const std::string &p_strName) : ISpace(p_strName) { }
+			BasicSpace(void) { }
 
 			bool Initialise(void);
 			void Shutdown(void);

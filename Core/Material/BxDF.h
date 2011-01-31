@@ -41,8 +41,8 @@ namespace Illumina
 				: m_bxdfType(p_bxdfType) 
 			{ }
 			
-			BxDF(const std::string &p_strId, BxDF::Type p_bxdfType) 
-				: Object(p_strId)
+			BxDF(const std::string &p_strName, BxDF::Type p_bxdfType) 
+				: Object(p_strName)
 				, m_bxdfType(p_bxdfType)
 			{ }
 

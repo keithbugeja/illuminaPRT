@@ -28,10 +28,10 @@ namespace Illumina
 			Scene *m_pScene;
 
 		protected:
-			IRenderer(Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL,
+			IRenderer(const std::string &p_strName, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL,
 				IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL);
 
-			IRenderer(const std::string &p_strId, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL,
+			IRenderer(Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL,
 				IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL);
 
 		public:

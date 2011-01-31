@@ -22,7 +22,7 @@ namespace Illumina
 			ThinLensCamera(const Vector3 &p_centre, const Vector3 &p_direction, const Vector3 &p_up, 
 				float p_fAperture, float p_fLeft, float p_fRight, float p_fBottom, float p_fTop, float p_fDistance);
 
-			ThinLensCamera(const std::string &p_strId, const Vector3 &p_centre, const Vector3 &p_direction, const Vector3 &p_up, 
+			ThinLensCamera(const std::string &p_strName, const Vector3 &p_centre, const Vector3 &p_direction, const Vector3 &p_up, 
 				float p_fAperture, float p_fLeft, float p_fRight, float p_fBottom, float p_fTop, float p_fDistance);
 
 			float GetAperture(void) const;

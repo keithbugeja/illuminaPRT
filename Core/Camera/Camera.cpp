@@ -12,8 +12,8 @@ ICamera::ICamera(void)
 	: Object()
 { }
 //----------------------------------------------------------------------------------------------
-ICamera::ICamera(const std::string& p_strId)
-	: Object(p_strId)
+ICamera::ICamera(const std::string &p_strName)
+	: Object(p_strName)
 { }
 //----------------------------------------------------------------------------------------------
 void ICamera::SetProjection(float p_fLeft, float p_fRight, float p_fTop, float p_fBottom, float p_fDistance)

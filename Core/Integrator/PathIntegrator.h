@@ -13,7 +13,8 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class PathIntegrator : public IIntegrator
+		class PathIntegrator : 
+			public IIntegrator
 		{
 		protected:
 			int m_nMaxRayDepth,
@@ -22,8 +23,8 @@ namespace Illumina
 			Random m_random;
 
 		public:
+			PathIntegrator(const std::string &p_strName, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 16);
 			PathIntegrator(int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1);
-			PathIntegrator(const std::string &p_strId, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 16);
 
 			bool Initialise(Scene *p_pScene, ICamera *p_pCamera);
 			bool Shutdown(void);

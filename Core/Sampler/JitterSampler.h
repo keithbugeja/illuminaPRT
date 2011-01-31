@@ -20,7 +20,7 @@ namespace Illumina
 			Random m_random;
 
 		public:
-			JitterSampler(const std::string &p_strId) : ISampler(p_strId) { }
+			JitterSampler(const std::string &p_strName) : ISampler(p_strName) { }
 			JitterSampler(void) { }
 
 			void Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount);
@@ -39,7 +39,7 @@ namespace Illumina
 			Random m_random;
 
 		public:
-			MultijitterSampler(const std::string &p_strId) : ISampler(p_strId) { }
+			MultijitterSampler(const std::string &p_strName) : ISampler(p_strName) { }
 			MultijitterSampler(void) { }
 
 			void Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount);

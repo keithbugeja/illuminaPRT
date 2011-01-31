@@ -59,7 +59,7 @@ namespace Illumina
 				std::string strName;
 				Spectrum reflectivity;
 
-				if (p_argumentMap.GetArgument("Name", strName) && 
+				if (p_argumentMap.GetArgument("Id", strName) && 
 					p_argumentMap.GetArgument("Reflectivity", reflectivity))
 				{
 					return CreateInstance(strName, reflectivity);
@@ -87,7 +87,7 @@ namespace Illumina
 				std::string strName;
 				Spectrum reflectivity;
 
-				if (p_argumentMap.GetArgument("Name", strName) && 
+				if (p_argumentMap.GetArgument("Id", strName) && 
 					p_argumentMap.GetArgument("Reflectivity", reflectivity))
 				{
 					return CreateInstance(strName, reflectivity);
@@ -117,7 +117,7 @@ namespace Illumina
 				float absorption,
 					etaI, etaT;
 
-				if (p_argumentMap.GetArgument("Name", strName) && 
+				if (p_argumentMap.GetArgument("Id", strName) && 
 					p_argumentMap.GetArgument("Reflectivity", reflectivity) &&
 					p_argumentMap.GetArgument("Absorption", absorption) &&
 					p_argumentMap.GetArgument("EtaI", etaI) &&

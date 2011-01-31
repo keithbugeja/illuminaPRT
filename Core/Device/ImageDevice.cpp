@@ -20,8 +20,8 @@ ImageDevice::ImageDevice(int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, cons
 	, m_bKillFilterOnExit(p_bKillFilterOnExit)
 { }
 //----------------------------------------------------------------------------------------------
-ImageDevice::ImageDevice(const std::string &p_strId, int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit)
-	: IDevice(p_strId) 
+ImageDevice::ImageDevice(const std::string &p_strName, int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit)
+	: IDevice(p_strName) 
 	, m_pImage(new Image(p_nWidth, p_nHeight))
 	, m_pImageIO(p_pImageIO)
 	, m_strFilename(p_strFilename)

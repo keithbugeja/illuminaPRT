@@ -22,7 +22,7 @@ namespace Illumina
 			: public Object
 		{
 		protected:
-			IDevice(const std::string &p_strId) : Object(p_strId) { }
+			IDevice(const std::string &p_strName) : Object(p_strName) { }
 			IDevice(void) { }
 
 		public:

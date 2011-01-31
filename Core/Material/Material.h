@@ -27,7 +27,7 @@ namespace Illumina
 
 		public:
 			IMaterial(void) : BSDF() { }
-			IMaterial(const std::string &p_strId) : BSDF(p_strId) { }
+			IMaterial(const std::string &p_strName) : BSDF(p_strName) { }
 
 			virtual bool IsComposite(void) const { return false; }
 		};

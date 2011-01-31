@@ -17,14 +17,14 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-WhittedIntegrator::WhittedIntegrator(int p_nMaxRayDepth, int p_nShadowSampleCount)
-	: m_nShadowSampleCount(p_nShadowSampleCount)
+WhittedIntegrator::WhittedIntegrator(const std::string &p_strName, int p_nMaxRayDepth, int p_nShadowSampleCount)
+	: IIntegrator(p_strName) 
+	, m_nShadowSampleCount(p_nShadowSampleCount)
 	, m_nMaxRayDepth(p_nMaxRayDepth)
 { }
 //----------------------------------------------------------------------------------------------
-WhittedIntegrator::WhittedIntegrator(const std::string &p_strId, int p_nMaxRayDepth, int p_nShadowSampleCount)
-	: IIntegrator(p_strId) 
-	, m_nShadowSampleCount(p_nShadowSampleCount)
+WhittedIntegrator::WhittedIntegrator(int p_nMaxRayDepth, int p_nShadowSampleCount)
+	: m_nShadowSampleCount(p_nShadowSampleCount)
 	, m_nMaxRayDepth(p_nMaxRayDepth)
 { }
 //----------------------------------------------------------------------------------------------

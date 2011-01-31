@@ -113,13 +113,15 @@ bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int
 	// Load geometry
 	LoadGeometry(p_strFilename, context);
 
+	std::cout << "Geometry Loaded... " << std::endl;
+
 	std::string meshName = context.Mesh->GetName(),
 		materialGroupName = context.MaterialGroup->GetName();
 
 	if (p_pArgumentMap != NULL)
 	{
-		p_pArgumentMap->GetArgument("MeshName", meshName);
-		p_pArgumentMap->GetArgument("MaterialGroupName", materialGroupName);
+		p_pArgumentMap->GetArgument("Id", meshName);
+		p_pArgumentMap->GetArgument("MaterialGroupId", materialGroupName);
 	}
 
 	// Register assets
@@ -175,6 +177,8 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 			material.Type = WavefrontMaterial::Matte;
 
 			p_context.MaterialList.push_back(material);
+
+			std::cout << "New material : [" << material.Name << "]" << std::endl;
 		}
 		else if (tokenList[0] == "illum") // Illumination model
 		{
@@ -293,7 +297,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 		argumentStream << "Id=" << material.Name << ";"
 			<< "Reflectivity={" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "}, "
 			<< "{" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "};"
-			<< "Shininess=" << material.Shininess << "Absorption=" << 1.0f << ";EtaI=" << 1.0f << ";EtaT=" << material.RefractiveIndex << ";";
+			<< "Shininess=" << material.Shininess << ";Absorption=" << 1.0f << ";EtaI=" << 1.0f << ";EtaT=" << material.RefractiveIndex << ";";
 
 		if (!material.DiffuseMap.empty())
 		{
@@ -319,18 +323,21 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 			{
 				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Matte", material.Name, argumentStream.str());
 				((MatteMaterial*)pMaterial)->SetTexture(pTexture);
+				break;
 			}
 
 			case WavefrontMaterial::Mirror:
 			{
 				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Mirror", material.Name, argumentStream.str());
 				((MirrorMaterial*)pMaterial)->SetTexture(pTexture);
+				break;
 			}
 
 			case WavefrontMaterial::Glass:
 			{
 				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Glass", material.Name, argumentStream.str());
 				((GlassMaterial*)pMaterial)->SetTexture(pTexture);
+				break;
 			}
 		}
 
@@ -404,7 +411,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 		}
 		else if (tokenList[0] == "vt") // Texture coordinates
 		{
-			if (tokenList.size() != 3)
+			if (tokenList.size() < 3)
 				continue;
 
 			vector2.Set(boost::lexical_cast<float>(tokenList[1]),
@@ -459,8 +466,10 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 			if (tokenList.size() == 5) 
 				p_context.Mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[2], vertexIndex[3], p_context.CurrentMaterialId);
 		}
-		else if (tokenList[0] == "mtlib")
+		else if (tokenList[0] == "mtllib")
 		{
+			std::cout << "Load material library [" << tokenList[1] << "]" << std::endl;
+
 			if (tokenList.size() != 2)
 				continue;
 
@@ -470,6 +479,8 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 		}
 		else if (tokenList[0] == "usemtl")
 		{
+			std::cout << "Use material [" << tokenList[1] << "]" << std::endl;
+
 			if (tokenList.size() != 2)
 				continue;
 

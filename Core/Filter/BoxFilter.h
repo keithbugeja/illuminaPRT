@@ -18,7 +18,7 @@ namespace Illumina
 		{
 		public:
 			BoxFilter(void);
-			BoxFilter(const std::string &p_strId);
+			BoxFilter(const std::string &p_strName);
 			
 			void operator()(Vector2 *p_pSamples, int p_nSampleCount);
 		};

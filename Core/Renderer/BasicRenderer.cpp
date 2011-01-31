@@ -19,13 +19,13 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-BasicRenderer::BasicRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
-	: IRenderer(p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
+BasicRenderer::BasicRenderer(const std::string &p_strName, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
+	: IRenderer(p_strName, p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
 	, m_nSampleCount(p_nSampleCount)
 { }
 //----------------------------------------------------------------------------------------------
-BasicRenderer::BasicRenderer(const std::string &p_strId, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
-	: IRenderer(p_strId, p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
+BasicRenderer::BasicRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
+	: IRenderer(p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
 	, m_nSampleCount(p_nSampleCount)
 { }
 //----------------------------------------------------------------------------------------------
