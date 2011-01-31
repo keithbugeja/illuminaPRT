@@ -31,22 +31,22 @@ namespace Illumina
 		public:
 			Illumina::Core::IShape *CreateInstance(void)
 			{
-				throw new Exception("SphereShapeFactory cannot create a Sphere without required parameters!");
+				throw new Exception("Method not supported!");
 			}
 
 			Illumina::Core::IShape *CreateInstance(ArgumentMap &p_argumentMap)
 			{
-				std::string strName;
+				std::string strId;
 				Vector3 centre;
 				float fRadius;
 
 				if (p_argumentMap.GetArgument("Centre", centre) && 
 					p_argumentMap.GetArgument("Radius", fRadius))
 				{
-					if (p_argumentMap.GetArgument("Name", strName))
-						return CreateInstance(strName, centre, fRadius);
-					else
-						return CreateInstance(centre, fRadius);
+					if (p_argumentMap.GetArgument("Id", strId))
+						return CreateInstance(strId, centre, fRadius);
+
+					return CreateInstance(centre, fRadius);
 				}
 
 				throw new Exception("Invalid arguments to SphereShapeFactory!");
@@ -57,9 +57,9 @@ namespace Illumina
 				return new Sphere(p_centre, p_fRadius);
 			}
 
-			Illumina::Core::IShape *CreateInstance(const std::string &p_strName, const Vector3 &p_centre, float p_fRadius)
+			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, const Vector3 &p_centre, float p_fRadius)
 			{
-				return new Sphere(p_strName, p_centre, p_fRadius);
+				return new Sphere(p_strId, p_centre, p_fRadius);
 			}
 		};
 
@@ -71,12 +71,12 @@ namespace Illumina
 		public:
 			Illumina::Core::IShape *CreateInstance(void)
 			{
-				throw new Exception("TriangleShapeFactory cannot create a Sphere without required parameters!");
+				throw new Exception("Method not supported!");
 			}
 
 			Illumina::Core::IShape *CreateInstance(ArgumentMap &p_argumentMap)
 			{
-				std::string strName;
+				std::string strId;
 				Vector3 p_position[3];
 				Vector2 p_uv[2];
 
@@ -88,14 +88,14 @@ namespace Illumina
 						p_argumentMap.GetArgument("UV1", p_uv[1]) &&
 						p_argumentMap.GetArgument("UV2", p_uv[2]))
 					{
-						if (p_argumentMap.GetArgument("Name", strName))
-							return CreateInstance(strName, p_position[0], p_position[1], p_position[2], p_uv[0], p_uv[1], p_uv[2]);
+						if (p_argumentMap.GetArgument("Id", strId))
+							return CreateInstance(strId, p_position[0], p_position[1], p_position[2], p_uv[0], p_uv[1], p_uv[2]);
 
 						return CreateInstance(p_position[0], p_position[1], p_position[2], p_uv[0], p_uv[1], p_uv[2]);
 					}
 
-					if (p_argumentMap.GetArgument("Name", strName))
-						return CreateInstance(strName, p_position[0], p_position[1], p_position[2]);
+					if (p_argumentMap.GetArgument("Id", strId))
+						return CreateInstance(strId, p_position[0], p_position[1], p_position[2]);
 
 					return CreateInstance(p_position[0], p_position[1], p_position[2]);
 				}
@@ -103,16 +103,16 @@ namespace Illumina
 				throw new Exception("Invalid arguments to TriangleShapeFactory!");
 			}
 
-			Illumina::Core::IShape *CreateInstance(const std::string &p_strName, const Vector3 &p_p0, const Vector3 &p_p1, const Vector3 &p_p2)
+			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, const Vector3 &p_p0, const Vector3 &p_p1, const Vector3 &p_p2)
 			{
-				return new Triangle(p_strName, p_p0, p_p1, p_p2);
+				return new Triangle(p_strId, p_p0, p_p1, p_p2);
 			}
 
-			Illumina::Core::IShape *CreateInstance(const std::string &p_strName, 
+			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, 
 				const Vector3 &p_p0, const Vector3 &p_p1, const Vector3 &p_p2,
 				const Vector2 &p_uv0, const Vector2 &p_uv1, const Vector2 &p_uv2)
 			{
-				return new Triangle(p_strName, p_p0, p_p1, p_p2, p_uv0, p_uv1, p_uv2);
+				return new Triangle(p_strId, p_p0, p_p1, p_p2, p_uv0, p_uv1, p_uv2);
 			}
 
 			Illumina::Core::IShape *CreateInstance(const Vector3 &p_p0, const Vector3 &p_p1, const Vector3 &p_p2)
@@ -124,6 +124,46 @@ namespace Illumina
 				const Vector2 &p_uv0, const Vector2 &p_uv1, const Vector2 &p_uv2)
 			{
 				return new Triangle(p_p0, p_p1, p_p2, p_uv0, p_uv1, p_uv2);
+			}
+		};
+
+		//----------------------------------------------------------------------------------------------
+		// Quad shape factory
+		// Note	that the factory produces ITriangleMesh objects with vertex format type Vertex and
+		// IndexedTriangle type faces.
+		//----------------------------------------------------------------------------------------------
+		class QuadMeshShapeFactory : public Illumina::Core::Factory<Illumina::Core::IShape>
+		{
+		public:
+			Illumina::Core::IShape *CreateInstance(void)
+			{
+				throw new Exception("Method not supported!");
+			}
+
+			Illumina::Core::IShape *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::vector<Vector3> vertices;
+				std::string strId;
+
+				p_argumentMap.GetArgument("Vertices", vertices);
+
+				if (vertices.size() != 4)
+					throw new Exception("QuadMeshShapeFactory : Incorrect number of vertices.");
+
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId, vertices);
+				
+				return CreateInstance(vertices);
+			}
+
+			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, std::vector<Vector3> &p_vertices)
+			{
+				return new BasicMesh(p_strId);
+			}
+
+			Illumina::Core::IShape *CreateInstance(std::vector<Vector3> &p_vertices)
+			{
+				return new BasicMesh();
 			}
 		};
 
@@ -142,17 +182,17 @@ namespace Illumina
 
 			Illumina::Core::IShape *CreateInstance(ArgumentMap &p_argumentMap)
 			{
-				std::string strName;
+				std::string strId;
 
-				if (p_argumentMap.GetArgument("Name", strName))
-					return CreateInstance(strName);
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId);
 				
 				return CreateInstance();
 			}
 
-			Illumina::Core::IShape *CreateInstance(const std::string &p_strName)
+			Illumina::Core::IShape *CreateInstance(const std::string &p_strId)
 			{
-				return new BasicMesh(p_strName);
+				return new BasicMesh(p_strId);
 			}
 		};
 
@@ -171,7 +211,7 @@ namespace Illumina
 
 			Illumina::Core::IShape *CreateInstance(ArgumentMap &p_argumentMap)
 			{
-				std::string strName;
+				std::string strId;
 				
 				int maxDepth, 
 					maxObjects;
@@ -179,8 +219,8 @@ namespace Illumina
 				if (p_argumentMap.GetArgument("MaximumTreeDepth", maxDepth) && 
 					p_argumentMap.GetArgument("MaximumLeafObjects", maxObjects))
 				{
-					if (p_argumentMap.GetArgument("Name", strName))
-						return CreateInstance(strName, maxDepth, maxObjects);
+					if (p_argumentMap.GetArgument("Name", strId))
+						return CreateInstance(strId, maxDepth, maxObjects);
 					
 					return CreateInstance(maxDepth, maxObjects);
 				}
@@ -193,9 +233,9 @@ namespace Illumina
 				return new KDTreeMesh(p_nMaxDepth, p_nMaxLeafObjects);
 			}
 
-			Illumina::Core::IShape *CreateInstance(const std::string &p_strName, int p_nMaxDepth, int p_nMaxLeafObjects)
+			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, int p_nMaxDepth, int p_nMaxLeafObjects)
 			{
-				return new KDTreeMesh(p_strName, p_nMaxDepth, p_nMaxLeafObjects);
+				return new KDTreeMesh(p_strId, p_nMaxDepth, p_nMaxLeafObjects);
 			}
 		};
 	}
