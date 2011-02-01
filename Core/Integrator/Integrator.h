@@ -47,6 +47,8 @@ namespace Illumina
 			static Spectrum SampleAllLights(Scene *p_pScene, const Intersection &p_intersection,
 				const Vector3 &p_point, const Vector3 &p_pNormal, const Vector3 &p_wOut,
 				ISampler *p_pSampler, ILight *p_pExclude = NULL, int p_nShadowSamples = 1);
+
+			std::string ToString(void) const { return "IIntegrator"; }
 		};
 
 		//----------------------------------------------------------------------------------------------
