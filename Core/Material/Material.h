@@ -30,6 +30,8 @@ namespace Illumina
 			IMaterial(const std::string &p_strName) : BSDF(p_strName) { }
 
 			virtual bool IsComposite(void) const { return false; }
+
+			std::string ToString(void) const { return "IMaterial"; }
 		};
 
 		//----------------------------------------------------------------------------------------------

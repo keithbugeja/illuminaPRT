@@ -107,31 +107,31 @@ namespace Illumina
 		public:
 			Illumina::Core::IMaterial *CreateInstance(void)
 			{
-				return new GlassMaterial(Spectrum(0.5));
+				return new GlassMaterial(Spectrum(0.5), Spectrum(0.5));
 			}
 
 			Illumina::Core::IMaterial *CreateInstance(ArgumentMap &p_argumentMap)
 			{
 				std::string strName;
-				Spectrum reflectivity;
-				float absorption,
-					etaI, etaT;
+				float absorption;
+				std::vector<Spectrum> reflectivity;
+				Vector2 eta;
 
 				if (p_argumentMap.GetArgument("Id", strName) && 
 					p_argumentMap.GetArgument("Reflectivity", reflectivity) &&
 					p_argumentMap.GetArgument("Absorption", absorption) &&
-					p_argumentMap.GetArgument("EtaI", etaI) &&
-					p_argumentMap.GetArgument("EtaT", etaT))
+					p_argumentMap.GetArgument("Eta", eta))
 				{
-					return CreateInstance(strName, reflectivity, absorption, etaI, etaT);
+					return CreateInstance(strName, reflectivity[0], reflectivity[1], absorption, eta.U, eta.V);
 				}
 
 				throw new Exception("Invalid arguments to GlassMaterialFactory!");
 			}
 
-			Illumina::Core::IMaterial *CreateInstance(const std::string &p_strName, const Spectrum &p_reflectivity, float p_fAbsorption, float p_fEtaI, float p_fEtaT, ITexture* p_pTexture = NULL)
+			Illumina::Core::IMaterial *CreateInstance(const std::string &p_strName, const Spectrum &p_reflectivity, const Spectrum &p_transmittance, 
+				float p_fAbsorption, float p_fEtaI, float p_fEtaT, ITexture* p_pTexture = NULL)
 			{
-				return new GlassMaterial(p_strName, p_reflectivity, p_fAbsorption, p_fEtaI, p_fEtaT, p_pTexture);
+				return new GlassMaterial(p_strName, p_reflectivity, p_transmittance, p_fAbsorption, p_fEtaI, p_fEtaT, p_pTexture);
 			}
 		};
 	}

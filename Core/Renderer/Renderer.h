@@ -51,6 +51,8 @@ namespace Illumina
 
 			void SetScene(Scene *p_pScene);
 			Scene* GetScene(void) const;
+
+			std::string ToString(void) const { return "IRenderer"; }
 		};
 
 		//----------------------------------------------------------------------------------------------

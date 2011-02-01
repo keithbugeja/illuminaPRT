@@ -21,7 +21,8 @@ namespace Illumina
 			using BSDF::m_bxdfList;
 
 		protected:
-			Spectrum m_reflectivity;
+			Spectrum m_reflectivity,
+				m_transmittance;
 			
 			float m_fAbsorption;
 			
@@ -31,9 +32,10 @@ namespace Illumina
 			ITexture *m_pTexture;
 
 		public:
-			GlassMaterial(const std::string &p_strName, const Spectrum &p_reflectivity, float p_fAbsorption = 1.0f, float p_fEtaI = 1.0f, float p_fEtaT = 1.52f, ITexture *p_pTexture = NULL)
+			GlassMaterial(const std::string &p_strName, const Spectrum &p_reflectivity, const Spectrum &p_transmittance, float p_fAbsorption = 1.0f, float p_fEtaI = 1.0f, float p_fEtaT = 1.52f, ITexture *p_pTexture = NULL)
 				: IMaterial(p_strName) 
 				, m_reflectivity(p_reflectivity)
+				, m_transmittance(p_transmittance)
 				, m_fAbsorption(p_fAbsorption)
 				, m_fEtaI(p_fEtaI)
 				, m_fEtaT(p_fEtaT)
@@ -43,8 +45,9 @@ namespace Illumina
 				m_bxdfList.PushBack(new SpecularReflection());
 			}
 
-			GlassMaterial(const Spectrum& p_reflectivity, float p_fAbsorption = 1.0f, float p_fEtaI = 1.0f, float p_fEtaT = 1.52f, ITexture *p_pTexture = NULL)
+			GlassMaterial(const Spectrum &p_reflectivity, const Spectrum &p_transmittance, float p_fAbsorption = 1.0f, float p_fEtaI = 1.0f, float p_fEtaT = 1.52f, ITexture *p_pTexture = NULL)
 				: m_reflectivity(p_reflectivity)
+				, m_transmittance(p_transmittance)
 				, m_fAbsorption(p_fAbsorption)
 				, m_fEtaI(p_fEtaI)
 				, m_fEtaT(p_fEtaT)
@@ -127,7 +130,7 @@ namespace Illumina
 				}
 				else
 				{
-					return m_reflectivity;// p_bxdfIndex == 0 ? m_reflectivity : Spectrum(1.0f) - m_reflectivity;
+					return p_bxdfIndex == 0 ? m_transmittance : m_reflectivity;// p_bxdfIndex == 0 ? m_reflectivity : Spectrum(1.0f) - m_reflectivity;
 				}
 
 			}

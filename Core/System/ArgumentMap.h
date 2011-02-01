@@ -195,6 +195,31 @@ namespace Illumina
 				return false;
 			}
 
+			bool GetArgument(const std::string &p_strArgumentName, std::vector<Spectrum> &p_argumentValue)
+			{
+				if (ContainsArgument(p_strArgumentName))
+				{
+					float value[3];
+					char separator;
+					
+					std::stringstream argumentValue(m_argumentMap[p_strArgumentName]);
+					// argument type : {{0.0f, 0.0f, 0.0f}, ... , {0.0f, 0.0f, 0.0f}}
+					do 
+					{
+						argumentValue>>separator; // {
+
+						// argument type : {0.0f, 0.0f, 0.0f}
+						argumentValue>>separator>>value[0]>>separator>>value[1]>>separator>>value[2]>>separator;
+						p_argumentValue.push_back(Spectrum(value[0], value[1], value[2]));
+
+						argumentValue>>separator; // , -or- }
+					} 
+					while (separator == ',');
+				}
+
+				return true;
+			}
+
 			std::string ToString(void) const
 			{
 				std::stringstream argumentMap;
