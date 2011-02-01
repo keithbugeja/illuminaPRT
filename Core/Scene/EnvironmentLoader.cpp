@@ -206,7 +206,10 @@ bool EnvironmentLoader::Parse(void)
 	ParseDevices();
 	ParseSamplers();
 	ParseIntegrators();
+	ParseRenderers();
+	ParseMaterials();
 	ParseShapes();
+
 
 	return true;
 }
@@ -669,20 +672,109 @@ bool EnvironmentLoader::ParseIntegrators(void)
 //----------------------------------------------------------------------------------------------
 bool EnvironmentLoader::ParseRenderers(void)
 {
-	std::cout << "[Renderers]" << std::endl;
+	std::cout << "Parsing Renderers..." << std::endl;
 
-	std::vector<std::map<std::string, std::string>> rendererList;
-	bool result = ParseList("Renderer", rendererList);
-	return result;
+	ArgumentMap argumentMap;
+
+	std::vector<ParseNode*> renderers;
+	std::vector<ParseNode*>::iterator renderersIterator;
+	
+	std::vector<ParseNode*> rendererNodes;
+	std::vector<ParseNode*>::iterator rendererNodesIterator;
+
+	m_parseTree.Root.FindByName("Renderers", renderers);
+
+	for (renderersIterator = renderers.begin();
+		 renderersIterator != renderers.end();
+		 ++renderersIterator)
+	{
+		ParseNode *pRenderersNode = *renderersIterator;
+
+		// Go throug all shape entries in the shapes node
+		pRenderersNode->FindByName("Renderer", rendererNodes);
+		
+		for (rendererNodesIterator = rendererNodes.begin();
+			 rendererNodesIterator != rendererNodes.end();
+			 ++rendererNodesIterator)
+		{
+			ParseNode *pRendererNode = *rendererNodesIterator;
+			pRendererNode->GetArgumentMap(argumentMap);
+
+			// If argument map does not specify geometry type or name/id, ignore entry
+			if (!(argumentMap.ContainsArgument("Id") && argumentMap.ContainsArgument("Type")))
+			{
+				std::cout << "[Integrator] Warning :: Ignoring entry because it does not specify Id or Type..." << std::endl;
+				continue;
+			}
+
+			// Get factory and create instance
+			std::string strType, strId;
+
+			argumentMap.GetArgument("Id", strId);
+			argumentMap.GetArgument("Type", strType);
+
+			// Filter some types like model filters
+			IRenderer *pRenderer = m_pEngineKernel->GetRendererManager()->CreateInstance(strType, strId, argumentMap);
+			std::cout << pRenderer->ToString() << ", " << pRenderer->GetName() << std::endl;
+
+			// Now we need to do some binding operations on the renderer
+			std::cout << "Performing binding ops..." << std::endl;
+		}
+	}
+
+	return true;
 }
 //----------------------------------------------------------------------------------------------
 bool EnvironmentLoader::ParseMaterials(void)
 {
-	std::cout << "[Materials]" << std::endl;
+	std::cout << "Parsing Materials..." << std::endl;
 
-	std::vector<std::map<std::string, std::string>> materialList;
-	bool result = ParseList("Material", materialList);
-	return result;
+	ArgumentMap argumentMap;
+
+	std::vector<ParseNode*> materials;
+	std::vector<ParseNode*>::iterator materialsIterator;
+	
+	std::vector<ParseNode*> materialNodes;
+	std::vector<ParseNode*>::iterator materialNodesIterator;
+
+	m_parseTree.Root.FindByName("Materials", materials);
+
+	for (materialsIterator = materials.begin();
+		 materialsIterator != materials.end();
+		 ++materialsIterator)
+	{
+		ParseNode *pMaterialsNode = *materialsIterator;
+
+		// Go throug all shape entries in the shapes node
+		pMaterialsNode->FindByName("Material", materialNodes);
+		
+		for (materialNodesIterator = materialNodes.begin();
+			 materialNodesIterator != materialNodes.end();
+			 ++materialNodesIterator)
+		{
+			ParseNode *pMaterialNode = *materialNodesIterator;
+			pMaterialNode->GetArgumentMap(argumentMap);
+
+			// If argument map does not specify geometry type or name/id, ignore entry
+			if (!(argumentMap.ContainsArgument("Id") && argumentMap.ContainsArgument("Type")))
+			{
+				std::cout << "[Material] Warning :: Ignoring entry because it does not specify Id or Type..." << std::endl;
+				continue;
+			}
+
+			// Get factory and create instance
+			std::string strType, strId;
+
+			argumentMap.GetArgument("Id", strId);
+			argumentMap.GetArgument("Type", strType);
+
+			// Filter some types like model filters
+			IMaterial *pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance(strType, strId, argumentMap);
+			std::cout << pMaterial->ToString() << ", " << pMaterial->GetName() << std::endl;
+		}
+	}
+
+	return true;
 }
 /*
 //----------------------------------------------------------------------------------------------
