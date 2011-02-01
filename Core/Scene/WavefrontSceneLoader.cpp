@@ -111,9 +111,8 @@ bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int
 	WavefrontContext context;
 	
 	// Load geometry
-	LoadGeometry(p_strFilename, context);
-
-	std::cout << "Geometry Loaded... " << std::endl;
+	if (!LoadGeometry(p_strFilename, context))
+		return false;
 
 	std::string meshName = context.Mesh->GetName(),
 		materialGroupName = context.MaterialGroup->GetName();
@@ -363,7 +362,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 		std::cerr << "Error : Couldn't open file \'" << p_strFilename << "\'" << std::endl;
 		exit(-1);
 	}
-
+	
 	// define some temporary containers
 	Vector2 vector2;
 	Vector3 vector3;
@@ -432,7 +431,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 
 			for (size_t index = 1; index < tokenList.size(); index++)
 			{
-				Tokenise(tokenList[1], "/", faceTokenList);
+				Tokenise(tokenList[index], "/", faceTokenList);
 
 				vertex.Position = boost::lexical_cast<int>(faceTokenList[0]);
 				vertex.Texture = boost::lexical_cast<int>(faceTokenList[1]);
@@ -448,7 +447,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 					meshVertex.UV = (vertex.Texture == 0) ? Vector2::Zero : p_context.UVList[vertex.Texture - 1];
 					meshVertex.Normal = (vertex.Normal == 0) ? Vector3::Zero : p_context.NormalList[vertex.Normal - 1];
 					
-					p_context.VertexMap[hash] = vertexIndex[index] = 
+					p_context.VertexMap[hash] = vertexIndex[index - 1] = 
 						p_context.Mesh->VertexList.Size();
 
 					// Add vertex to mesh
@@ -456,19 +455,20 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 				}
 				else
 				{
-					vertexIndex[index] = p_context.VertexMap[hash];
+					vertexIndex[index - 1] = p_context.VertexMap[hash];
 				}
 			}
-
+			
 			// Add faces to mesh
 			p_context.Mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[1], vertexIndex[2], p_context.CurrentMaterialId);
 			
 			if (tokenList.size() == 5) 
 				p_context.Mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[2], vertexIndex[3], p_context.CurrentMaterialId);
+			
 		}
 		else if (tokenList[0] == "mtllib")
 		{
-			std::cout << "Load material library [" << tokenList[1] << "]" << std::endl;
+			//std::cout << "Load material library [" << tokenList[1] << "]" << std::endl;
 
 			if (tokenList.size() != 2)
 				continue;
@@ -479,7 +479,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 		}
 		else if (tokenList[0] == "usemtl")
 		{
-			std::cout << "Use material [" << tokenList[1] << "]" << std::endl;
+			//std::cout << "Use material [" << tokenList[1] << "]" << std::endl;
 
 			if (tokenList.size() != 2)
 				continue;
@@ -487,7 +487,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 			p_context.CurrentMaterialId = p_context.MaterialGroup->GetGroupId(tokenList[1]);
 		}
 	}
-
+	
 	wavefrontFile.close();
 
 	return true;

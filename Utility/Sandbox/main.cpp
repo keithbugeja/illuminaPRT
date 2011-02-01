@@ -91,7 +91,7 @@
 // Factories
 #include "Camera/CameraFactories.h"
 #include "Device/DeviceFactories.h"
-
+#include "Light/LightFactories.h"
 #include "Space/SpaceFactories.h"
 #include "Shape/ShapeFactories.h"
 #include "Filter/FilterFactories.h"
@@ -147,7 +147,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	// Integrator
 	//----------------------------------------------------------------------------------------------
-	engineKernel.GetIntegratorManager()->RegisterFactory("Path", new PathIntegratorFactory());
+	engineKernel.GetIntegratorManager()->RegisterFactory("PathTracing", new PathIntegratorFactory());
 	engineKernel.GetIntegratorManager()->RegisterFactory("Whitted", new PathIntegratorFactory());
 
 	//----------------------------------------------------------------------------------------------
@@ -167,6 +167,12 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	engineKernel.GetCameraManager()->RegisterFactory("Perspective", new PerspectiveCameraFactory());
 	engineKernel.GetCameraManager()->RegisterFactory("ThinLens", new ThinLensCameraFactory());
+
+	//----------------------------------------------------------------------------------------------
+	// Lights
+	//----------------------------------------------------------------------------------------------
+	engineKernel.GetLightManager()->RegisterFactory("Point", new PointLightFactory());
+	engineKernel.GetLightManager()->RegisterFactory("DiffuseArea", new DiffuseAreaLightFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Shapes

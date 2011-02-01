@@ -22,6 +22,7 @@
 #include "Filter/Filter.h"
 #include "Space/Space.h"
 #include "Shape/Shape.h"
+#include "Light/Light.h"
 
 namespace Illumina
 {
@@ -49,6 +50,7 @@ namespace Illumina
 			FilterManager* GetFilterManager(void) const;
 			ShapeManager* GetShapeManager(void) const;
 			SpaceManager* GetSpaceManager(void) const;
+			LightManager* GetLightManager(void) const;
 			DummyManager* GetDummyManager(void) const;
 		};
 	}

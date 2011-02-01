@@ -34,6 +34,8 @@ namespace Illumina
 
 			virtual void Set(int p_nX, int p_nY, const Spectrum &p_spectrum) = 0;
 			virtual void Set(float p_fX, float p_fY, const Spectrum &p_spectrum) = 0;
+
+			std::string ToString(void) const { return "IDevice"; }
 		};
 
 		//----------------------------------------------------------------------------------------------

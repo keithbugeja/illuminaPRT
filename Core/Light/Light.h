@@ -49,6 +49,7 @@ namespace Illumina
 			virtual Spectrum SampleRadiance(const Vector3 &p_point, Vector3 &p_wIn, VisibilityQuery &p_visibilityQuery) = 0;
 			virtual Spectrum SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wIn, VisibilityQuery &p_visibilityQuery) = 0;
 			//----------------------------------------------------------------------------------------------
+			std::string ToString(void) const { return "ILight"; }
 		};
 
 		typedef List<ILight*> LightList;

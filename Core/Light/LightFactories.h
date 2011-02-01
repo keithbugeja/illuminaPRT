@@ -21,7 +21,7 @@ namespace Illumina
 		class PointLightFactory : public Illumina::Core::Factory<Illumina::Core::ILight>
 		{
 		public:
-			Illumina::Core::IIntegrator *CreateInstance(void)
+			Illumina::Core::ILight *CreateInstance(void)
 			{
 				throw new Exception("Method not supported!");
 			}
@@ -32,7 +32,7 @@ namespace Illumina
 			 * -- Position {Vector3}
 			 * -- Intensity {Spectrum}
 			 */
-			Illumina::Core::IIntegrator *CreateInstance(ArgumentMap &p_argumentMap)
+			Illumina::Core::ILight *CreateInstance(ArgumentMap &p_argumentMap)
 			{
 				Vector3 position(0);
 				Spectrum intensity(0);
@@ -47,12 +47,12 @@ namespace Illumina
 				return CreateInstance(position, intensity);
 			}
 
-			Illumina::Core::IIntegrator *CreateInstance(const std::string &p_strId, const Vector3 &p_position, const Spectrum &p_intensity)
+			Illumina::Core::ILight *CreateInstance(const std::string &p_strId, const Vector3 &p_position, const Spectrum &p_intensity)
 			{
 				return new PointLight(p_strId, p_position, p_intensity);
 			}
 
-			Illumina::Core::IIntegrator *CreateInstance(const Vector3 &p_position, const Spectrum &p_intensity)
+			Illumina::Core::ILight *CreateInstance(const Vector3 &p_position, const Spectrum &p_intensity)
 			{
 				return new PointLight(p_position, p_intensity);
 			}
@@ -69,8 +69,7 @@ namespace Illumina
 			/*
 			 * Arguments
 			 * -- Id {String}
-			 * -- RayDepth {Integer}
-			 * -- ShadowRays {Integer}
+			 * -- Power {Integer}
 			 */
 			Illumina::Core::ILight *CreateInstance(ArgumentMap &p_argumentMap)
 			{

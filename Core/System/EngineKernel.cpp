@@ -25,6 +25,7 @@ namespace Illumina
 			FilterManager* m_pFilterManager;
 			ShapeManager* m_pShapeManager;
 			SpaceManager* m_pSpaceManager;
+			LightManager* m_pLightManager;
 			DummyManager* m_pDummyManager;
 
 			EngineKernelState(EngineKernel* p_pEngineKernel)
@@ -39,12 +40,14 @@ namespace Illumina
 				, m_pFilterManager(new FilterManager())
 				, m_pShapeManager(new ShapeManager())
 				, m_pSpaceManager(new SpaceManager())
+				, m_pLightManager(new LightManager())
 				, m_pDummyManager(new DummyManager())
 			{ }
 
 			~EngineKernelState(void)
 			{
 				delete m_pDummyManager;
+				delete m_pLightManager;
 				delete m_pSpaceManager;
 				delete m_pShapeManager;
 				delete m_pFilterManager;
@@ -140,6 +143,12 @@ SpaceManager* EngineKernel::GetSpaceManager(void) const
 ShapeManager* EngineKernel::GetShapeManager(void) const
 {
 	return m_pEngineKernelState->m_pShapeManager;
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+LightManager* EngineKernel::GetLightManager(void) const
+{
+	return m_pEngineKernelState->m_pLightManager;
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
