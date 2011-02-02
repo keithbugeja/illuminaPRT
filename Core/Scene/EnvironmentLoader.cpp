@@ -796,24 +796,64 @@ bool EnvironmentLoader::ParsePrimitives(void)
 //----------------------------------------------------------------------------------------------
 bool EnvironmentLoader::ParseEnvironment(void)
 {
-	Lexer *pLexer = Top();
-	LexerToken token;
-	
-	// {
-	if (!pLexer->ReadToken(LexerToken::LeftCurly, token))
+	std::vector<ParseNode*> environmentNode;
+	if (!m_parseTree.Root.FindByName("Environment", environmentNode))
 		return false;
 
-	while (true)
-	{
-		// Finished parsing Environment block
-		if (!pLexer->ReadToken(LexerToken::PropertyName, token))
-			return (token.Type == LexerToken::RightCurly);
+	// Set renderer
+	ArgumentMap argumentMap;
+	environmentNode[0]->GetArgumentMap(argumentMap);
+	
+	std::string strRendererId;
+	if (!argumentMap.GetArgument("Renderer", strRendererId))
+		return false;
 
-		// Parse Scene
-		if (token.Value == "Scene")
-		{
-		}
+	IRenderer *pRenderer = m_pEngineKernel->GetRendererManager()->QueryInstance(strRendererId);
+	m_pEnvironment->SetRenderer(pRenderer);
+
+	// Parse Scene
+	std::vector<ParseNode*> sceneNode;
+	if (!environmentNode[0]->FindByName("Scene", sceneNode))
+	{
+		std::cerr << "EnvironmentLoader :: Missing Scene block within Environment block!" << std::endl;
+		return false;
 	}
+
+	// We want to read sampler, camera, lights and space
+	std::string strSamplerId, strCameraId, strLightsId;
+
+	sceneNode[0]->GetArgumentMap(argumentMap);
+	if (!argumentMap.GetArgument("Sampler", strSamplerId)) 
+	{
+		std::cerr << "EnvironmentLoader :: Missing Sampler within Scene block!" << std::endl;
+		return false;
+	} 
+	else
+	{
+		ISampler *pSampler = m_pEngineKernel->GetSamplerManager()->QueryInstance(strSamplerId);
+		m_pEnvironment->SetSampler(pSampler);
+	}
+
+	if (!argumentMap.GetArgument("Camera", strCameraId))
+	{
+		std::cerr << "EnvironmentLoader :: Missing Camera within Scene block!" << std::endl;
+		return false;
+	}
+	else
+	{
+		ICamera *pCamera = m_pEngineKernel->GetCameraManager()->QueryInstance(strCameraId);
+		m_pEnvironment->SetCamera(strCameraId);
+	}
+
+	if (!argumentMap.GetArgument("Lights", strLightsId))
+	{
+		std::cerr << "EnvironmentLoader :: Missing Lights within Scene block!" << std::endl;
+		return false;
+	}
+	else
+	{
+	}
+
 
 	return true;
 }
