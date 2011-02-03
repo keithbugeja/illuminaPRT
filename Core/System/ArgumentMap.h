@@ -115,27 +115,19 @@ namespace Illumina
 
 			bool GetArgument(const std::string &p_strArgumentName, std::vector<std::string> &p_argumentValue)
 			{
-/*
 				if (ContainsArgument(p_strArgumentName))
 				{
-					float value[3];
-					char separator;
-					
-					std::stringstream argumentValue(m_argumentMap[p_strArgumentName]);
-					// argument type : {{0.0f, 0.0f, 0.0f}, ... , {0.0f, 0.0f, 0.0f}}
-					do 
+					std::string strArgumentList = m_argumentMap[p_strArgumentName];
+
+					boost::char_separator<char> separator("{,}");
+					boost::tokenizer<boost::char_separator<char> > tokens(strArgumentList, separator);
+
+					for (boost::tokenizer<boost::char_separator<char> >::iterator iterator = tokens.begin(); iterator != tokens.end(); ++iterator)
 					{
-						argumentValue>>separator; // {
-
-						// argument type : {0.0f, 0.0f, 0.0f}
-						argumentValue>>separator>>value[0]>>separator>>value[1]>>separator>>value[2]>>separator;
-						p_argumentValue.push_back(Vector3(value[0], value[1], value[2]));
-
-						argumentValue>>separator; // , -or- }
-					} 
-					while (separator == ',');
+						p_argumentValue.push_back(*iterator);
+					}
 				}
-*/
+
 				return true;
 			}
 

@@ -9,10 +9,15 @@
 #include <map>
 
 #include "System/EngineKernel.h"
+#include "System/Lexer.h"
+
+#include "Scene/Scene.h"
 #include "Scene/EnvironmentLoader.h"
 #include "Scene/WavefrontSceneLoader.h"
 #include "Scene/Environment.h"
-#include "System/Lexer.h"
+
+#include "Scene/EmissivePrimitive.h"
+#include "Scene/GeometricPrimitive.h"
 
 using namespace Illumina::Core;
 
@@ -200,72 +205,18 @@ bool EnvironmentLoader::Parse(void)
 		}
 	}
 
-	ParseCameras();
-	ParseLights();
-	ParseFilters();
-	ParseDevices();
-	ParseSamplers();
-	ParseIntegrators();
-	ParseRenderers();
-	ParseMaterials();
-	ParseShapes();
-
+	if (!ParseCameras()) std::cerr << "ParseCameras :: Completed with warnings!" << std::endl;
+	if (!ParseLights()) std::cerr << "Light Parsing :: Completed with warnings!" << std::endl;
+	if (!ParseFilters()) std::cerr << "Filter Parsing :: Completed with warnings!" << std::endl;
+	if (!ParseDevices()) std::cerr << "Device Parsing :: Completed with warnings!" << std::endl;
+	if (!ParseSamplers()) std::cerr << "Sampler Parsing:: Completed with warnings!" << std::endl;
+	if (!ParseIntegrators()) std::cerr << "Integrator Parsing :: Completed with warnings!" << std::endl;
+	if (!ParseRenderers()) std::cerr << "Renderer Parsing :: Completed with warnings!" << std::endl;
+	if (!ParseMaterials()) std::cerr << "Material Parsing :: Completed with warnings!" << std::endl;
+	if (!ParseShapes()) std::cerr << "Shape Parsing :: Completed with warnings!" << std::endl;
+	if (!ParseEnvironment()) std::cerr << "Environment Parsing :: Completed with warnings!" << std::endl;
 
 	return true;
-}
-//----------------------------------------------------------------------------------------------
-bool EnvironmentLoader::ParseList(const std::string& p_strContainerName, std::vector<std::map<std::string, std::string>> p_containerList)
-{
-	Lexer *pLexer = Top();
-	LexerToken token, 
-		nameToken, 
-		valueToken;
-
-	// {
-	if (!pLexer->ReadToken(LexerToken::LeftCurly, token)) 
-		return false;
-
-	while (true)
-	{
-		// ContainerName { ... } 
-		// -- or --
-		// }
-
-		// EOS
-		if (!pLexer->ReadToken(token))
-			return false;
-
-		// }
-		if (token.Type == LexerToken::RightCurly)
-			return true;
-
-		// ContainerName
-		if (token.Type == LexerToken::PropertyName && token.Value == p_strContainerName)
-		{
-			if (!pLexer->ReadToken(LexerToken::LeftCurly, token))
-				return false;
-
-			std::cout << "Pushing " << p_strContainerName << " object ..." << std::endl;
-			p_containerList.push_back(std::map<std::string, std::string>());
-
-			while (true)
-			{
-				if (!pLexer->ReadToken(LexerToken::PropertyName, nameToken))
-				{
-					if (nameToken.Type == LexerToken::RightCurly) 
-						break;
-
-					return false;
-				}
-
-				if (!pLexer->ReadToken(LexerToken::PropertyValue, valueToken))
-					return false;
-
-				std::cout << "[" << nameToken.Value << " = " << valueToken.Value << "]" << std::endl;
-				p_containerList.back()[nameToken.Value] = valueToken.Value;
-			}
-		}
-	}
 }
 //----------------------------------------------------------------------------------------------
 bool EnvironmentLoader::ParseInclude(void)
@@ -307,7 +258,11 @@ bool EnvironmentLoader::ParseCameras(void)
 	std::vector<ParseNode*> cameraNodes;
 	std::vector<ParseNode*>::iterator cameraNodesIterator;
 
-	m_parseTree.Root.FindByName("Cameras", cameras);
+	std::string strType, 
+		strId;
+
+	if (!m_parseTree.Root.FindByName("Cameras", cameras))
+		return false;
 
 	for (camerasIterator = cameras.begin();
 		 camerasIterator != cameras.end();
@@ -316,7 +271,8 @@ bool EnvironmentLoader::ParseCameras(void)
 		ParseNode *pCamerasNode = *camerasIterator;
 
 		// Go throug all shape entries in the shapes node
-		pCamerasNode->FindByName("Camera", cameraNodes);
+		if (!pCamerasNode->FindByName("Camera", cameraNodes))
+			continue;
 		
 		for (cameraNodesIterator = cameraNodes.begin();
 			 cameraNodesIterator != cameraNodes.end();
@@ -333,14 +289,12 @@ bool EnvironmentLoader::ParseCameras(void)
 			}
 
 			// Get shape factory and create instance
-			std::string strType, strId;
-
 			argumentMap.GetArgument("Id", strId);
 			argumentMap.GetArgument("Type", strType);
 
 			// Filter some types like model filters
 			ICamera *pCamera = m_pEngineKernel->GetCameraManager()->CreateInstance(strType, strId, argumentMap);
-			std::cout << pCamera->ToString() << ", " << pCamera->GetName() << std::endl;
+			std::cout << "Created : [" << pCamera->ToString() << "] : " << pCamera->GetName() << std::endl;
 		}
 	}
 
@@ -359,7 +313,11 @@ bool EnvironmentLoader::ParseLights(void)
 	std::vector<ParseNode*> lightNodes;
 	std::vector<ParseNode*>::iterator lightNodesIterator;
 
-	m_parseTree.Root.FindByName("Lights", lights);
+	std::string strType, 
+		strId;
+
+	if (!m_parseTree.Root.FindByName("Lights", lights))
+		return false;
 
 	for (lightsIterator = lights.begin();
 		 lightsIterator != lights.end();
@@ -368,7 +326,8 @@ bool EnvironmentLoader::ParseLights(void)
 		ParseNode *pLightsNode = *lightsIterator;
 
 		// Go throug all shape entries in the shapes node
-		pLightsNode->FindByName("Light", lightNodes);
+		if (!pLightsNode->FindByName("Light", lightNodes))
+			continue;
 		
 		for (lightNodesIterator = lightNodes.begin();
 			 lightNodesIterator != lightNodes.end();
@@ -385,8 +344,6 @@ bool EnvironmentLoader::ParseLights(void)
 			}
 
 			// Get shape factory and create instance
-			std::string strType, strId;
-
 			argumentMap.GetArgument("Id", strId);
 			argumentMap.GetArgument("Type", strType);
 
@@ -411,7 +368,11 @@ bool EnvironmentLoader::ParseFilters(void)
 	std::vector<ParseNode*> filterNodes;
 	std::vector<ParseNode*>::iterator filterNodesIterator;
 
-	m_parseTree.Root.FindByName("Filters", filters);
+	std::string strType, 
+		strId;
+
+	if (!m_parseTree.Root.FindByName("Filters", filters))
+		return false;
 
 	for (filtersIterator = filters.begin();
 		 filtersIterator != filters.end();
@@ -420,7 +381,8 @@ bool EnvironmentLoader::ParseFilters(void)
 		ParseNode *pFiltersNode = *filtersIterator;
 
 		// Go throug all shape entries in the shapes node
-		pFiltersNode->FindByName("Filter", filterNodes);
+		if (!pFiltersNode->FindByName("Filter", filterNodes))
+			continue;
 		
 		for (filterNodesIterator = filterNodes.begin();
 			 filterNodesIterator != filterNodes.end();
@@ -437,8 +399,6 @@ bool EnvironmentLoader::ParseFilters(void)
 			}
 
 			// Get factory and create instance
-			std::string strType, strId;
-
 			argumentMap.GetArgument("Id", strId);
 			argumentMap.GetArgument("Type", strType);
 
@@ -463,7 +423,11 @@ bool EnvironmentLoader::ParseSamplers(void)
 	std::vector<ParseNode*> samplerNodes;
 	std::vector<ParseNode*>::iterator samplerNodesIterator;
 
-	m_parseTree.Root.FindByName("Samplers", samplers);
+	std::string strType, 
+		strId;
+
+	if (!m_parseTree.Root.FindByName("Samplers", samplers))
+		return false;
 
 	for (samplersIterator = samplers.begin();
 		 samplersIterator != samplers.end();
@@ -472,7 +436,8 @@ bool EnvironmentLoader::ParseSamplers(void)
 		ParseNode *pSamplersNode = *samplersIterator;
 
 		// Go throug all shape entries in the shapes node
-		pSamplersNode->FindByName("Sampler", samplerNodes);
+		if (!pSamplersNode->FindByName("Sampler", samplerNodes))
+			continue;
 		
 		for (samplerNodesIterator = samplerNodes.begin();
 			 samplerNodesIterator != samplerNodes.end();
@@ -489,77 +454,12 @@ bool EnvironmentLoader::ParseSamplers(void)
 			}
 
 			// Get factory and create instance
-			std::string strType, strId;
-
 			argumentMap.GetArgument("Id", strId);
 			argumentMap.GetArgument("Type", strType);
 
 			// Filter some types like model filters
 			ISampler *pSampler = m_pEngineKernel->GetSamplerManager()->CreateInstance(strType, strId, argumentMap);
 			std::cout << pSampler->ToString() << ", " << pSampler->GetName() << std::endl;
-		}
-	}
-
-	return true;
-}
-//----------------------------------------------------------------------------------------------
-bool EnvironmentLoader::ParseShapes(void)
-{
-	std::cout << "Parsing Shapes..." << std::endl;
-
-	ArgumentMap argumentMap;
-
-	std::vector<ParseNode*> shapes;
-	std::vector<ParseNode*>::iterator shapesIterator;
-	
-	std::vector<ParseNode*> shapeNodes;
-	std::vector<ParseNode*>::iterator shapeNodesIterator;
-
-	m_parseTree.Root.FindByName("Shapes", shapes);
-
-	for (shapesIterator = shapes.begin();
-		 shapesIterator != shapes.end();
-		 ++shapesIterator)
-	{
-		ParseNode *pShapesNode = *shapesIterator;
-
-		// Go throug all shape entries in the shapes node
-		pShapesNode->FindByName("Shape", shapeNodes);
-		
-		for (shapeNodesIterator = shapeNodes.begin();
-			 shapeNodesIterator != shapeNodes.end();
-			 ++shapeNodesIterator)
-		{
-			ParseNode *pShapeNode = *shapeNodesIterator;
-			pShapeNode->GetArgumentMap(argumentMap);
-
-			// If argument map does not specify geometry type or name/id, ignore entry
-			if (!(argumentMap.ContainsArgument("Id") && argumentMap.ContainsArgument("Type")))
-			{
-				std::cout << "[Shape] Warning :: Ignoring Shape entry because it does not specify Id or Type..." << std::endl;
-				continue;
-			}
-
-			// Get shape factory and create instance
-			std::string strType, strId;
-
-			argumentMap.GetArgument("Id", strId);
-			argumentMap.GetArgument("Type", strType);
-
-			// Filter some types like model filters
-			if (strType == "WavefrontModel")
-			{
-				std::string strFilename;
-				argumentMap.GetArgument("Filename", strFilename);
-
-				WavefrontSceneLoader wavefrontLoader(m_pEnvironment);
-				wavefrontLoader.Import(strFilename, 0, &argumentMap);
-			}
-			else
-			{
-				IShape *pShape = m_pEngineKernel->GetShapeManager()->CreateInstance(strType, strId, argumentMap);
-				std::cout << pShape->ToString() << ", " << pShape->GetName() << std::endl;
-			}
 		}
 	}
 
@@ -578,7 +478,11 @@ bool EnvironmentLoader::ParseDevices(void)
 	std::vector<ParseNode*> deviceNodes;
 	std::vector<ParseNode*>::iterator deviceNodesIterator;
 
-	m_parseTree.Root.FindByName("Devices", devices);
+	std::string strType, 
+		strId;
+
+	if (!m_parseTree.Root.FindByName("Devices", devices))
+		return false;
 
 	for (devicesIterator = devices.begin();
 		 devicesIterator != devices.end();
@@ -587,7 +491,8 @@ bool EnvironmentLoader::ParseDevices(void)
 		ParseNode *pDevicesNode = *devicesIterator;
 
 		// Go throug all shape entries in the shapes node
-		pDevicesNode->FindByName("Device", deviceNodes);
+		if (!pDevicesNode->FindByName("Device", deviceNodes))
+			continue;
 		
 		for (deviceNodesIterator = deviceNodes.begin();
 			 deviceNodesIterator != deviceNodes.end();
@@ -604,8 +509,6 @@ bool EnvironmentLoader::ParseDevices(void)
 			}
 
 			// Get factory and create instance
-			std::string strType, strId;
-
 			argumentMap.GetArgument("Id", strId);
 			argumentMap.GetArgument("Type", strType);
 
@@ -630,7 +533,11 @@ bool EnvironmentLoader::ParseIntegrators(void)
 	std::vector<ParseNode*> integratorNodes;
 	std::vector<ParseNode*>::iterator integratorNodesIterator;
 
-	m_parseTree.Root.FindByName("Integrators", integrators);
+	std::string strType, 
+		strId;
+
+	if (!m_parseTree.Root.FindByName("Integrators", integrators))
+		return false;
 
 	for (integratorsIterator = integrators.begin();
 		 integratorsIterator != integrators.end();
@@ -639,7 +546,8 @@ bool EnvironmentLoader::ParseIntegrators(void)
 		ParseNode *pIntegratorsNode = *integratorsIterator;
 
 		// Go throug all shape entries in the shapes node
-		pIntegratorsNode->FindByName("Integrator", integratorNodes);
+		if (!pIntegratorsNode->FindByName("Integrator", integratorNodes))
+			continue;
 		
 		for (integratorNodesIterator = integratorNodes.begin();
 			 integratorNodesIterator != integratorNodes.end();
@@ -656,69 +564,12 @@ bool EnvironmentLoader::ParseIntegrators(void)
 			}
 
 			// Get factory and create instance
-			std::string strType, strId;
-
 			argumentMap.GetArgument("Id", strId);
 			argumentMap.GetArgument("Type", strType);
 
 			// Filter some types like model filters
 			IIntegrator *pIntegrator = m_pEngineKernel->GetIntegratorManager()->CreateInstance(strType, strId, argumentMap);
 			std::cout << pIntegrator->ToString() << ", " << pIntegrator->GetName() << std::endl;
-		}
-	}
-
-	return true;
-}
-//----------------------------------------------------------------------------------------------
-bool EnvironmentLoader::ParseRenderers(void)
-{
-	std::cout << "Parsing Renderers..." << std::endl;
-
-	ArgumentMap argumentMap;
-
-	std::vector<ParseNode*> renderers;
-	std::vector<ParseNode*>::iterator renderersIterator;
-	
-	std::vector<ParseNode*> rendererNodes;
-	std::vector<ParseNode*>::iterator rendererNodesIterator;
-
-	m_parseTree.Root.FindByName("Renderers", renderers);
-
-	for (renderersIterator = renderers.begin();
-		 renderersIterator != renderers.end();
-		 ++renderersIterator)
-	{
-		ParseNode *pRenderersNode = *renderersIterator;
-
-		// Go throug all shape entries in the shapes node
-		pRenderersNode->FindByName("Renderer", rendererNodes);
-		
-		for (rendererNodesIterator = rendererNodes.begin();
-			 rendererNodesIterator != rendererNodes.end();
-			 ++rendererNodesIterator)
-		{
-			ParseNode *pRendererNode = *rendererNodesIterator;
-			pRendererNode->GetArgumentMap(argumentMap);
-
-			// If argument map does not specify geometry type or name/id, ignore entry
-			if (!(argumentMap.ContainsArgument("Id") && argumentMap.ContainsArgument("Type")))
-			{
-				std::cout << "[Integrator] Warning :: Ignoring entry because it does not specify Id or Type..." << std::endl;
-				continue;
-			}
-
-			// Get factory and create instance
-			std::string strType, strId;
-
-			argumentMap.GetArgument("Id", strId);
-			argumentMap.GetArgument("Type", strType);
-
-			// Filter some types like model filters
-			IRenderer *pRenderer = m_pEngineKernel->GetRendererManager()->CreateInstance(strType, strId, argumentMap);
-			std::cout << pRenderer->ToString() << ", " << pRenderer->GetName() << std::endl;
-
-			// Now we need to do some binding operations on the renderer
-			std::cout << "Performing binding ops..." << std::endl;
 		}
 	}
 
@@ -737,7 +588,11 @@ bool EnvironmentLoader::ParseMaterials(void)
 	std::vector<ParseNode*> materialNodes;
 	std::vector<ParseNode*>::iterator materialNodesIterator;
 
-	m_parseTree.Root.FindByName("Materials", materials);
+	std::string strType, 
+		strId;
+
+	if (!m_parseTree.Root.FindByName("Materials", materials))
+		return false;
 
 	for (materialsIterator = materials.begin();
 		 materialsIterator != materials.end();
@@ -746,7 +601,8 @@ bool EnvironmentLoader::ParseMaterials(void)
 		ParseNode *pMaterialsNode = *materialsIterator;
 
 		// Go throug all shape entries in the shapes node
-		pMaterialsNode->FindByName("Material", materialNodes);
+		if (!pMaterialsNode->FindByName("Material", materialNodes))
+			continue;
 		
 		for (materialNodesIterator = materialNodes.begin();
 			 materialNodesIterator != materialNodes.end();
@@ -763,8 +619,6 @@ bool EnvironmentLoader::ParseMaterials(void)
 			}
 
 			// Get factory and create instance
-			std::string strType, strId;
-
 			argumentMap.GetArgument("Id", strId);
 			argumentMap.GetArgument("Type", strType);
 
@@ -776,41 +630,188 @@ bool EnvironmentLoader::ParseMaterials(void)
 
 	return true;
 }
-/*
 //----------------------------------------------------------------------------------------------
-bool EnvironmentLoader::ParseScene(void)
+bool EnvironmentLoader::ParseShapes(void)
 {
+	std::cout << "Parsing Shapes..." << std::endl;
+
+	ArgumentMap argumentMap;
+
+	std::vector<ParseNode*> shapes;
+	std::vector<ParseNode*>::iterator shapesIterator;
+	
+	std::vector<ParseNode*> shapeNodes;
+	std::vector<ParseNode*>::iterator shapeNodesIterator;
+
+	std::string strType, 
+		strId;
+
+	IShape *pShape;
+
+	if (!m_parseTree.Root.FindByName("Shapes", shapes))
+		return false;
+
+	for (shapesIterator = shapes.begin();
+		 shapesIterator != shapes.end();
+		 ++shapesIterator)
+	{
+		ParseNode *pShapesNode = *shapesIterator;
+
+		// Go throug all shape entries in the shapes node
+		if (!pShapesNode->FindByName("Shape", shapeNodes))
+			continue;
+		
+		for (shapeNodesIterator = shapeNodes.begin();
+			 shapeNodesIterator != shapeNodes.end();
+			 ++shapeNodesIterator)
+		{
+			ParseNode *pShapeNode = *shapeNodesIterator;
+			pShapeNode->GetArgumentMap(argumentMap);
+
+			// If argument map does not specify geometry type or name/id, ignore entry
+			if (!(argumentMap.ContainsArgument("Id") && argumentMap.ContainsArgument("Type")))
+			{
+				std::cout << "[Shape] Warning :: Ignoring Shape entry because it does not specify Id or Type..." << std::endl;
+				continue;
+			}
+
+			// Get shape factory and create instance
+			argumentMap.GetArgument("Id", strId);
+			argumentMap.GetArgument("Type", strType);
+
+			// Filter some types like model filters
+			if (strType == "WavefrontModel")
+			{
+				std::string strFilename;
+				argumentMap.GetArgument("Filename", strFilename);
+
+				WavefrontSceneLoader wavefrontLoader(m_pEnvironment);
+				wavefrontLoader.Import(strFilename, 0, &argumentMap);
+
+				pShape = m_pEngineKernel->GetShapeManager()->RequestInstance(strId);
+			}
+			else
+			{
+				pShape = m_pEngineKernel->GetShapeManager()->CreateInstance(strType, strId, argumentMap);
+				std::cout << pShape->ToString() << ", " << pShape->GetName() << std::endl;
+			}
+
+			pShape->ComputeBoundingVolume();
+			pShape->Compile();
+		}
+	}
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-bool EnvironmentLoader::ParseSpace(void)
+bool EnvironmentLoader::ParseRenderers(void)
 {
+	std::cout << "Parsing Renderers..." << std::endl;
+
+	ArgumentMap argumentMap;
+
+	std::vector<ParseNode*> renderers;
+	std::vector<ParseNode*>::iterator renderersIterator;
+	
+	std::vector<ParseNode*> rendererNodes;
+	std::vector<ParseNode*>::iterator rendererNodesIterator;
+
+	std::string strType, strId, 
+		strFilter, strDevice, strIntegrator;
+
+	if (!m_parseTree.Root.FindByName("Renderers", renderers))
+		return false;
+
+	for (renderersIterator = renderers.begin();
+		 renderersIterator != renderers.end();
+		 ++renderersIterator)
+	{
+		ParseNode *pRenderersNode = *renderersIterator;
+
+		// Go throug all shape entries in the shapes node
+		if (!pRenderersNode->FindByName("Renderer", rendererNodes))
+			continue;
+		
+		for (rendererNodesIterator = rendererNodes.begin();
+			 rendererNodesIterator != rendererNodes.end();
+			 ++rendererNodesIterator)
+		{
+			ParseNode *pRendererNode = *rendererNodesIterator;
+			pRendererNode->GetArgumentMap(argumentMap);
+
+			// If argument map does not specify geometry type or name/id, ignore entry
+			if (!(argumentMap.ContainsArgument("Id") && argumentMap.ContainsArgument("Type")))
+			{
+				std::cout << "[Integrator] Warning :: Ignoring entry because it does not specify Id or Type..." << std::endl;
+				continue;
+			}
+
+			// Get factory and create instance
+			argumentMap.GetArgument("Id", strId);
+			argumentMap.GetArgument("Type", strType);
+
+			// Filter some types like model filters
+			IRenderer *pRenderer = m_pEngineKernel->GetRendererManager()->CreateInstance(strType, strId, argumentMap);
+			std::cout << pRenderer->ToString() << ", " << pRenderer->GetName() << std::endl;
+
+			// Now we need to do some binding operations on the renderer
+			std::cout << "Renderer : Performing binding operations..." << std::endl;
+
+			argumentMap.GetArgument("Integrator", strIntegrator);
+			IIntegrator *pIntegrator = m_pEngineKernel->GetIntegratorManager()->RequestInstance(strIntegrator);
+
+			argumentMap.GetArgument("Filter", strFilter);
+			IFilter* pFilter = m_pEngineKernel->GetFilterManager()->RequestInstance(strFilter);
+
+			argumentMap.GetArgument("Device", strDevice);
+			IDevice* pDevice = m_pEngineKernel->GetDeviceManager()->RequestInstance(strDevice);
+
+			pRenderer->SetIntegrator(pIntegrator);
+			pRenderer->SetDevice(pDevice);
+			pRenderer->SetFilter(pFilter);
+
+			std::cout << "Renderer : Bound [" << strIntegrator << ", " << strDevice << ", " << strFilter << "]" << std::endl;
+		}
+	}
+
 	return true;
 }
-//----------------------------------------------------------------------------------------------
-bool EnvironmentLoader::ParsePrimitives(void)
-{
-	return true;
-}
-*/
 //----------------------------------------------------------------------------------------------
 bool EnvironmentLoader::ParseEnvironment(void)
 {
+	ArgumentMap argumentMap;
+
+	std::string strRendererId, strSamplerId, strCameraId, strSpaceId,
+		strMaterialId, strGeometryId, strLightId, strId, strType;
+
+	std::vector<std::string> lightsIdList;
+
+	IRenderer *pRenderer;
+	IMaterial *pMaterial;
+	ISampler *pSampler;
+	ICamera *pCamera;
+	IShape *pGeometry;
+	ILight *pLight;
+	ISpace *pSpace;
+
+	//----------------------------------------------------------------------------------------------
+	// Find environment node under root
 	std::vector<ParseNode*> environmentNode;
 	if (!m_parseTree.Root.FindByName("Environment", environmentNode))
 		return false;
 
-	// Set renderer
-	ArgumentMap argumentMap;
+	// Read argument map from environment node
 	environmentNode[0]->GetArgumentMap(argumentMap);
-	
-	std::string strRendererId;
+
+	//----------------------------------------------------------------------------------------------
+	// Read renderer argument and set renderer
 	if (!argumentMap.GetArgument("Renderer", strRendererId))
 		return false;
 
-	IRenderer *pRenderer = m_pEngineKernel->GetRendererManager()->QueryInstance(strRendererId);
+	pRenderer = m_pEngineKernel->GetRendererManager()->RequestInstance(strRendererId);
 	m_pEnvironment->SetRenderer(pRenderer);
 
+	//----------------------------------------------------------------------------------------------
 	// Parse Scene
 	std::vector<ParseNode*> sceneNode;
 	if (!environmentNode[0]->FindByName("Scene", sceneNode))
@@ -819,9 +820,11 @@ bool EnvironmentLoader::ParseEnvironment(void)
 		return false;
 	}
 
-	// We want to read sampler, camera, lights and space
-	std::string strSamplerId, strCameraId, strLightsId;
+	// Instantiate Scene
+	Scene *pScene = new Scene();
+	m_pEnvironment->SetScene(pScene);
 
+	// We want to read sampler, camera, lights and space
 	sceneNode[0]->GetArgumentMap(argumentMap);
 	if (!argumentMap.GetArgument("Sampler", strSamplerId)) 
 	{
@@ -830,7 +833,7 @@ bool EnvironmentLoader::ParseEnvironment(void)
 	} 
 	else
 	{
-		ISampler *pSampler = m_pEngineKernel->GetSamplerManager()->QueryInstance(strSamplerId);
+		pSampler = m_pEngineKernel->GetSamplerManager()->RequestInstance(strSamplerId);
 		m_pEnvironment->SetSampler(pSampler);
 	}
 
@@ -841,19 +844,109 @@ bool EnvironmentLoader::ParseEnvironment(void)
 	}
 	else
 	{
-		ICamera *pCamera = m_pEngineKernel->GetCameraManager()->QueryInstance(strCameraId);
-		m_pEnvironment->SetCamera(strCameraId);
+		pCamera = m_pEngineKernel->GetCameraManager()->RequestInstance(strCameraId);
+		m_pEnvironment->SetCamera(pCamera);
 	}
 
-	if (!argumentMap.GetArgument("Lights", strLightsId))
+	if (!argumentMap.GetArgument("Lights", lightsIdList))
 	{
 		std::cerr << "EnvironmentLoader :: Missing Lights within Scene block!" << std::endl;
 		return false;
 	}
 	else
 	{
+		pLight = NULL;
+		std::vector<std::string>::iterator lightIterator;
+
+		for (lightIterator = lightsIdList.begin(); lightIterator != lightsIdList.end(); ++lightIterator)
+		{
+			pLight = m_pEngineKernel->GetLightManager()->RequestInstance(*lightIterator);
+			pScene->LightList.PushBack(pLight);
+		}
 	}
 
+	//----------------------------------------------------------------------------------------------
+	// Parse Space node
+	std::vector<ParseNode*> spaceNode;
+	if (!sceneNode[0]->FindByName("Space", spaceNode))
+	{
+		std::cerr << "EnvironmentLoader :: Missing Scene block within Environment block!" << std::endl;
+		return false;
+	}
+
+	// Read argument map from space node
+	spaceNode[0]->GetArgumentMap(argumentMap);
+
+	//
+	// --> Continue here
+	//
+	pSpace = m_pEngineKernel->GetSpaceManager()->CreateInstance();
+	m_pEnvironment->SetSpace(pSpace);
+
+	// Now we parse the space block
+	std::cout << "Parsing Primitives..." << std::endl;
+
+	std::vector<ParseNode*> primitives;
+	std::vector<ParseNode*> primitiveNodes;
+	std::vector<ParseNode*>::iterator primitiveNodesIterator;
+
+	sceneNode[0]->FindByName("Primitives", primitives);
+	primitives[0]->FindByName("Primitive", primitiveNodes);
+		
+	for (primitiveNodesIterator = primitiveNodes.begin();
+			primitiveNodesIterator != primitiveNodes.end();
+			++primitiveNodesIterator)
+	{
+		ParseNode *primitiveNode = *primitiveNodesIterator;
+		primitiveNode->GetArgumentMap(argumentMap);
+
+		// If argument map does not specify geometry type or name/id, ignore entry
+		if (!(argumentMap.ContainsArgument("Id") && argumentMap.ContainsArgument("Type")))
+		{
+			std::cout << "[Primitive] Warning :: Ignoring entry because it does not specify Id or Type..." << std::endl;
+			continue;
+		}
+
+		// Get factory and create instance
+		argumentMap.GetArgument("Id", strId);
+		argumentMap.GetArgument("Type", strType);
+
+		if (strType == "Emissive")
+		{
+			argumentMap.GetArgument("Material", strMaterialId);
+			pMaterial = m_pEngineKernel->GetMaterialManager()->RequestInstance(strMaterialId);
+
+			argumentMap.GetArgument("Geometry", strGeometryId);
+			pGeometry = m_pEngineKernel->GetShapeManager()->RequestInstance(strGeometryId);
+
+			argumentMap.GetArgument("Light", strLightId);
+			pLight = m_pEngineKernel->GetLightManager()->RequestInstance(strLightId);
+
+			EmissivePrimitive *pEmissive = new EmissivePrimitive();
+			pEmissive->SetMaterial(pMaterial);
+			pEmissive->SetShape(pGeometry);
+			pEmissive->SetLight((IAreaLight*)pLight);
+				
+			pSpace->PrimitiveList.PushBack(pEmissive);
+		}
+		else if (strType == "Geometry")
+		{
+			argumentMap.GetArgument("Material", strMaterialId);
+			pMaterial = m_pEngineKernel->GetMaterialManager()->RequestInstance(strMaterialId);
+
+			argumentMap.GetArgument("Geometry", strGeometryId);
+			pGeometry = m_pEngineKernel->GetShapeManager()->RequestInstance(strGeometryId);
+
+			GeometricPrimitive *pGeometric = new GeometricPrimitive();
+			pGeometric->SetMaterial(pMaterial);
+			pGeometric->SetShape(pGeometry);
+
+			pSpace->PrimitiveList.PushBack(pGeometric);
+		}
+	}
+
+	std::cout << "Building Space..." << std::endl;
+	pSpace->Build();
 
 	return true;
 }
