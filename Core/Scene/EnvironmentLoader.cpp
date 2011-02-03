@@ -877,21 +877,27 @@ bool EnvironmentLoader::ParseEnvironment(void)
 	// Read argument map from space node
 	spaceNode[0]->GetArgumentMap(argumentMap);
 
-	//
-	// --> Continue here
-	//
-	pSpace = m_pEngineKernel->GetSpaceManager()->CreateInstance();
+	if (!argumentMap.GetArgument("Id", strSpaceId))
+		return false;
+
+	if (!argumentMap.GetArgument("Type", strType))
+		return false;
+
+	pSpace = m_pEngineKernel->GetSpaceManager()->CreateInstance(strType, strSpaceId, argumentMap);
 	m_pEnvironment->SetSpace(pSpace);
 
 	// Now we parse the space block
-	std::cout << "Parsing Primitives..." << std::endl;
+	//std::cout << "Parsing Primitives..." << std::endl;
 
 	std::vector<ParseNode*> primitives;
 	std::vector<ParseNode*> primitiveNodes;
 	std::vector<ParseNode*>::iterator primitiveNodesIterator;
 
-	sceneNode[0]->FindByName("Primitives", primitives);
-	primitives[0]->FindByName("Primitive", primitiveNodes);
+	if (!spaceNode[0]->FindByName("Primitives", primitives))
+		return false;
+
+	if (!primitives[0]->FindByName("Primitive", primitiveNodes))
+		return false;
 		
 	for (primitiveNodesIterator = primitiveNodes.begin();
 			primitiveNodesIterator != primitiveNodes.end();
@@ -916,7 +922,7 @@ bool EnvironmentLoader::ParseEnvironment(void)
 			argumentMap.GetArgument("Material", strMaterialId);
 			pMaterial = m_pEngineKernel->GetMaterialManager()->RequestInstance(strMaterialId);
 
-			argumentMap.GetArgument("Geometry", strGeometryId);
+			argumentMap.GetArgument("Shape", strGeometryId);
 			pGeometry = m_pEngineKernel->GetShapeManager()->RequestInstance(strGeometryId);
 
 			argumentMap.GetArgument("Light", strLightId);
@@ -934,7 +940,7 @@ bool EnvironmentLoader::ParseEnvironment(void)
 			argumentMap.GetArgument("Material", strMaterialId);
 			pMaterial = m_pEngineKernel->GetMaterialManager()->RequestInstance(strMaterialId);
 
-			argumentMap.GetArgument("Geometry", strGeometryId);
+			argumentMap.GetArgument("Shape", strGeometryId);
 			pGeometry = m_pEngineKernel->GetShapeManager()->RequestInstance(strGeometryId);
 
 			GeometricPrimitive *pGeometric = new GeometricPrimitive();
@@ -945,7 +951,7 @@ bool EnvironmentLoader::ParseEnvironment(void)
 		}
 	}
 
-	std::cout << "Building Space..." << std::endl;
+	//std::cout << "Building Space..." << std::endl;
 	pSpace->Build();
 
 	return true;
