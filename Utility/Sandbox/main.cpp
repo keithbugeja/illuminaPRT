@@ -203,6 +203,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	Environment environment(&engineKernel);
 	environment.Load("D:\\Development\\IlluminaPRT\\Resource\\Scene\\default.ilm");
 
+	/*
 	char c;
 	cin.get(c);
 	exit(0);
@@ -484,11 +485,6 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 
 	//char cKey; std::cin >> cKey;
 
-	boost::timer renderTimer;
-
-	double alpha = Maths::Pi,
-		totalFPS = 0.0f;
-
 	// Sibenik
 	//Vector3 lookFrom(20, 30, -20);
 	//Vector3 lookFrom(10, 10, 0);
@@ -517,34 +513,45 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 
 	camera.SetFieldOfView(60, 1.0f);
 	//alpha = Maths::PiHalf;
+	*/
+
+	boost::timer renderTimer;
+
+	double alpha = Maths::PiHalf,
+		totalFPS = 0.0f;
+
+	ICamera *pCamera = environment.GetCamera();
+	ISpace *pSpace = enviornment.GetSpace();
+	IIntegrator *pIntegrator
+	IRenderer *pRenderer = environment.GetRenderer();
 
 	for (int iteration = 0; iteration < 2 /*4e+10*/; iteration++)
 	{
 		renderTimer.restart();
 		//alpha += 0.05f;
-	 
-		camera.MoveTo(lookFrom);
-		camera.MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
-		camera.LookAt(lookAt);
+		
+		//pCamera->MoveTo(lookFrom);
+		//pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
+		//pCamera->LookAt(lookAt);
 	 
 		// Here we rebuild the AS
-		basicSpace.Update();
+		pSpace->Update();
 	 
 		// Render
-		renderer.Render();
+		pRenderer->Render();
 	 
 		totalFPS += (float)(1.0 / renderTimer.elapsed());
 		
 		if (p_bVerbose)
 		{
-			std::cout << shape_mesh1->ToString() << std::endl;
+			//std::cout << shape_mesh1->ToString() << std::endl;
 			std::cout << "Total Render Time : " << renderTimer.elapsed() << " seconds" << std::endl;
 			std::cout << "FPS: [" << totalFPS / iteration <<" / " << iteration << "]" << std::endl;
 		}
 	}
 
-	renderer.Shutdown();
-	integrator.Shutdown();
+	pRenderer->Shutdown();
+	pIntegrator->Shutdown();
 }
 
 int main()
