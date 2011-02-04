@@ -521,8 +521,8 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 		totalFPS = 0.0f;
 
 	ICamera *pCamera = environment.GetCamera();
-	ISpace *pSpace = enviornment.GetSpace();
-	IIntegrator *pIntegrator
+	ISpace *pSpace = environment.GetSpace();
+	IIntegrator *pIntegrator = environment.GetIntegrator();
 	IRenderer *pRenderer = environment.GetRenderer();
 
 	for (int iteration = 0; iteration < 2 /*4e+10*/; iteration++)

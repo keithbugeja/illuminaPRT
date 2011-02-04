@@ -932,6 +932,8 @@ bool EnvironmentLoader::ParseEnvironment(void)
 			pEmissive->SetMaterial(pMaterial);
 			pEmissive->SetShape(pGeometry);
 			pEmissive->SetLight((IAreaLight*)pLight);
+
+			((IAreaLight*)pLight)->SetShape(pGeometry);
 				
 			pSpace->PrimitiveList.PushBack(pEmissive);
 		}
