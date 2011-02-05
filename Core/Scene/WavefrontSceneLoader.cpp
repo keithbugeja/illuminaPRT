@@ -182,7 +182,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 		}
 		else if (tokenList[0] == "illum") // Illumination model
 		{
-			if (tokenList.size() != 4)
+			if (tokenList.size() != 2)
 				continue;
 
 			switch (boost::lexical_cast<int>(tokenList[1]))
@@ -297,7 +297,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 		argumentStream << "Id=" << material.Name << ";"
 			<< "Reflectivity={" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "}, "
 			<< "{" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "};"
-			<< "Shininess=" << material.Shininess << ";Absorption=" << 1.0f << ";EtaI=" << 1.0f << ";EtaT=" << material.RefractiveIndex << ";";
+			<< "Shininess=" << material.Shininess << ";Absorption=" << 1.0f << ";Eta={" << 1.0f << "," << material.RefractiveIndex << "};";
 
 		if (!material.DiffuseMap.empty())
 		{
@@ -335,6 +335,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 
 			case WavefrontMaterial::Glass:
 			{
+				std::cout << "Creating glass material..." << std::endl;
 				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Glass", material.Name, argumentStream.str());
 				((GlassMaterial*)pMaterial)->SetTexture(pTexture);
 				break;
