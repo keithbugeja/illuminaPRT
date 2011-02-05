@@ -30,14 +30,18 @@ bool BasicSpace::Update(void) {
 //----------------------------------------------------------------------------------------------
 bool BasicSpace::Intersects(const Ray &p_ray, float p_fTime, Intersection &p_intersection) const
 {
+	Intersection intersection;
 	Ray ray(p_ray);
+
 	bool bHit = false;
 
 	for (int primitiveIdx = 0, count = (int)PrimitiveList.Size(); primitiveIdx < count; primitiveIdx++)
 	{
-		if (PrimitiveList[primitiveIdx]->Intersect(ray, p_fTime, p_intersection))
+		if (PrimitiveList[primitiveIdx]->Intersect(ray, p_fTime, intersection) && 
+			ray.Max > intersection.Surface.Distance)
 		{
-			ray.Max = Maths::Min(ray.Max, p_intersection.Surface.Distance);
+			ray.Max = intersection.Surface.Distance;
+			p_intersection = intersection;
 			bHit = true;
 		}
 	}
@@ -47,18 +51,20 @@ bool BasicSpace::Intersects(const Ray &p_ray, float p_fTime, Intersection &p_int
 //----------------------------------------------------------------------------------------------
 bool BasicSpace::Intersects(const Ray &p_ray, float p_fTime, Intersection &p_intersection, IPrimitive *p_pExclude) const
 {
+	Intersection intersection;
 	Ray ray(p_ray);
+
 	bool bHit = false;
 
 	for (int primitiveIdx = 0, count = (int)PrimitiveList.Size(); primitiveIdx < count; primitiveIdx++)
 	{
-		if (PrimitiveList[primitiveIdx] != p_pExclude)
+		if (PrimitiveList[primitiveIdx] != p_pExclude &&
+			PrimitiveList[primitiveIdx]->Intersect(ray, p_fTime, p_intersection) && 
+			ray.Max > intersection.Surface.Distance)
 		{
-			if (PrimitiveList[primitiveIdx]->Intersect(ray, p_fTime, p_intersection))
-			{
-				ray.Max = Maths::Min(ray.Max, p_intersection.Surface.Distance);
-				bHit = true;
-			}
+			ray.Max = intersection.Surface.Distance;
+			p_intersection = intersection;
+			bHit = true;
 		}
 	}
 
@@ -80,11 +86,9 @@ bool BasicSpace::Intersects(const Ray &p_ray, float p_fTime, IPrimitive *p_pExcl
 {
 	for (int primitiveIdx = 0, count = (int)PrimitiveList.Size(); primitiveIdx < count; primitiveIdx++)
 	{
-		if (PrimitiveList[primitiveIdx] != p_pExclude)
-		{
-			if (PrimitiveList[primitiveIdx]->Intersect(p_ray, p_fTime))
-				return true;
-		}
+		if (PrimitiveList[primitiveIdx] != p_pExclude && 
+			PrimitiveList[primitiveIdx]->Intersect(p_ray, p_fTime))
+			return true;
 	}
 
 	return false;

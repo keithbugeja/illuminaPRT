@@ -13,6 +13,7 @@
 #include "Material/Material.h"
 #include "Spectrum/Spectrum.h"
 #include "Scene/Visibility.h"
+#include "Scene/Primitive.h"
 #include "Scene/Scene.h"
 
 using namespace Illumina::Core;

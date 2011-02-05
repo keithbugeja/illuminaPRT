@@ -71,8 +71,6 @@ bool Sphere::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_
 		p_surface.Distance = t;
 		p_surface.Point = p_ray.PointAlongRay(t);
 
-		//Vector3::Subtract(p_surface.Point, Centre, p_surface.GeometryNormal);
-		//p_surface.GeometryNormal.Normalize();
 		p_surface.GeometryNormal = Vector3::Normalize(p_surface.Point - Centre);
 		p_surface.ShadingNormal = p_surface.GeometryNormal;
 
