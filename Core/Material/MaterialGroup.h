@@ -43,7 +43,6 @@ namespace Illumina
 					: NULL; 
 			}
 			
-#pragma message("Refactor method : GetByName is ambiguous -> it should really be GetById or GetByIdString")
 			IMaterial* GetByName(const std::string &p_strName)
 			{ 
 				return (m_materialNameMap.find(p_strName) != m_materialNameMap.end()) 
