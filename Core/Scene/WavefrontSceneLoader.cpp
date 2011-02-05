@@ -14,6 +14,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 #include "Scene/Environment.h"
 #include "Scene/WavefrontSceneLoader.h"
@@ -167,6 +168,8 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 		if (Tokenise(currentLine, " ", tokenList) == 0)
 			continue;
 
+		boost::trim(tokenList[0]);
+
 		if (tokenList[0] == "newmtl") // New material
 		{
 			if (tokenList.size() != 2)
@@ -176,8 +179,6 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 			material.Type = WavefrontMaterial::Matte;
 
 			p_context.MaterialList.push_back(material);
-
-			std::cout << "New material : [" << material.Name << "]" << std::endl;
 		}
 		else if (tokenList[0] == "illum") // Illumination model
 		{
@@ -219,7 +220,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 
 			p_context.MaterialList.back().SpecularMap = tokenList[1];
 		}
-		else if (tokenList[0] == "ka") // Ambient values
+		else if (tokenList[0] == "Ka") // Ambient values
 		{
 			if (tokenList.size() != 4)
 				continue;
@@ -229,7 +230,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 				boost::lexical_cast<float>(tokenList[2]),
 				boost::lexical_cast<float>(tokenList[3]));
 		}
-		else if (tokenList[0] == "kd") // Diffuse values
+		else if (tokenList[0] == "Kd") // Diffuse values
 		{
 			if (tokenList.size() != 4)
 				continue;
@@ -239,7 +240,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 				boost::lexical_cast<float>(tokenList[2]),
 				boost::lexical_cast<float>(tokenList[3]));
 		}
-		else if (tokenList[0] == "ks") // Specular values
+		else if (tokenList[0] == "Ks") // Specular values
 		{
 			if (tokenList.size() != 4)
 				continue;
@@ -249,7 +250,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 				boost::lexical_cast<float>(tokenList[2]),
 				boost::lexical_cast<float>(tokenList[3]));
 		}
-		else if (tokenList[0] == "ke") // Emissive values
+		else if (tokenList[0] == "Ke") // Emissive values
 		{
 			if (tokenList.size() != 4)
 				continue;
@@ -379,6 +380,8 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 		if (Tokenise(currentLine, " ", tokenList) == 0)
 			continue;
 
+		boost::trim(tokenList[0]);
+
 		if (tokenList[0] == "o") // Object - set geometry to friendly object name
 		{
 			if (tokenList.size() != 2)
@@ -468,8 +471,6 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 		}
 		else if (tokenList[0] == "mtllib")
 		{
-			//std::cout << "Load material library [" << tokenList[1] << "]" << std::endl;
-
 			if (tokenList.size() != 2)
 				continue;
 
@@ -479,8 +480,6 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 		}
 		else if (tokenList[0] == "usemtl")
 		{
-			//std::cout << "Use material [" << tokenList[1] << "]" << std::endl;
-
 			if (tokenList.size() != 2)
 				continue;
 

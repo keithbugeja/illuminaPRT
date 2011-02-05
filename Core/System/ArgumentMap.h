@@ -94,6 +94,24 @@ namespace Illumina
 				return false;
 			}
 
+			bool GetArgument(const std::string &p_strArgumentName, std::vector<std::string> &p_argumentValue)
+			{
+				if (ContainsArgument(p_strArgumentName))
+				{
+					std::string strArgumentList = m_argumentMap[p_strArgumentName];
+
+					boost::char_separator<char> separator("{,}");
+					boost::tokenizer<boost::char_separator<char> > tokens(strArgumentList, separator);
+
+					for (boost::tokenizer<boost::char_separator<char> >::iterator iterator = tokens.begin(); iterator != tokens.end(); ++iterator)
+					{
+						p_argumentValue.push_back(*iterator);
+					}
+				}
+
+				return true;
+			}
+
 			bool GetArgument(const std::string &p_strArgumentName, Vector2 &p_argumentValue)
 			{
 				if (ContainsArgument(p_strArgumentName))
@@ -111,24 +129,6 @@ namespace Illumina
 				}
 
 				return false;
-			}
-
-			bool GetArgument(const std::string &p_strArgumentName, std::vector<std::string> &p_argumentValue)
-			{
-				if (ContainsArgument(p_strArgumentName))
-				{
-					std::string strArgumentList = m_argumentMap[p_strArgumentName];
-
-					boost::char_separator<char> separator("{,}");
-					boost::tokenizer<boost::char_separator<char> > tokens(strArgumentList, separator);
-
-					for (boost::tokenizer<boost::char_separator<char> >::iterator iterator = tokens.begin(); iterator != tokens.end(); ++iterator)
-					{
-						p_argumentValue.push_back(*iterator);
-					}
-				}
-
-				return true;
 			}
 
 			bool GetArgument(const std::string &p_strArgumentName, Vector3 &p_argumentValue)
@@ -159,10 +159,11 @@ namespace Illumina
 					
 					std::stringstream argumentValue(m_argumentMap[p_strArgumentName]);
 					// argument type : {{0.0f, 0.0f, 0.0f}, ... , {0.0f, 0.0f, 0.0f}}
+
+					argumentValue>>separator; // {
+
 					do 
 					{
-						argumentValue>>separator; // {
-
 						// argument type : {0.0f, 0.0f, 0.0f}
 						argumentValue>>separator>>value[0]>>separator>>value[1]>>separator>>value[2]>>separator;
 						p_argumentValue.push_back(Vector3(value[0], value[1], value[2]));
@@ -222,10 +223,9 @@ namespace Illumina
 					
 					std::stringstream argumentValue(m_argumentMap[p_strArgumentName]);
 					// argument type : {{0.0f, 0.0f, 0.0f}, ... , {0.0f, 0.0f, 0.0f}}
+					argumentValue>>separator; // {
 					do 
 					{
-						argumentValue>>separator; // {
-
 						// argument type : {0.0f, 0.0f, 0.0f}
 						argumentValue>>separator>>value[0]>>separator>>value[1]>>separator>>value[2]>>separator;
 						p_argumentValue.push_back(Spectrum(value[0], value[1], value[2]));

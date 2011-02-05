@@ -1,92 +1,26 @@
-#include <vector>
-#include <iostream>
+//----------------------------------------------------------------------------------------------
+//	Filename:	Sandbox.cpp
+//	Author:		Keith Bugeja
+//	Date:		27/02/2010
+//----------------------------------------------------------------------------------------------
+// TODO:
+// ?? DistributedRenderer should not instantiate MPI - change it to have it passed to the object
+// ?? Scene should provide more than one kind of sampler
+// Remove old obj loader
+// Refactor *Manager.h files to *Factories.h
+// Finish scene loaders
+// Polish object factories
+// Move factories to CorePlugins.dll
+//----------------------------------------------------------------------------------------------
 #include <omp.h>
 
-//#include "tbb/parallel_for.h"
-//#include "tbb/blocked_range.h"
+#include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/timer.hpp>
 
-#include "boost/timer.hpp"
-
-#include "System/Platform.h"
+// Illumina Environment
 #include "System/EngineKernel.h"
-#include "System/Dummy.h"
-
-#include "Geometry/Vector2.h"
-#include "Geometry/Vector3.h"
-#include "Geometry/Matrix3x3.h"
-#include "Geometry/Matrix4x4.h"
-#include "Geometry/Transform.h"
-#include "Geometry/Ray.h"
-
-#include "Sampler/Sampler.h"
-#include "Sampler/RandomSampler.h"
-#include "Sampler/JitterSampler.h"
-
-#include "Image/ImagePPM.h"
-#include "Image/Image.h"
-#include "Image/RGBPixel.h"
-
-#include "Texture/Texture.h"
-#include "Texture/MarbleTexture.h"
-#include "Texture/ImageTexture.h"
-#include "Texture/NoiseTexture.h"
-
-#include "Camera/Camera.h"
-#include "Camera/PerspectiveCamera.h"
-#include "Camera/ThinLensCamera.h"
-
-#include "Shape/ShapeForge.h"
-#include "Shape/TriangleMesh.h"
-#include "Shape/BasicMesh.h"
-#include "Shape/VertexFormats.h"
-#include "Shape/IndexedTriangle.h"
-#include "Shape/Triangle.h"
-#include "Shape/Sphere.h"
-#include "Shape/BVHMesh.h"
-#include "Shape/KDTreeMesh.h"
-#include "Shape/BIHMesh.h"
-#include "Shape/HybridMesh.h"
-
-#include "Space/BasicSpace.h"
-#include "Space/BVHSpace.h"
-
-#include "Material/Material.h"
-#include "Material/Matte.h"
-#include "Material/Mirror.h"
-#include "Material/Glass.h"
-#include "Material/MaterialGroup.h"
-
-#include "Scene/Scene.h"
-#include "Scene/GeometricPrimitive.h"
-#include "Scene/EmissivePrimitive.h"
-
-#include "Threading/Atomic.h"
-#include "Threading/AtomicReference.h"
-#include "Threading/LinkedList.h"
-#include "Threading/Spinlock.h"
-#include "Threading/Monitor.h"
-#include "Threading/List.h"
-#include "Threading/Queue.h"
-
-#include "Light/PointLight.h"
-#include "Light/DiffuseAreaLight.h"
-
-#include "Integrator/PathIntegrator.h"
-#include "Integrator/WhittedIntegrator.h"
-
-#include "Renderer/BasicRenderer.h"
-#include "Renderer/DistributedRenderer.h"
-
-#include "Device/ImageDevice.h"
-
-#include "Filter/Filter.h"
-#include "Filter/BoxFilter.h"
-#include "Filter/TentFilter.h"
-
-#include "Object/Object.h"
-
 #include "Scene/Environment.h"
-#include "Scene/WavefrontSceneLoader.h"
 
 // Factories
 #include "Camera/CameraFactories.h"
@@ -101,19 +35,15 @@
 #include "Renderer/RendererFactories.h"
 #include "Integrator/IntegratorFactories.h"
 
-using namespace std;
 using namespace Illumina::Core;
 
-// TODO:
-// ?? DistributedRenderer should not instantiate MPI - change it to have it passed to the object
-// ?? Scene should provide more than one kind of sampler
-// Remove old obj loader
-// Refactor *Manager.h files to *Factories.h
-// Finish scene loaders
-// Polish object factories
-// Move factories to CorePlugins.dll
+void Message(const std::string& p_strMessage, bool p_bVerbose)
+{
+	if (p_bVerbose) std::cout << p_strMessage << std::endl;
+}
 
-void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
+//----------------------------------------------------------------------------------------------
+void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 {
 	//----------------------------------------------------------------------------------------------
 	// Set number of OMP Threads
@@ -124,11 +54,14 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	// Engine Kernel
 	//----------------------------------------------------------------------------------------------
+	Message("\nInitialising EngineKernel...", p_bVerbose);
 	EngineKernel engineKernel;
+	// Initialise factories -- note, factories should be moved to plug-ins a dynamically loaded
 
 	//----------------------------------------------------------------------------------------------
 	// Sampler
 	//----------------------------------------------------------------------------------------------
+	Message("Registering Samplers...", p_bVerbose);
 	engineKernel.GetSamplerManager()->RegisterFactory("Random", new RandomSamplerFactory());
 	engineKernel.GetSamplerManager()->RegisterFactory("Jitter", new JitterSamplerFactory());
 	engineKernel.GetSamplerManager()->RegisterFactory("Multijitter", new MultijitterSamplerFactory());
@@ -136,23 +69,27 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	// Filter
 	//----------------------------------------------------------------------------------------------
+	Message("Registering Filters...", p_bVerbose);
 	engineKernel.GetFilterManager()->RegisterFactory("Box", new BoxFilterFactory());
 	engineKernel.GetFilterManager()->RegisterFactory("Tent", new TentFilterFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Space
 	//----------------------------------------------------------------------------------------------
+	Message("Registering Spaces...", p_bVerbose);
 	engineKernel.GetSpaceManager()->RegisterFactory("Basic", new BasicSpaceFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Integrator
 	//----------------------------------------------------------------------------------------------
+	Message("Registering Integrators...", p_bVerbose);
 	engineKernel.GetIntegratorManager()->RegisterFactory("PathTracing", new PathIntegratorFactory());
 	engineKernel.GetIntegratorManager()->RegisterFactory("Whitted", new PathIntegratorFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Renderer
 	//----------------------------------------------------------------------------------------------
+	Message("Registering Renderers...", p_bVerbose);
 	engineKernel.GetRendererManager()->RegisterFactory("Basic", new BasicRendererFactory());
 	engineKernel.GetRendererManager()->RegisterFactory("Multithreaded", new MultithreadedRendererFactory());
 	engineKernel.GetRendererManager()->RegisterFactory("Distributed", new DistributedRendererFactory());
@@ -160,23 +97,27 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	// Device
 	//----------------------------------------------------------------------------------------------
+	Message("Registering Devices...", p_bVerbose);
 	engineKernel.GetDeviceManager()->RegisterFactory("Image", new ImageDeviceFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Cameras
 	//----------------------------------------------------------------------------------------------
+	Message("Registering Cameras...", p_bVerbose);
 	engineKernel.GetCameraManager()->RegisterFactory("Perspective", new PerspectiveCameraFactory());
 	engineKernel.GetCameraManager()->RegisterFactory("ThinLens", new ThinLensCameraFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Lights
 	//----------------------------------------------------------------------------------------------
+	Message("Registering Lights...", p_bVerbose);
 	engineKernel.GetLightManager()->RegisterFactory("Point", new PointLightFactory());
 	engineKernel.GetLightManager()->RegisterFactory("DiffuseArea", new DiffuseAreaLightFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Shapes
 	//----------------------------------------------------------------------------------------------
+	Message("Registering Shapes...", p_bVerbose);
 	engineKernel.GetShapeManager()->RegisterFactory("KDTreeMesh", new KDTreeMeshShapeFactory());
 	engineKernel.GetShapeManager()->RegisterFactory("Quad", new QuadMeshShapeFactory());
 	engineKernel.GetShapeManager()->RegisterFactory("Triangle", new TriangleShapeFactory());
@@ -185,6 +126,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	// Textures
 	//----------------------------------------------------------------------------------------------
+	Message("Registering Textures...", p_bVerbose);
 	engineKernel.GetTextureManager()->RegisterFactory("Image", new ImageTextureFactory());
 	engineKernel.GetTextureManager()->RegisterFactory("Noise", new NoiseTextureFactory());
 	engineKernel.GetTextureManager()->RegisterFactory("Marble", new MarbleTextureFactory());
@@ -192,6 +134,7 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	// Materials
 	//----------------------------------------------------------------------------------------------
+	Message("Registering Materials...", p_bVerbose);
 	engineKernel.GetMaterialManager()->RegisterFactory("Matte", new MatteMaterialFactory());
 	engineKernel.GetMaterialManager()->RegisterFactory("Mirror", new MirrorMaterialFactory());
 	engineKernel.GetMaterialManager()->RegisterFactory("Glass", new GlassMaterialFactory());
@@ -200,353 +143,51 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	//----------------------------------------------------------------------------------------------
 	// Environment
 	//----------------------------------------------------------------------------------------------
+	Message("Initialising Environment...", p_bVerbose);
 	Environment environment(&engineKernel);
-	environment.Load("D:\\Development\\IlluminaPRT\\Resource\\Scene\\default.ilm");
 
-	/*
-	char c;
-	cin.get(c);
-	exit(0);
-	//Environment environment(&engineKernel);
+	// Load environment script
+	Message("Loading Environment script...", p_bVerbose);
+	environment.Load(p_strScript);
 
-	//----------------------------------------------------------------------------------------------
-	// Setup camera
-	//----------------------------------------------------------------------------------------------
-	//PerspectiveCamera camera(
-		ThinLensCamera camera(
-		Vector3(-20.0, 10.0, -20.0), Vector3(1.0f, -0.5f, 1.0f), Vector3::UnitYPos, 
-		0.4f, -1.3f, 1.3f, -1.f, 1.f, 1.0f);
-
-	if (p_bVerbose)
-		std::cout << "Setting up camera : [" << camera.ToString() << "]" << std::endl;
-
-	//----------------------------------------------------------------------------------------------
-	// Setup scene objects
-	//----------------------------------------------------------------------------------------------
-	// Initialising scene objects
-	if (p_bVerbose)
-		std::cout << "Initialising scene objects..." << std::endl;
-
-	// Load Model
-	#if defined(__PLATFORM_WINDOWS__)
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\tests\\test_axes.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sibenik\\sibenik.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\original\\sponza.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\clean\\sponza_clean.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\kiti\\kitiExt\\kiti_87_o.obj");
-		std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\sponza\\crytek\\sponza.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\kalabsha\\kalabsha12.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellbox.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_empty.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornell_glass.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\cornell\\cornellsymmetric.obj");
-		//std::string fname_model01("D:\\Development\\IlluminaPRT\\Resource\\Model\\bunny\\bunny.obj");
-	#elif defined(__PLATFORM_LINUX__)
-		//std::string fname_model01("../../../Resource/Model/tests/testAxes.obj");
-		//std::string fname_model01("../../../Resource/Model/sibenik/sibenik.obj");
-		//std::string fname_model01("../../../Resource/Model/sponza/original/sponza.obj");
-		//std::string fname_model01("../../../Resource/Model/sponza/clean/sponza_clean.obj");
-		std::string fname_model01("../../../Resource/Model/sponza/crytek/sponza.obj");
-		//std::string fname_model01("../../../Resource/Model/kalabsha/kalabsha12.obj");
-		//std::string fname_model01("../../../Resource/Model/cornell/cornellbox.obj");
-		//std::string fname_model01("../../../Resource/Model/cornell/cornell.obj");
-		//std::string fname_model01("../../../Resource/Model/cornell/cornell_empty.obj");
-		//std::string fname_model01("../../../Resource/Model/cornell/cornell_glass.obj");
-		//std::string fname_model01("../../../Resource/Model/cornell/cornellsymmetric.obj");
-		//std::string fname_model01("../../../Resource/Model/bunny/bunny.obj");
-	#endif
-
-	if (p_bVerbose)
-		std::cout << "-- Load object : [" << fname_model01 << "]" << std::endl;
-
-	MaterialGroup *pMeshMaterialGroup = NULL, 
-		*pMeshMaterialGroup2 = NULL;
-
-	//boost::shared_ptr<BasicMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-	//	ShapeFactory::LoadMesh<BasicMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
-	//	fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
-	boost::shared_ptr<KDTreeMesh> shape_mesh1 =
-		ShapeForge::LoadMesh<KDTreeMesh>(
-		fname_model01, &engineKernel, &pMeshMaterialGroup );
-	//boost::shared_ptr<BVHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-	//	ShapeFactory::LoadMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
-	//	fname_model01, &engineKernel, &pMeshMaterialGroup );
-	//boost::shared_ptr<BIHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-	//	ShapeFactory::LoadMesh<BIHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
-	//	fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
-	//boost::shared_ptr<PBIHMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-	//	ShapeFactory::LoadMesh<PBIHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
-	//	fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
-	//boost::shared_ptr<GridMesh<IndexedTriangle<Vertex>, Vertex>> shape_mesh1 =
-	//	ShapeFactory::LoadMesh<GridMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(
-	//  fname_model01, engineKernel.GetMaterialManager(), &pMeshMaterialGroup );
-
-	//std::cout << "Save object : [sibenik.obj]" << std::endl;
-	//ShapeFactory::SaveMesh<BVHMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>("D:\\Assets\\object_out.obj", shape_mesh1);
-
-	// sphere arealight
-	// Sponza, et al.
-	//Sphere shape_mesh2(Vector3(0, 7.0f, 0), 2.0f);
-	//Sphere shape_mesh2(Vector3(0.0, 15.0f, 0.0), 0.5f);
-	//Sphere shape_mesh2(Vector3(0.0, 16.5f, 0.0), 0.5f);
-	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+2, 1e+2, 1e+2));
-	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
-	
-	// crytek sponza
-	// -- > Last used
-	boost::shared_ptr<KDTreeMesh> shape_boxLight =
-		ShapeForge::CreateQuad<KDTreeMesh>(Vector3(-100, 1700, -100), Vector3(100, 1700, -100), Vector3(-100, 1700, 100), Vector3(100, 1700, 100));
-	DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(4.5e+3, 4.5e+3, 4.5e+3));
-	// -- > Last used
-
-	// Cornell Box
-	//Sphere shape_mesh2(Vector3(0, 30.0f, 0), 2.0f);
-	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+4, 1e+4, 1e+4));
-	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1000, 1000, 1000));
-	//Sphere shape_mesh2(Vector3(0.0, 30.0f, 0.0), 5.0f);
-	//DiffuseAreaLight diffuseLight2(NULL, &shape_mesh2, Spectrum(1e+3, 1e+3, 1e+3));
-
-	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
-	//	ShapeFactory::CreateBox<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>(Vector3(-4, 40 - 1E-2, -4), Vector3(4, 40, 4));
-	//DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(1e+3, 1e+3, 1e+3));
-
-	//boost::shared_ptr<KDTreeMesh> shape_boxLight =
-	//	ShapeFactory::CreateQuad<KDTreeMesh>
-	//	(Vector3(-6, 40 - 1E-4, -6), Vector3(6, 40 - 1E-4, -6), Vector3(-6, 40 - 1E-4, 6), Vector3(6, 40 - 1E-4, 6));
-	//DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(4.5e+4, 4.5e+4, 4.5e+4));
-
-	// box sky
-	//boost::shared_ptr<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>> shape_boxLight =
-	//	ShapeFactory::CreateQuad<KDTreeMesh<IndexedTriangle<Vertex>, Vertex>, Vertex>
-	//	(Vector3(-6, 15 - 1E-4, -6), Vector3(6, 15 - 1E-4, -6), Vector3(-6, 15 - 1E-4, 6), Vector3(6, 15 - 1E-4, 6));
-	//DiffuseAreaLight diffuseBoxLight(NULL, (IShape*)shape_boxLight.get(), Spectrum(1.5e+3, 1.5e+3, 1.5e+3));
-	//boost::shared_ptr<KDTreeMesh> shape_mesh3 =
-	//	ShapeFactory::CreateBox<KDTreeMesh>(Vector3(-5, 14.5, -5), Vector3(5, 15, 5));
-	//DiffuseAreaLight diffuseLight1(NULL, (IShape*)shape_mesh3.get(), Spectrum(40000, 40000, 40000));
-
-	//----------------------------------------------------------------------------------------------
-	// Compute bounding volumes
-	//----------------------------------------------------------------------------------------------
-	if (p_bVerbose)
-		std::cout << "Computing bounding volumes..." << std::endl;
-	
-	shape_mesh1->ComputeBoundingVolume();
-	//shape_mesh2.ComputeBoundingVolume();
-	//shape_mesh3->ComputeBoundingVolume();
-	shape_boxLight->ComputeBoundingVolume();
-	//std::cout << std::endl;
-
-	//----------------------------------------------------------------------------------------------
-	// Compute normals
-	//----------------------------------------------------------------------------------------------
-	if (p_bVerbose)
-		std::cout << "Computing mesh normals..." << std::endl;
-	
-	//shape_mesh1->UpdateNormals();
-	//shape_mesh3->UpdateNormals();
-	//std::cout << std::endl;
-
-	//----------------------------------------------------------------------------------------------
-	// Compile meshes
-	//----------------------------------------------------------------------------------------------
-	if (p_bVerbose)
-		std::cout << "Compiling acceleration structure-based meshes..." << std::endl;
-
-	boost::timer compileTimer;
-	compileTimer.restart();
-	shape_mesh1->Compile();
-	//shape_mesh3->Compile();
-	shape_boxLight->Compile();
-	
-	if (p_bVerbose)
-		std::cout << "-- Model 01 : [" << fname_model01 << "] compiled in " << compileTimer.elapsed() << " seconds." << std::endl;
-
-	//----------------------------------------------------------------------------------------------
-	// Initialise scene space
-	//----------------------------------------------------------------------------------------------
-	if (p_bVerbose)
-		std::cout << "Adding models to scene space..." << std::endl;
-
-	BasicSpace basicSpace;
-
-	GeometricPrimitive pmv_mesh1;
-	pmv_mesh1.SetShape((IShape*)shape_mesh1.get());
-	pmv_mesh1.SetMaterial(pMeshMaterialGroup);
-	//pmv_mesh1.SetMaterial((IMaterial*)&material_mesh1);
-	//pmv_mesh1.WorldTransform.SetScaling(Vector3(3.0f, 3.0f, 3.0f));
-	//pmv_mesh1.WorldTransform.SetScaling(Vector3(5.0f, 5.0f, 5.0f));
-	//pmv_mesh1.WorldTransform.SetTranslation(Vector3(0.0f, -10.0f, 0.0f));
-	basicSpace.PrimitiveList.PushBack(&pmv_mesh1);
-
-	//GeometricPrimitive pmv_mesh3;
-	//pmv_mesh3.SetShape((IShape*)shape_mesh3.get());
-	//pmv_mesh3.SetMaterial(pMaterial2);
-	////pmv_mesh1.WorldTransform.SetScaling(Vector3(3.0f, 3.0f, 3.0f));
-	////pmv_mesh1.WorldTransform.SetScaling(Vector3(5.0f, 5.0f, 5.0f));
-	////pmv_mesh1.WorldTransform.SetTranslation(Vector3(0.0f, -10.0f, 0.0f));
-	//basicSpace.PrimitiveList.PushBack(&pmv_mesh3);
-
-	//EmissivePrimitive pmv_mesh2;
-	//pmv_mesh2.SetShape(&shape_mesh2);
-	////pmv_mesh2.SetShape((IShape*)shape_mesh3.get());
-	//IMaterial *pLightMaterial = engineKernel.GetMaterialManager()->CreateInstance("Matte", "light", "Name=light;Reflectivity=0,0,0;");
-	//pmv_mesh2.SetMaterial(pLightMaterial);
-	////pmv_mesh2.SetLight(&diffuseLight1);
-	//pmv_mesh2.SetLight(&diffuseLight2);
-	////pmv_mesh2.WorldTransform.SetTranslation(Vector3(0.0f, 0.0f, 0.0f));
-	//basicSpace.PrimitiveList.PushBack(&pmv_mesh2);
-
-	//----------------------------------------------------------------------------------------------
-	// Add spheres for cornell box tests
-	//----------------------------------------------------------------------------------------------
-	Sphere shape_cornell_metal_sphere(Vector3(12.0, 7.5f, -5.0), 7.5f);
-	shape_cornell_metal_sphere.ComputeBoundingVolume();
-
-	IMaterial *pMaterial_cornell_metal_sphere = engineKernel.GetMaterialManager()->CreateInstance("Mirror", "metalsphere", "Name=metalsphere;Reflectivity=0.9,0.9,0.9;Absorption=1.0;EtaI=1.0;EtaT=1.55;");
-	GeometricPrimitive pmv_cornell_metal_sphere;
-	pmv_cornell_metal_sphere.SetShape(&shape_cornell_metal_sphere);
-	pmv_cornell_metal_sphere.SetMaterial(pMaterial_cornell_metal_sphere);
-	//basicSpace.PrimitiveList.PushBack(&pmv_cornell_metal_sphere);
-
-	Sphere shape_cornell_glass_sphere(Vector3(-15.0, 20.0f, 2.0), 7.5f);
-	//Sphere shape_cornell_glass_sphere(Vector3(10.0, 7.5f, 2.0), 7.5f);
-	shape_cornell_glass_sphere.ComputeBoundingVolume();
-
-	IMaterial *pMaterial_cornell_glass_sphere = engineKernel.GetMaterialManager()->CreateInstance("Glass", "glasssphere", "Name=glasssphere;Reflectivity=0.92,0.92,0.92;Absorption=1.0;EtaI=1.0;EtaT=1.55;");
-	GeometricPrimitive pmv_cornell_glass_sphere;
-	pmv_cornell_glass_sphere.SetShape(&shape_cornell_glass_sphere);
-	pmv_cornell_glass_sphere.SetMaterial(pMaterial_cornell_glass_sphere);
-	//basicSpace.PrimitiveList.PushBack(&pmv_cornell_glass_sphere);
-
-	EmissivePrimitive pmv_cornell_box_light;
-	pmv_cornell_box_light.SetShape((IShape*)shape_boxLight.get());
-	pmv_cornell_box_light.SetMaterial(engineKernel.GetMaterialManager()->CreateInstance("Matte", "boxlight", "Name=light;Reflectivity=0,0,0;"));
-	pmv_cornell_box_light.SetLight(&diffuseBoxLight);
-	basicSpace.PrimitiveList.PushBack(&pmv_cornell_box_light);
-
-	// Prepare space
-	basicSpace.Initialise();
-	basicSpace.Build();
-
-	//----------------------------------------------------------------------------------------------
-	// Initialise sampler and filter
-	//----------------------------------------------------------------------------------------------
-	//JitterSampler sampler;
-	RandomSampler sampler;
-	BoxFilter filter;
-
-	//----------------------------------------------------------------------------------------------
-	// Scene creation complete
-	//----------------------------------------------------------------------------------------------
-	//PointLight pointLight(Vector3(0, 5, 0), RGBSpectrum(1000,1000,1000));
-	//PointLight pointLight(Vector3(0, 7, 0), RGBSpectrum(10000,10000,10000));
-	PointLight pointLight(Vector3(0, 7.5, 0), RGBSpectrum(100,100,100));
- 
-	Scene scene(&basicSpace, &camera, &sampler);
-	//scene.LightList.PushBack(&pointLight);
-	//scene.LightList.PushBack(&diffuseLight1);
-	//scene.LightList.PushBack(&diffuseLight2);
-	scene.LightList.PushBack(&diffuseBoxLight);
- 
-	//PathIntegrator integrator(4, 16, 1, false);
-	//PathIntegrator integrator(4, 4, false);
-	PathIntegrator integrator(4, 1);
-	//WhittedIntegrator integrator(6, 1);
-	integrator.Initialise(&scene, &camera);
- 
-	ImagePPM imagePPM;
-	//int width = 64, height = 64;
-	//int width = 256, height = 256;
-	//int width = 512, height = 384;
-	int width = 512, height = 512;
-	//int width = 640, height = 480;
-	//int width = 800, height = 600;
-	//int width = 1024, height = 1024;
-	//int width = 1280, height = 1024;
-	//int width = 1920, height = 1080;
-	//int width = 1920, height = 1200;
-
-	#if defined(__PLATFORM_WINDOWS__)
-		ImageDevice device(width, height, &imagePPM, "D:\\Development\\IlluminaPRT\\Resource\\Output\\result.ppm");
-	#elif defined(__PLATFORM_LINUX__)
-		ImageDevice device(width, height, &imagePPM, "../../../Resource/Output/result.ppm");
-	#endif
-
-	BasicRenderer renderer(&scene, &integrator, &device, &filter, 16);
-	//DistributedRenderer renderer(&scene, &integrator, &device, &filter, 4, 8, 8);
-	renderer.Initialise();
-
-	//environment.SetRenderer(&renderer);
-	//environment.Initialise();
-
-	if (p_bVerbose)
-		std::cout << "Scene creation completed." << std::endl;
-
-	//char cKey; std::cin >> cKey;
-
-	// Sibenik
-	//Vector3 lookFrom(20, 30, -20);
-	//Vector3 lookFrom(10, 10, 0);
-	//Vector3 lookAt(0, 5, 0);
-
-	// Crytek sponza
-	//Vector3 lookFrom(-1000, 750, -400);
-	//Vector3 lookFrom(-900, 1600, -600);
-	//Vector3 lookFrom(-900, 1600, -600);
-	// --> Last used
-	 Vector3 lookFrom(-800, 700, -400);
-	 Vector3 lookAt(0, 400, 0);
-	// --> Last used
-		
-	// Cornell box
-	//cDistX = -30, cDistY = 30, cDistZ = -10;
-	
-	// Sponza
-	//Vector3 lookFrom(10, 7.5, 0);
-	//Vector3 lookAt(0, 0, 0);
-	//Vector3 lookAt(0, 5, 0);
-
-	// Cornell box
-	//Vector3 lookFrom(0, 20, 70);
-	//Vector3 lookAt(0, 20, 0);
-
-	camera.SetFieldOfView(60, 1.0f);
-	//alpha = Maths::PiHalf;
-	*/
-
-	boost::timer renderTimer;
-
-	double alpha = Maths::PiHalf,
-		totalFPS = 0.0f;
-
-	ICamera *pCamera = environment.GetCamera();
-	ISpace *pSpace = environment.GetSpace();
+	// Alias required components
 	IIntegrator *pIntegrator = environment.GetIntegrator();
 	IRenderer *pRenderer = environment.GetRenderer();
+	ISpace *pSpace = environment.GetSpace();
 
-	for (int iteration = 0; iteration < 2 /*4e+10*/; iteration++)
+	// Initialise integrator and renderer
+	pIntegrator->Initialise(environment.GetScene(), environment.GetCamera());
+	pRenderer->Initialise();
+
+	// Initialisation complete
+	Message("Initialisation complete. Rendering in progress...", p_bVerbose);
+
+	// Initialise timing
+	boost::timer frameTimer;
+	float fTotalFramesPerSecond = 0.f;
+
+	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
-		renderTimer.restart();
-		//alpha += 0.05f;
+		frameTimer.restart();
 		
 		//pCamera->MoveTo(lookFrom);
 		//pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
 		//pCamera->LookAt(lookAt);
 	 
-		// Here we rebuild the AS
+		// Update space
 		pSpace->Update();
 	 
-		// Render
+		// Render frame
 		pRenderer->Render();
 	 
-		totalFPS += (float)(1.0 / renderTimer.elapsed());
+		// Compute frames per second
+		fTotalFramesPerSecond += (float)(1.0f / frameTimer.elapsed());
 		
 		if (p_bVerbose)
 		{
-			//std::cout << shape_mesh1->ToString() << std::endl;
-			std::cout << "Total Render Time : " << renderTimer.elapsed() << " seconds" << std::endl;
-			std::cout << "FPS: [" << totalFPS / iteration <<" / " << iteration << "]" << std::endl;
+			std::cout << std::endl;
+			std::cout << "-- Frame Render Time : [" << frameTimer.elapsed() << "s]" << std::endl;
+			std::cout << "-- Frames per second : [" << fTotalFramesPerSecond / nFrame << "]" << std::endl;
 		}
 	}
 
@@ -554,25 +195,103 @@ void RayTracer(int p_nOMPThreads, bool p_bVerbose = true)
 	pIntegrator->Shutdown();
 }
 
-int main()
+#define Major 0
+#define Minor 5
+#define Build 0
+
+int main(int argc, char** argv)
 {
-	int nCores = Platform::GetProcessorCount();
-	//std::cout << "Hardware cores : " << nCores << std::endl;
+	std::cout << "Illumina Renderer : Version " << Major << "." << Minor << "." << Build << " http://www.illuminaprt.codeplex.com " << std::endl;
+	std::cout << "Copyright (C) 2010-2011 Keith Bugeja" << std::endl << std::endl;
 
-	//TestAtomic();
-	//TestUID();
-	//TestSpinLock();
-	//TestLists();
+	// default options
+	int nIterations = 1;
+	bool bVerbose = false;
+	std::string strScript("default.ilm");
 
-	//SimpleTracer(4);
-	//SimplePacketTracer(nCores);
-	//TileBasedTracer(nCores);
+	// Declare the supported options.
+	boost::program_options::options_description description("Allowed Settings");
 
-	RayTracer(nCores / 2, true);
+	description.add_options()
+		("help", "show this message")
+		("verbose", boost::program_options::value<bool>(), "show extended information")
+		("script", boost::program_options::value<std::string>(), "script file to render")
+		("workdir", boost::program_options::value<std::string>(), "working directory")
+		("iterations", boost::program_options::value<int>(), "interations to execute")
+		;
 
-	//std::cout << "Complete in " << Platform::GetTime() << " seconds " << std::endl;
+	// Declare variable map
+	boost::program_options::variables_map variableMap;
 
-	//char cKey;
-	//cin >> cKey;
-	return 0;
+	// Parse command line options
+	try 
+	{
+		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, description), variableMap);
+		boost::program_options::notify(variableMap);
+    } 
+	catch (boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::program_options::unknown_option> > &exception) 
+	{
+		std::cout << "Unknown option [" << exception.get_option_name() << "] : Please use --help to display help message." << std::endl;
+        return 1;
+    }
+	catch (boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::program_options::invalid_option_value> > &exception) 
+	{
+		std::cout << "Error parsing input for [" << exception.get_option_name() << "] : Invalid argument value." << std::endl;
+        return 1;
+    }
+
+	// --help
+	if (variableMap.count("help"))
+	{
+		std::cout << description << std::endl;
+		return 1;
+	}
+
+	// --verbose
+	if (variableMap.count("verbose"))
+	{
+		bVerbose = variableMap["verbose"].as<bool>();
+		std::cout << "Verbose mode [" << (bVerbose ? "ON]" : "OFF]") << std::endl;
+	}
+
+	// --iterations
+	if (variableMap.count("iterations"))
+	{
+		try {
+			nIterations = variableMap["iterations"].as<int>();
+		} catch (...) { nIterations = 1; } 
+		std::cout << "Iterations [" << nIterations << "]" << std::endl;
+	}
+
+	// --script
+	if (variableMap.count("script"))
+	{
+		strScript = variableMap["script"].as<std::string>();
+		std::cout << "Script [" << strScript << "]" << std::endl;
+	}
+
+	// --workdir
+	boost::filesystem::path cwdPath;
+
+	if (variableMap.count("workdir"))
+	{
+		cwdPath = boost::filesystem::path(variableMap["workdir"].as<std::string>());
+	}
+	else
+	{
+		// Setting working directory
+		boost::filesystem::path scriptPath(strScript);
+		cwdPath = boost::filesystem::path(scriptPath.parent_path());
+	}
+
+	try {
+		boost::filesystem::current_path(cwdPath);
+		std::cout << "Working directory [" << cwdPath.string() << "]" << std::endl;;
+	} catch (...) { std::cerr << "Error : Unable to set working directory to " << cwdPath.string() << std::endl; }
+
+	// -- start rendering
+	IlluminaPRT(bVerbose, nIterations, strScript);
+
+	// Exit
+	return 1;
 }

@@ -43,7 +43,7 @@ Spectrum DiffuseAreaLight::Power(void)
 //----------------------------------------------------------------------------------------------
 Spectrum DiffuseAreaLight::Radiance(const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wIn)
 {
-	return Vector3::Dot(p_normal, p_wIn) < 0 ? m_emit : 0.0f;
+	return m_emit; //return Vector3::Dot(p_normal, p_wIn) < 0 ? m_emit : 0.0f;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum DiffuseAreaLight::SampleRadiance(const Vector3 &p_point, Vector3 &p_wIn, VisibilityQuery &p_visibilityQuery)
