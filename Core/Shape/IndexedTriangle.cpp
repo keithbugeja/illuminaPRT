@@ -118,11 +118,13 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, float p_fTime, DifferentialSu
 	
 	p_surface.ShadingNormal.Normalize();
 
-	// Set geometry normal
-	p_surface.GeometryNormal = Vector3::Normalize(Vector3::Cross(CA, BA));
+	p_surface.GeometryNormal = p_surface.ShadingNormal;
 
-	if (p_surface.GeometryNormal.Dot(p_surface.ShadingNormal) < 0)
-		p_surface.GeometryNormal = -p_surface.GeometryNormal;
+	//// Set geometry normal
+	//p_surface.GeometryNormal = Vector3::Normalize(Vector3::Cross(CA, BA));
+
+	//if (p_surface.GeometryNormal.Dot(p_surface.ShadingNormal) < 0)
+	//	p_surface.GeometryNormal = -p_surface.GeometryNormal;
 
 	return true;
 }

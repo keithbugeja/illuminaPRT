@@ -84,7 +84,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	//----------------------------------------------------------------------------------------------
 	Message("Registering Integrators...", p_bVerbose);
 	engineKernel.GetIntegratorManager()->RegisterFactory("PathTracing", new PathIntegratorFactory());
-	engineKernel.GetIntegratorManager()->RegisterFactory("Whitted", new PathIntegratorFactory());
+	engineKernel.GetIntegratorManager()->RegisterFactory("Whitted", new WhittedIntegratorFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Renderer
@@ -228,17 +228,17 @@ int main(int argc, char** argv)
 	{
 		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, description), variableMap);
 		boost::program_options::notify(variableMap);
-    } 
+	} 
 	catch (boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::program_options::unknown_option> > &exception) 
 	{
 		std::cout << "Unknown option [" << exception.get_option_name() << "] : Please use --help to display help message." << std::endl;
-        return 1;
-    }
+		return 1;
+	}
 	catch (boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::program_options::invalid_option_value> > &exception) 
 	{
 		std::cout << "Error parsing input for [" << exception.get_option_name() << "] : Invalid argument value." << std::endl;
-        return 1;
-    }
+		return 1;
+	}
 
 	// --help
 	if (variableMap.count("help"))
