@@ -552,6 +552,7 @@ bool EnvironmentLoader::ParseShapes(void)
 			{
 				std::string strFilename;
 				argumentMap.GetArgument("Filename", strFilename);
+				boost::trim(strFilename);
 
 				WavefrontSceneLoader wavefrontLoader(m_pEnvironment);
 				wavefrontLoader.Import(strFilename, 0, &argumentMap);

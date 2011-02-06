@@ -20,11 +20,13 @@ namespace Illumina
 			int m_nMaxRayDepth,
 				m_nShadowSampleCount;
 
+			bool m_bEnableShadowRays;
+
 			Random m_random;
 
 		public:
-			WhittedIntegrator(const std::string &p_strName, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 16);
-			WhittedIntegrator(int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 16);
+			WhittedIntegrator(const std::string &p_strName, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 16, bool p_bEnableShadowRays = true);
+			WhittedIntegrator(int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 16, bool p_bEnableShadowRays = true);
 
 			bool Initialise(Scene *p_pScene, ICamera *p_pCamera);
 			bool Shutdown(void);

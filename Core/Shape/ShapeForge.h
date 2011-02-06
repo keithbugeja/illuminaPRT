@@ -15,7 +15,6 @@
 #include "Shape/TriangleMesh.h"
 #include "Shape/VertexFormats.h"
 #include "Material/MaterialGroup.h"
-#include "Staging/WavefrontLoader.h"
 
 namespace Illumina
 {
@@ -24,6 +23,7 @@ namespace Illumina
 		class ShapeForge
 		{
 		public:
+			/*
 			template<class TMesh>
 			static void SaveMesh(const std::string& p_strMeshFile, boost::shared_ptr<TMesh> p_pMesh)
 			{
@@ -63,6 +63,7 @@ namespace Illumina
 			{
 				return WavefrontLoader::LoadMesh<TMesh>(p_strMeshFile, p_pEngineKernel, p_pMaterialGroup, false);
 			}
+			*/
 
 			template<class TMesh>
 			static boost::shared_ptr<TMesh> CreateQuad(const Vector3 &p_v0, const Vector3 &p_v1, 

@@ -91,12 +91,12 @@ namespace Illumina
 
 			Illumina::Core::IIntegrator *CreateInstance(const std::string &p_strId, int p_nRayDepth, int p_nShadowRays)
 			{
-				return new WhittedIntegrator(p_strId, p_nRayDepth, p_nShadowRays);
+				return new WhittedIntegrator(p_strId, p_nRayDepth, p_nShadowRays, (p_nShadowRays > 0));
 			}
 
 			Illumina::Core::IIntegrator *CreateInstance(int p_nRayDepth = 6, int p_nShadowRays = 1)
 			{
-				return new WhittedIntegrator(p_nRayDepth, p_nShadowRays);
+				return new WhittedIntegrator(p_nRayDepth, p_nShadowRays, (p_nShadowRays > 0));
 			}
 		};
 	}

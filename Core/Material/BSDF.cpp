@@ -96,7 +96,7 @@ bool BSDF::HasBxDFType(BxDF::Type p_bxdfType, bool p_bExactMatch)
 //----------------------------------------------------------------------------------------------
 int BSDF::GetBxDFCount(BxDF::Type p_bxdfType, bool p_bExactMatch)
 {
-	if (p_bxdfType == BxDF::All_Combined)
+	if (!p_bExactMatch && p_bxdfType == BxDF::All_Combined)
 		return m_bxdfList.Size();
 
 	int bxdfCount = 0;
@@ -110,7 +110,7 @@ int BSDF::GetBxDFCount(BxDF::Type p_bxdfType, bool p_bExactMatch)
 //----------------------------------------------------------------------------------------------
 int BSDF::GetBxDF(BxDF::Type p_bxdfType, int p_nBxDFIndex, BxDF **p_pBxDF, bool p_bExactMatch)
 {
-	if (p_bxdfType == BxDF::All_Combined)
+	if (!p_bExactMatch && p_bxdfType == BxDF::All_Combined)
 	{
 		*p_pBxDF = m_bxdfList[p_nBxDFIndex];
 		return p_nBxDFIndex;

@@ -3,8 +3,6 @@
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
-#pragma once
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -87,14 +85,14 @@ struct WavefrontContext
 	std::vector<WavefrontMaterial> MaterialList;
 
 	ITriangleMesh *Mesh;
-	MaterialGroup *MaterialGroup;
+	MaterialGroup *Materials;
 
 	std::string ObjectName;
 	int CurrentMaterialId;
 
 	WavefrontContext(void)
 		: Mesh(NULL)
-		, MaterialGroup(NULL)
+		, Materials(NULL)
 		, CurrentMaterialId(-1)
 	{ }
 };
@@ -116,7 +114,7 @@ bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int
 		return false;
 
 	std::string meshName = context.Mesh->GetName(),
-		materialGroupName = context.MaterialGroup->GetName();
+		materialGroupName = context.Materials->GetName();
 
 	if (p_pArgumentMap != NULL)
 	{
@@ -126,7 +124,7 @@ bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int
 
 	// Register assets
 	m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, context.Mesh);
-	m_pEngineKernel->GetMaterialManager()->RegisterInstance(materialGroupName, context.MaterialGroup);
+	m_pEngineKernel->GetMaterialManager()->RegisterInstance(materialGroupName, context.Materials);
 
 	return true;
 }
@@ -147,7 +145,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 	
 	if (!materialFile.is_open())
 	{
-		std::cerr << "Error : Couldn't open file \'" << p_strFilename << "\'" << std::endl;
+		std::cerr << "Error : Couldn't open file '" << p_strFilename << "'" << std::endl;
 		exit(-1);
 	}
 
@@ -165,10 +163,13 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 	{
 		tokenList.clear();
 
-		if (Tokenise(currentLine, " ", tokenList) == 0)
+		// Tokenise line
+		if (Tokenise(currentLine, " \n\r", tokenList) == 0)
 			continue;
 
-		boost::trim(tokenList[0]);
+		// Trim whitespace at edges
+		for (size_t tokenIndex = 0; tokenIndex < tokenList.size(); ++tokenIndex)
+			boost::trim(tokenList[tokenIndex]);
 
 		if (tokenList[0] == "newmtl") // New material
 		{
@@ -281,10 +282,10 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 	materialFile.close();
 
 	// Add Wavefront materials to context material group
-	if (p_context.MaterialGroup == NULL)
-		p_context.MaterialGroup = new MaterialGroup(materialPath.filename());
+	if (p_context.Materials == NULL)
+		p_context.Materials = new MaterialGroup(materialPath.filename());
 
-	int baseGroupId = p_context.MaterialGroup->Size();
+	int baseGroupId = p_context.Materials->Size();
 
 	for (int groupId = 0; groupId < p_context.MaterialList.size(); ++groupId)
 	{
@@ -294,10 +295,8 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 		const WavefrontMaterial& material = p_context.MaterialList.at(groupId); 
 
 		std::stringstream argumentStream;
-		argumentStream << "Id=" << material.Name << ";"
-			<< "Reflectivity={" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "}, "
-			<< "{" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "};"
-			<< "Shininess=" << material.Shininess << ";Absorption=" << 1.0f << ";Eta={" << 1.0f << "," << material.RefractiveIndex << "};";
+		argumentStream << "Id=" << material.Name << ";Shininess=" << material.Shininess << ";Absorption=" << 1.0f 
+			<< ";Eta={" << 1.0f << "," << material.RefractiveIndex << "};";
 
 		if (!material.DiffuseMap.empty())
 		{
@@ -321,6 +320,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 		{
 			case WavefrontMaterial::Matte:
 			{
+				argumentStream << "Reflectivity={" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "};";
 				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Matte", material.Name, argumentStream.str());
 				((MatteMaterial*)pMaterial)->SetTexture(pTexture);
 				break;
@@ -328,6 +328,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 
 			case WavefrontMaterial::Mirror:
 			{
+				argumentStream << "Reflectivity={" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "};";
 				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Mirror", material.Name, argumentStream.str());
 				((MirrorMaterial*)pMaterial)->SetTexture(pTexture);
 				break;
@@ -335,14 +336,15 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 
 			case WavefrontMaterial::Glass:
 			{
-				std::cout << "Creating glass material..." << std::endl;
+				argumentStream << "Reflectivity={{" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "},"
+					<< "{" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "}};";
 				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Glass", material.Name, argumentStream.str());
 				((GlassMaterial*)pMaterial)->SetTexture(pTexture);
 				break;
 			}
 		}
 
-		p_context.MaterialGroup->Add(pMaterial, baseGroupId + groupId);
+		p_context.Materials->Add(pMaterial, baseGroupId + groupId);
 	}
 
 	return true;
@@ -361,7 +363,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 	
 	if (!wavefrontFile.is_open())
 	{
-		std::cerr << "Error : Couldn't open file \'" << p_strFilename << "\'" << std::endl;
+		std::cerr << "Error : Couldn't open file '" << p_strFilename << "'" << std::endl;
 		exit(-1);
 	}
 	
@@ -378,10 +380,13 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 	{
 		tokenList.clear();
 
-		if (Tokenise(currentLine, " ", tokenList) == 0)
+		// Tokenise line
+		if (Tokenise(currentLine, " \n\r", tokenList) == 0)
 			continue;
 
-		boost::trim(tokenList[0]);
+		// Trim whitespace at edges
+		for (size_t tokenIndex = 0; tokenIndex < tokenList.size(); ++tokenIndex)
+			boost::trim(tokenList[tokenIndex]);
 
 		if (tokenList[0] == "o") // Object - set geometry to friendly object name
 		{
@@ -438,8 +443,13 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 				Tokenise(tokenList[index], "/", faceTokenList);
 
 				vertex.Position = boost::lexical_cast<int>(faceTokenList[0]);
-				vertex.Texture = boost::lexical_cast<int>(faceTokenList[1]);
-				vertex.Normal = boost::lexical_cast<int>(faceTokenList[2]);
+
+				if (faceTokenList.size() == 2) {
+					vertex.Normal = boost::lexical_cast<int>(faceTokenList[1]);
+				} else if (faceTokenList.size() == 3) {
+					vertex.Texture = boost::lexical_cast<int>(faceTokenList[1]);
+					vertex.Normal = boost::lexical_cast<int>(faceTokenList[2]);
+				} 
 
 				// Search for vertex in map
 				std::string hash = vertex.GetVertexHash();
@@ -468,7 +478,6 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 			
 			if (tokenList.size() == 5) 
 				p_context.Mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[2], vertexIndex[3], p_context.CurrentMaterialId);
-			
 		}
 		else if (tokenList[0] == "mtllib")
 		{
@@ -477,6 +486,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 
 			std::string materialLibraryFilename;
 			materialLibraryFilename = (geometryPath.parent_path() / tokenList[1]).string();
+
 			LoadMaterials(materialLibraryFilename, p_context);
 		}
 		else if (tokenList[0] == "usemtl")
@@ -484,7 +494,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 			if (tokenList.size() != 2)
 				continue;
 
-			p_context.CurrentMaterialId = p_context.MaterialGroup->GetGroupId(tokenList[1]);
+			p_context.CurrentMaterialId = p_context.Materials->GetGroupId(tokenList[1]);
 		}
 	}
 	
