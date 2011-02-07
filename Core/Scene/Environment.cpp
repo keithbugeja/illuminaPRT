@@ -102,10 +102,7 @@ IRenderer* Environment::GetRenderer(void) const {
 bool Environment::Load(const std::string &p_strEnvironmentName)
 {
 	EnvironmentLoader loader(this);
-	loader.Import(p_strEnvironmentName, 0);
-	//loader.Load(p_strEnvironmentName);
-
-	return true;
+	return loader.Import(p_strEnvironmentName, 0);
 }
 //----------------------------------------------------------------------------------------------
 bool Save(const std::string &p_strEnvironmentName)

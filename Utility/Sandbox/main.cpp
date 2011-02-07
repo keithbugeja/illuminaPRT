@@ -148,7 +148,11 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 
 	// Load environment script
 	Message("Loading Environment script...", p_bVerbose);
-	environment.Load(p_strScript);
+	if (!environment.Load(p_strScript))
+	{
+		std::cerr << "Error : Unable to load environment script." << std::endl;
+		exit(-1);
+	}
 
 	// Alias required components
 	IIntegrator *pIntegrator = environment.GetIntegrator();
