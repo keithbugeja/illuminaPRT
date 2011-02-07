@@ -52,7 +52,7 @@ namespace Illumina
 				//v = Maths::Max(0.0f, Maths::Min(1.0f, v));
 
 				u *= (m_image->GetWidth() - 1);
-				v *= (m_image->GetHeight() - 1);
+				v = (1.0f - v) * (m_image->GetHeight() - 1);
 
 				int iu = Maths::FAbs(((int)u) % m_image->GetWidth()),
 					iv = Maths::FAbs(((int)v) % m_image->GetHeight());

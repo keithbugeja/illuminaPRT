@@ -18,26 +18,26 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-PathIntegrator::PathIntegrator(const std::string &p_strName, int p_nMaxRayDepth, int p_nShadowSampleCount)
+PathIntegrator::PathIntegrator(const std::string &p_strName, int p_nMaxRayDepth, int p_nShadowSampleCount, float p_fReflectEpsilon)
 	: IIntegrator(p_strName) 
 	, m_nShadowSampleCount(p_nShadowSampleCount)
 	, m_nMaxRayDepth(p_nMaxRayDepth)
+	, m_fReflectEpsilon(p_fReflectEpsilon)
 { }
 //----------------------------------------------------------------------------------------------
-PathIntegrator::PathIntegrator(int p_nMaxRayDepth, int p_nShadowSampleCount)
+PathIntegrator::PathIntegrator(int p_nMaxRayDepth, int p_nShadowSampleCount, float p_fReflectEpsilon)
 	: m_nShadowSampleCount(p_nShadowSampleCount)
 	, m_nMaxRayDepth(p_nMaxRayDepth)
+	, m_fReflectEpsilon(p_fReflectEpsilon)
 { }
 //----------------------------------------------------------------------------------------------
 bool PathIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 {
-	//std::cout << "Path Tracing Integrator :: Initialise()" << std::endl;
 	return true;
 }
 //----------------------------------------------------------------------------------------------
 bool PathIntegrator::Shutdown(void)
 {
-	//std::cout << "Path Tracing Integrator :: Shutdown()" << std::endl;
 	return true;
 }
 //----------------------------------------------------------------------------------------------
@@ -158,9 +158,9 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		// -- ray is moved by a small epsilon in sampled direction
 		// -- ray origin is set to point of intersection
 		//----------------------------------------------------------------------------------------------
-		ray.Min = 1E-4f;
+		ray.Min = 0.f;
 		ray.Max = Maths::Maximum;
-		ray.Origin = p_intersection.Surface.PointWS + wIn * 1E-4f;
+		ray.Origin = p_intersection.Surface.PointWS + wIn * m_fReflectEpsilon;
 		ray.Direction = wIn;
 		
 		// Update path contribution at current stage
