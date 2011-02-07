@@ -270,6 +270,9 @@
     <ClCompile Include="..\..\..\..\Core\Shape\BasicMesh.cpp">
       <Filter>Header Files\Shape</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Integrator\TestIntegrator.cpp">
+      <Filter>Header Files\Integrator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -661,6 +664,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Scene\Visibility.h">
       <Filter>Header Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Integrator\TestIntegrator.h">
+      <Filter>Header Files\Integrator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

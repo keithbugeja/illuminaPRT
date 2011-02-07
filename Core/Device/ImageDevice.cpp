@@ -53,7 +53,6 @@ void ImageDevice::EndFrame(void) {
 //----------------------------------------------------------------------------------------------
 void ImageDevice::Set(int p_nX, int p_nY, const Spectrum &p_spectrum)
 {
-	//RGBPixel pixel(HDRToLDR(p_spectrum[0]), HDRToLDR(p_spectrum[1]), HDRToLDR(p_spectrum[2]));
 	RGBPixel pixel(p_spectrum[0], p_spectrum[1], p_spectrum[2]);
 	m_pImage->Set(p_nX, p_nY, pixel);
 }
