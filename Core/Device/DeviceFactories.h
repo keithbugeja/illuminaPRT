@@ -44,7 +44,7 @@ namespace Illumina
 
 				p_argumentMap.GetArgument("Width", width);
 				p_argumentMap.GetArgument("Height", height);
-				p_argumentMap.GetArgument("Format", format);
+				p_argumentMap.GetArgument("Filetype", format);
 				p_argumentMap.GetArgument("Filename", filename);
 
 				// So far only PPM is supported

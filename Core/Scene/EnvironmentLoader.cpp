@@ -19,6 +19,8 @@
 #include "Scene/EmissivePrimitive.h"
 #include "Scene/GeometricPrimitive.h"
 
+#include "Light/InfiniteAreaLight.h"
+
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 ParseNode::ParseNode(const std::string &p_strName, const std::string &p_strValue)
@@ -196,15 +198,16 @@ bool EnvironmentLoader::Parse(void)
 	}
 
 	// Parse sections of generated parse-tree
-	if (!ParseCameras()) std::cerr << "ParseCameras :: Completed with warnings!" << std::endl;
+	if (!ParseTextures()) std::cerr << "Texture Parsing :: Completed with warnings!" << std::endl;
 	if (!ParseShapes()) std::cerr << "Shape Parsing :: Completed with warnings!" << std::endl;
+	if (!ParseMaterials()) std::cerr << "Material Parsing :: Completed with warnings!" << std::endl;
 	if (!ParseLights()) std::cerr << "Light Parsing :: Completed with warnings!" << std::endl;
+	if (!ParseCameras()) std::cerr << "ParseCameras :: Completed with warnings!" << std::endl;
 	if (!ParseFilters()) std::cerr << "Filter Parsing :: Completed with warnings!" << std::endl;
-	if (!ParseDevices()) std::cerr << "Device Parsing :: Completed with warnings!" << std::endl;
 	if (!ParseSamplers()) std::cerr << "Sampler Parsing:: Completed with warnings!" << std::endl;
+	if (!ParseDevices()) std::cerr << "Device Parsing :: Completed with warnings!" << std::endl;
 	if (!ParseIntegrators()) std::cerr << "Integrator Parsing :: Completed with warnings!" << std::endl;
 	if (!ParseRenderers()) std::cerr << "Renderer Parsing :: Completed with warnings!" << std::endl;
-	if (!ParseMaterials()) std::cerr << "Material Parsing :: Completed with warnings!" << std::endl;
 	if (!ParseEnvironment()) std::cerr << "Environment Parsing :: Completed with warnings!" << std::endl;
 
 	// Release parse tree nodes
@@ -282,6 +285,44 @@ bool EnvironmentLoader::ParseCameras(void)
 	return true;
 }
 //----------------------------------------------------------------------------------------------
+bool EnvironmentLoader::ParseTextures(void)
+{
+	ITexture *pTexture;
+	ArgumentMap argumentMap;
+	std::string strType, strId;
+
+	std::vector<ParseNode*> textureNodes;
+	std::vector<ParseNode*>::iterator textureNodesIterator;
+
+	if (!GetNodeList("Textures", "Texture", textureNodes))
+		return false;
+
+	for (textureNodesIterator = textureNodes.begin();
+			textureNodesIterator != textureNodes.end();
+			++textureNodesIterator)
+	{
+		ParseNode *pTextureNode = *textureNodesIterator;
+		pTextureNode->GetArgumentMap(argumentMap);
+
+		// If argument map does not specify geometry type or name/id, ignore entry
+		if (!(argumentMap.ContainsArgument("Id") && argumentMap.ContainsArgument("Type")))
+		{
+			std::cerr << "[Texture] Warning : Ignoring entry because it does not specify Id or Type..." << std::endl;
+			continue;
+		}
+
+		// Get shape factory and create instance
+		argumentMap.GetArgument("Id", strId);
+		argumentMap.GetArgument("Type", strType);
+
+		// Try creating instance
+		try { pTexture = m_pEngineKernel->GetTextureManager()->CreateInstance(strType, strId, argumentMap); }
+		catch (...) { std::cerr << "[Texture] Error : Cannot create instance." << std::endl; }
+	}
+
+	return true;
+}
+//----------------------------------------------------------------------------------------------
 bool EnvironmentLoader::ParseLights(void)
 {
 	ILight *pLight;
@@ -304,7 +345,7 @@ bool EnvironmentLoader::ParseLights(void)
 		// If argument map does not specify geometry type or name/id, ignore entry
 		if (!(argumentMap.ContainsArgument("Id") && argumentMap.ContainsArgument("Type")))
 		{
-			std::cerr << "[Light] Warning : Ignoring Shape entry because it does not specify Id or Type..." << std::endl;
+			std::cerr << "[Light] Warning : Ignoring entry because it does not specify Id or Type..." << std::endl;
 			continue;
 		}
 
@@ -312,13 +353,17 @@ bool EnvironmentLoader::ParseLights(void)
 		argumentMap.GetArgument("Id", strId);
 		argumentMap.GetArgument("Type", strType);
 
-		// Filter some types like model filters
+		// Try creating instance
 		try { pLight = m_pEngineKernel->GetLightManager()->CreateInstance(strType, strId, argumentMap); }
 		catch (...) { std::cerr << "[Light] Error : Cannot create instance." << std::endl; }
 
 		// We have an arealight derived class
 		try { if (argumentMap.GetArgument("Shape", strId)) ((IAreaLight*)pLight)->SetShape(m_pEngineKernel->GetShapeManager()->RequestInstance(strId)); } 
 		catch (...) { std::cerr << "[Light] Error : Cannot assign shape instance to area light." << std::endl; }
+
+		// We have an infinite area light
+		try { if (argumentMap.GetArgument("Texture", strId)) ((InfiniteAreaLight*)pLight)->SetTexture(m_pEngineKernel->GetTextureManager()->RequestInstance(strId)); }
+		catch (...) { std::cerr << "[Light] Error : Cannot assign texture instance to light." << std::endl; }
 	}
 
 	return true;
@@ -354,7 +399,7 @@ bool EnvironmentLoader::ParseFilters(void)
 		argumentMap.GetArgument("Id", strId);
 		argumentMap.GetArgument("Type", strType);
 
-		// Filter some types like model filters
+		// Try creating instance
 		try { pFilter = m_pEngineKernel->GetFilterManager()->CreateInstance(strType, strId, argumentMap); } 
 		catch (...) { std::cerr << "[Filter] Error : Cannot create instance." << std::endl; }
 	}
@@ -392,7 +437,7 @@ bool EnvironmentLoader::ParseSamplers(void)
 		argumentMap.GetArgument("Id", strId);
 		argumentMap.GetArgument("Type", strType);
 
-		// Filter some types like model filters
+		// Try creating instance
 		try { pSampler = m_pEngineKernel->GetSamplerManager()->CreateInstance(strType, strId, argumentMap); } 
 		catch (...) { std::cerr << "[Sampler] Error : Cannot create instance." << std::endl; }
 	}
@@ -430,7 +475,7 @@ bool EnvironmentLoader::ParseDevices(void)
 		argumentMap.GetArgument("Id", strId);
 		argumentMap.GetArgument("Type", strType);
 
-		// Filter some types like model filters
+		// Try creating instance
 		try { pDevice = m_pEngineKernel->GetDeviceManager()->CreateInstance(strType, strId, argumentMap); } 
 		catch (...) { std::cerr << "[Device] Error : Cannot create instance." << std::endl; }
 	}
