@@ -114,6 +114,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	Message("Registering Lights...", p_bVerbose);
 	engineKernel.GetLightManager()->RegisterFactory("Point", new PointLightFactory());
 	engineKernel.GetLightManager()->RegisterFactory("DiffuseArea", new DiffuseAreaLightFactory());
+	engineKernel.GetLightManager()->RegisterFactory("InfiniteArea", new InfiniteAreaLightFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Shapes

@@ -152,6 +152,7 @@
     <ClCompile Include="..\..\..\..\Core\Integrator\WhittedIntegrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\AreaLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\DiffuseAreaLight.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Light\InfiniteAreaLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\PointLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Material\BSDF.cpp" />
     <ClCompile Include="..\..\..\..\Core\Material\LambertianBxDF.cpp" />
@@ -227,6 +228,7 @@
     <ClInclude Include="..\..\..\..\Core\Integrator\WhittedIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Light\AreaLight.h" />
     <ClInclude Include="..\..\..\..\Core\Light\DiffuseAreaLight.h" />
+    <ClInclude Include="..\..\..\..\Core\Light\InfiniteAreaLight.h" />
     <ClInclude Include="..\..\..\..\Core\Light\Light.h" />
     <ClInclude Include="..\..\..\..\Core\Light\LightFactories.h" />
     <ClInclude Include="..\..\..\..\Core\Light\PointLight.h" />

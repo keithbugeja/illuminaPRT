@@ -13,6 +13,7 @@
 #include "Light/Light.h"
 #include "Light/PointLight.h"
 #include "Light/DiffuseAreaLight.h"
+#include "Light/InfiniteAreaLight.h"
 
 namespace Illumina
 {
@@ -55,6 +56,43 @@ namespace Illumina
 			Illumina::Core::ILight *CreateInstance(const Vector3 &p_position, const Spectrum &p_intensity)
 			{
 				return new PointLight(p_position, p_intensity);
+			}
+		};
+
+		class InfiniteAreaLightFactory : public Illumina::Core::Factory<Illumina::Core::ILight>
+		{
+		public:
+			Illumina::Core::ILight *CreateInstance(void)
+			{
+				throw new Exception("Method not supported!");
+			}
+
+			/*
+			 * Arguments
+			 * -- Id {String}
+			 * -- Intensity {Spectrum}
+			 */
+			Illumina::Core::ILight *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				Spectrum intensity(0);
+				std::string strId;
+
+				p_argumentMap.GetArgument("Intensity", intensity);
+
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId, intensity);
+
+				return CreateInstance(intensity);
+			}
+
+			Illumina::Core::ILight *CreateInstance(const std::string &p_strId, const Spectrum &p_intensity)
+			{
+				return new InfiniteAreaLight(p_strId, p_intensity);
+			}
+
+			Illumina::Core::ILight *CreateInstance(const Spectrum &p_intensity)
+			{
+				return new InfiniteAreaLight(p_intensity);
 			}
 		};
 

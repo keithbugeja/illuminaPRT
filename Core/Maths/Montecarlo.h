@@ -27,6 +27,11 @@ namespace Illumina
 				return Vector3(x, y, z);
 			}
 
+			static float UniformSpherePdf()
+			{
+				return 0.5f / Maths::PiTwo;
+			}
+
 			static void UniformSampleTriangle(float p_u, float p_v, float *p_uOut, float *p_vOut) 
 			{
 				float su1 = Maths::Sqrt(p_u);

@@ -86,15 +86,16 @@ namespace Illumina
 			bool Load(const std::string p_strFilename);
 
 			bool Parse(void);
+			bool ParseShapes(void);
+			bool ParseTextures(void);
+			bool ParseMaterials(void);
 			bool ParseCameras(void);
-			bool ParseLights(void);
 			bool ParseFilters(void);
-			bool ParseDevices(void);
 			bool ParseSamplers(void);
+			bool ParseDevices(void);
+			bool ParseLights(void);
 			bool ParseIntegrators(void);
 			bool ParseRenderers(void);
-			bool ParseShapes(void);
-			bool ParseMaterials(void);
 			bool ParseEnvironment(void);
 			
 			bool GetNodeList(const std::string &p_strCategoryName, const std::string &p_strInstanceName, std::vector<ParseNode*> &p_nodeList, ParseNode *p_pNode = NULL);
