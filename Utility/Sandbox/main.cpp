@@ -185,8 +185,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		frameTimer.restart();
 		
 		//pCamera->MoveTo(lookFrom);
-		pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
-		pCamera->LookAt(lookAt);
+		//pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
+		//pCamera->LookAt(lookAt);
 	 
 		// Update space
 		pSpace->Update();
