@@ -25,8 +25,8 @@ Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, 
 
 	Spectrum Ls = p_pLight->SampleRadiance(p_point, p_normal, p_u, p_v, p_wIn, visibilityQuery);
 				
-	//if (Ls.IsBlack() || visibilityQuery.IsOccluded())
-	//	return 0.0f;
+	if (Ls.IsBlack() || visibilityQuery.IsOccluded())
+		return 0.0f;
 
 	p_wIn = -p_wIn;
 
