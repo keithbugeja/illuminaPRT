@@ -23,10 +23,10 @@ Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, 
 { 
 	VisibilityQuery visibilityQuery(p_pScene);
 
-	Spectrum Ls = p_pLight->SampleRadiance(p_point, p_u, p_v, p_wIn, visibilityQuery);
+	Spectrum Ls = p_pLight->SampleRadiance(p_point, p_normal, p_u, p_v, p_wIn, visibilityQuery);
 				
-	if (Ls.IsBlack() || visibilityQuery.IsOccluded())
-		return 0.0f;
+	//if (Ls.IsBlack() || visibilityQuery.IsOccluded())
+	//	return 0.0f;
 
 	p_wIn = -p_wIn;
 
@@ -79,11 +79,11 @@ Spectrum IIntegrator::SampleAllLights(Scene *p_pScene, const Intersection &p_int
 					p_point, p_normal, p_wOut, wIn, lightSample[sampleIdx].U, lightSample[sampleIdx].V);
 			}
 
-			Ls += Le / p_nSampleCount;
+			Ls += Le;
 		}
 	}
 
 	delete[] lightSample;
 
-	return Ls;
+	return Ls / p_nSampleCount;
 }

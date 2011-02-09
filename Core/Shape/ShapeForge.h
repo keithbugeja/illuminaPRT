@@ -117,6 +117,18 @@ namespace Illumina
 					vertex[3].Position = p_v3;
 				}
 
+				// If vertex has normals, init
+				if (Vertex::GetDescriptor() & VertexFormat::Normal)
+				{
+					Vector3 normal = Vector3::Cross(vertex[2].Position - vertex[0].Position, 
+						vertex[1].Position - vertex[0].Position);
+
+					vertex[0].Normal = normal;
+					vertex[1].Normal = normal;
+					vertex[2].Normal = normal;
+					vertex[3].Normal = normal;
+				}
+
 				// If vertex has UVs, initialise
 				if (Vertex::GetDescriptor() & VertexFormat::UV)
 				{

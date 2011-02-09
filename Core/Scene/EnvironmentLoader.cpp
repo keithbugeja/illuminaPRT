@@ -173,11 +173,14 @@ bool EnvironmentLoader::Parse(void)
 	// Perform lexical analysis on current stream
 	while(pLexer->ReadToken(nameToken))
 	{
+		//std::cout << nameToken.Value << " ";
 		if (nameToken.Type == LexerToken::PropertyName)
 		{
 			if (!pLexer->ReadToken(valueToken))
 				return false;
 			
+			//std::cout << valueToken.Value << " ";
+
 			// Go deeper
 			if (valueToken.Type == LexerToken::LeftCurly)
 			{
