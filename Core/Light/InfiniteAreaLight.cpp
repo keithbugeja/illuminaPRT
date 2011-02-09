@@ -47,8 +47,23 @@ Spectrum InfiniteAreaLight::Radiance(const Vector3 &p_direction)
 		//uvCoords.U = Maths::Atan(p_direction.Y, p_direction.X) / Maths::PiHalf;
 		//uvCoords.V = Maths::Acos(p_direction.Z) / Maths::Pi;
 
-		uvCoords.U = Maths::Atan(p_direction.X, p_direction.Z) / Maths::PiTwo;
-		uvCoords.V = Maths::Acos(p_direction.Y) / Maths::Pi; //0.5 * (1 + p_direction.Y);
+		Vector3::Normalize(p_direction);
+
+		/*float m = 2 * Maths::Sqrt(
+			(p_direction.X * p_direction.X) + (p_direction.Y * p_direction.Y) +
+			(p_direction.Z + 1) * (p_direction.Z + 1));
+			*/
+
+		//P = (u*u + v*v + 1 - (u*u + v*v))^1/2;
+		//z = (1 - (u*u + v*v))^1/2;
+
+		// float x = Maths::Atan(p_direction.Z, p_direction.X) / Maths::
+
+		uvCoords.U = p_direction.X / m + 0.5;
+		uvCoords.V = p_direction.Y / m + 0.5;
+
+		//uvCoords.U = Maths::Atan(p_direction.X, p_direction.Z) / Maths::PiTwo;
+		//uvCoords.V = Maths::Acos(p_direction.Y) / Maths::Pi; //0.5 * (1 + p_direction.Y);
 
 		RGBPixel value = m_pTexture->GetValue(uvCoords);
 		radiance.Set(value.R, value.G, value.B);
@@ -86,7 +101,7 @@ Spectrum InfiniteAreaLight::SampleRadiance(const Vector3 &p_point, double p_u, d
 Spectrum InfiniteAreaLight::SampleRadiance(const Vector3 &p_point, const Vector3 &p_normal, double p_u, double p_v, Vector3& p_wIn, VisibilityQuery &p_visibilityQuery)
 {
 	//p_wIn = Montecarlo::UniformSampleSphere(p_u, p_v);
-	p_wIn = Montecarlo::UniformSampleSphere(p_u, p_v); //p_wIn = p_wIn;
+	p_wIn = -Montecarlo::UniformSampleSphere(p_u, p_v); //p_wIn = p_wIn;
 	p_visibilityQuery.SetSegment(p_point + p_wIn * 1e-4f, p_wIn, Maths::Maximum, 1e-4f);
 	return Radiance(p_wIn);
 
