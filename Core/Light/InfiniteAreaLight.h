@@ -24,8 +24,11 @@ namespace Illumina
 			Spectrum Power(void);
 			Spectrum Radiance(const Ray &p_ray);
 			Spectrum Radiance(const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wIn);
+			
 			Spectrum SampleRadiance(const Vector3 &p_point, Vector3 &p_wIn, VisibilityQuery &p_visibilityQuery);
 			Spectrum SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wIn, VisibilityQuery &p_visibilityQuery);
+			Spectrum SampleRadiance(const Vector3 &p_point, const Vector3 &p_normal, double p_u, double p_v, Vector3& p_wIn, VisibilityQuery &p_visibilityQuery);
+
 
 			InfiniteAreaLight(const InfiniteAreaLight &p_infiniteAreaLight);
 			InfiniteAreaLight(const Spectrum &p_intensity, ITexture *p_pTexture = NULL);

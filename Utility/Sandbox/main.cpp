@@ -172,13 +172,21 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	boost::timer frameTimer;
 	float fTotalFramesPerSecond = 0.f;
 
+	ICamera *pCamera = environment.GetCamera();
+	float alpha = 0.0f;
+
+	Vector3 lookFrom(70, 0, 70),
+		lookAt(0, 0, 0);
+
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
+		alpha += 0.5f;
+
 		frameTimer.restart();
 		
 		//pCamera->MoveTo(lookFrom);
-		//pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
-		//pCamera->LookAt(lookAt);
+		pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
+		pCamera->LookAt(lookAt);
 	 
 		// Update space
 		pSpace->Update();

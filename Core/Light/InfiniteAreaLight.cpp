@@ -28,7 +28,7 @@ InfiniteAreaLight::InfiniteAreaLight(const InfiniteAreaLight &p_infiniteAreaLigh
 { }
 //----------------------------------------------------------------------------------------------
 float InfiniteAreaLight::Pdf(const Vector3 &p_point, const Vector3 &p_wOut) {
-	return 1.0f;
+	return 0.25f / Maths::Pi;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum InfiniteAreaLight::Power(void) {
@@ -47,18 +47,24 @@ Spectrum InfiniteAreaLight::Radiance(const Vector3 &p_direction)
 		//uvCoords.U = Maths::Atan(p_direction.Y, p_direction.X) / Maths::PiHalf;
 		//uvCoords.V = Maths::Acos(p_direction.Z) / Maths::Pi;
 
-		uvCoords.U = Maths::Atan(p_direction.Z, p_direction.X) / Maths::Pi;
-		uvCoords.V = -Maths::Acos(p_direction.Y) / Maths::Pi; //0.5 * (1 + p_direction.Y);
+		uvCoords.U = Maths::Atan(p_direction.X, p_direction.Z) / Maths::PiTwo;
+		uvCoords.V = Maths::Acos(p_direction.Y) / Maths::Pi; //0.5 * (1 + p_direction.Y);
 
 		RGBPixel value = m_pTexture->GetValue(uvCoords);
 		radiance.Set(value.R, value.G, value.B);
 	}
 
-	return m_intensity * radiance * 10;
+	return Spectrum( 
+		Maths::Pow(m_intensity[0] * radiance[0], 3),
+		Maths::Pow(m_intensity[1] * radiance[1], 3),
+		Maths::Pow(m_intensity[2] * radiance[2], 3));
+	
+	return m_intensity * radiance * radiance;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum InfiniteAreaLight::Radiance(const Ray &p_ray)
 {
+	//return 0.0f;
 	return Radiance(p_ray.Direction);
 }
 //----------------------------------------------------------------------------------------------
@@ -74,9 +80,26 @@ Spectrum InfiniteAreaLight::SampleRadiance(const Vector3 &p_point, Vector3 &p_wI
 //----------------------------------------------------------------------------------------------
 Spectrum InfiniteAreaLight::SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wIn, VisibilityQuery &p_visibilityQuery)
 {
-	p_wIn = -(Montecarlo::UniformSampleSphere(p_u, p_v));
-	p_visibilityQuery.SetSegment(p_point, 1e-4f, p_point + p_wIn * (Maths::Maximum - 1e-4f), 0.f);
+	throw new Exception("Method not supported!");
+}
+//----------------------------------------------------------------------------------------------
+Spectrum InfiniteAreaLight::SampleRadiance(const Vector3 &p_point, const Vector3 &p_normal, double p_u, double p_v, Vector3& p_wIn, VisibilityQuery &p_visibilityQuery)
+{
+	//p_wIn = Montecarlo::UniformSampleSphere(p_u, p_v);
+	p_wIn = Montecarlo::UniformSampleSphere(p_u, p_v); //p_wIn = p_wIn;
+	p_visibilityQuery.SetSegment(p_point + p_wIn * 1e-4f, p_wIn, Maths::Maximum, 1e-4f);
 	return Radiance(p_wIn);
+
+	//p_wIn = Montecarlo::UniformSampleSphere(p_u, p_v); //p_wIn = p_wIn;
+
+	//OrthonormalBasis basis; basis.InitFromW(p_normal);
+	//p_wIn = Montecarlo::UniformSampleCone(p_u, p_v, Maths::PiHalf, basis);
+
+	//if (p_wIn.Dot(p_normal) < 0)
+	//	p_wIn = -p_wIn;
+
+	//p_visibilityQuery.SetSegment(p_point + p_wIn * 1e-4f, p_wIn, Maths::Maximum, 1e-4f);
+	//return Radiance(p_wIn);
 }
 //----------------------------------------------------------------------------------------------
 ITexture* InfiniteAreaLight::GetTexture(void) const { 
