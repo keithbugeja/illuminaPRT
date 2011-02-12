@@ -102,7 +102,7 @@ namespace Illumina
 
 				for (int i = 0; i < p_image.GetLength(); i++)
 				{
-					imageFile.write((char*)image[i].Element, sizeof(float) * 3);
+					imageFile.write((char*)p_image[i].Element, sizeof(float) * 3);
 				}
 				
 				imageFile.close();
