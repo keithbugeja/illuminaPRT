@@ -219,6 +219,7 @@
     <ClInclude Include="..\..\..\..\Core\Geometry\Vector3.h" />
     <ClInclude Include="..\..\..\..\Core\Image\Image.h" />
     <ClInclude Include="..\..\..\..\Core\Image\ImageIO.h" />
+    <ClInclude Include="..\..\..\..\Core\Image\ImagePFM.h" />
     <ClInclude Include="..\..\..\..\Core\Image\ImagePPM.h" />
     <ClInclude Include="..\..\..\..\Core\Image\RGBPixel.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\Integrator.h" />

@@ -674,6 +674,9 @@
     <ClInclude Include="..\..\..\..\Core\Light\InfiniteAreaLight.h">
       <Filter>Header Files\Light</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Image\ImagePFM.h">
+      <Filter>Header Files\Image</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">

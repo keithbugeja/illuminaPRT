@@ -69,19 +69,10 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		//----------------------------------------------------------------------------------------------
 		if(!p_pScene->Intersects(ray, p_intersection))
 		{
-			if (rayDepth == 0) 
+			if (rayDepth == 0 || specularBounce) 
 			{
 				for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
-				{
-					L += p_pScene->LightList[lightIndex]->Radiance(p_ray);
-				}
-			}
-			else if (rayDepth > 0 && specularBounce)
-			{
-				for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
-				{
-					L += pathThroughput * p_pScene->LightList[lightIndex]->Radiance(p_ray);
-				}
+					L += pathThroughput * p_pScene->LightList[lightIndex]->Radiance(-ray);
 			}
 
 			break;

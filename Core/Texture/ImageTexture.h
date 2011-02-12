@@ -13,7 +13,6 @@
 #include "Texture/Noise.h"
 #include "Image/ImageIO.h"
 
-
 namespace Illumina 
 {
 	namespace Core
@@ -22,43 +21,85 @@ namespace Illumina
 			public ITexture
 		{
 		protected:
+			TextureFiltering m_filtering;
 			boost::shared_ptr<Image> m_image;
 
+		protected:
+			RGBPixel GetValueNearestNeighbour(const Vector2 &p_uv) const
+			{
+				// take fractional part of u and v
+				float u = Maths::Frac(p_uv.U);
+				float v = 1.0f - Maths::Frac(p_uv.V);
+
+				float width = m_image->GetWidth() - 1,
+					height = m_image->GetHeight() - 1;
+
+				// transform to texture space
+				float iu = width * u;
+				float iv = height * v;
+
+				// get discretised coordinates
+				float ix = Maths::Min(width, iu > 0.5f ? Maths::Ceil(iu) : Maths::Floor(iu));
+				float iy = Maths::Min(height, iv > 0.5f ? Maths::Ceil(iv) : Maths::Floor(iv));
+
+				return m_image->Get(ix, iy);
+			}
+
+			RGBPixel GetValueBilinear(const Vector2 &p_uv) const
+			{
+				// take fractional part of u and v
+				float u = Maths::Frac(p_uv.U);
+				float v = 1.0f - Maths::Frac(p_uv.V);
+
+				// transform to texture space
+				float iu = (m_image->GetWidth() - 1) * u;
+				float iv = (m_image->GetHeight() - 1) * v;
+
+				// get discretised coordinates
+				float ix = Maths::FAbs(Maths::Floor(iu));
+				float iy = Maths::FAbs(Maths::Floor(iv));
+
+				RGBPixel value[4];
+				value[0] = m_image->Get(ix, iy);
+				value[1] = m_image->Get(Maths::Min(ix, m_image->GetWidth() - 1), iy); 
+				value[2] = m_image->Get(ix, Maths::Min(iy, m_image->GetHeight() - 1));
+				value[3] = m_image->Get(Maths::Min(ix, m_image->GetWidth() - 1), Maths::Min(iy, m_image->GetHeight() - 1)); 
+
+				float fx = Maths::Frac(ix);
+				float fy = Maths::Frac(iy);
+
+				float w0 = (1.0f - fx) * (1.0f - fy),
+					  w1 = fx * (1.0f - fy),
+					  w2 = (1.0f - fx) * fy,
+					  w3 = fx * fy;
+
+				return value[0] * w0 + value[1] * w1 + value[2] * w2 + value[3] * w3;
+			}
+
 		public:
-			ImageTexture(const std::string &p_strName, const std::string &p_strFilename, IImageIO *p_pImageIO) 
+			ImageTexture(const std::string &p_strName, const std::string &p_strFilename, IImageIO *p_pImageIO, TextureFiltering p_filtering = Bilinear) 
 				: ITexture(p_strName) 
+				, m_filtering(p_filtering)
 			{
 				m_image = boost::shared_ptr<Image>(p_pImageIO->Load(p_strFilename));
 			}
 
-			ImageTexture(const std::string &p_strFilename, IImageIO *p_pImageIO) {
+			ImageTexture(const std::string &p_strFilename, IImageIO *p_pImageIO, TextureFiltering p_filtering = Bilinear) 
+				: m_filtering(p_filtering)
+			{
 				m_image = boost::shared_ptr<Image>(p_pImageIO->Load(p_strFilename));
 			}
 
 			RGBPixel GetValue(const Vector2 &p_uv, const Vector3 &p_hitPoint) const
 			{
-				float u, v;
-
-				u = p_uv.U >= 0	? p_uv.U - (int)p_uv.U 
-								: 1.0f + (p_uv.U - (int)p_uv.U);
-
-				v = p_uv.V >= 0	? p_uv.V - (int)p_uv.V
-								: 1.0f + (p_uv.V - (int)p_uv.V);
-
-				//u = Maths::Frac(u);
-				//v = Maths::Frac(v);
-
-				//u = Maths::Max(0.0f, Maths::Min(1.0f, u));
-				//v = Maths::Max(0.0f, Maths::Min(1.0f, v));
-
-				u *= (m_image->GetWidth() - 1);
-				v = (1.0f - v) * (m_image->GetHeight() - 1);
-
-				int iu = Maths::FAbs(((int)u) % m_image->GetWidth()),
-					iv = Maths::FAbs(((int)v) % m_image->GetHeight());
-
-				// Add interpolation w. smoothing function
-				return m_image->Get(iu, iv);
+				switch (m_filtering)
+				{
+					case Bilinear:
+						return GetValueBilinear(p_uv);
+					
+					default:
+						return GetValueNearestNeighbour(p_uv);
+				}
 			}
 		};
 	} 
