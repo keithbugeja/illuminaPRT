@@ -7,6 +7,11 @@
 using namespace Illumina::Core;
 
 //----------------------------------------------------------------------------------------------
+inline Ray Ray::operator-(void) const
+{
+	return Ray(Origin, -Direction, Min, Max);
+}
+//----------------------------------------------------------------------------------------------
 inline void Ray::Set(const Vector3 &p_origin, const Vector3 &p_direction, float p_fMin, float p_fMax)
 {
 	Origin = p_origin;

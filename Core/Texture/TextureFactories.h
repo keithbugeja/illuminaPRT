@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "Image/ImagePPM.h"
+#include "Image/ImagePFM.h"
 
 #include "Texture/Texture.h"
 #include "Texture/SimpleTexture.h"
@@ -52,6 +53,11 @@ namespace Illumina
 				{
 					ImagePPM imagePPM;
 					return new ImageTexture(p_strId, p_strFilename, (IImageIO*)&imagePPM);
+				} 
+				else if (p_strFiletype.find("PFM") != std::string::npos)
+				{
+					ImagePFM imagePFM;
+					return new ImageTexture(p_strId, p_strFilename, (IImageIO*)&imagePFM);
 				}
 
 				throw new Exception("Unable to create ImageTexture instance!");

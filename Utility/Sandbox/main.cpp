@@ -35,6 +35,8 @@
 #include "Renderer/RendererFactories.h"
 #include "Integrator/IntegratorFactories.h"
 
+#include "Image/ImagePFM.h"
+
 using namespace Illumina::Core;
 
 void Message(const std::string& p_strMessage, bool p_bVerbose)
@@ -173,20 +175,28 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	float fTotalFramesPerSecond = 0.f;
 
 	ICamera *pCamera = environment.GetCamera();
-	float alpha = 0.0f;
+	float alpha = Maths::Pi;
 
-	Vector3 lookFrom(70, 0, 70),
-		lookAt(0, 0, 0);
-
+	// Cornell
+	//Vector3 lookFrom(70, 0, 70),
+	//	lookAt(0, 0, 0);
+	
+	// Kiti
+	//Vector3 lookFrom(-19, 1, -19),
+	//	lookAt(0, 8, 0);
+	
+	// Sponza
+	//Vector3 lookFrom(800, 100, 200),
+	//	lookAt(0, 200, 100);
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
-		alpha += 0.5f;
+		//alpha += Maths::PiTwo / 256;
 
 		frameTimer.restart();
 		
 		//pCamera->MoveTo(lookFrom);
-		pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
-		pCamera->LookAt(lookAt);
+		//pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
+		//pCamera->LookAt(lookAt);
 	 
 		// Update space
 		pSpace->Update();

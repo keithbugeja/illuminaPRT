@@ -28,8 +28,7 @@ namespace Illumina
 			}
 
 			inline static float Frac(float p_fValue) {
-				float integerPart;
-				return (float)modf((double)p_fValue, (double*)&integerPart);
+				return fabs(p_fValue - floor(p_fValue));
 			}
 
 			inline static float Ceil(float p_fValue) {

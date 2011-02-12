@@ -6,13 +6,18 @@
 //	A simple image class to store an array of RGB colours that can be accessed
 //  via one or two-dimensional indexing. 
 //----------------------------------------------------------------------------------------------
+#include <iostream>
+
 using namespace Illumina::Core;
 
 //----------------------------------------------------------------------------------------------
 inline int Image::IndexOf(int p_x, int p_y) 
 {
 	//BOOST_ASSERT(p_x + p_y * m_nWidth >= 0 && p_x + p_y * m_nWidth < m_nHeight * m_nWidth);
-			
+	//if ((p_x < 0 || p_x >= m_nWidth) || (p_y < 0 || p_y >= m_nHeight))
+	//		std::cout << ":::: [" << p_x << ", " << p_y << "], ["
+	//				<< m_nWidth << ", " << m_nHeight << "]" << std::endl;
+
 	return p_x + p_y * m_nWidth;
 }
 //----------------------------------------------------------------------------------------------
