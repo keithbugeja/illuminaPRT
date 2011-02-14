@@ -61,12 +61,12 @@ namespace Illumina
 
 				RGBPixel value[4];
 				value[0] = m_image->Get(ix, iy);
-				value[1] = m_image->Get(Maths::Min(ix, m_image->GetWidth() - 1), iy); 
-				value[2] = m_image->Get(ix, Maths::Min(iy, m_image->GetHeight() - 1));
-				value[3] = m_image->Get(Maths::Min(ix, m_image->GetWidth() - 1), Maths::Min(iy, m_image->GetHeight() - 1)); 
+				value[1] = m_image->Get(Maths::Max(0, Maths::Min(ix, m_image->GetWidth() - 1)), iy); 
+				value[2] = m_image->Get(ix, Maths::Max(0, Maths::Min(iy, m_image->GetHeight() - 1)));
+				value[3] = m_image->Get(Maths::Max(0, Maths::Min(ix, m_image->GetWidth() - 1)), Maths::Max(0, Maths::Min(iy, m_image->GetHeight() - 1))); 
 
-				float fx = Maths::Frac(ix);
-				float fy = Maths::Frac(iy);
+				float fx = Maths::Frac(iu);
+				float fy = Maths::Frac(iv);
 
 				float w0 = (1.0f - fx) * (1.0f - fy),
 					  w1 = fx * (1.0f - fy),

@@ -47,12 +47,7 @@ Spectrum DiffuseAreaLight::Radiance(const Vector3 &p_point, const Vector3 &p_nor
 	//return Vector3::Dot(p_normal, p_wIn) < 0 ? m_emit : 0.0f;
 }
 //----------------------------------------------------------------------------------------------
-Spectrum DiffuseAreaLight::SampleRadiance(const Vector3 &p_point, Vector3 &p_wIn, VisibilityQuery &p_visibilityQuery)
-{
-	throw new Exception("Should call radiance function providing surface sample coordinates!");
-}
-//----------------------------------------------------------------------------------------------
-Spectrum DiffuseAreaLight::SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wIn, VisibilityQuery &p_visibilityQuery)
+Spectrum DiffuseAreaLight::SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)
 {
 	Vector3 surfaceNormal, 
 		surfacePoint;
@@ -79,8 +74,26 @@ Spectrum DiffuseAreaLight::SampleRadiance(const Vector3 &p_point, double p_u, do
 
 	// Return radiance + part of geometry term
 	return (m_emit * Maths::Max(0.0f, Vector3::Dot(p_wIn, surfaceNormal))) / (Pdf(surfacePoint, p_wIn) * distanceSquared);
-	//return (m_emit * Pdf(surfaceNormal, surfaceOmega) * Maths::Max(0.0f, Vector3::Dot(surfaceOmega, surfaceNormal))) / (Pdf(surfacePoint, surfaceOmega) * distanceSquared);
-	//return (m_emit * Pdf(surfacePoint, p_wIn) * Maths::Max(0.0f, Vector3::Dot(p_wIn, surfaceNormal))) / distanceSquared;
 }
+//----------------------------------------------------------------------------------------------
+Spectrum DiffuseAreaLight::SampleRadiance(double p_u, double p_v, Vector3 &p_point, Vector3 &p_normal, float &p_pdf)
+{
+	Vector3 surfaceNormal, 
+		surfacePoint;
 
+	// Sample surface point
+	if (m_pWorldTransform != NULL && !m_pWorldTransform->IsIdentity())
+	{
+		p_point = m_pWorldTransform->Apply(m_pShape->SamplePoint(p_u, p_v, surfaceNormal));
+		p_normal = m_pWorldTransform->RotateInverse(surfaceNormal);
+	}
+	else
+	{
+		p_point = m_pShape->SamplePoint(p_u, p_v, p_normal);
+	}
+
+	p_pdf = 1.0f;
+
+	return m_emit;
+}
 //----------------------------------------------------------------------------------------------

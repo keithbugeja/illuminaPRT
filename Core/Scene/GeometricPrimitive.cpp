@@ -29,6 +29,43 @@ bool GeometricPrimitive::IsBounded(void) const
 	return (m_pShape != NULL && m_pShape->IsBounded()); 
 }
 //----------------------------------------------------------------------------------------------
+Vector3 GeometricPrimitive::SamplePoint(float p_u, float p_v, Vector3 &p_normal)
+{
+	BOOST_ASSERT(m_pShape != NULL);
+
+	if (!WorldTransform.IsIdentity())
+	{
+		Vector3 normal,
+			point = m_pShape->SamplePoint(p_u, p_v, normal);
+		
+		WorldTransform.Rotate(normal, p_normal);
+		return WorldTransform.Apply(point);
+	}
+	else
+	{
+		return m_pShape->SamplePoint(p_u, p_v, p_normal);
+	}
+}
+//----------------------------------------------------------------------------------------------
+Vector3 GeometricPrimitive::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal)
+{
+	BOOST_ASSERT(m_pShape != NULL);
+
+	if (!WorldTransform.IsIdentity())
+	{
+		Vector3 normal,
+			viewPoint = WorldTransform.ApplyInverse(p_viewPoint),
+			point = m_pShape->SamplePoint(viewPoint, p_u, p_v, normal);
+		
+		WorldTransform.Rotate(normal, p_normal);
+		return WorldTransform.Apply(point);
+	}
+	else
+	{
+		return m_pShape->SamplePoint(p_viewPoint, p_u, p_v, p_normal);
+	}
+}
+//----------------------------------------------------------------------------------------------
 bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection &p_intersection)
 {
 	// Todo:

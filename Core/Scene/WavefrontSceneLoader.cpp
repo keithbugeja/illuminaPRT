@@ -113,18 +113,25 @@ bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int
 	if (!LoadGeometry(p_strFilename, context))
 		return false;
 
-	std::string meshName = context.Mesh->GetName(),
-		materialGroupName = context.Materials->GetName();
-
-	if (p_pArgumentMap != NULL)
+	if (context.Mesh != NULL)
 	{
-		p_pArgumentMap->GetArgument("Id", meshName);
-		p_pArgumentMap->GetArgument("MaterialGroupId", materialGroupName);
+		std::string meshName = context.Mesh->GetName();
+		
+		if (p_pArgumentMap != NULL) 
+			p_pArgumentMap->GetArgument("Id", meshName);
+		
+		m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, context.Mesh);
 	}
 
-	// Register assets
-	m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, context.Mesh);
-	m_pEngineKernel->GetMaterialManager()->RegisterInstance(materialGroupName, context.Materials);
+	if (context.Materials != NULL)
+	{
+		std::string materialGroupName = context.Materials->GetName();
+		
+		if (p_pArgumentMap != NULL) 
+			p_pArgumentMap->GetArgument("MaterialGroupId", materialGroupName);
+		
+		m_pEngineKernel->GetMaterialManager()->RegisterInstance(materialGroupName, context.Materials);
+	}
 
 	return true;
 }

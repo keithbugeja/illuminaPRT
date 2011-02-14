@@ -6,49 +6,9 @@
 //----------------------------------------------------------------------------------------------
 #include "Light/PointLight.h"
 #include "Scene/Visibility.h"
+#include "Maths/Montecarlo.h"
 
 using namespace Illumina::Core;
-//----------------------------------------------------------------------------------------------
-float PointLight::Pdf(const Vector3 &p_point, const Vector3 &p_wOut) {
-	return 1.0f;
-}
-//----------------------------------------------------------------------------------------------
-Spectrum PointLight::Power(void) {
-	return Spectrum(1.0f);
-}
-//----------------------------------------------------------------------------------------------
-Spectrum PointLight::Radiance(const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wIn)
-{
-	return Vector3::Dot(p_normal, p_wIn) > 0 ? m_intensity : 0.0f;
-}
-//----------------------------------------------------------------------------------------------
-/*
-	Returns the Radiance L(i, x), where
-	i is the incident vector denoting incoming radiance at x,
-	and x is the location of a differential area on a surface.
-			 
-	The visibility query object, denoted by p_visibilityQuery, is set to the segment
-	(Sp, x), where Sp is the location of the point light.
-	The direction of incident light, denoted by p_direction, is set to (x - Sp).
-*/
-Spectrum PointLight::SampleRadiance(const Vector3 &p_point, Vector3 &p_wIn, VisibilityQuery &p_visibilityQuery)
-{
-	// Update visibility query information
-	p_visibilityQuery.SetSegment(m_position, 1e-4f, p_point, 1e-4f); 
-
-	Vector3::Subtract(p_point, m_position, p_wIn);
-	double distanceSquared = p_wIn.LengthSquared();
-	p_wIn.Normalize();
-
-	// Radiance prop to Energy / (Area of sphere * distance squared)
-	// L = Phi / (4*Pi * |Sp - x| ^ 2)
-	return m_intensity / (Maths::InvPi * distanceSquared);
-}
-//----------------------------------------------------------------------------------------------
-Spectrum PointLight::SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wIn, VisibilityQuery &p_visibilityQuery)
-{
-	return SampleRadiance(p_point, p_wIn, p_visibilityQuery);
-}
 //----------------------------------------------------------------------------------------------
 PointLight::PointLight(const Vector3 &p_position, const Spectrum &p_intensity)
 	: m_position(p_position) 
@@ -65,6 +25,53 @@ PointLight::PointLight(const PointLight &p_pointLight)
 	: m_position(p_pointLight.m_position)
 	, m_intensity(p_pointLight.m_intensity)
 { }
+//----------------------------------------------------------------------------------------------
+float PointLight::Pdf(const Vector3 &p_point, const Vector3 &p_wOut) {
+	return 0.0f;
+}
+//----------------------------------------------------------------------------------------------
+Spectrum PointLight::Power(void) {
+	return m_intensity * 4.0 * Maths::Pi;
+}
+//----------------------------------------------------------------------------------------------
+Spectrum PointLight::Radiance(const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wIn)
+{
+	return Vector3::Dot(p_normal, p_wIn) > 0 ? m_intensity : 0.0f;
+}
+//----------------------------------------------------------------------------------------------
+/*
+	Returns the Radiance L(i, x), where
+	i is the incident vector denoting incoming radiance at x,
+	and x is the location of a differential area on a surface.
+			 
+	The visibility query object, denoted by p_visibilityQuery, is set to the segment
+	(Sp, x), where Sp is the location of the point light.
+	The direction of incident light, denoted by p_direction, is set to (x - Sp).
+*/
+//----------------------------------------------------------------------------------------------
+Spectrum PointLight::SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)
+{
+	// Update visibility query information
+	p_visibilityQuery.SetSegment(m_position, 1e-4f, p_point, 1e-4f); 
+
+	Vector3::Subtract(p_point, m_position, p_wIn);
+	double distanceSquared = p_wIn.LengthSquared();
+	p_wIn.Normalize();
+	p_pdf = 1.0f;
+
+	// Radiance prop to Energy / (Area of sphere * distance squared)
+	// L = Phi / (4*Pi * |Sp - x| ^ 2)
+	return m_intensity / distanceSquared;
+}
+//----------------------------------------------------------------------------------------------
+Spectrum PointLight::SampleRadiance(double p_u, double p_v, Vector3 &p_point, Vector3 &p_normal, float &p_pdf) 
+{
+	p_point = m_position;
+	p_normal = Montecarlo::UniformSampleSphere(p_u, p_v);
+	p_pdf = 1.0f / (4.0f * Maths::Pi);
+
+	return m_intensity;
+}
 //----------------------------------------------------------------------------------------------
 Vector3 PointLight::GetPosition(void) const { 
 	return m_position; 
