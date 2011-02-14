@@ -1,16 +1,14 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	Sandbox.cpp
+//	Filename:	main.cpp
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 // TODO:
+// Double check ILight-derived classes ... some methods have not been tested properly.
 // ?? DistributedRenderer should not instantiate MPI - change it to have it passed to the object
-// ?? Scene should provide more than one kind of sampler
-// Remove old obj loader
-// Refactor *Manager.h files to *Factories.h
-// Finish scene loaders
 // Polish object factories
 // Move factories to CorePlugins.dll
+// Finish scene loaders
 //----------------------------------------------------------------------------------------------
 #include <omp.h>
 
@@ -34,8 +32,6 @@
 #include "Material/MaterialFactories.h"
 #include "Renderer/RendererFactories.h"
 #include "Integrator/IntegratorFactories.h"
-
-#include "Image/ImagePFM.h"
 
 using namespace Illumina::Core;
 
