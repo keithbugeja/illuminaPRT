@@ -276,6 +276,9 @@
     <ClCompile Include="..\..\..\..\Core\Light\InfiniteAreaLight.cpp">
       <Filter>Header Files\Light</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Integrator\PhotonIntegrator.cpp">
+      <Filter>Header Files\Integrator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -676,6 +679,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Image\ImagePFM.h">
       <Filter>Header Files\Image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Integrator\PhotonIntegrator.h">
+      <Filter>Header Files\Integrator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -76,7 +76,7 @@ Spectrum TestIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 				for (size_t lightIdx = 0; lightIdx < p_pScene->LightList.Size(); ++lightIdx)
 				{
 					sample = p_pScene->GetSampler()->Get2DSample();
-					Spectrum Ls = p_pScene->LightList[0]->SampleRadiance(p_intersection.Surface.PointWS, sample.U, sample.V, wIn, visibilityQuery);
+					Spectrum Ls = p_pScene->LightList[0]->SampleRadiance(p_intersection.Surface.PointWS, sample.U, sample.V, wIn, pdf, visibilityQuery);
 				
 					wIn = -wIn;
 

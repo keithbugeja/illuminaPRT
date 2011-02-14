@@ -117,8 +117,10 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, float p_fTime, DifferentialSu
 		v0.Normal.Z * alpha + v1.Normal.Z * beta + v2.Normal.Z * gamma);
 	
 	p_surface.ShadingNormal.Normalize();
-
 	p_surface.GeometryNormal = p_surface.ShadingNormal;
+
+	if (p_surface.ShadingNormal.X != p_surface.ShadingNormal.X)
+		std::cerr << "Warning : Indeterminate normal computation!" << std::endl;
 
 	//// Set geometry normal
 	//p_surface.GeometryNormal = Vector3::Normalize(Vector3::Cross(CA, BA));
