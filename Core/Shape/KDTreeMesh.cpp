@@ -28,9 +28,9 @@ namespace Illumina
 		public:
 			float Min;
 			float Max;
-			KDTreeNode *pNode;
+			KDTreeMeshNode *pNode;
 
-			KDTreeStackElement(KDTreeNode *p_pNode, float p_fMin, float p_fMax)
+			KDTreeStackElement(KDTreeMeshNode *p_pNode, float p_fMin, float p_fMax)
 				: Min(p_fMin)
 				, Max(p_fMax)
 				, pNode(p_pNode)
@@ -48,12 +48,12 @@ namespace Illumina
 //----------------------------------------------------------------------------------------------
 // Helper functions for allocation and deallocation of KDTree nodes
 //----------------------------------------------------------------------------------------------
-KDTreeNode* KDTreeMesh::RequestNode(void)
+KDTreeMeshNode* KDTreeMesh::RequestNode(void)
 {
-	return new KDTreeNode();
+	return new KDTreeMeshNode();
 }
 //----------------------------------------------------------------------------------------------
-int KDTreeMesh::ReleaseNode(KDTreeNode *p_pNode)
+int KDTreeMesh::ReleaseNode(KDTreeMeshNode *p_pNode)
 {
 	int nodesFreed = 0;
 
@@ -169,7 +169,7 @@ std::string KDTreeMesh::ToString(void) const
 //----------------------------------------------------------------------------------------------
 // Performs intersection testing using a stack-based tree traversal method.
 //----------------------------------------------------------------------------------------------
-bool KDTreeMesh::Intersect_Stack(KDTreeNode *p_pNode, Ray &p_ray, float p_fTime)
+bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fTime)
 {
 	AxisAlignedBoundingBox *pAABB = 
 		&p_pNode->BoundingBox;
@@ -188,7 +188,7 @@ bool KDTreeMesh::Intersect_Stack(KDTreeNode *p_pNode, Ray &p_ray, float p_fTime)
 	std::stack<KDTreeStackElement> traverseStack;
 	traverseStack.push(rootElement);
 
-	KDTreeNode *pNode;
+	KDTreeMeshNode *pNode;
 
 	while(!traverseStack.empty())
 	{
@@ -247,7 +247,7 @@ bool KDTreeMesh::Intersect_Stack(KDTreeNode *p_pNode, Ray &p_ray, float p_fTime)
 //----------------------------------------------------------------------------------------------
 // Performs intersection testing using stack-based traversal.
 //----------------------------------------------------------------------------------------------
-bool KDTreeMesh::Intersect_Stack(KDTreeNode *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
+bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 {
 	AxisAlignedBoundingBox *pAABB = 
 		&p_pNode->BoundingBox;
@@ -269,7 +269,7 @@ bool KDTreeMesh::Intersect_Stack(KDTreeNode *p_pNode, Ray &p_ray, float p_fTime,
 	std::stack<KDTreeStackElement> traverseStack;
 	traverseStack.push(rootElement);
 
-	KDTreeNode *pNode;
+	KDTreeMeshNode *pNode;
 
 	while(!traverseStack.empty())
 	{
@@ -340,7 +340,7 @@ bool KDTreeMesh::Intersect_Stack(KDTreeNode *p_pNode, Ray &p_ray, float p_fTime,
 //----------------------------------------------------------------------------------------------
 // Performs intersection testing using recursive traversal.
 //----------------------------------------------------------------------------------------------
-bool KDTreeMesh::Intersect_Recursive(KDTreeNode *p_pNode, Ray &p_ray, float p_fTime)
+bool KDTreeMesh::Intersect_Recursive(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fTime)
 {
 	float in, out;
 
@@ -367,7 +367,7 @@ bool KDTreeMesh::Intersect_Recursive(KDTreeNode *p_pNode, Ray &p_ray, float p_fT
 //----------------------------------------------------------------------------------------------
 // Performs intersection testing using recursive traversal.
 //----------------------------------------------------------------------------------------------
-bool KDTreeMesh::Intersect_Recursive(KDTreeNode *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
+bool KDTreeMesh::Intersect_Recursive(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
 {
 	float in, out;
 
@@ -427,7 +427,7 @@ bool KDTreeMesh::Intersect_Recursive(KDTreeNode *p_pNode, Ray &p_ray, float p_fT
 //----------------------------------------------------------------------------------------------
 // Builds the kd-tree hierarchy
 //----------------------------------------------------------------------------------------------
-void KDTreeMesh::BuildHierarchy(KDTreeNode *p_pNode, List<IndexedTriangle*> &p_objectList, int p_nAxis, int p_nDepth)
+void KDTreeMesh::BuildHierarchy(KDTreeMeshNode *p_pNode, List<IndexedTriangle*> &p_objectList, int p_nAxis, int p_nDepth)
 {
 	ComputeBounds(p_objectList, p_pNode->BoundingBox, 0.0001f, 0.0001f);
 	const Vector3 &size = p_pNode->BoundingBox.GetExtent();
@@ -440,7 +440,7 @@ void KDTreeMesh::BuildHierarchy(KDTreeNode *p_pNode, List<IndexedTriangle*> &p_o
 //----------------------------------------------------------------------------------------------
 // Builds the kd-tree hierarchy
 //----------------------------------------------------------------------------------------------
-void KDTreeMesh::BuildHierarchy_S2(KDTreeNode *p_pNode, List<IndexedTriangle*> &p_objectList, int p_nAxis, int p_nDepth)
+void KDTreeMesh::BuildHierarchy_S2(KDTreeMeshNode *p_pNode, List<IndexedTriangle*> &p_objectList, int p_nAxis, int p_nDepth)
 {
 	// Update stats
 	m_statistics.m_maxTreeDepth = Maths::Min(p_nDepth, m_statistics.m_maxTreeDepth);
