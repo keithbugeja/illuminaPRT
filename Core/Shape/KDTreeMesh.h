@@ -23,7 +23,7 @@ namespace Illumina
 		// Represents a single node in the kd-tree structure. Note that only leaf nodes in the 
 		// structure contain any geometry.
 		//----------------------------------------------------------------------------------------------
-		struct KDTreeNode
+		struct KDTreeMeshNode
 		{
 			// Node Type
 			ITreeMesh::NodeType Type;
@@ -38,13 +38,13 @@ namespace Illumina
 			float Partition;
 
 			// Only if an internal node
-			KDTreeNode *m_pChild[2];
+			KDTreeMeshNode *m_pChild[2];
 
 			// Only if a leaf
 			List<IndexedTriangle*> TriangleList;
 
-			KDTreeNode() { m_pChild[0] = m_pChild[1] = NULL; }
-			~KDTreeNode() { }
+			KDTreeMeshNode() { m_pChild[0] = m_pChild[1] = NULL; }
+			~KDTreeMeshNode() { }
 		};
 
 		//----------------------------------------------------------------------------------------------
@@ -64,14 +64,14 @@ namespace Illumina
 			using ITriangleMesh::VertexList;
 
 		protected:
-			KDTreeNode m_rootNode;
+			KDTreeMeshNode m_rootNode;
 			int m_nMaxLeafObjects;
 			int m_nMaxTreeDepth;
 			float m_nMinNodeWidth;
 
 		protected:
-			KDTreeNode* RequestNode(void);
-			int ReleaseNode(KDTreeNode *p_pNode);
+			KDTreeMeshNode* RequestNode(void);
+			int ReleaseNode(KDTreeMeshNode *p_pNode);
 
 		public:
 			KDTreeMesh(int p_nMaxObjectsPerLeaf = 20, int p_nMaxTreeDepth = 20);
@@ -86,14 +86,14 @@ namespace Illumina
 			std::string ToString(void) const;
 
 		protected:
-			bool Intersect_Stack(KDTreeNode *p_pNode, Ray &p_ray, float p_fTime);
-			bool Intersect_Stack(KDTreeNode *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface);
+			bool Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fTime);
+			bool Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface);
 
-			bool Intersect_Recursive(KDTreeNode *p_pNode, Ray &p_ray, float p_fTime);
-			bool Intersect_Recursive(KDTreeNode *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface);
+			bool Intersect_Recursive(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fTime);
+			bool Intersect_Recursive(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface);
 
-			void BuildHierarchy(KDTreeNode *p_pNode, List<IndexedTriangle*> &p_objectList, int p_nAxis, int p_nDepth = 0);
-			void BuildHierarchy_S2(KDTreeNode *p_pNode, List<IndexedTriangle*> &p_objectList, int p_nAxis, int p_nDepth = 0);
+			void BuildHierarchy(KDTreeMeshNode *p_pNode, List<IndexedTriangle*> &p_objectList, int p_nAxis, int p_nDepth = 0);
+			void BuildHierarchy_S2(KDTreeMeshNode *p_pNode, List<IndexedTriangle*> &p_objectList, int p_nAxis, int p_nDepth = 0);
 		};
 	} 
 }

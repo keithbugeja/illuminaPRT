@@ -49,15 +49,20 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 	
 	VisibilityQuery visibilityQuery(p_pScene);
 	
+	Intersection intersection;
+
 	float sample, pdf;
 	int lightIdx, objIdx;
 	Vector2 uvSample;
 	Vector3 normal,
-		point, wIn;
+		objectPoint, 
+		lightPoint, 
+		wIn;
 
 	// Shoot n photos
 	for (int photon = 0; photon < m_nMaxPhotonCount; ++photon)
 	{
+		/*
 		// Start by selecting a light source
 		sample = p_pScene->GetSampler()->Get1DSample();
 		lightIdx = Maths::Floor(sample * p_pScene->LightList.Size());
@@ -69,10 +74,24 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 		// Now we sample both objects and start casting photon
 		uvSample = p_pScene->GetSampler()->Get2DSample();
 		IPrimitive *pPrimitive = p_pScene->GetSpace()->PrimitiveList[objIdx];
-		point = pPrimitive->SamplePoint(uvSample.U, uvSample.V, normal);
+		objectPoint = pPrimitive->SamplePoint(uvSample.U, uvSample.V, normal);
 
 		uvSample = p_pScene->GetSampler()->Get2DSample();
-		p_pScene->LightList[lightIdx]->SampleRadiance(uvSample.U, uvSample.V, point, normal, pdf);
+		p_pScene->LightList[lightIdx]->SampleRadiance(uvSample.U, uvSample.V, lightPoint, normal, pdf);
+
+		// Cast photon
+		Vector3 photonDirection = Vector3::Normalize(objectPoint - lightPoint);
+		Ray photonRay(lightPoint + photonDirection * 1e-4f, photonDirection);
+
+		p_pScene->Intersects(ray, intersection);
+
+		// Store photon intersection
+		Photon p;
+		p.Direction = photonDirection;
+		p.Position = Intersection.Surface.PointWS;
+		p.Power = p_pScene->LightList[lightIdx]->Radiance(-photonRay);
+
+		*/
 	}
 
 	return true;

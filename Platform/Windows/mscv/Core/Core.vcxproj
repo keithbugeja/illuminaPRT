@@ -292,6 +292,7 @@
     <ClInclude Include="..\..\..\..\Core\Spectrum\BaseSpectrum.h" />
     <ClInclude Include="..\..\..\..\Core\Spectrum\RGBSpectrum.h" />
     <ClInclude Include="..\..\..\..\Core\Spectrum\Spectrum.h" />
+    <ClInclude Include="..\..\..\..\Core\Staging\Acceleration.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\Aggregate.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\WavefrontLoader.h" />
     <ClInclude Include="..\..\..\..\Core\System\ArgumentMap.h" />
