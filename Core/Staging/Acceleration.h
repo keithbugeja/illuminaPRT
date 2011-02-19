@@ -14,39 +14,200 @@ namespace Illumina
 {
 	namespace Core
 	{
-		template <class T>
-		class IAccelerationStructure
-		{
-		public:
-			virtual void Remove(const T &p_element) = 0;
-			virtual void Insert(const T &p_element) = 0;
-
-			virtual bool Build(void) = 0;
-			virtual bool Update(void) = 0;
-
-			// Intersect
-			virtual bool Intersects(const Ray &p_ray) = 0;
-
-			// Find 
-			virtual bool Find(const Ray &p_ray, List<T> p_result) = 0;
-
-			// Lookup
-			virtual bool Lookup(const Vector3 &p_lookupPoint) = 0;
-
-			virtual float GetIntegrityScore(void) = 0;
-		};
-
+		//----------------------------------------------------------------------------------------------
+		//----------------------------------------------------------------------------------------------
 		template <class T>
 		class IAccelerationStructureLookupMethod
 		{
 			virtual bool operator()(const Vector3 &p_lookupPoint, T &p_element) = 0;
 		};
+		//----------------------------------------------------------------------------------------------
+		//----------------------------------------------------------------------------------------------
 
+		//----------------------------------------------------------------------------------------------
+		//----------------------------------------------------------------------------------------------
+		template <class T>
+		class IAccelerationStructure
+		{
+		public:
+			virtual void Remove(T &p_element) = 0;
+			virtual void Insert(T &p_element) = 0;
+
+			virtual bool Build(void) = 0;
+			virtual bool Update(void) = 0;
+
+			virtual bool Lookup(const Vector3 &p_point, float p_fDistance, IAccelerationStructureLookupMethod<T> &p_lookupMethod) = 0;
+
+			virtual float GetIntegrityScore(void) = 0;
+		};
+		//----------------------------------------------------------------------------------------------
+		//----------------------------------------------------------------------------------------------
+
+		//----------------------------------------------------------------------------------------------
+		//----------------------------------------------------------------------------------------------
+		template <class T>
+		class ITreeAccelerationStructure 
+			: public IAccelerationStructure<T>
+		{
+		public:
+			enum NodeType
+			{
+				Internal	= 0,
+				Leaf		= 1
+			};
+
+		protected:
+			enum PartitionType
+			{
+				SpatialMedian,
+				SurfaceAreaHeuristic
+			};
+
+			//----------------------------------------------------------------------------------------------
+			void ComputeBounds(const List<T*> &p_objectList, 
+							   AxisAlignedBoundingBox &p_aabb, 
+							   float p_fMinEpsilon = 0.0f, 
+							   float p_fMaxEpsilon = 0.0f)
+			{
+				p_aabb.Invalidate();
+
+				if (p_objectList.Size() > 0)
+				{
+					p_aabb.ComputeFromVolume(*(p_objectList[0]->GetBoundingVolume()));
+
+					for (int idx = 1, count = (int)p_objectList.Size(); idx < count; idx++) {
+						p_aabb.Union(*(p_objectList[idx]->GetBoundingVolume()));
+					}
+
+					p_aabb.SetMinExtent(p_aabb.GetMinExtent() - p_fMinEpsilon);
+					p_aabb.SetMaxExtent(p_aabb.GetMaxExtent() + p_fMaxEpsilon);
+				}
+			}
+			//----------------------------------------------------------------------------------------------
+			int Distribute(const List<T*> &p_objectList, float p_fPartition, 
+						   int p_nAxis, List<T*> &p_outLeftList, List<T*> &p_outRightList)
+			{
+				int count = (int)p_objectList.Size();
+	
+				for (int n = 0; n < count; n++)
+				{
+					float min = p_objectList[n]->GetBoundingVolume()->GetMinExtent(p_nAxis),
+						max = p_objectList[n]->GetBoundingVolume()->GetMaxExtent(p_nAxis);
+
+					if (p_fPartition >= min) p_outLeftList.PushBack(p_objectList[n]);
+					if (p_fPartition <= max) p_outRightList.PushBack(p_objectList[n]);
+				}
+
+				return (int)p_outLeftList.Size();
+			}
+			//----------------------------------------------------------------------------------------------
+			int Distribute(const List<T*> &p_objectList, 
+						   AxisAlignedBoundingBox &p_leftAABB, AxisAlignedBoundingBox &p_rightAABB, 
+						   List<T*> &p_outLeftList, List<T*> &p_outRightList)
+			{
+				int count = (int)p_objectList.Size();
+	
+				for (int n = 0; n < count; n++)
+				{
+					if (p_objectList[n]->GetBoundingVolume()->Intersects(p_leftAABB))
+						p_outLeftList.PushBack(p_objectList[n]);
+
+					if (p_objectList[n]->GetBoundingVolume()->Intersects(p_rightAABB))
+						p_outRightList.PushBack(p_objectList[n]);
+				}
+
+				return (int)p_outLeftList.Size();
+			}
+			//----------------------------------------------------------------------------------------------
+			float FindPartitionPlane(const List<T*> &p_objectList, 
+									 AxisAlignedBoundingBox &p_aabb, 
+									 int p_nAxis, PartitionType p_partition) 
+			{
+				switch(p_partition)
+				{
+					case SurfaceAreaHeuristic:
+						return FindPartitionPlaneSAH(p_objectList, p_aabb, p_nAxis);
+
+					case SpatialMedian:
+					default:
+						return FindPartitionPlaneSpatialMedian(p_objectList, p_aabb, p_nAxis);
+				}
+			}
+
+			//----------------------------------------------------------------------------------------------
+			float FindPartitionPlaneSpatialMedian(const List<T*> &p_objectList, 
+					AxisAlignedBoundingBox &p_aabb, int p_nAxis) 
+			{
+				return p_aabb.GetCentre()[p_nAxis];
+			}
+			//----------------------------------------------------------------------------------------------
+			float FindPartitionPlaneSAH(const List<T*> &p_objectList, 
+										AxisAlignedBoundingBox &p_aabb, int p_nAxis)
+			{
+				const int Bins = 128;
+
+				int minBins[Bins], 
+					maxBins[Bins];
+
+				for (int j = 0; j < Bins; j++)
+					maxBins[j] = minBins[j] = 0;
+
+				float extent = p_aabb.GetMaxExtent(p_nAxis) - p_aabb.GetMinExtent(p_nAxis),
+					start = p_aabb.GetMinExtent(p_nAxis);
+
+				int count = (int)p_objectList.Size();
+
+				for (int n = 0; n < count; n++)
+				{
+					IBoundingVolume* pAABB = p_objectList[n]->GetBoundingVolume();
+
+					int left = (int)(Bins * ((pAABB->GetMinExtent(p_nAxis) - start) / extent)),
+						right = (int)(Bins * ((pAABB->GetMaxExtent(p_nAxis) - start) / extent));
+
+					if (left >= 0 && left < Bins)
+						minBins[left]++;
+
+					if (right >= 0 && right < Bins)
+						maxBins[right]++;
+				}
+
+				int leftPrims, rightPrims, bestSplit;
+				float cost, bestCost = Maths::Maximum;
+
+				for (int j = 0; j < Bins; j++)
+				{
+					leftPrims = rightPrims = 1;
+
+					for (int k = 0; k <=j; k++)
+						leftPrims += minBins[k];
+
+					for (int k = j; k < Bins; k++)
+						rightPrims += maxBins[k];
+
+					cost = (float)((rightPrims * (Bins - j) + leftPrims * j)) / Bins;
+
+					if (cost < bestCost)
+					{
+						bestCost = cost;
+						bestSplit = j;
+					}
+				}
+
+				return start + (bestSplit * extent) / Bins;
+			}
+		};
+		//----------------------------------------------------------------------------------------------
+		//----------------------------------------------------------------------------------------------
+
+		//----------------------------------------------------------------------------------------------
+		//----------------------------------------------------------------------------------------------
 		template <class T>
 		struct KDTreeNode
 		{
-			unsigned char NodeType : 1;
-			unsigned char Axis	   : 2;
+			AxisAlignedBoundingBox BoundingBox;
+
+			unsigned char Type	: 1;
+			unsigned char Axis	: 2;
 
 			float Partition;
 			KDTreeNode *ChildNode[2];
@@ -55,58 +216,141 @@ namespace Illumina
 			KDTreeNode(void) { ChildNode[0] = ChildNode[1] = NULL; }
 			~KDTreeNode() { }
 		};
+		//----------------------------------------------------------------------------------------------
+		//----------------------------------------------------------------------------------------------
 
-		template <class T, class U>
-		class KDTree 
-			: public IAccelerationStructure<T>
+		//----------------------------------------------------------------------------------------------
+		//----------------------------------------------------------------------------------------------
+		template <class T>
+		class KDTreeLookupMethod
 		{
+			bool operator()(const Vector3 &p_lookupPoint, T &p_element) { return false; }
+		};
+
+		//----------------------------------------------------------------------------------------------
+		//----------------------------------------------------------------------------------------------
+		// T should implement: IBoundingVolume* GetBoundingVolume(void)
+		template <class T>
+		class KDTree 
+			: public ITreeAccelerationStructure<T>
+		{
+			int m_nMaxTreeDepth,
+				m_nMaxLeafObjects;
+
+			float m_fMinNodeWidth;
+
 			KDTreeNode<T*> RootNode;
 			List<T*> ObjectList;
-
+		
 		protected:
-			AxisAlignedBoundingBox ComputeNodeBounds(List<T*> p_objectList) 
+			//----------------------------------------------------------------------------------------------
+			KDTreeNode<T*>* RequestNode(void)
 			{
-				AxisAlignedBoundingBox aabb;
+				return new KDTreeNode<T*>();
+			}
+			//----------------------------------------------------------------------------------------------
+			int ReleaseNode(KDTreeNode<T*> *p_pNode)
+			{
+				int nodesFreed = 0;
+
+				if (p_pNode != NULL && p_pNode->Type == Internal)
+				{
+					nodesFreed += ReleaseNode(p_pNode->ChildNode[0]);
+					nodesFreed += ReleaseNode(p_pNode->ChildNode[1]);
+				}
+				else
+				{
+					Safe_Delete(p_pNode);
+					nodesFreed++;
+				}
+
+				return nodesFreed;
+			}
+			//----------------------------------------------------------------------------------------------
+		public:
+			KDTree(int p_nMaxLeafObjects = 10, int p_nMaxTreeDepth = 16, float p_fMinNodeWidth = 1e-2)
+				: m_nMaxLeafObjects(p_nMaxLeafObjects)
+				, m_nMaxTreeDepth(p_nMaxTreeDepth)
+				, m_fMinNodeWidth(p_fMinNodeWidth)
+			{ }
+
+			KDTree::~KDTree(void)
+			{
+				ReleaseNode(RootNode.ChildNode[0]);
+				ReleaseNode(RootNode.ChildNode[1]);
 			}
 
-		public:
-			void Remove(const T &p_element) {
+			void Remove(T &p_element) {
 				throw new Exception("Method not supported!");
 			}
 
-			void Insert(const T &p_element) {
+			void Insert(T &p_element) {
 				ObjectList.PushBack(&p_element);
+			}
+
+			float GetIntegrityScore(void) {
+				return 0;
 			}
 
 			bool Build(void) 
 			{
-				for (int index = 0; index < ObjectList.Size(); index++)
-				{
-				}
-				// Compute bounding volume of scene
-				// Select initial partition axis
-				// Start building
+				ComputeBounds(ObjectList, RootNode.BoundingBox, 1e-6f, 1e-6f);
+				const Vector3 &size = RootNode.BoundingBox.GetExtent();
+
+				int axis;
+				if (size.X > size.Y) axis = size.X > size.Z ? 0 : 2;
+				else axis = size.Y > size.Z ? 1 : 2;
+
+				BuildHierarchy(&RootNode, ObjectList, axis, 0);
 				return true;
+			}
+
+			void BuildHierarchy(KDTreeNode<T*> *p_pNode, List<T*> &p_objectList, int p_nAxis, int p_nDepth)
+			{
+				// If we have enough objects, we consider this node a leaf
+				if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxTreeDepth || p_pNode->BoundingBox.GetRadius() <= m_fMinNodeWidth)
+				{
+					p_pNode->Type = Leaf; 
+					p_pNode->ObjectList.PushBack(p_objectList);
+				}
+				else
+				{
+					p_pNode->Type = Internal;
+					p_pNode->Axis = p_nAxis;
+					p_pNode->Partition = FindPartitionPlane(p_objectList, p_pNode->BoundingBox, p_nAxis, SurfaceAreaHeuristic);
+
+					List<T*> leftList, rightList;
+					leftList.Clear(); rightList.Clear(); 
+
+					p_pNode->ChildNode[0] = RequestNode();
+					p_pNode->ChildNode[1] = RequestNode();
+
+					AxisAlignedBoundingBox 
+						&leftAABB = p_pNode->ChildNode[0]->BoundingBox,
+						&rightAABB = p_pNode->ChildNode[1]->BoundingBox;
+
+					leftAABB = p_pNode->BoundingBox;
+					rightAABB = p_pNode->BoundingBox;
+
+					leftAABB.SetMaxExtent(p_nAxis, p_pNode->Partition);
+					rightAABB.SetMinExtent(p_nAxis, p_pNode->Partition);
+
+					Distribute(p_objectList, p_pNode->Partition, p_pNode->Axis, leftList, rightList);
+
+					int nAxis = (p_nAxis + 1) % 3,
+						nDepth = p_nDepth + 1;
+
+					BuildHierarchy(p_pNode->ChildNode[0], leftList, nAxis, nDepth);
+					BuildHierarchy(p_pNode->ChildNode[1], rightList, nAxis, nDepth);
+				}
 			}
 
 			bool Update(void) {
 				return true;
 			}
 
-			bool Intersects(const Ray &p_ray) {
+			bool Lookup(const Vector3 &p_point, float p_fDistance, IAccelerationStructureLookupMethod<T> &p_lookupMethod) {
 				return true;
-			}
-
-			bool Find(const Ray &p_ray, List<T> p_result) {
-				return true;
-			}
-
-			bool Lookup(const Vector3 &p_lookupPoint) {
-				return true;
-			}
-
-			float GetIntegrityScore(void) {
-				return 0;
 			}
 		};
 	} 

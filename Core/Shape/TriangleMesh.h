@@ -90,8 +90,8 @@ namespace Illumina
 			Vector3 SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal);
 
 			// Intersect methods
-			virtual bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface) = 0;
-			virtual bool Intersects(const Ray &p_ray, float p_fTime) = 0;
+			virtual bool Intersects(const Ray &p_ray, DifferentialSurface &p_surface) = 0;
+			virtual bool Intersects(const Ray &p_ray) = 0;
 		};		
 	} 
 }

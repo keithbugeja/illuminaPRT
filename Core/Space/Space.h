@@ -35,10 +35,10 @@ namespace Illumina
 			virtual bool Update(void) = 0;
 			virtual bool Build(void) = 0;
 
-			virtual bool Intersects(const Ray &p_ray, float p_fTime, Intersection &p_intersection, IPrimitive *p_pExclude) const = 0;
-			virtual bool Intersects(const Ray &p_ray, float p_fTime, Intersection &p_intersection) const = 0;
-			virtual bool Intersects(const Ray &p_ray, float p_fTime, IPrimitive *p_pExclude) const = 0;
-			virtual bool Intersects(const Ray &p_ray, float p_fTime) const = 0;
+			virtual bool Intersects(const Ray &p_ray, Intersection &p_intersection, IPrimitive *p_pExclude) const = 0;
+			virtual bool Intersects(const Ray &p_ray, Intersection &p_intersection) const = 0;
+			virtual bool Intersects(const Ray &p_ray, IPrimitive *p_pExclude) const = 0;
+			virtual bool Intersects(const Ray &p_ray) const = 0;
 
 			virtual std::string ToString(void) const { return "ISpace"; }
 		};

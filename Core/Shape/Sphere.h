@@ -31,8 +31,8 @@ namespace Illumina
 			void ComputeBoundingVolume(void);
 			IBoundingVolume* GetBoundingVolume(void) const;
 
-			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface);
-			bool Intersects(const Ray &p_ray, float p_fTime);
+			bool Intersects(const Ray &p_ray, DifferentialSurface &p_surface);
+			bool Intersects(const Ray &p_ray);
 
 			float GetArea(void) const;
 			float GetPdf(const Vector3 &p_point) const;

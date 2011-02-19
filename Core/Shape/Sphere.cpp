@@ -45,7 +45,7 @@ IBoundingVolume* Sphere::GetBoundingVolume(void) const {
 	return (IBoundingVolume*)&m_boundingBox;
 }
 //----------------------------------------------------------------------------------------------
-bool Sphere::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
+bool Sphere::Intersects(const Ray &p_ray, DifferentialSurface &p_surface)
 {
 	const Vector3 &temp = p_ray.Origin - Centre;
 	
@@ -85,7 +85,7 @@ bool Sphere::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_
 	return false;
 }
 //----------------------------------------------------------------------------------------------
-bool Sphere::Intersects(const Ray &p_ray, float p_fTime)
+bool Sphere::Intersects(const Ray &p_ray)
 {
 	const Vector3 &temp = p_ray.Origin - Centre;
 	
@@ -140,7 +140,7 @@ Vector3 Sphere::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Ve
 	DifferentialSurface surface;	
 	Ray ray(p_viewPoint, Montecarlo::UniformSampleCone(p_u, p_v, cosThetaMax, basis), 1e-3f);
 	
-	if (!Intersects(ray, 0, surface))
+	if (!Intersects(ray, surface))
 		surface.Distance = Vector3::Dot(viewToCentre, Vector3::Normalize(ray.Direction));
 
 	Vector3 surfacePoint = ray.PointAlongRay(surface.Distance);

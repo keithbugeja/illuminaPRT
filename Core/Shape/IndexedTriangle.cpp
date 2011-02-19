@@ -60,7 +60,7 @@ int IndexedTriangle::GetGroupId(void) const {
 	return m_nGroupID;
 }
 //----------------------------------------------------------------------------------------------
-bool IndexedTriangle::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
+bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surface)
 {
 	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
 		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
@@ -131,7 +131,7 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, float p_fTime, DifferentialSu
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-bool IndexedTriangle::Intersects(const Ray &p_ray, float p_fTime)
+bool IndexedTriangle::Intersects(const Ray &p_ray)
 {
 	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
 		&v1 = m_pMesh->VertexList[m_nVertexID[1]],

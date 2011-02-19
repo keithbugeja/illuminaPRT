@@ -19,24 +19,24 @@ bool Scene::Intersects(const Ray &p_ray, Intersection &p_intersection, IPrimitiv
 {
 	p_intersection.Reset();
 
-	return m_pSpace->Intersects(p_ray, 0.0f, p_intersection, p_pExclude);
+	return m_pSpace->Intersects(p_ray, p_intersection, p_pExclude);
 }
 //----------------------------------------------------------------------------------------------
 bool Scene::Intersects(const Ray &p_ray, Intersection &p_intersection)
 {
 	p_intersection.Reset();
 
-	return m_pSpace->Intersects(p_ray, 0.0f, p_intersection);
+	return m_pSpace->Intersects(p_ray, p_intersection);
 }
 //----------------------------------------------------------------------------------------------
 bool Scene::Intersects(const Ray &p_ray)
 {
-	return m_pSpace->Intersects(p_ray, 0.0f);
+	return m_pSpace->Intersects(p_ray);
 }
 //----------------------------------------------------------------------------------------------
 bool Scene::Intersects(const Ray &p_ray, IPrimitive *p_pExclude)
 {
-	return m_pSpace->Intersects(p_ray, 0.0f, p_pExclude);
+	return m_pSpace->Intersects(p_ray, p_pExclude);
 }
 //----------------------------------------------------------------------------------------------
 ISpace* Scene::GetSpace(void) const

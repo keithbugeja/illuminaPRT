@@ -51,9 +51,8 @@ namespace Illumina
 			virtual bool IsRebuildRequired(void) const { return false; }
 			virtual bool Rebuild(void) { return false; }
 
-			virtual bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface& p_surface, float& p_fTestDensity) { return Intersects(p_ray, p_fTime, p_surface); }
-			virtual bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface& p_surface) = 0;
-			virtual bool Intersects(const Ray &p_ray, float p_fTime) = 0;
+			virtual bool Intersects(const Ray &p_ray, DifferentialSurface& p_surface) = 0;
+			virtual bool Intersects(const Ray &p_ray) = 0;
 
 			virtual float GetArea(void) const = 0;
 			virtual float GetPdf(const Vector3 &p_point) const = 0;

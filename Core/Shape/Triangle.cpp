@@ -83,7 +83,7 @@ bool Triangle::IsBounded(void) const {
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-bool Triangle::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
+bool Triangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surface)
 {
 	const Vector3 &OA = p_ray.Origin - Vertex[0],
 		&BA = Vertex[1] - Vertex[0],
@@ -133,7 +133,7 @@ bool Triangle::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-bool Triangle::Intersects(const Ray &p_ray, float p_fTime)
+bool Triangle::Intersects(const Ray &p_ray)
 {
 	const Vector3 &OA = p_ray.Origin - Vertex[0],
 		&BA = Vertex[1] - Vertex[0],

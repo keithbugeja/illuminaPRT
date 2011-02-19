@@ -28,7 +28,7 @@ namespace Illumina
 			IAreaLight* GetLight(void) const;
 			void SetLight(IAreaLight *p_pLight);
 
-			bool Intersect(const Ray &p_ray, float p_fTime, Intersection &p_intersection);
+			bool Intersect(const Ray &p_ray, Intersection &p_intersection);
 			//bool Intersect(const Ray &p_ray, float p_fTime);
 
 			std::string ToString(void) const;

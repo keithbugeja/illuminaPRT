@@ -23,8 +23,8 @@ namespace Illumina
 			//----------------------------------------------------------------------------------------------
 			boost::shared_ptr<ITriangleMesh> CreateInstance(void);
 			//----------------------------------------------------------------------------------------------
-			bool Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface);
-			bool Intersects(const Ray &p_ray, float p_fTime);
+			bool Intersects(const Ray &p_ray, DifferentialSurface &p_surface);
+			bool Intersects(const Ray &p_ray);
 			//----------------------------------------------------------------------------------------------
 		};
 	} 

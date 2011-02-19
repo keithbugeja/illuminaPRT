@@ -24,9 +24,9 @@ void EmissivePrimitive::SetLight(IAreaLight *p_pLight)
 	m_pLight->SetWorldTransform(&this->WorldTransform);
 }
 //----------------------------------------------------------------------------------------------
-bool EmissivePrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection &p_intersection)
+bool EmissivePrimitive::Intersect(const Ray &p_ray, Intersection &p_intersection)
 {
-	if (GeometricPrimitive::Intersect(p_ray, p_fTime, p_intersection))
+	if (GeometricPrimitive::Intersect(p_ray, p_intersection))
 	{
 		p_intersection.SetLight(m_pLight);
 		return true;
