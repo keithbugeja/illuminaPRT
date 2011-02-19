@@ -15,14 +15,14 @@ boost::shared_ptr<ITriangleMesh> BasicMesh::CreateInstance(void) {
 	return boost::shared_ptr<ITriangleMesh>(new BasicMesh());
 }
 //----------------------------------------------------------------------------------------------
-bool BasicMesh::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
+bool BasicMesh::Intersects(const Ray &p_ray, DifferentialSurface &p_surface)
 {
 	bool bIntersect = false;
 	Ray ray(p_ray);
 
 	for (int idx = 0, count = (int)ITriangleMesh::TriangleList.Size(); idx < count; idx++)
 	{
-		if (ITriangleMesh::TriangleList[idx].Intersects(ray, p_fTime, p_surface))
+		if (ITriangleMesh::TriangleList[idx].Intersects(ray, p_surface))
 		{
 			ray.Max = p_surface.Distance;
 			bIntersect = true;
@@ -32,11 +32,11 @@ bool BasicMesh::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface 
 	return bIntersect;
 }
 //----------------------------------------------------------------------------------------------
-bool BasicMesh::Intersects(const Ray &p_ray, float p_fTime)
+bool BasicMesh::Intersects(const Ray &p_ray)
 {
 	for (int idx = 0, count = (int)ITriangleMesh::TriangleList.Size(); idx < count; idx++)
 	{
-		if (ITriangleMesh::TriangleList[idx].Intersects(p_ray, p_fTime))
+		if (ITriangleMesh::TriangleList[idx].Intersects(p_ray))
 			return true;					
 	}
 

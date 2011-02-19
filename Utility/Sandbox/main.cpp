@@ -33,6 +33,8 @@
 #include "Renderer/RendererFactories.h"
 #include "Integrator/IntegratorFactories.h"
 
+#include "Staging/Acceleration.h"
+
 using namespace Illumina::Core;
 
 void Message(const std::string& p_strMessage, bool p_bVerbose)
@@ -43,6 +45,14 @@ void Message(const std::string& p_strMessage, bool p_bVerbose)
 //----------------------------------------------------------------------------------------------
 void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 {
+	// Test
+	KDTree<Sphere> mytree;
+
+	Sphere p(Vector3::Zero, 2);
+	mytree.Insert(p);
+	mytree.Build();
+	// Test
+
 	//----------------------------------------------------------------------------------------------
 	// Set number of OMP Threads
 	//----------------------------------------------------------------------------------------------

@@ -66,7 +66,7 @@ Vector3 GeometricPrimitive::SamplePoint(const Vector3 &p_viewPoint, float p_u, f
 	}
 }
 //----------------------------------------------------------------------------------------------
-bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection &p_intersection)
+bool GeometricPrimitive::Intersect(const Ray &p_ray, Intersection &p_intersection)
 {
 	// Todo:
 	// Major bottleneck in ray inverse transform and normal rotation
@@ -78,7 +78,7 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection
 	
 		if (m_pShape->GetBoundingVolume()->Intersects(invRay))
 		{
-			if (m_pShape->Intersects(invRay, p_fTime, p_intersection.Surface))
+			if (m_pShape->Intersects(invRay, p_intersection.Surface))
 			{
 				Vector3 shadingNormalWS, 
 					geometryNormalWS;
@@ -120,7 +120,7 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection
 	{
 		if (m_pShape->GetBoundingVolume()->Intersects(p_ray))
 		{
-			if (m_pShape->Intersects(p_ray, p_fTime, p_intersection.Surface))
+			if (m_pShape->Intersects(p_ray, p_intersection.Surface))
 			{
 				// Update geometry normal
 				p_intersection.Surface.GeometryBasisWS.InitFromW(p_intersection.Surface.GeometryNormal);
@@ -157,11 +157,11 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime, Intersection
 	return false;
 }
 //----------------------------------------------------------------------------------------------
-bool GeometricPrimitive::Intersect(const Ray &p_ray, float p_fTime)
+bool GeometricPrimitive::Intersect(const Ray &p_ray)
 {
 	const Ray &invRay = p_ray.ApplyInverse(WorldTransform);
 	return (m_pShape->GetBoundingVolume()->Intersects(p_ray) && 
-			m_pShape->Intersects(invRay, p_fTime));
+			m_pShape->Intersects(invRay));
 }
 //----------------------------------------------------------------------------------------------
 std::string GeometricPrimitive::ToString(void) const { 

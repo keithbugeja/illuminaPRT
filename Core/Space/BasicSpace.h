@@ -24,10 +24,10 @@ namespace Illumina
 			bool Build(void);
 			bool Update(void);
 
-			bool Intersects(const Ray &p_ray, float p_fTime) const;
-			bool Intersects(const Ray &p_ray, float p_fTime, IPrimitive *p_pExclude) const;
-			bool Intersects(const Ray &p_ray, float p_fTime, Intersection &p_intersection) const;
-			bool Intersects(const Ray &p_ray, float p_fTime, Intersection &p_intersection, IPrimitive *p_pExclude) const;
+			bool Intersects(const Ray &p_ray) const;
+			bool Intersects(const Ray &p_ray, IPrimitive *p_pExclude) const;
+			bool Intersects(const Ray &p_ray, Intersection &p_intersection) const;
+			bool Intersects(const Ray &p_ray, Intersection &p_intersection, IPrimitive *p_pExclude) const;
 		};
 	} 
 }

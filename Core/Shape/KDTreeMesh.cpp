@@ -123,7 +123,7 @@ bool KDTreeMesh::Compile(void)
 
 	// Compute the minimum dimensions constraint for a node 				
 	// TODO: Should be parameterised!
-	m_nMinNodeWidth = m_rootNode.BoundingBox.GetRadius() / 1000.0f;
+	m_fMinNodeWidth = m_rootNode.BoundingBox.GetRadius() / 1000.0f;
 				
 	// Build kd-tree hierarchy
 	BuildHierarchy(&m_rootNode, triangleList, 0); 
@@ -139,23 +139,23 @@ bool KDTreeMesh::Compile(void)
 // populates a DifferentialSurface structure with all the details of the intersected
 // surface.
 //----------------------------------------------------------------------------------------------
-bool KDTreeMesh::Intersects(const Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
+bool KDTreeMesh::Intersects(const Ray &p_ray, DifferentialSurface &p_surface)
 {
 	Ray ray(p_ray);
 
-	//return Intersect_Recursive(&m_rootNode, ray, p_fTime, p_surface);
-	return Intersect_Stack(&m_rootNode, ray, p_fTime, p_surface);
+	//return Intersect_Recursive(&m_rootNode, ray, p_surface);
+	return Intersect_Stack(&m_rootNode, ray, p_surface);
 }
 
 //----------------------------------------------------------------------------------------------
 // Performs a quick intersection test, returning whether an intersection has occurred
 // or not, but providing no further details as to the intersection itself.
 //----------------------------------------------------------------------------------------------
-bool KDTreeMesh::Intersects(const Ray &p_ray, float p_fTime)
+bool KDTreeMesh::Intersects(const Ray &p_ray)
 {
 	Ray ray(p_ray);
 
-	return Intersect_Recursive(&m_rootNode, ray, p_fTime);
+	return Intersect_Recursive(&m_rootNode, ray);
 }
 
 //----------------------------------------------------------------------------------------------
@@ -169,7 +169,7 @@ std::string KDTreeMesh::ToString(void) const
 //----------------------------------------------------------------------------------------------
 // Performs intersection testing using a stack-based tree traversal method.
 //----------------------------------------------------------------------------------------------
-bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fTime)
+bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray)
 {
 	AxisAlignedBoundingBox *pAABB = 
 		&p_pNode->BoundingBox;
@@ -235,7 +235,7 @@ bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fT
 		{
 			for (int n = 0; n < count; n++)
 			{
-				if (pNode->TriangleList[n]->Intersects(p_ray, p_fTime))
+				if (pNode->TriangleList[n]->Intersects(p_ray))
 					return true;
 			}
 		}
@@ -247,7 +247,7 @@ bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fT
 //----------------------------------------------------------------------------------------------
 // Performs intersection testing using stack-based traversal.
 //----------------------------------------------------------------------------------------------
-bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
+bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, DifferentialSurface &p_surface)
 {
 	AxisAlignedBoundingBox *pAABB = 
 		&p_pNode->BoundingBox;
@@ -319,7 +319,7 @@ bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fT
 
 			for (int n = 0; n < count; n++)
 			{
-				if (pNode->TriangleList[n]->Intersects(p_ray, p_fTime, p_surface))
+				if (pNode->TriangleList[n]->Intersects(p_ray, p_surface))
 				{
 					p_ray.Max = 
 						tHit = Maths::Min(tHit, p_surface.Distance);
@@ -340,14 +340,14 @@ bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fT
 //----------------------------------------------------------------------------------------------
 // Performs intersection testing using recursive traversal.
 //----------------------------------------------------------------------------------------------
-bool KDTreeMesh::Intersect_Recursive(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fTime)
+bool KDTreeMesh::Intersect_Recursive(KDTreeMeshNode *p_pNode, Ray &p_ray)
 {
 	float in, out;
 
 	if (p_pNode->BoundingBox.Intersects(p_ray, in, out))
 	{
 		if (p_pNode->Type == Internal)
-			return Intersect_Recursive(p_pNode->m_pChild[0], p_ray, p_fTime) || Intersect_Recursive(p_pNode->m_pChild[1], p_ray, p_fTime);
+			return Intersect_Recursive(p_pNode->m_pChild[0], p_ray) || Intersect_Recursive(p_pNode->m_pChild[1], p_ray);
 
 		int count = (int)p_pNode->TriangleList.Size();
 
@@ -356,18 +356,18 @@ bool KDTreeMesh::Intersect_Recursive(KDTreeMeshNode *p_pNode, Ray &p_ray, float 
 
 		for (int n = 0; n < count; n++)
 		{
-			if (p_pNode->TriangleList[n]->Intersects(p_ray, p_fTime))
+			if (p_pNode->TriangleList[n]->Intersects(p_ray))
 				return true;
 		}
 	}
-
+	
 	return false;
 }
 
 //----------------------------------------------------------------------------------------------
 // Performs intersection testing using recursive traversal.
 //----------------------------------------------------------------------------------------------
-bool KDTreeMesh::Intersect_Recursive(KDTreeMeshNode *p_pNode, Ray &p_ray, float p_fTime, DifferentialSurface &p_surface)
+bool KDTreeMesh::Intersect_Recursive(KDTreeMeshNode *p_pNode, Ray &p_ray, DifferentialSurface &p_surface)
 {
 	float in, out;
 
@@ -389,14 +389,14 @@ bool KDTreeMesh::Intersect_Recursive(KDTreeMeshNode *p_pNode, Ray &p_ray, float 
 
 				// split is outside region
 				if (tSplit < in || tSplit > out)
-					return Intersect_Recursive(p_pNode->m_pChild[halfspace], p_ray, p_fTime, p_surface);
+					return Intersect_Recursive(p_pNode->m_pChild[halfspace], p_ray, p_surface);
 				else
-					return Intersect_Recursive(p_pNode->m_pChild[halfspace], p_ray, p_fTime, p_surface) || 
-					Intersect_Recursive(p_pNode->m_pChild[halfspace^1], p_ray, p_fTime, p_surface);
+					return Intersect_Recursive(p_pNode->m_pChild[halfspace], p_ray, p_surface) || 
+					Intersect_Recursive(p_pNode->m_pChild[halfspace^1], p_ray, p_surface);
 			}
 			else
 			{
-				return Intersect_Recursive(p_pNode->m_pChild[halfspace], p_ray, p_fTime, p_surface);
+				return Intersect_Recursive(p_pNode->m_pChild[halfspace], p_ray, p_surface);
 			}
 		}
 
@@ -408,7 +408,7 @@ bool KDTreeMesh::Intersect_Recursive(KDTreeMeshNode *p_pNode, Ray &p_ray, float 
 		{
 			for (int n = 0; n < count; n++)
 			{
-				if (p_pNode->TriangleList[n]->Intersects(p_ray, p_fTime, p_surface))
+				if (p_pNode->TriangleList[n]->Intersects(p_ray, p_surface))
 				{
 					p_ray.Max = Maths::Min(p_ray.Max, p_surface.Distance);
 
@@ -446,7 +446,7 @@ void KDTreeMesh::BuildHierarchy_S2(KDTreeMeshNode *p_pNode, List<IndexedTriangle
 	m_statistics.m_maxTreeDepth = Maths::Min(p_nDepth, m_statistics.m_maxTreeDepth);
 
 	// If we have enough objects, we consider this node a leaf
-	if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxTreeDepth || p_pNode->BoundingBox.GetRadius() <= m_nMinNodeWidth)
+	if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxTreeDepth || p_pNode->BoundingBox.GetRadius() <= m_fMinNodeWidth)
 	{
 		//std::cout << "Adding leaf node [" << p_objectList.Size() << ", " << p_nDepth << "]" << std::endl;
 		p_pNode->Type = Leaf; 
