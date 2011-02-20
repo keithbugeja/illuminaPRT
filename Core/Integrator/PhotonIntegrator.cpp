@@ -8,6 +8,7 @@
 #include "Integrator/PhotonIntegrator.h"
 
 #include "Geometry/Ray.h"
+#include "Geometry/BoundingBox.h"
 #include "Geometry/Intersection.h"
 #include "Sampler/JitterSampler.h"
 #include "Material/Material.h"
@@ -16,13 +17,41 @@
 #include "Scene/Primitive.h"
 #include "Scene/Scene.h"
 
-struct Photon
+namespace Illumina
 {
-	Vector3	Position,
-		Direction;
+	namespace Core
+	{
+		template <class T>
+		class KDTreePhotonLookupMethod
+			: public IAccelerationStructureLookupMethod<T>
+		{
+		public:
+			int points;
+			Spectrum radiance;
 
-	Spectrum Power;
-};
+			void Reset()
+			{
+				radiance = 0;
+				points = 0;
+			}
+
+			bool operator()(const Vector3 &p_lookupPoint, float p_fMaxDistance, T &p_element) 
+			{
+				bool hit = false;
+				const Photon &photon = (const Photon&)p_element;
+				
+				if ((photon.Position - p_lookupPoint).Length() < p_fMaxDistance)
+				{
+					hit = true;
+					radiance += photon.Power;
+				}
+
+				return hit; 
+			}
+		};
+
+	}
+}
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -62,7 +91,6 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 	// Shoot n photos
 	for (int photon = 0; photon < m_nMaxPhotonCount; ++photon)
 	{
-		/*
 		// Start by selecting a light source
 		sample = p_pScene->GetSampler()->Get1DSample();
 		lightIdx = Maths::Floor(sample * p_pScene->LightList.Size());
@@ -81,18 +109,23 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 
 		// Cast photon
 		Vector3 photonDirection = Vector3::Normalize(objectPoint - lightPoint);
-		Ray photonRay(lightPoint + photonDirection * 1e-4f, photonDirection);
+		Ray photonRay(lightPoint + normal * 1e-1f + photonDirection * 1e-1f, photonDirection);
 
-		p_pScene->Intersects(ray, intersection);
+		p_pScene->Intersects(photonRay, intersection);
 
 		// Store photon intersection
 		Photon p;
 		p.Direction = photonDirection;
-		p.Position = Intersection.Surface.PointWS;
+		p.Position = intersection.Surface.PointWS;
 		p.Power = p_pScene->LightList[lightIdx]->Radiance(-photonRay);
 
-		*/
+		m_photonList.PushBack(p);
+		m_photonMap.Insert(p);
 	}
+
+
+	std::cout << "Building photon map..." << std::endl;
+	m_photonMap.Build();
 
 	return true;
 }
@@ -122,6 +155,8 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 	Ray ray(p_ray); 
 
 	float pdf;
+
+	KDTreePhotonLookupMethod<Photon> lookup;
 	
 	for (int rayDepth = 0; rayDepth < m_nMaxRayDepth; rayDepth++)
 	{
@@ -139,6 +174,12 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 			break;
 		}
 		
+		lookup.Reset();
+		if (m_photonMap.Lookup(p_intersection.Surface.PointWS, 1.0f, lookup))
+			L += lookup.radiance / lookup.points;
+
+		return L;
+
 		//----------------------------------------------------------------------------------------------
 		// Primitive has no material assigned - terminate
 		//----------------------------------------------------------------------------------------------

@@ -3,6 +3,11 @@
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
+// TODO: 
+//	1. Split A.S. into separate files
+//  2. Possibly add Intersects method for rays in base class
+//	3. Semantics are unclear - kd-tree stores pointer on insert, not an instance copy
+//	   Perhaps kd-tree->ObjectList should keep instance copies, and nodes keep pointers instead
 //----------------------------------------------------------------------------------------------
 #pragma once
 
@@ -19,7 +24,8 @@ namespace Illumina
 		template <class T>
 		class IAccelerationStructureLookupMethod
 		{
-			virtual bool operator()(const Vector3 &p_lookupPoint, T &p_element) = 0;
+		public:
+			virtual bool operator()(const Vector3 &p_lookupPoint, float p_fMaxDistance, T &p_element) = 0;
 		};
 		//----------------------------------------------------------------------------------------------
 		//----------------------------------------------------------------------------------------------
@@ -36,7 +42,7 @@ namespace Illumina
 			virtual bool Build(void) = 0;
 			virtual bool Update(void) = 0;
 
-			virtual bool Lookup(const Vector3 &p_point, float p_fDistance, IAccelerationStructureLookupMethod<T> &p_lookupMethod) = 0;
+			virtual bool Lookup(const Vector3 &p_point, float p_fRadius, IAccelerationStructureLookupMethod<T> &p_lookupMethod) = 0;
 
 			virtual float GetIntegrityScore(void) = 0;
 		};
@@ -222,9 +228,14 @@ namespace Illumina
 		//----------------------------------------------------------------------------------------------
 		//----------------------------------------------------------------------------------------------
 		template <class T>
-		class KDTreeLookupMethod
+		class KDTreeLookupMethod 
+			: public IAccelerationStructureLookupMethod<T>
 		{
-			bool operator()(const Vector3 &p_lookupPoint, T &p_element) { return false; }
+		public:
+			bool operator()(const Vector3 &p_lookupPoint, float p_fMaxDistance, T &p_element) 
+			{
+				return false; 
+			}
 		};
 
 		//----------------------------------------------------------------------------------------------
@@ -349,8 +360,59 @@ namespace Illumina
 				return true;
 			}
 
-			bool Lookup(const Vector3 &p_point, float p_fDistance, IAccelerationStructureLookupMethod<T> &p_lookupMethod) {
-				return true;
+			//// Lookup for elements in range
+			//bool Lookup(const IBoundingVolume *p_pBoundingVolume, IAccelerationStructureLookupMethod<T> &p_lookupMethod) {
+			//	return true;
+			//}
+
+			// Lookup for elements in range
+			bool Lookup(const Vector3 &p_point, float p_fRadius, IAccelerationStructureLookupMethod<T> &p_lookupMethod) {
+				return Lookup(&RootNode, p_point, p_fRadius, p_lookupMethod);
+			}
+
+			bool Lookup(KDTreeNode<T*> *p_pNode, const Vector3 &p_point, float p_fRadius, IAccelerationStructureLookupMethod<T> &p_lookupMethod) 
+			{
+				if (p_pNode->Type == Internal)
+				{
+					int axis = p_pNode->Axis;
+
+					float min = p_point[axis] - p_fRadius,
+						max = p_point[axis] + p_fRadius;
+
+					bool leftChild = false, 
+						rightChild = false;
+
+					// Intersects both half-spaces
+					if (p_pNode->Partition >= min && p_pNode->Partition <= max) {
+						leftChild = rightChild = true;
+					} 
+					// Intersects left half-space
+					else if (p_pNode->Partition > max) {
+						leftChild = true;
+					}
+					// Intersects right half-space
+					else if (p_pNode->Partition < min) {
+						rightChild = true;
+					}
+
+					if (leftChild && p_pNode->ChildNode[0] != NULL)
+						return Lookup(p_pNode->ChildNode[0], p_point, p_fRadius, p_lookupMethod);
+
+					if (rightChild && p_pNode->ChildNode[1] != NULL)
+						return Lookup(p_pNode->ChildNode[1], p_point, p_fRadius, p_lookupMethod);
+				}
+
+				int count = p_pNode->ObjectList.Size();
+				
+				if (count == 0)
+					return false;
+
+				bool result = false;
+
+				for (int objIdx = 0; objIdx < count; ++objIdx)
+					result |= p_lookupMethod(p_point, p_fRadius, *(p_pNode->ObjectList[objIdx]));
+
+				return result;
 			}
 		};
 	} 

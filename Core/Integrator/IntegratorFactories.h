@@ -12,6 +12,7 @@
 
 #include "Integrator/Integrator.h"
 #include "Integrator/PathIntegrator.h"
+#include "Integrator/PhotonIntegrator.h"
 #include "Integrator/WhittedIntegrator.h"
 #include "Integrator/TestIntegrator.h"
 
@@ -61,6 +62,54 @@ namespace Illumina
 			Illumina::Core::IIntegrator *CreateInstance(int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
 			{
 				return new PathIntegrator(p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
+			}
+		};
+
+		class PhotonIntegratorFactory : public Illumina::Core::Factory<Illumina::Core::IIntegrator>
+		{
+		public:
+			Illumina::Core::IIntegrator *CreateInstance(void)
+			{
+				throw new Exception("Method not supported!");
+			}
+
+			/*
+			 * Arguments
+			 * -- Id {String}
+			 * -- RayDepth {Integer}
+			 * -- ShadowRays {Integer}
+			 * -- Photons {Integer}
+			 * -- Epsilon {Integer}
+			 */
+			Illumina::Core::IIntegrator *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				int raydepth = 6,
+					shadowrays = 1,
+					photons = 1e+5;
+
+				float reflectEpsilon = 1e-4f;
+
+				std::string strId;
+
+				p_argumentMap.GetArgument("RayDepth", raydepth);
+				p_argumentMap.GetArgument("ShadowRays", shadowrays);
+				p_argumentMap.GetArgument("Photons", photons);
+				p_argumentMap.GetArgument("Epsilon", reflectEpsilon);
+
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId, photons, raydepth, shadowrays, reflectEpsilon);
+
+				return CreateInstance(photons, raydepth, shadowrays, reflectEpsilon);
+			}
+
+			Illumina::Core::IIntegrator *CreateInstance(const std::string &p_strId, int p_nPhotons, int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
+			{
+				return new PhotonIntegrator(p_strId, p_nPhotons, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
+			}
+
+			Illumina::Core::IIntegrator *CreateInstance(int p_nPhotons, int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
+			{
+				return new PhotonIntegrator(p_nPhotons, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
 			}
 		};
 
