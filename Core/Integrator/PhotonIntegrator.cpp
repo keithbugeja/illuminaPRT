@@ -17,6 +17,8 @@
 #include "Scene/Primitive.h"
 #include "Scene/Scene.h"
 
+#include "Maths/Montecarlo.h"
+
 namespace Illumina
 {
 	namespace Core
@@ -44,6 +46,7 @@ namespace Illumina
 				{
 					hit = true;
 					radiance += photon.Power;
+					points++;
 				}
 
 				return hit; 
@@ -74,8 +77,6 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 {
 	std::cout << "Constructing photon map" << std::endl;
 
-	List<Photon> photoList(m_nMaxPhotonCount);
-	
 	VisibilityQuery visibilityQuery(p_pScene);
 	
 	Intersection intersection;
@@ -88,6 +89,11 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 		lightPoint, 
 		wIn;
 
+	// for each photon, we have to determine initial ray before using 
+	// a montecarlo like russian roulette to propagate photons across
+	// scene.
+
+
 	// Shoot n photos
 	for (int photon = 0; photon < m_nMaxPhotonCount; ++photon)
 	{
@@ -98,8 +104,6 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 		// Select an object in the scene
 		sample = p_pScene->GetSampler()->Get1DSample();
 		objIdx = Maths::Floor(sample * p_pScene->GetSpace()->PrimitiveList.Size());
-
-		// Now we sample both objects and start casting photon
 
 		// Sample object
 		uvSample = p_pScene->GetSampler()->Get2DSample();
@@ -112,22 +116,29 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 
 		// Cast photon
 		Vector3 photonDirection = Vector3::Normalize(objectPoint - lightPoint);
+		//Vector3 photonDirection = Montecarlo::UniformSampleSphere(uvSample.U, uvSample.V);
 		
 		if (Vector3::Dot(photonDirection, normal) < 0.f)
-			photonDirection = -photonDirection;
+			normal = -normal;
 
-		Ray photonRay(lightPoint + normal * 1e-1f + photonDirection * 1e-1f, photonDirection);
+		Ray photonRay(lightPoint + normal * 1e-4f, photonDirection);
 
-		p_pScene->Intersects(photonRay, intersection);
 
-		// Store photon intersection
-		Photon p;
-		p.Direction = photonDirection;
-		p.Position = intersection.Surface.PointWS;
-		p.Power = p_pScene->LightList[lightIdx]->Radiance(-photonRay);
 
-		m_photonList.PushBack(p);
-		m_photonMap.Insert(m_photonList.Back());
+		if (p_pScene->Intersects(photonRay, intersection))
+		{
+			// Store photon intersection
+			Photon photon;
+
+			photon.Direction = photonDirection;
+			photon.Position = intersection.Surface.PointWS;
+			photon.Power = p_pScene->LightList[lightIdx]->Radiance(
+				photon.Position, 
+				intersection.Surface.ShadingBasisWS.W, 
+				-photonDirection);
+
+			m_photonMap.Insert(photon);
+		}
 	}
 
 	std::cout << "Building photon map..." << std::endl;
@@ -181,7 +192,8 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 		}
 		
 		lookup.Reset();
-		if (m_photonMap.Lookup(p_intersection.Surface.PointWS, 1.0f, lookup))
+
+		if (m_photonMap.Lookup(p_intersection.Surface.PointWS, 1e-1f, lookup))
 			L += lookup.radiance / lookup.points;
 
 		return L;

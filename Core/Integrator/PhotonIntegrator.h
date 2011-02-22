@@ -27,7 +27,7 @@ namespace Illumina
 			AxisAlignedBoundingBox aabb;
 	
 			IBoundingVolume* GetBoundingVolume(void) {
-				aabb.SetExtents(Position, Position);
+				aabb.SetExtents(Position - 1e-1f, Position + 1e-1f);
 				return &aabb;
 			}
 		};
