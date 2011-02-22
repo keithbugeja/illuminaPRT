@@ -100,15 +100,22 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 		objIdx = Maths::Floor(sample * p_pScene->GetSpace()->PrimitiveList.Size());
 
 		// Now we sample both objects and start casting photon
+
+		// Sample object
 		uvSample = p_pScene->GetSampler()->Get2DSample();
 		IPrimitive *pPrimitive = p_pScene->GetSpace()->PrimitiveList[objIdx];
 		objectPoint = pPrimitive->SamplePoint(uvSample.U, uvSample.V, normal);
 
+		// Sample light
 		uvSample = p_pScene->GetSampler()->Get2DSample();
 		p_pScene->LightList[lightIdx]->SampleRadiance(uvSample.U, uvSample.V, lightPoint, normal, pdf);
 
 		// Cast photon
 		Vector3 photonDirection = Vector3::Normalize(objectPoint - lightPoint);
+		
+		if (Vector3::Dot(photonDirection, normal) < 0.f)
+			photonDirection = -photonDirection;
+
 		Ray photonRay(lightPoint + normal * 1e-1f + photonDirection * 1e-1f, photonDirection);
 
 		p_pScene->Intersects(photonRay, intersection);
@@ -120,9 +127,8 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 		p.Power = p_pScene->LightList[lightIdx]->Radiance(-photonRay);
 
 		m_photonList.PushBack(p);
-		m_photonMap.Insert(p);
+		m_photonMap.Insert(m_photonList.Back());
 	}
-
 
 	std::cout << "Building photon map..." << std::endl;
 	m_photonMap.Build();
