@@ -253,7 +253,7 @@ namespace Illumina
 			float m_fMinNodeWidth;
 
 			KDTreeNode<T*> RootNode;
-			List<T*> ObjectList;
+			List<T> ObjectList;
 		
 		protected:
 			//----------------------------------------------------------------------------------------------
@@ -298,7 +298,7 @@ namespace Illumina
 			}
 
 			void Insert(T &p_element) {
-				ObjectList.PushBack(&p_element);
+				ObjectList.PushBack(p_element);
 			}
 
 			float GetIntegrityScore(void) {
@@ -307,14 +307,22 @@ namespace Illumina
 
 			bool Build(void) 
 			{
-				ComputeBounds(ObjectList, RootNode.BoundingBox, 1e-6f, 1e-6f);
+				// Generate a list of pointers 
+				int objectCount = (int)ObjectList.Size();
+				List<T*> localObjectList(objectCount);
+
+				for (int objIdx = 0; objIdx < objectCount; ++objIdx) {
+					localObjectList.PushBack(&ObjectList[objIdx]);
+				}
+
+				ComputeBounds(localObjectList, RootNode.BoundingBox, 1e-6f, 1e-6f);
 				const Vector3 &size = RootNode.BoundingBox.GetExtent();
 
 				int axis;
 				if (size.X > size.Y) axis = size.X > size.Z ? 0 : 2;
 				else axis = size.Y > size.Z ? 1 : 2;
 
-				BuildHierarchy(&RootNode, ObjectList, axis, 0);
+				BuildHierarchy(&RootNode, localObjectList, axis, 0);
 				return true;
 			}
 
@@ -384,18 +392,27 @@ namespace Illumina
 					bool leftChild = false, 
 						rightChild = false;
 
-					// Intersects both half-spaces
-					if (p_pNode->Partition >= min && p_pNode->Partition <= max) {
+					if (p_pNode->Partition >= min && p_pNode->Partition <= max)
 						leftChild = rightChild = true;
-					} 
-					// Intersects left half-space
-					else if (p_pNode->Partition > max) {
-						leftChild = true;
-					}
-					// Intersects right half-space
-					else if (p_pNode->Partition < min) {
+
+					if (p_pNode->Partition <= min)
 						rightChild = true;
-					}
+
+					if (p_pNode->Partition >= max)
+						leftChild = true;
+
+					//// Intersects both half-spaces
+					//if (p_pNode->Partition >= min && p_pNode->Partition <= max) {
+					//	leftChild = rightChild = true;
+					//} 
+					//// Intersects left half-space
+					//else if (p_pNode->Partition > max) {
+					//	leftChild = true;
+					//}
+					//// Intersects right half-space
+					//else if (p_pNode->Partition < min) {
+					//	rightChild = true;
+					//}
 
 					if (leftChild && p_pNode->ChildNode[0] != NULL)
 						return Lookup(p_pNode->ChildNode[0], p_point, p_fRadius, p_lookupMethod);
