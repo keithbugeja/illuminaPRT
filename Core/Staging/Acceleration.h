@@ -79,7 +79,9 @@ namespace Illumina
 
 				if (p_objectList.Size() > 0)
 				{
-					p_aabb.ComputeFromVolume(*(p_objectList[0]->GetBoundingVolume()));
+					IBoundingVolume *pBox = pBox = p_objectList[0]->GetBoundingVolume();
+					p_aabb.ComputeFromVolume(*pBox);
+					//p_aabb.ComputeFromVolume(*(p_objectList[0]->GetBoundingVolume()));
 
 					for (int idx = 1, count = (int)p_objectList.Size(); idx < count; idx++) {
 						p_aabb.Union(*(p_objectList[idx]->GetBoundingVolume()));
