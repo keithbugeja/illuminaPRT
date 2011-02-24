@@ -93,7 +93,6 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 	// a montecarlo like russian roulette to propagate photons across
 	// scene.
 
-
 	// Shoot n photos
 	for (int photon = 0; photon < m_nMaxPhotonCount; ++photon)
 	{
@@ -121,10 +120,77 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 		if (Vector3::Dot(photonDirection, normal) < 0.f)
 			normal = -normal;
 
-		Ray photonRay(lightPoint + normal * 1e-4f, photonDirection);
+		Ray photonRay(lightPoint + normal * 1e-1f, photonDirection);
 
+		// Set up some common data
+		Spectrum pathThroughput, power(100);
 
+		Vector3 wIn, wInLocal,
+			wOut, wOutLocal;
 
+		BxDF::Type bxdfType;
+
+		bool specularBounce = false;
+		float pdf = 0.f;
+		int maxBounces = 4;
+
+		for (int bounce = 0; bounce < maxBounces; ++bounce)
+		{
+			if (p_pScene->Intersects(photonRay, intersection))
+			{
+				if (intersection.HasMaterial())
+				{
+					IMaterial *pMaterial = intersection.GetMaterial();
+
+					uvSample = p_pScene->GetSampler()->Get2DSample();
+					BSDF::WorldToSurface(intersection.WorldTransform, 
+						intersection.Surface, wOut, wOutLocal);
+
+					Spectrum f = pMaterial->SampleF(intersection.Surface, 
+						wOutLocal, wInLocal, uvSample.U, uvSample.V, 
+						&pdf, BxDF::All_Combined, &bxdfType);
+
+					if (f.IsBlack() || pdf == 0.0f) 
+						break;
+
+					specularBounce = ((int)(bxdfType & BxDF::Specular)) != 0;
+
+					BSDF::SurfaceToWorld(intersection.WorldTransform, 
+						intersection.Surface, wInLocal, wIn);
+
+					// Store photon if surface is diffuse
+					if (!specularBounce)
+					{
+						Photon photon;
+						photon.Direction = photonRay.Direction;
+						photon.Position = intersection.Surface.PointWS;
+						photon.Power = power;
+
+						m_photonMap.Insert(photon);
+					}
+
+					photonRay.Min = 0.f;
+					photonRay.Max = Maths::Maximum;
+					photonRay.Origin = intersection.Surface.PointWS + wIn * 1e-1f;
+					photonRay.Direction = wIn;
+		
+					// Update path contribution at current stage
+					pathThroughput *= f * Vector3::AbsDot(wIn, intersection.Surface.GeometryBasisWS.W) / pdf;
+
+					if (bounce > 3)
+					{
+						float continueProbability = Maths::Min(0.5f, 0.33f * pathThroughput[0] + pathThroughput[1] + pathThroughput[2]);
+
+						if (p_pScene->GetSampler()->Get1DSample() > continueProbability)
+							break;
+
+						pathThroughput /= continueProbability;
+					}
+				}
+			}
+		}
+
+		/*
 		if (p_pScene->Intersects(photonRay, intersection))
 		{
 			// Store photon intersection
@@ -139,6 +205,7 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 
 			m_photonMap.Insert(photon);
 		}
+		*/
 	}
 
 	std::cout << "Building photon map..." << std::endl;
@@ -193,8 +260,8 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 		
 		lookup.Reset();
 
-		if (m_photonMap.Lookup(p_intersection.Surface.PointWS, 1e-1f, lookup))
-			L += lookup.radiance / lookup.points;
+		if (m_photonMap.Lookup(p_intersection.Surface.PointWS, 0.2f, lookup))
+			L += pathThroughput * lookup.radiance / lookup.points;
 
 		return L;
 
