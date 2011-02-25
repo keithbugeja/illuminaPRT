@@ -81,7 +81,6 @@ namespace Illumina
 				{
 					IBoundingVolume *pBox = pBox = p_objectList[0]->GetBoundingVolume();
 					p_aabb.ComputeFromVolume(*pBox);
-					//p_aabb.ComputeFromVolume(*(p_objectList[0]->GetBoundingVolume()));
 
 					for (int idx = 1, count = (int)p_objectList.Size(); idx < count; idx++) {
 						p_aabb.Union(*(p_objectList[idx]->GetBoundingVolume()));
@@ -357,6 +356,8 @@ namespace Illumina
 					rightAABB.SetMinExtent(p_nAxis, p_pNode->Partition);
 
 					Distribute(p_objectList, p_pNode->Partition, p_pNode->Axis, leftList, rightList);
+
+					std::cout << leftList.Size() << ", " << rightList.Size() << std::endl;
 
 					int nAxis = (p_nAxis + 1) % 3,
 						nDepth = p_nDepth + 1;
