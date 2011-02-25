@@ -64,6 +64,7 @@ PhotonIntegrator::PhotonIntegrator(const std::string &p_strName, int p_nMaxPhoto
 	, m_nShadowSampleCount(p_nShadowSampleCount)
 	, m_nMaxRayDepth(p_nMaxRayDepth)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
+	, m_photonMap(5, 16, 1e-1f)
 { }
 //----------------------------------------------------------------------------------------------
 PhotonIntegrator::PhotonIntegrator(int p_nMaxPhotonCount, int p_nMaxRayDepth, int p_nShadowSampleCount, float p_fReflectEpsilon)
@@ -71,6 +72,7 @@ PhotonIntegrator::PhotonIntegrator(int p_nMaxPhotonCount, int p_nMaxRayDepth, in
 	, m_nShadowSampleCount(p_nShadowSampleCount)
 	, m_nMaxRayDepth(p_nMaxRayDepth)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
+	, m_photonMap(5, 16, 1e-1f)
 { }
 //----------------------------------------------------------------------------------------------
 bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
@@ -242,6 +244,13 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 
 	KDTreePhotonLookupMethod<Photon> lookup;
 	
+	lookup.Reset();
+	
+	m_photonMap.Lookup(p_intersection.Surface.PointWS, 10.0f, lookup);
+	L = lookup.radiance;
+
+	return L;
+
 	for (int rayDepth = 0; rayDepth < m_nMaxRayDepth; rayDepth++)
 	{
 		//----------------------------------------------------------------------------------------------
@@ -260,8 +269,8 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 		
 		lookup.Reset();
 
-		if (m_photonMap.Lookup(p_intersection.Surface.PointWS, 0.2f, lookup))
-			L += pathThroughput * lookup.radiance / lookup.points;
+		if (m_photonMap.Lookup(p_intersection.Surface.PointWS, 10.0f, lookup))
+			L = pathThroughput * lookup.radiance;// / lookup.points;
 
 		return L;
 
