@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Integrator/Integrator.h"
+#include "Material/Material.h"
 #include "Maths/Random.h"
 
 #include "Staging/Acceleration.h"
@@ -47,7 +48,12 @@ namespace Illumina
 			Random m_random;
 
 			List<Photon> m_photonList;
+
 			KDTree<Photon> m_photonMap;
+
+			KDTree<Photon> m_directMap;
+			KDTree<Photon> m_indirectMap;
+			KDTree<Photon> m_causticsMap;
 
 		public:
 			PhotonIntegrator(const std::string &p_strName, int p_nMaxPhotonCount = 100000, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 16, float p_fReflectEpsilon = 1E-1f);
@@ -60,6 +66,7 @@ namespace Illumina
 		
 		protected:
 			Spectrum Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, int p_nDepth);
+			Spectrum SampleF(Scene *p_pScene, Intersection &p_intersection, const Vector3 &p_wOut, Vector3 &p_wIn, float &p_pdf, BxDF::Type &p_bxdfType);
 		};
 	}
 }

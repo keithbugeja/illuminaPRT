@@ -162,7 +162,7 @@ Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 		//----------------------------------------------------------------------------------------------
 		if (rayDepth > 3)
 		{
-			float continueProbability = Maths::Min(0.5f, 0.33f * pathThroughput[0] + pathThroughput[1] + pathThroughput[2]);
+			float continueProbability = Maths::Min(0.5f, 0.33f * (pathThroughput[0] + pathThroughput[1] + pathThroughput[2]));
 
 			if (p_pScene->GetSampler()->Get1DSample() > continueProbability)
 				break;

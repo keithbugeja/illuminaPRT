@@ -59,39 +59,40 @@ Spectrum InfiniteAreaLight::Radiance(const Ray &p_ray)
 	return Radiance(p_ray.Direction);
 }
 //----------------------------------------------------------------------------------------------
-Spectrum InfiniteAreaLight::Radiance(const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wIn)
+Spectrum InfiniteAreaLight::Radiance(const Vector3 &p_lightSurfacePoint, const Vector3 &p_lightSurfaceNormal, const Vector3 &p_wIn)
 {
-	return Vector3::Dot(p_normal, p_wIn) > 0 ? Radiance(p_wIn) : 0.0f;
+	return Vector3::Dot(p_lightSurfaceNormal, p_wIn) > 0 ? Radiance(p_wIn) : 0.0f;
 }
 //----------------------------------------------------------------------------------------------
-Spectrum InfiniteAreaLight::SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3& p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)
+Spectrum InfiniteAreaLight::SampleRadiance(const Vector3 &p_surfacePoint, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)
 {
 	throw new Exception("Method not supported!");
 }
 //----------------------------------------------------------------------------------------------
-Spectrum InfiniteAreaLight::SampleRadiance(const Vector3 &p_point, const Vector3 &p_normal, double p_u, double p_v, Vector3& p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)
+Spectrum InfiniteAreaLight::SampleRadiance(const Vector3 &p_surfacePoint, const Vector3 &p_surfaceNormal, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)
 {
-	OrthonormalBasis basis; basis.InitFromW(p_normal);
+	OrthonormalBasis basis; basis.InitFromW(p_surfaceNormal);
 	p_wIn = Montecarlo::UniformSampleCone(p_u, p_v, 1e-3f, basis);
-	p_visibilityQuery.SetSegment(p_point, p_wIn, Maths::Maximum, 1e-4f);
+	p_visibilityQuery.SetSegment(p_surfacePoint, p_wIn, Maths::Maximum, 1e-4f);
 	p_wIn = -p_wIn;
 	
-	// PDF is not correct!
-	p_pdf = 1.0f;
+	p_pdf = 0.5f / Maths::PiTwo;
 	
 	return Radiance(p_wIn);
 }
 //----------------------------------------------------------------------------------------------
-Spectrum InfiniteAreaLight::SampleRadiance(double p_u, double p_v, Vector3 &p_point, Vector3 &p_normal, float &p_pdf)
+Vector3 InfiniteAreaLight::SamplePoint(const Vector3 &p_viewPoint, double p_u, double p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf)
 {
-	p_normal = Montecarlo::UniformSampleSphere(p_u, p_v);
-	p_point = p_normal * 1e+38; // Arbitrarily large
-	p_normal = -p_normal;
+	return SamplePoint(p_u, p_v, p_lightSurfaceNormal, p_pdf);
+}
+//----------------------------------------------------------------------------------------------
+Vector3 InfiniteAreaLight::SamplePoint(double p_u, double p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf)
+{
+	p_pdf = 0.5f / Maths::PiTwo;
 
-	// To work out
-	p_pdf = 1.0f;
+	p_lightSurfaceNormal = -Montecarlo::UniformSampleSphere(p_u, p_v);
 
-	return Radiance(p_normal);
+	return p_lightSurfaceNormal * -1e+38; // Arbitrarily large
 }
 //----------------------------------------------------------------------------------------------
 ITexture* InfiniteAreaLight::GetTexture(void) const { 
