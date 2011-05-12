@@ -292,6 +292,14 @@ namespace Illumina
 				ReleaseNode(RootNode.ChildNode[1]);
 			}
 
+			void Clear(void) 
+			{
+				ReleaseNode(RootNode.ChildNode[0]);
+				ReleaseNode(RootNode.ChildNode[1]);
+
+				ObjectList.Clear();
+			}
+
 			void Remove(T &p_element) {
 				throw new Exception("Method not supported!");
 			}
@@ -383,6 +391,9 @@ namespace Illumina
 
 			bool Lookup(KDTreeNode<T*> *p_pNode, const Vector3 &p_point, float p_fRadius, IAccelerationStructureLookupMethod<T> &p_lookupMethod) 
 			{
+				bool result = false;
+
+				// Should not have any objects in list
 				if (p_pNode->Type == Internal)
 				{
 					int axis = p_pNode->Axis;
@@ -390,47 +401,29 @@ namespace Illumina
 					float min = p_point[axis] - p_fRadius,
 						max = p_point[axis] + p_fRadius;
 
-					bool leftChild = false, 
+					bool leftChild = false,
 						rightChild = false;
 
-					if (p_pNode->Partition >= min && p_pNode->Partition <= max)
-						leftChild = rightChild = true;
-
-					if (p_pNode->Partition <= min)
-						rightChild = true;
-
-					if (p_pNode->Partition >= max)
-						leftChild = true;
-
-					//// Intersects both half-spaces
-					//if (p_pNode->Partition >= min && p_pNode->Partition <= max) {
-					//	leftChild = rightChild = true;
-					//} 
-					//// Intersects left half-space
-					//else if (p_pNode->Partition > max) {
-					//	leftChild = true;
-					//}
-					//// Intersects right half-space
-					//else if (p_pNode->Partition < min) {
-					//	rightChild = true;
-					//}
+					if (p_pNode->Partition >= min) leftChild = true;
+					if (p_pNode->Partition <= max) rightChild = true;
 
 					if (leftChild && p_pNode->ChildNode[0] != NULL)
-						return Lookup(p_pNode->ChildNode[0], p_point, p_fRadius, p_lookupMethod);
+						result |= Lookup(p_pNode->ChildNode[0], p_point, p_fRadius, p_lookupMethod);
 
 					if (rightChild && p_pNode->ChildNode[1] != NULL)
-						return Lookup(p_pNode->ChildNode[1], p_point, p_fRadius, p_lookupMethod);
+						result |= Lookup(p_pNode->ChildNode[1], p_point, p_fRadius, p_lookupMethod);
 				}
-
-				int count = p_pNode->ObjectList.Size();
+				else
+				{
+					// Has objects in list
+					int count = p_pNode->ObjectList.Size();
 				
-				if (count == 0)
-					return false;
+					if (count == 0)
+						return false;
 
-				bool result = false;
-
-				for (int objIdx = 0; objIdx < count; ++objIdx)
-					result |= p_lookupMethod(p_point, p_fRadius, *(p_pNode->ObjectList[objIdx]));
+					for (int objIdx = 0; objIdx < count; ++objIdx)
+						result |= p_lookupMethod(p_point, p_fRadius, *(p_pNode->ObjectList[objIdx]));
+				}
 
 				return result;
 			}

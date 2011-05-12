@@ -29,29 +29,55 @@ namespace Illumina
 			ILight(void) { }
 
 		public:
+			//----------------------------------------------------------------------------------------------
+			/* 
+			 */
 			virtual float Pdf(const Vector3 &p_point, const Vector3 &p_wOut) = 0;
 
+			//----------------------------------------------------------------------------------------------
+			/* Returns an approximation of the total emitted power by the luminaire.
+			 */
 			virtual Spectrum Power(void) = 0;
-			virtual Spectrum Radiance(const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wIn) = 0;
+
+			//----------------------------------------------------------------------------------------------
+			/* Returns the Radiance emitted by the luminaire along the specified ray.
+			 */
 			virtual Spectrum Radiance(const Ray &p_ray) { return 0.0f; }
 
 			//----------------------------------------------------------------------------------------------
-			/* 
-			 * Sample radiance methods should return surface radiance on the luminaire compounded with the geometry term:
-			 * Le(x', x - x') * G(x, x'), where G(x, x') = ((x'/|x'|) . n') / (p(x') * |x - x'|^2)
-			 * Note that the foreshortening term (x/|x| . n) missing from G() should be supplied.
-			 *
-			 * The method also populates a VisibilityQuery structure which allows the test for visibility between
-			 * points, v(x, x') to be carried out.
-			 *
-			 * Note that the direction of wIn is from the sampled point on the luminaire towards p_point.
+			/* Returns the Radiance emitted at the specified point on the surface of the luminaire along
+			 * the direction vector wIn.
+			 * 
+			 * This method is mainly employed by area lights that have a position and volume in space.
 			 */
-			virtual Spectrum SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery) = 0;
-			virtual Spectrum SampleRadiance(const Vector3 &p_point, const Vector3 &p_normal, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery) {
-				return SampleRadiance(p_point, p_u, p_v, p_wIn, p_pdf, p_visibilityQuery); 
+			virtual Spectrum Radiance(const Vector3 &p_lightSurfacePoint, const Vector3 &p_lightSurfaceNormal, const Vector3 &p_wIn) = 0;
+			
+			//----------------------------------------------------------------------------------------------
+			/* Samples a point on the luminaire.
+			 */
+			virtual Vector3 SamplePoint(double p_u, double p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf) = 0;
+
+			virtual Vector3 SamplePoint(const Vector3 &p_viewPoint, double p_u, double p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf)
+			{
+				return SamplePoint(p_u, p_v, p_lightSurfaceNormal, p_pdf);
 			}
 
-			virtual Spectrum SampleRadiance(double p_u, double p_v, Vector3 &p_point, Vector3 &p_normal, float &p_pdf) = 0;
+			//----------------------------------------------------------------------------------------------
+			/* Computes emitted radiance towards the specified point. The vector wIn is given the direction
+			 * from the sampled point on the luminaire towards the specified surface point:
+			 *
+			 *    wIn = surfacePoint - sampledPoint
+			 * 
+			 * The pdf gives specifies the contribution of the estimated radiance, while the visibility 
+			 * query structure is enabled to occlusion testing between the two points.			 
+			 */
+			virtual Spectrum SampleRadiance(const Vector3 &p_surfacePoint, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery) = 0;
+
+			virtual Spectrum SampleRadiance(const Vector3 &p_surfacePoint, const Vector3 &p_surfaceNormal, float p_u, float p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery) 
+			{
+				return SampleRadiance(p_surfacePoint, p_u, p_v, p_wIn, p_pdf, p_visibilityQuery);
+			}
+
 			//----------------------------------------------------------------------------------------------
 			std::string ToString(void) const { return "ILight"; }
 		};

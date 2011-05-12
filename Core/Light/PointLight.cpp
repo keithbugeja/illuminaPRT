@@ -34,9 +34,9 @@ Spectrum PointLight::Power(void) {
 	return m_intensity * 4.0 * Maths::Pi;
 }
 //----------------------------------------------------------------------------------------------
-Spectrum PointLight::Radiance(const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wIn)
+Spectrum PointLight::Radiance(const Vector3 &p_lightSurfacePoint, const Vector3 &p_lightSurfaceNormal, const Vector3 &p_wIn)
 {
-	return Vector3::Dot(p_normal, p_wIn) > 0 ? m_intensity : 0.0f;
+	return Vector3::Dot(p_lightSurfacePoint, p_wIn) > 0 ? m_intensity : 0.0f;
 }
 //----------------------------------------------------------------------------------------------
 /*
@@ -49,12 +49,12 @@ Spectrum PointLight::Radiance(const Vector3 &p_point, const Vector3 &p_normal, c
 	The direction of incident light, denoted by p_direction, is set to (x - Sp).
 */
 //----------------------------------------------------------------------------------------------
-Spectrum PointLight::SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)
+Spectrum PointLight::SampleRadiance(const Vector3 &p_surfacePoint, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)
 {
 	// Update visibility query information
-	p_visibilityQuery.SetSegment(m_position, 1e-4f, p_point, 1e-4f); 
+	p_visibilityQuery.SetSegment(m_position, 1e-4f, p_surfacePoint, 1e-4f); 
 
-	Vector3::Subtract(p_point, m_position, p_wIn);
+	Vector3::Subtract(p_surfacePoint, m_position, p_wIn);
 	double distanceSquared = p_wIn.LengthSquared();
 	p_wIn.Normalize();
 	p_pdf = 1.0f;
@@ -64,13 +64,11 @@ Spectrum PointLight::SampleRadiance(const Vector3 &p_point, double p_u, double p
 	return m_intensity / distanceSquared;
 }
 //----------------------------------------------------------------------------------------------
-Spectrum PointLight::SampleRadiance(double p_u, double p_v, Vector3 &p_point, Vector3 &p_normal, float &p_pdf) 
+Vector3 PointLight::SamplePoint(double p_u, double p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf)
 {
-	p_point = m_position;
-	p_normal = Montecarlo::UniformSampleSphere(p_u, p_v);
-	p_pdf = 1.0f / (4.0f * Maths::Pi);
-
-	return m_intensity;
+	p_pdf = 0.5f / Maths::PiTwo;
+	p_lightSurfaceNormal = Montecarlo::UniformSampleSphere(p_u, p_v);
+	return m_position;
 }
 //----------------------------------------------------------------------------------------------
 Vector3 PointLight::GetPosition(void) const { 

@@ -26,12 +26,15 @@ namespace Illumina
 			float Pdf(const Vector3 &p_point, const Vector3 &p_wOut);
 
 			Spectrum Power(void);
+
 			Spectrum Radiance(const Ray &p_ray);
-			Spectrum Radiance(const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wIn);
+			Spectrum Radiance(const Vector3 &p_lightSurfacePoint, const Vector3 &p_lightSurfaceNormal, const Vector3 &p_wIn);
+
+			Spectrum SampleRadiance(const Vector3 &p_surfacePoint, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery);
+			Spectrum SampleRadiance(const Vector3 &p_surfacePoint, const Vector3 &p_surfaceNormal, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery);
 			
-			Spectrum SampleRadiance(const Vector3 &p_point, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery);
-			Spectrum SampleRadiance(const Vector3 &p_point, const Vector3 &p_normal, double p_u, double p_v, Vector3& p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery);
-			Spectrum SampleRadiance(double p_u, double p_v, Vector3 &p_point, Vector3 &p_normal, float &p_pdf);
+			Vector3 SamplePoint(const Vector3 &p_viewPoint, double p_u, double p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf);
+			Vector3 SamplePoint(double p_u, double p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf);
 
 			ITexture *GetTexture(void) const;
 			void SetTexture(ITexture *p_pTexture);
