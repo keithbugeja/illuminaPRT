@@ -28,6 +28,7 @@ namespace Illumina
 
 		public:
 			Intersection(void);
+			Intersection(const Intersection &p_intersection);
 
 			void Reset(void);
 
@@ -42,6 +43,8 @@ namespace Illumina
 
 			ILight* GetLight(void) const;
 			void SetLight(ILight* p_pLight);
+
+			const Intersection& operator=(const Intersection &p_intersection);
 		};
 	}
 }

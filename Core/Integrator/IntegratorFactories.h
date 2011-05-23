@@ -12,6 +12,7 @@
 
 #include "Integrator/Integrator.h"
 #include "Integrator/PathIntegrator.h"
+#include "Integrator/IGIIntegrator.h"
 #include "Integrator/PhotonIntegrator.h"
 #include "Integrator/WhittedIntegrator.h"
 #include "Integrator/TestIntegrator.h"
@@ -62,6 +63,54 @@ namespace Illumina
 			Illumina::Core::IIntegrator *CreateInstance(int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
 			{
 				return new PathIntegrator(p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
+			}
+		};
+
+		class IGIIntegratorFactory : public Illumina::Core::Factory<Illumina::Core::IIntegrator>
+		{
+		public:
+			Illumina::Core::IIntegrator *CreateInstance(void)
+			{
+				throw new Exception("Method not supported!");
+			}
+
+			/*
+			 * Arguments
+			 * -- Id {String}
+			 * -- MaxVPLs {Integer}
+			 * -- RayDepth {Integer}
+			 * -- ShadowRays {Integer}
+			 * -- Epsilon {Integer}
+			 */
+			Illumina::Core::IIntegrator *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				int maxVPLs, 
+					raydepth,
+					shadowrays;
+
+				float reflectEpsilon = 1e-4f;
+
+				std::string strId;
+
+				p_argumentMap.GetArgument("MaxVPL", maxVPLs);
+				p_argumentMap.GetArgument("RayDepth", raydepth);
+				p_argumentMap.GetArgument("ShadowRays", shadowrays);
+				p_argumentMap.GetArgument("Epsilon", reflectEpsilon);
+
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId, maxVPLs, raydepth, shadowrays, reflectEpsilon);
+
+				return CreateInstance(maxVPLs, raydepth, shadowrays, reflectEpsilon);
+			}
+
+			Illumina::Core::IIntegrator *CreateInstance(const std::string &p_strId, int p_nMaxVPLs, int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
+			{
+				return new IGIIntegrator(p_strId, p_nMaxVPLs, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
+			}
+
+			Illumina::Core::IIntegrator *CreateInstance(int p_nMaxVPLs, int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
+			{
+				return new IGIIntegrator(p_nMaxVPLs, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
 			}
 		};
 

@@ -42,6 +42,18 @@ namespace Illumina
 
 		public:
 			DifferentialSurface(void) : Distance(Maths::Maximum) { }
+			DifferentialSurface(const DifferentialSurface &p_surface) 
+				: ShadingNormal(p_surface.ShadingNormal)
+				, GeometryNormal(p_surface.GeometryNormal)
+				, Point(p_surface.Point)
+				, PointUV(p_surface.PointUV)
+				, ShadingBasisWS(p_surface.ShadingBasisWS)
+				, GeometryBasisWS(p_surface.GeometryBasisWS)
+				, PointWS(p_surface.PointWS)
+				, Distance(p_surface.Distance)
+				, RayOrigin(p_surface.RayOrigin)
+				, RayDirection(p_surface.RayDirection)
+			{ }
 
 			inline void Reset(void) {
 				Distance = Maths::Maximum;
@@ -53,6 +65,22 @@ namespace Illumina
 
 			inline IShape* GetShape(void) const { 
 				return m_pShape; 
+			}
+
+			const DifferentialSurface& operator=(const DifferentialSurface &p_surface)
+			{
+				ShadingNormal = p_surface.ShadingNormal;
+				GeometryNormal = p_surface.GeometryNormal;
+				Point = p_surface.Point;
+				PointUV = p_surface.PointUV;
+				ShadingBasisWS = p_surface.ShadingBasisWS;
+				GeometryBasisWS = p_surface.GeometryBasisWS;
+				PointWS = p_surface.PointWS;
+				Distance = p_surface.Distance;
+				RayOrigin = p_surface.RayOrigin;
+				RayDirection = p_surface.RayDirection;
+
+				return *this;
 			}
 		};
 	} 

@@ -8,6 +8,7 @@
 
 #include "Light/DiffuseAreaLight.h"
 #include "Exception/Exception.h"
+#include "Maths/Montecarlo.h"
 #include "Scene/Visibility.h"
 #include "Shape/Shape.h"
 
@@ -49,7 +50,7 @@ Spectrum DiffuseAreaLight::Radiance(const Vector3 &p_lightSurfacePoint, const Ve
 	return Vector3::Dot(p_lightSurfaceNormal, p_wIn) > 0 ? m_emit : 0.0f;
 }
 //----------------------------------------------------------------------------------------------
-Spectrum DiffuseAreaLight::SampleRadiance(const Vector3 &p_surfacePoint, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)
+Spectrum DiffuseAreaLight::SampleRadiance(const Vector3 &p_surfacePoint, float p_u, float p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)
 {
 	Vector3 surfaceNormal, 
 		surfacePoint;
@@ -68,7 +69,25 @@ Spectrum DiffuseAreaLight::SampleRadiance(const Vector3 &p_surfacePoint, double 
 	return (m_emit * Maths::Max(0.0f, Vector3::Dot(p_wIn, surfaceNormal))) / (Pdf(surfacePoint, p_wIn) * distanceSquared);
 }
 //----------------------------------------------------------------------------------------------
-Vector3 DiffuseAreaLight::SamplePoint(const Vector3 &p_viewPoint, double p_u, double p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf)
+Spectrum DiffuseAreaLight::SampleRadiance(const Scene *p_pScene, float p_u, float p_v, float p_w, float p_x, Ray &p_ray, float &p_pdf)
+{
+	Vector3 normal;
+
+	p_ray.Direction = Montecarlo::UniformSampleSphere(p_w, p_x);
+	p_ray.Origin = SamplePoint(p_u, p_v, normal, p_pdf) + p_ray.Direction * 1e-3f; normal = -normal;
+	
+	p_ray.Min = 1e-3f;
+	p_ray.Max = Maths::Maximum;
+
+	if (Vector3::Dot(p_ray.Direction, normal) < 0) 
+		p_ray.Direction *= -1.0f;
+	
+	p_pdf = m_pShape->GetPdf(p_ray.Origin) * Maths::InvPiTwo;
+
+	return Radiance(p_ray.Origin, normal, p_ray.Direction);
+}
+//----------------------------------------------------------------------------------------------
+Vector3 DiffuseAreaLight::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf)
 {
 	Vector3 surfaceNormal, 
 		surfacePoint;
@@ -97,7 +116,7 @@ Vector3 DiffuseAreaLight::SamplePoint(const Vector3 &p_viewPoint, double p_u, do
 	return surfacePoint;
 }
 //----------------------------------------------------------------------------------------------
-Vector3 DiffuseAreaLight::SamplePoint(double p_u, double p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf)
+Vector3 DiffuseAreaLight::SamplePoint(float p_u, float p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf)
 {
 	Vector3 surfaceNormal, 
 		surfacePoint;

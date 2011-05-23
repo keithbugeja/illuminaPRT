@@ -93,6 +93,10 @@ void ImageDevice::ToneMap(void)
 			Ld.G = HDRToLDR(Ld.G * (0.18f / Lw.G));
 			Ld.B = HDRToLDR(Ld.B * (0.18f / Lw.B));
 			
+			//Ld.R = HDRToLDR(Ld.R);
+			//Ld.G = HDRToLDR(Ld.G);
+			//Ld.B = HDRToLDR(Ld.B);
+			
 			m_pImage->Set(x,y, Ld);
 		}
 	}
