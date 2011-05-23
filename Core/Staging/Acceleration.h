@@ -365,7 +365,7 @@ namespace Illumina
 
 					Distribute(p_objectList, p_pNode->Partition, p_pNode->Axis, leftList, rightList);
 
-					std::cout << leftList.Size() << ", " << rightList.Size() << std::endl;
+					// std::cout << leftList.Size() << ", " << rightList.Size() << std::endl;
 
 					int nAxis = (p_nAxis + 1) % 3,
 						nDepth = p_nDepth + 1;

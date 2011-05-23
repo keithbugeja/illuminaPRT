@@ -263,6 +263,11 @@ void DistributedRenderer::Render(void)
 		m_pDevice->BeginFrame();
 
 		//--------------------------------------------------
+		// Prepare integrator for rending frame
+		//--------------------------------------------------
+		m_pIntegrator->Prepare(m_pScene);
+
+		//--------------------------------------------------
 		// Prepare task queue
 		//--------------------------------------------------
 		std::vector<int> m_taskQueue;

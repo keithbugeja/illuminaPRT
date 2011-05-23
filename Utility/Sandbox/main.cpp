@@ -84,6 +84,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	//----------------------------------------------------------------------------------------------
 	Message("Registering Integrators...", p_bVerbose);
 	engineKernel.GetIntegratorManager()->RegisterFactory("PathTracing", new PathIntegratorFactory());
+	engineKernel.GetIntegratorManager()->RegisterFactory("IGI", new IGIIntegratorFactory());
 	engineKernel.GetIntegratorManager()->RegisterFactory("Photon", new PhotonIntegratorFactory());
 	engineKernel.GetIntegratorManager()->RegisterFactory("Whitted", new WhittedIntegratorFactory());
 	engineKernel.GetIntegratorManager()->RegisterFactory("Test", new TestIntegratorFactory());

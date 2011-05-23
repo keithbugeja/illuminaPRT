@@ -89,3 +89,56 @@ Spectrum IIntegrator::SampleAllLights(Scene *p_pScene, const Intersection &p_int
 
 	return Ls / p_nSampleCount;
 }
+//----------------------------------------------------------------------------------------------
+Spectrum IIntegrator::SampleF(Scene *p_pScene, Intersection &p_intersection, const Vector3 &p_wOut, Vector3 &p_wIn, float &p_pdf, BxDF::Type &p_bxdfType)
+{
+	if (!p_intersection.HasMaterial())
+		return 0.f;
+
+	IMaterial *pMaterial = p_intersection.GetMaterial();
+
+	Vector3 wOutLocal, 
+		wInLocal;
+
+	//----------------------------------------------------------------------------------------------
+	// Sample bsdf for next direction
+	//----------------------------------------------------------------------------------------------
+	// Generate random samples
+	Vector2 sample = p_pScene->GetSampler()->Get2DSample();
+
+	// Convert to surface coordinate system where (0,0,1) represents surface normal
+	// Note: 
+	// -- All Material/BSDF/BxDF operations are carried out in surface coordinates
+	// -- All inputs must be in surface coordinates
+	// -- All outputs are in surface coordinates
+	BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, p_wOut, wOutLocal);
+
+	// Sample new direction in wIn (remember we're tracing backwards)
+	// -- wIn returns the sampled direction
+	// -- pdf returns the reflectivity function's pdf at the sampled point
+	// -- bxdfType returns the type of BxDF sampled
+	Spectrum f = pMaterial->SampleF(p_intersection.Surface, wOutLocal, wInLocal, sample.U, sample.V, &p_pdf, BxDF::All_Combined, &p_bxdfType);
+
+	// If the reflectivity or pdf are zero, terminate path
+	if (f.IsBlack() || p_pdf == 0.0f) return 0.f;
+
+	// Convert back to world coordinates
+	BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, wInLocal, p_wIn);
+
+	return f;
+}
+//----------------------------------------------------------------------------------------------
+Spectrum IIntegrator::F(Scene *p_pScene, const Intersection &p_intersection, const Vector3 &p_wOut, const Vector3 &p_wIn /*, BxDF::Type &p_bxdfType*/)
+{
+	IMaterial *pMaterial = p_intersection.GetMaterial();
+	
+	if (pMaterial == NULL)
+		return 0.f;
+
+	Vector3 bsdfIn, bsdfOut;
+
+	BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, p_wOut, bsdfOut);
+	BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, p_wIn, bsdfIn);
+
+	return pMaterial->F(p_intersection.Surface, bsdfOut, bsdfIn);
+}

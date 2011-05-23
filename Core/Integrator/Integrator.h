@@ -15,6 +15,8 @@
 
 #include "Geometry/Vector2.h"
 #include "Geometry/Vector3.h"
+
+#include "Material/Material.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {
@@ -34,6 +36,8 @@ namespace Illumina
 			virtual bool Initialise(Scene *p_pScene, ICamera *p_pCamera) = 0;
 			virtual bool Shutdown(void) = 0;
 
+			virtual bool Prepare(Scene *p_pScene = NULL) { return true; }
+
 			virtual Spectrum Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection) = 0;
 
 			static Spectrum EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, IMaterial *p_pMaterial, 
@@ -47,6 +51,12 @@ namespace Illumina
 			static Spectrum SampleAllLights(Scene *p_pScene, const Intersection &p_intersection,
 				const Vector3 &p_point, const Vector3 &p_pNormal, const Vector3 &p_wOut,
 				ISampler *p_pSampler, ILight *p_pExclude = NULL, int p_nShadowSamples = 1);
+
+			static Spectrum SampleF(Scene *p_pScene, Intersection &p_intersection, 
+				const Vector3 &p_wOut, Vector3 &p_wIn, float &p_pdf, BxDF::Type &p_bxdfType);
+
+			static Spectrum F(Scene *p_pScene, const Intersection &p_intersection,
+				const Vector3 &p_wOut, const Vector3 &p_wIn /*, BxDF::Type &p_bxdfType*/);
 
 			std::string ToString(void) const { return "IIntegrator"; }
 		};

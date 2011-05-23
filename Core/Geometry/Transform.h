@@ -34,7 +34,10 @@ namespace Illumina
 
 		public:
 			Transformation(void);
+			Transformation(const Transformation &p_transformation);
 			Transformation(const Matrix3x3 &p_rotation, const Vector3 &p_scaling, const Vector3 &p_translation);
+
+			const Transformation& operator=(const Transformation &p_transformation);
 
 			void Reset(void);
 

@@ -17,6 +17,25 @@ Intersection::Intersection(void)
 	, WorldTransform()
 { }
 //----------------------------------------------------------------------------------------------
+Intersection::Intersection(const Intersection &p_intersection)
+	: m_pPrimitive(p_intersection.m_pPrimitive)
+	, m_pMaterial(p_intersection.m_pMaterial)
+	, m_pLight(p_intersection.m_pLight)
+	, Surface(p_intersection.Surface)
+	, WorldTransform(p_intersection.WorldTransform)
+{ }
+//----------------------------------------------------------------------------------------------
+const Intersection& Intersection::operator=(const Intersection &p_intersection)
+{
+	m_pPrimitive = p_intersection.m_pPrimitive;
+	m_pMaterial = p_intersection.m_pMaterial;
+	m_pLight = p_intersection.m_pLight;
+	Surface = p_intersection.Surface;
+	WorldTransform = p_intersection.WorldTransform;
+	
+	return *this;
+}
+//----------------------------------------------------------------------------------------------
 void Intersection::Reset(void)
 {
 	m_pLight = NULL;

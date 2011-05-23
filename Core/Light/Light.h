@@ -55,9 +55,9 @@ namespace Illumina
 			//----------------------------------------------------------------------------------------------
 			/* Samples a point on the luminaire.
 			 */
-			virtual Vector3 SamplePoint(double p_u, double p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf) = 0;
+			virtual Vector3 SamplePoint(float p_u, float p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf) = 0;
 
-			virtual Vector3 SamplePoint(const Vector3 &p_viewPoint, double p_u, double p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf)
+			virtual Vector3 SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf)
 			{
 				return SamplePoint(p_u, p_v, p_lightSurfaceNormal, p_pdf);
 			}
@@ -71,13 +71,14 @@ namespace Illumina
 			 * The pdf gives specifies the contribution of the estimated radiance, while the visibility 
 			 * query structure is enabled to occlusion testing between the two points.			 
 			 */
-			virtual Spectrum SampleRadiance(const Vector3 &p_surfacePoint, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery) = 0;
+			virtual Spectrum SampleRadiance(const Vector3 &p_surfacePoint, float p_u, float p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery) = 0;
 
 			virtual Spectrum SampleRadiance(const Vector3 &p_surfacePoint, const Vector3 &p_surfaceNormal, float p_u, float p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery) 
 			{
 				return SampleRadiance(p_surfacePoint, p_u, p_v, p_wIn, p_pdf, p_visibilityQuery);
 			}
 
+			virtual Spectrum SampleRadiance(const Scene* p_pScene, float p_u, float p_v, float p_w, float p_x, Ray &p_ray, float &p_pdf) = 0;
 			//----------------------------------------------------------------------------------------------
 			std::string ToString(void) const { return "ILight"; }
 		};

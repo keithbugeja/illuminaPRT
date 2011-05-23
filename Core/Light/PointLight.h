@@ -28,9 +28,10 @@ namespace Illumina
 
 			Spectrum Radiance(const Vector3 &p_lightSurfacePoint, const Vector3 &p_lightSurfaceNormal, const Vector3 &p_wIn);
 
-			Spectrum SampleRadiance(const Vector3 &p_surfacePoint, double p_u, double p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery);
+			Spectrum SampleRadiance(const Vector3 &p_surfacePoint, float p_u, float p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery);
+			Spectrum SampleRadiance(const Scene *p_pScene, float p_u, float p_v, float p_w, float p_x, Ray &p_ray, float &p_pdf);
 
-			Vector3 SamplePoint(double p_u, double p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf);
+			Vector3 SamplePoint(float p_u, float p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf);
 		
 			Vector3 GetPosition(void) const;
 			void SetPosition(const Vector3 &p_position);

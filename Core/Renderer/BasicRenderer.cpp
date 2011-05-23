@@ -41,6 +41,8 @@ void BasicRenderer::Render(void)
 	
 	boost::progress_display renderProgress(height);
 
+	m_pIntegrator->Prepare(m_pScene);
+
 	for (int y = 0; y < height; ++y)
 	{
 		Vector2 *pSampleBuffer = new Vector2[m_nSampleCount];

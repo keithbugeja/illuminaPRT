@@ -134,9 +134,21 @@ int BSDF::GetBxDF(BxDF::Type p_bxdfType, int p_nBxDFIndex, BxDF **p_pBxDF, bool 
 	return -1;
 }
 //----------------------------------------------------------------------------------------------
-Spectrum BSDF::Rho(Vector3 &p_wOut, int p_nSampleCount, float *p_nSampleList, BxDF::Type p_bxdfType)
+Spectrum BSDF::Rho(Vector3 &p_wOut, const DifferentialSurface &p_surface, BxDF::Type p_bxdfType)
 {
-	return 0.0f; 
+	Spectrum rho(0),
+		reflectivity;
+
+	for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); bxdfIndex++)
+	{
+		if (m_bxdfList[bxdfIndex]->IsType(p_bxdfType, false))
+		{
+			reflectivity = SampleTexture(p_surface, bxdfIndex);
+			rho += m_bxdfList[bxdfIndex]->Rho(reflectivity, p_wOut);
+		}
+	}
+
+	return rho;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum BSDF::SampleF(const DifferentialSurface& p_surface, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float *p_pdf, BxDF::Type p_bxdfType, BxDF::Type *p_sampledBxDFType)

@@ -174,8 +174,8 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 	m_nMaxPhotonCount = 10000000;
 
 	int nMaxDirectPhotonCount = 1000,
-		nMaxIndirectPhotonCount = 40000,
-		nMaxCausticsPhotonCount = 80000;
+		nMaxIndirectPhotonCount = 100000,
+		nMaxCausticsPhotonCount = 10000;
 
 	int nIndirectCount = nMaxIndirectPhotonCount,
 		nDirectCount = nMaxDirectPhotonCount,
@@ -235,38 +235,41 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 
 			if (f.IsBlack())
 				break;
-			//
 			
-			lastBounceSpecular &= specularBounce;
-			
-			specularBounce = ((int)(bxdfType & BxDF::Specular)) != 0;
-			//specularBounce = (intersection.GetMaterial()->HasBxDFType(BxDF::Diffuse) == 0);
-			//specularBounce = intersection.GetMaterial()->HasBxDFType(BxDF::Type(BxDF::Specular), false);
+			// Did we hit an S surface?
+			bool hasSpecular = intersection.GetMaterial()->HasBxDFType(BxDF::Specular);
 
-			if (intersections == 0)
-				lastBounceSpecular = specularBounce;
+			// Record photon -> Can be nested
+			Photon photon;
 
-			if (!specularBounce)
+			photon.Direction = photonDirection;
+			photon.Position = intersection.Surface.PointWS;
+			photon.Power = photonPower;
+
+			// If we hit a D surface, we record photon?
+			if (!hasSpecular)
 			{
-				// Define photon we are storing
-				Photon photon;
-
-				photon.Direction = photonDirection;
-				photon.Position = intersection.Surface.PointWS;
-				photon.Power = photonPower;
-
-				if (lastBounceSpecular && intersections > 0)
+				// Direct contribution
+				if (intersections == 0)
 				{
-					if (nCausticsCount > 0)
+					if (nDirectCount > 0)
 					{
-						m_causticsMap.Insert(photon);
-						nCausticsCount--;
+						m_directMap.Insert(photon);
+						nDirectCount--;
 					}
 				}
 				else
 				{
-					// direct or indirect
-					if (intersections != 0)
+					// Caustics contribution
+					if (lastBounceSpecular)
+					{
+						if (nCausticsCount > 0)
+						{
+							m_causticsMap.Insert(photon);
+							nCausticsCount--;
+						}
+					}
+					else // Indirect contribution
 					{
 						if (nIndirectCount > 0)
 						{
@@ -274,18 +277,14 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 							nIndirectCount--;
 						}
 					}
-					else
-					{
-						if (nDirectCount > 0)
-						{
-							m_directMap.Insert(photon);
-							nDirectCount--;
-						}
-					}
 				}
 			}
 
-			intersections++;
+			// If this is the (L(S|D)), record the last bounce directly
+			if (intersections++ == 0)
+				lastBounceSpecular = hasSpecular;
+			else
+				lastBounceSpecular &= hasSpecular;			
 
 			if (intersections > m_nMaxRayDepth)
 				break;
@@ -325,6 +324,227 @@ bool PhotonIntegrator::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
 {
+	return Radiance(p_pScene, p_ray, p_intersection, 0);
+}
+//----------------------------------------------------------------------------------------------
+Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, int p_nRayDepth)
+{
+	VisibilityQuery visibilityQuery(p_pScene);
+	IMaterial *pMaterial = NULL;
+	Ray ray(p_ray);
+
+	BxDF::Type bxdfType;
+	Vector3 wIn, wOut, wInLocal, wOutLocal; 
+	Vector2 sample;
+
+	float pdf;
+
+	KDTreePhotonLookupMethod<Photon> lookup;
+
+	Spectrum L(0), Ld(0), Ls(0), Lt(0);
+
+	//----------------------------------------------------------------------------------------------
+	// No intersection
+	//----------------------------------------------------------------------------------------------
+	if(!p_pScene->Intersects(ray, p_intersection))
+		return 0;
+	/*
+	{
+		if (p_nRayDepth == 0 || specularBounce) 
+		{
+			for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
+				L += pathThroughput * p_pScene->LightList[lightIndex]->Radiance(-ray);
+		}
+
+		return L;
+	} 
+	*/
+
+	//----------------------------------------------------------------------------------------------
+	// Primitive has no material assigned - terminate
+	//----------------------------------------------------------------------------------------------
+	if (!p_intersection.HasMaterial()) 
+		return 0;
+		
+	// Get material for intersection primitive
+	pMaterial = p_intersection.GetMaterial();
+
+	bool specularBounce = pMaterial->HasBxDFType(BxDF::Specular);
+
+	//----------------------------------------------------------------------------------------------
+	// Sample lights for specular / first bounce
+	//----------------------------------------------------------------------------------------------
+	wOut = -Vector3::Normalize(ray.Direction);
+
+	// Add emitted light : only on first bounce or specular to avoid double counting
+	if (p_intersection.IsEmissive())
+	{
+		if (p_nRayDepth == 0 || specularBounce)
+		{
+			// Add contribution from luminaire
+			// -- Captures highlight on specular materials
+			// -- Transmits light through dielectrics
+			// -- Renders light primitive for first bounce intersections
+				
+			L += p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
+
+			if (p_nRayDepth == 0) return L;
+		}
+	}
+
+	//----------------------------------------------------------------------------------------------
+	// If material has a diffuse component, compute using photon map
+	//----------------------------------------------------------------------------------------------
+	if (pMaterial->HasBxDFType(BxDF::Diffuse, false))
+	{
+		float r;
+		//r = 0.4f;
+		r = 1.0f;
+
+		lookup.Reset();
+
+		if (m_indirectMap.Lookup(p_intersection.Surface.PointWS, r, lookup))
+		{
+			if (lookup.PhotonCount > 8)
+			{
+				Spectrum indirectL = 0;
+				float k = 1.5f;
+
+				std::sort(lookup.PhotonList.begin(), lookup.PhotonList.end(), lookup.SortPredicate);
+				std::vector<DistancePhoton>::iterator photonIterator;
+				int photonsDone = 0;
+
+				// Update r to match most distant photon
+				r = lookup.PhotonList.back().Distance;
+
+				for (photonIterator = lookup.PhotonList.begin(); 
+						photonIterator != lookup.PhotonList.end();
+						++photonIterator)
+				{
+					++photonsDone;
+
+					float wpc = 1 - Vector3::Distance(p_intersection.Surface.PointWS, (*photonIterator).pPhoton->Position) / (k * r);
+
+					float pdf;
+
+					Vector3 photonDirection = -((*photonIterator).pPhoton->Direction);
+					Vector3 bsdfIn, bsdfOut;
+
+					BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, bsdfOut);
+					BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, photonDirection, bsdfIn);
+					
+					Spectrum Ls = (*photonIterator).pPhoton->Power * pMaterial->F(p_intersection.Surface, bsdfOut, bsdfIn) * wpc;
+					
+					indirectL += Ls;
+				}
+
+				indirectL /= (1-2/(3*k)) * (Maths::PiTwo * r * photonsDone);
+				
+				L += indirectL;
+			}
+		} 
+
+		lookup.Reset();
+		r = 0.4f;
+
+		if (m_causticsMap.Lookup(p_intersection.Surface.PointWS, r, lookup))
+		{
+			if (lookup.PhotonCount > 8)
+			{
+				Spectrum causticsL = 0;
+				float k = 1.5f;
+
+				std::sort(lookup.PhotonList.begin(), lookup.PhotonList.end(), lookup.SortPredicate);
+				std::vector<DistancePhoton>::iterator photonIterator;
+				int photonsDone = 0;
+
+				// Update r to match most distant photon
+				r = lookup.PhotonList.back().Distance;
+
+				for (photonIterator = lookup.PhotonList.begin(); 
+						photonIterator != lookup.PhotonList.end();
+						++photonIterator)
+				{
+					++photonsDone;
+
+					float wpc = 1 - Vector3::Distance(p_intersection.Surface.PointWS, (*photonIterator).pPhoton->Position) / (k * r);
+					float pdf;
+
+					Vector3 photonDirection = -((*photonIterator).pPhoton->Direction);
+					Vector3 bsdfIn, bsdfOut;
+
+					BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, bsdfOut);
+					BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, photonDirection, bsdfIn);
+					
+					Spectrum Ls = (*photonIterator).pPhoton->Power * pMaterial->F(p_intersection.Surface, bsdfOut, bsdfIn) * wpc;
+					
+					causticsL += Ls;
+				}
+
+				causticsL /= (1-2/(3*k)) * (Maths::PiTwo * r * photonsDone);
+				
+				L += causticsL;
+			}
+		}
+
+		L += SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+
+		Ld = L;
+	}
+
+	if (p_nRayDepth >= m_nMaxRayDepth)
+		return Ld;
+
+	// Reflection
+	if (pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Reflection)))
+	{
+		sample = p_pScene->GetSampler()->Get2DSample();
+			
+		Vector3 i,o;
+
+		BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, o, false);
+		Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, o, i, sample.U, sample.V, &pdf, BxDF::Type(BxDF::Reflection), &bxdfType);
+		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, i, wIn, false);
+
+		//ray.Origin = p_intersection.Surface.PointWS + p_intersection.Surface.ShadingNormal * 1E-4f;
+		ray.Origin = p_intersection.Surface.PointWS + wIn * 1E-4f;
+		ray.Direction = wIn;
+		ray.Min = 1E-4f;
+		ray.Max = Maths::Maximum;
+
+		if (!f.IsBlack() && pdf != 0.f)
+		{
+			Intersection intersection;
+			Ls = f * Radiance(p_pScene, ray, intersection, p_nRayDepth + 1);
+		}
+	} 
+
+	// Refraction
+	if (pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Transmission)))
+	{
+		sample = p_pScene->GetSampler()->Get2DSample();
+			
+		Vector3 i,o;
+
+		BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, o);
+		Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, o, i, sample.U, sample.V, &pdf, BxDF::Type(BxDF::Transmission), &bxdfType);
+		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, i, wIn);
+
+		ray.Direction = wIn;
+		ray.Origin = p_intersection.Surface.PointWS  + wIn * 1E-4f;
+		ray.Min = 1e-4f;
+		ray.Max = Maths::Maximum;
+
+		if (!f.IsBlack() && pdf != 0.f)
+		{
+			Intersection intersection;
+			Lt = f * Radiance(p_pScene, ray, intersection, p_nRayDepth + 1);
+		}
+	}
+		
+	return Ld + Ls + Lt;
+	
+	/* 
 	VisibilityQuery visibilityQuery(p_pScene);
 
 	Spectrum pathThroughput(1.0f), L(0.0f);
@@ -384,6 +604,7 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 				// -- Captures highlight on specular materials
 				// -- Transmits light through dielectrics
 				// -- Renders light primitive for first bounce intersections
+				
 				L += pathThroughput * p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
 
 				if (rayDepth == 0) break;
@@ -396,10 +617,10 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 		if (pMaterial->HasBxDFType(BxDF::Diffuse, false))
 		{
 			float r = 1e-03f;
-			r = 0.1f;
+			r = 0.4f;
 			
 			lookup.Reset();
-			/**/
+			/ ** /
 			if (m_indirectMap.Lookup(p_intersection.Surface.PointWS, r, lookup))
 			{
 				Spectrum indirectL = 0;
@@ -408,6 +629,9 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 				std::sort(lookup.PhotonList.begin(), lookup.PhotonList.end(), lookup.SortPredicate);
 				std::vector<DistancePhoton>::iterator photonIterator;
 				int photonsDone = 0;
+
+				// Update r to match most distant photon
+				r = lookup.PhotonList.back().Distance;
 
 				for (photonIterator = lookup.PhotonList.begin(); 
 					 photonIterator != lookup.PhotonList.end();
@@ -432,12 +656,13 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 
 				indirectL /= (1-2/(3*k)) * (Maths::PiTwo * r * photonsDone);
 				
-				//L += indirectL;
+				L += indirectL;
 			} 
-			/**/
+			/ ** /
 
+			/ ** /
 			lookup.Reset();
-			r = 0.1f;
+			r = 0.4f;
 
 			if (m_causticsMap.Lookup(p_intersection.Surface.PointWS, r, lookup))
 			{
@@ -448,6 +673,9 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 				std::vector<DistancePhoton>::iterator photonIterator;
 				int photonsDone = 0;
 
+				// Update r to match most distant photon
+				r = lookup.PhotonList.back().Distance;
+
 				for (photonIterator = lookup.PhotonList.begin(); 
 					 photonIterator != lookup.PhotonList.end();
 					 ++photonIterator)
@@ -455,7 +683,6 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 					++photonsDone;
 
 					float wpc = 1 - Vector3::Distance(p_intersection.Surface.PointWS, (*photonIterator).pPhoton->Position) / (k * r);
-
 					float pdf;
 
 					Vector3 photonDirection = -((*photonIterator).pPhoton->Direction);
@@ -473,9 +700,12 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 				
 				L += causticsL;
 			}
+			/ ** /
 
-			//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+			L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
 		}
+
+		//return L;
 
 		//----------------------------------------------------------------------------------------------
 		// Sample lights for direct lighting
@@ -496,7 +726,8 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 
 		if (!specularBounce)
 			break;
-		/*
+
+		/ *
 		sample = p_pScene->GetSampler()->Get2DSample();
 
 		// Convert to surface coordinate system where (0,0,1) represents surface normal
@@ -521,7 +752,7 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 
 		// Convert back to world coordinates
 		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, wInLocal, wIn);
-		*/
+		* /
 
 		//if (!specularBounce) break;
 
@@ -552,5 +783,7 @@ Spectrum PhotonIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersect
 	}
 
 	return L;
+
+	*/
 }
 //----------------------------------------------------------------------------------------------

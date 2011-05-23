@@ -41,6 +41,8 @@ void MultithreadedRenderer::Render(void)
 	
 	boost::progress_display renderProgress(height);
 
+	m_pIntegrator->Prepare(m_pScene);
+
 	#pragma omp parallel for schedule(guided)
 	for (int y = 0; y < height; ++y)
 	{

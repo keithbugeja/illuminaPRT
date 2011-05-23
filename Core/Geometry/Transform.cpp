@@ -24,6 +24,18 @@ Transformation::Transformation(void)
 	m_isIdentity = true;
 }
 //----------------------------------------------------------------------------------------------
+Transformation::Transformation(const Transformation &p_transformation)
+	: m_hasRotation(p_transformation.m_hasRotation)
+	, m_hasTranslation(p_transformation.m_hasTranslation)
+	, m_hasScaling(p_transformation.m_hasScaling)
+	, m_isIdentity(p_transformation.m_isIdentity)
+	, m_transform(p_transformation.m_transform)
+	, m_rotation(p_transformation.m_rotation)
+	, m_rotationInverse(p_transformation.m_rotationInverse)
+	, m_translation(p_transformation.m_translation)
+	, m_scaling(p_transformation.m_scaling)
+{ }
+//----------------------------------------------------------------------------------------------
 Transformation::Transformation(const Matrix3x3 &p_rotation, const Vector3 &p_scaling, const Vector3 &p_translation)
 {
 	m_rotation = p_rotation;
@@ -37,6 +49,21 @@ Transformation::Transformation(const Matrix3x3 &p_rotation, const Vector3 &p_sca
 	m_hasTranslation = !m_translation.IsZero();
 	m_hasScaling = !m_scaling.IsOnes();
 	m_isIdentity = !(m_hasRotation || m_hasScaling || m_hasTranslation);
+}
+//----------------------------------------------------------------------------------------------
+const Transformation& Transformation::operator=(const Transformation &p_transformation)
+{
+	m_hasRotation = p_transformation.m_hasRotation;
+	m_hasTranslation = p_transformation.m_hasTranslation;
+	m_hasScaling = p_transformation.m_hasScaling;
+	m_isIdentity = p_transformation.m_isIdentity;
+	m_transform = p_transformation.m_transform;
+	m_rotation = p_transformation.m_rotation;
+	m_rotationInverse = p_transformation.m_rotationInverse;
+	m_translation = p_transformation.m_translation;
+	m_scaling = p_transformation.m_scaling;
+
+	return *this;
 }
 //----------------------------------------------------------------------------------------------
 void Transformation::Reset(void)

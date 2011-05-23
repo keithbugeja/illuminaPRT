@@ -37,7 +37,7 @@ namespace Illumina
 
 			bool HasBxDFType(BxDF::Type p_bxdfType, bool p_bExactMatch = true);
 
-			virtual Spectrum Rho(Vector3 &p_wOut, int p_nSampleCount = 1, float *p_nSampleList = NULL, BxDF::Type p_bxdfType = BxDF::All_Combined);
+			virtual Spectrum Rho(Vector3 &p_wOut, const DifferentialSurface &p_surface, BxDF::Type p_bxdfType = BxDF::All_Combined);
 			virtual Spectrum SampleF(const DifferentialSurface &p_surface, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, 
 				float *p_pdf, BxDF::Type p_bxdfType = BxDF::All_Combined, BxDF::Type *p_sampledBxDFType = NULL);
 			virtual Spectrum F(const DifferentialSurface &p_surface, const Vector3 &p_wOut, const Vector3 &p_wIn, BxDF::Type p_bxdfType = BxDF::All_Combined);

@@ -146,6 +146,7 @@
     <ClCompile Include="..\..\..\..\Core\Geometry\Vector3.cpp" />
     <ClCompile Include="..\..\..\..\Core\Image\Image.cpp" />
     <ClCompile Include="..\..\..\..\Core\Image\RGBPixel.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Integrator\IGIIntegrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\Integrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\PathIntegrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\PhotonIntegrator.cpp" />
@@ -223,6 +224,7 @@
     <ClInclude Include="..\..\..\..\Core\Image\ImagePFM.h" />
     <ClInclude Include="..\..\..\..\Core\Image\ImagePPM.h" />
     <ClInclude Include="..\..\..\..\Core\Image\RGBPixel.h" />
+    <ClInclude Include="..\..\..\..\Core\Integrator\IGIIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\Integrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\IntegratorFactories.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\PathIntegrator.h" />
