@@ -16,11 +16,11 @@ namespace Illumina
 	{
 		struct VirtualPointLight
 		{
-			Intersection SurfaceIntersection;
+			Intersection Context;
 
-			Vector3 Position;
+			//Vector3 Normal;
+			//Vector3 Position;
 			Vector3 Direction;
-			Vector3 Normal;
 
 			Spectrum Power;
 		};
@@ -33,7 +33,8 @@ namespace Illumina
 				m_nMaxRayDepth,
 				m_nShadowSampleCount;
 
-			float m_fReflectEpsilon;
+			float m_fReflectEpsilon,
+				m_fGTermMax;
 
 			Random m_random;
 
@@ -41,8 +42,8 @@ namespace Illumina
 			std::vector<VirtualPointLight> VirtualPointLightList;
 
 		public:
-			IGIIntegrator(const std::string &p_strName, int p_nMaxVPL = 256, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
-			IGIIntegrator(int p_nMaxVPL = 256, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
+			IGIIntegrator(const std::string &p_strName, int p_nMaxVPL = 256, float p_fGTermMax = 0.01f, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
+			IGIIntegrator(int p_nMaxVPL = 256, float p_fGTermMax = 0.01f, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
 
 			bool Initialise(Scene *p_pScene, ICamera *p_pCamera);
 			bool Shutdown(void);
