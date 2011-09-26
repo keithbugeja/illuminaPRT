@@ -23,6 +23,23 @@ namespace Illumina
 			Vector3 Direction;
 
 			Spectrum Power;
+
+			VirtualPointLight() { }
+
+			VirtualPointLight(const VirtualPointLight &p_vpl)
+				: Context(p_vpl.Context)
+				, Direction(p_vpl.Direction)
+				, Power(p_vpl.Power)
+			{ }
+
+			VirtualPointLight& operator=(const VirtualPointLight &p_vpl)
+			{
+				Context = p_vpl.Context;
+				Direction = p_vpl.Direction;
+				Power = p_vpl.Power;
+
+				return *this;
+			}
 		};
 
 		class IGIIntegrator : 
@@ -30,6 +47,7 @@ namespace Illumina
 		{
 		protected:
 			int m_nMaxVPL,
+				m_nMaxSets,
 				m_nMaxRayDepth,
 				m_nShadowSampleCount;
 
@@ -39,6 +57,7 @@ namespace Illumina
 			Random m_random;
 
 		public:
+			std::vector<std::vector<VirtualPointLight>> VirtualPointLightSet;
 			std::vector<VirtualPointLight> VirtualPointLightList;
 
 		public:
@@ -50,10 +69,10 @@ namespace Illumina
 
 			bool Prepare(Scene *p_pScene);
 
-			Spectrum Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection);
+			Spectrum Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection);
 		
 		protected:
-			Spectrum Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, int p_nDepth);
+			Spectrum Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, int p_nDepth);
 
 			void TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLCount, std::vector<VirtualPointLight> &p_vplList);
 		};

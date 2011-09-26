@@ -152,6 +152,8 @@ void DistributedRenderer::RenderDebug(void)
 				startPixelX = startTileX * m_nTileWidth,
 				startPixelY = startTileY * m_nTileHeight;
 		
+			IntegratorContext context;
+
 			std::cout << "Tile region : [" << startPixelX << ", " << startPixelY << "] - [" << startPixelX + m_nTileWidth << ", " << startPixelY + m_nTileHeight << "]" << std::endl;
 
 			for (int y = 0; y < m_nTileHeight; y++)
@@ -167,13 +169,19 @@ void DistributedRenderer::RenderDebug(void)
 
 					for (int sample = 0; sample < m_nSampleCount; sample++)
 					{
+						context.SampleIndex = sample;
+						context.SurfacePosition.Set(startPixelX + x + pSampleBuffer[sample].U, startPixelY + y + pSampleBuffer[sample].V);
+						context.NormalisedPosition.Set(context.SurfacePosition.X / deviceWidth, context.SurfacePosition.Y / deviceHeight);
+
 						//Ray ray = m_pCamera->GetRay(
 						Ray ray = m_pScene->GetCamera()->GetRay(
-							(startPixelX + x + pSampleBuffer[sample].U) / deviceWidth, 
-							(startPixelY + y + pSampleBuffer[sample].V) / deviceHeight, 
+							context.NormalisedPosition.X,
+							context.NormalisedPosition.Y,
+							//(startPixelX + x + pSampleBuffer[sample].U) / deviceWidth, 
+							//(startPixelY + y + pSampleBuffer[sample].V) / deviceHeight, 
 							pSampleBuffer[sample].U, pSampleBuffer[sample].V);
 
-						Li += m_pIntegrator->Radiance(m_pScene, ray, intersection);
+						Li += m_pIntegrator->Radiance(&context, m_pScene, ray, intersection);
 					}
 
 					Li = Li / m_nSampleCount;
@@ -406,6 +414,8 @@ void DistributedRenderer::Render(void)
 					startPixelX = startTileX * m_nTileWidth,
 					startPixelY = startTileY * m_nTileHeight;
 		
+				IntegratorContext context;
+
 				//std::cout << "Tile region : [" << startPixelX << ", " << startPixelY << "] - [" << startPixelX + m_nTileWidth << ", " << startPixelY + m_nTileHeight << "]" << std::endl;
 
 				for (int y = 0; y < m_nTileHeight; y++)
@@ -421,12 +431,20 @@ void DistributedRenderer::Render(void)
 
 						for (int sample = 0; sample < m_nSampleCount; sample++)
 						{
+							context.SampleIndex = sample;
+							context.SurfacePosition.Set(startPixelX + x + pSampleBuffer[sample].U, startPixelY + y + pSampleBuffer[sample].V);
+							context.NormalisedPosition.Set(context.SurfacePosition.X / deviceWidth, context.SurfacePosition.Y / deviceHeight);
+
+							context.SurfacePosition.Set(x, y);
+
 							Ray ray = m_pScene->GetCamera()->GetRay(
-								(startPixelX + x + pSampleBuffer[sample].U) / deviceWidth, 
-								(startPixelY + y + pSampleBuffer[sample].V) / deviceHeight, 
+								context.NormalisedPosition.X,
+								context.NormalisedPosition.Y,
+								//(startPixelX + x + pSampleBuffer[sample].U) / deviceWidth, 
+								//(startPixelY + y + pSampleBuffer[sample].V) / deviceHeight, 
 								pSampleBuffer[sample].U, pSampleBuffer[sample].V);
 
-							Li += m_pIntegrator->Radiance(m_pScene, ray, intersection);
+							Li += m_pIntegrator->Radiance(&context, m_pScene, ray, intersection);
 						}
 
 						Li = Li / m_nSampleCount;
