@@ -42,12 +42,12 @@ bool WhittedIntegrator::Shutdown(void)
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
+Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
 {
-	return Radiance(p_pScene, p_ray, p_intersection, 0);
+	return Radiance(p_pContext, p_pScene, p_ray, p_intersection, 0);
 }
 //----------------------------------------------------------------------------------------------
-Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, int p_nRayDepth)
+Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, int p_nRayDepth)
 {
 	if (p_nRayDepth > m_nMaxRayDepth) 
 		return 0;
@@ -145,7 +145,7 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 			if (!f.IsBlack() && pdf != 0.f)
 			{
 				Intersection intersection;
-				Ls = f * Radiance(p_pScene, ray, intersection, p_nRayDepth + 1);
+				Ls = f * Radiance(p_pContext, p_pScene, ray, intersection, p_nRayDepth + 1);
 			}
 		} 
 		/**/
@@ -178,7 +178,7 @@ Spectrum WhittedIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersec
 			if (!f.IsBlack() && pdf != 0.f)
 			{
 				Intersection intersection;
-				Lt = f * Radiance(p_pScene, ray, intersection, p_nRayDepth + 1);
+				Lt = f * Radiance(p_pContext, p_pScene, ray, intersection, p_nRayDepth + 1);
 			}
 		}
 	/**/

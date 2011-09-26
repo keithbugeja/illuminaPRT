@@ -34,12 +34,12 @@ bool TestIntegrator::Shutdown(void)
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-Spectrum TestIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
+Spectrum TestIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
 {
-	return Radiance(p_pScene, p_ray, p_intersection, 0);
+	return Radiance(p_pContext, p_pScene, p_ray, p_intersection, 0);
 }
 //----------------------------------------------------------------------------------------------
-Spectrum TestIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, int p_nRayDepth)
+Spectrum TestIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, int p_nRayDepth)
 {
 	Ray ray(p_ray); 
 
@@ -122,7 +122,7 @@ Spectrum TestIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 			if (!f.IsBlack() && pdf != 0.f)
 			{
 				Intersection intersection;
-				Ls = f * Radiance(p_pScene, ray, intersection, p_nRayDepth + 1);
+				Ls = f * Radiance(p_pContext, p_pScene, ray, intersection, p_nRayDepth + 1);
 			}
 		} 
 		/**/
@@ -155,7 +155,7 @@ Spectrum TestIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersectio
 			if (!f.IsBlack() && pdf != 0.f)
 			{
 				Intersection intersection;
-				Lt = f * Radiance(p_pScene, ray, intersection, p_nRayDepth + 1);
+				Lt = f * Radiance(p_pContext, p_pScene, ray, intersection, p_nRayDepth + 1);
 			}
 		}
 	/**/

@@ -49,6 +49,7 @@ void MultithreadedRenderer::Render(void)
 		Vector2 *pSampleBuffer = new Vector2[m_nSampleCount];
 
 		Intersection intersection;
+		IntegratorContext context;
 
 		for (int x = 0; x < width; x++)
 		{
@@ -61,9 +62,13 @@ void MultithreadedRenderer::Render(void)
 
 			for (int sample = 0; sample < m_nSampleCount; sample++)
 			{
-				Ray ray = m_pScene->GetCamera()->GetRay((x + pSampleBuffer[sample].U) / width, (y + pSampleBuffer[sample].V) / height, pSampleBuffer[sample].U, pSampleBuffer[sample].V);
-				//Ray ray = m_pCamera->GetRay((x + pSampleBuffer[sample].U) / width, (y + pSampleBuffer[sample].V) / height, pSampleBuffer[sample].U, pSampleBuffer[sample].V);
-				Li += m_pIntegrator->Radiance(m_pScene, ray, intersection);
+				context.SampleIndex = sample;
+				context.SurfacePosition.Set(x + pSampleBuffer[sample].U, y + pSampleBuffer[sample].V);
+				context.NormalisedPosition.Set(context.SurfacePosition.X / width, context.SurfacePosition.Y / height);
+
+				Ray ray = m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, pSampleBuffer[sample].U, pSampleBuffer[sample].V);
+
+				Li += m_pIntegrator->Radiance(&context, m_pScene, ray, intersection);
 			}
 
 			Li = Li / m_nSampleCount;

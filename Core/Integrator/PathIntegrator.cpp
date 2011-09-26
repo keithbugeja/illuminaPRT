@@ -41,7 +41,7 @@ bool PathIntegrator::Shutdown(void)
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-Spectrum PathIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
+Spectrum PathIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
 {
 	VisibilityQuery visibilityQuery(p_pScene);
 

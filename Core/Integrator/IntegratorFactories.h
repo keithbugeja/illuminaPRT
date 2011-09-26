@@ -85,9 +85,9 @@ namespace Illumina
 			 */
 			Illumina::Core::IIntegrator *CreateInstance(ArgumentMap &p_argumentMap)
 			{
-				int maxVPLs, 
-					raydepth,
-					shadowrays;
+				int maxVPLs = 64, 
+					raydepth = 4,
+					shadowrays = 1;
 
 				float reflectEpsilon = 1e-4f,
 					gTermMax = 0.01f;
@@ -95,7 +95,7 @@ namespace Illumina
 				std::string strId;
 
 				p_argumentMap.GetArgument("MaxVPL", maxVPLs);
-				p_argumentMap.GetArgument("GTermMax", gTermMax);
+				p_argumentMap.GetArgument("MaxGTerm", gTermMax);
 				p_argumentMap.GetArgument("RayDepth", raydepth);
 				p_argumentMap.GetArgument("ShadowRays", shadowrays);
 				p_argumentMap.GetArgument("Epsilon", reflectEpsilon);

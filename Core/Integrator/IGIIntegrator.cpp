@@ -24,6 +24,7 @@ using namespace Illumina::Core;
 IGIIntegrator::IGIIntegrator(const std::string &p_strName, int p_nMaxVPL, float p_fGTermMax, int p_nMaxRayDepth, int p_nShadowSampleCount, float p_fReflectEpsilon)
 	: IIntegrator(p_strName) 
 	, m_nMaxVPL(p_nMaxVPL)
+	, m_nMaxSets(9)
 	, m_nShadowSampleCount(p_nShadowSampleCount)
 	, m_nMaxRayDepth(p_nMaxRayDepth)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
@@ -32,6 +33,7 @@ IGIIntegrator::IGIIntegrator(const std::string &p_strName, int p_nMaxVPL, float 
 //----------------------------------------------------------------------------------------------
 IGIIntegrator::IGIIntegrator(int p_nMaxVPL, float p_fGTermMax, int p_nMaxRayDepth, int p_nShadowSampleCount, float p_fReflectEpsilon)
 	: m_nMaxVPL(p_nMaxVPL) 
+	, m_nMaxSets(9)
 	, m_nShadowSampleCount(p_nShadowSampleCount)
 	, m_nMaxRayDepth(p_nMaxRayDepth)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
@@ -126,14 +128,20 @@ void IGIIntegrator::TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLCount,
 //----------------------------------------------------------------------------------------------
 bool IGIIntegrator::Prepare(Scene *p_pScene)
 {
-	VirtualPointLightList.clear();
+	//VirtualPointLightList.clear();
+	//TraceVPLs(p_pScene, 0, m_nMaxVPL, VirtualPointLightList);
 
-	TraceVPLs(p_pScene, 0, m_nMaxVPL, VirtualPointLightList);
+	// Assume we're using a set of 4 VPL Lists
+	for (int set = 0; set < 9; ++set)
+	{
+		VirtualPointLightSet.push_back(std::vector<VirtualPointLight>());
+		TraceVPLs(p_pScene, 0, m_nMaxVPL, VirtualPointLightSet.back());
+	}
 
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-Spectrum IGIIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
+Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
 {
 	VisibilityQuery visibilityQuery(p_pScene);
 
@@ -154,7 +162,12 @@ Spectrum IGIIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection
 	Ray ray(p_ray); 
 
 	float pdf;
-	
+
+	//choose a set
+	//int setId = (int)(p_pScene->GetSampler()->Get1DSample() * 9);
+	int setId = (int)p_pContext->SurfacePosition.X % 3 + ((int)(p_pContext->SurfacePosition.Y) % 3) * 3;
+	std::vector<VirtualPointLight> &vpll = VirtualPointLightSet[setId];
+
 	for (int rayDepth = 0; rayDepth < m_nMaxRayDepth; rayDepth++)
 	{
 		//----------------------------------------------------------------------------------------------
@@ -215,7 +228,8 @@ Spectrum IGIIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection
 		int contributions = 0;
 		Spectrum E;
 
-		for (vplIterator = VirtualPointLightList.begin(); vplIterator != VirtualPointLightList.end(); ++vplIterator)
+		//for (vplIterator = VirtualPointLightList.begin(); vplIterator != VirtualPointLightList.end(); ++vplIterator)
+		for (vplIterator = vpll.begin(); vplIterator != vpll.end(); ++vplIterator)
 		{
 			const VirtualPointLight &vpl = *vplIterator;
 
@@ -242,7 +256,8 @@ Spectrum IGIIntegrator::Radiance(Scene *p_pScene, const Ray &p_ray, Intersection
 				E += Llight;
 		}
 
-		L += E / VirtualPointLightList.size(); //contributions;
+		//L += E / VirtualPointLightList.size(); //contributions;
+		L += E / vpll.size(); //contributions;
 
 		//----------------------------------------------------------------------------------------------
 		// Sample bsdf for next direction
