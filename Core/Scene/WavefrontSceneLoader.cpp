@@ -290,7 +290,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 
 	// Add Wavefront materials to context material group
 	if (p_context.Materials == NULL)
-		p_context.Materials = new MaterialGroup(materialPath.filename());
+		p_context.Materials = new MaterialGroup(materialPath.filename().string() );
 
 	int baseGroupId = p_context.Materials->Size();
 
@@ -361,7 +361,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 {
 	// Use filename as the default object name
 	boost::filesystem::path geometryPath(p_strFilename);
-	p_context.ObjectName = geometryPath.filename();
+	p_context.ObjectName = geometryPath.filename().string();
 	p_context.Mesh = new KDTreeMesh(p_context.ObjectName);
 
 	// Open wavefront file
