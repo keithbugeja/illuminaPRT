@@ -69,8 +69,8 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 
 		IMaterial *pMaterial = p_intersection.GetMaterial();
 
-		if (p_intersection.IsEmissive())
-			return Spectrum(10,10,0);
+		//if (p_intersection.IsEmissive())
+			//return Spectrum(10,10,0);
 
 		//if (p_intersection.IsEmissive() && (p_nRayDepth == 0 || pMaterial->HasBxDFType(BxDF::Specular))) 
 		//	return Spectrum(1,0,1);
