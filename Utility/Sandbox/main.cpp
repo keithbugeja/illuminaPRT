@@ -10,6 +10,12 @@
 // Move factories to CorePlugins.dll
 // Finish scene loaders
 //----------------------------------------------------------------------------------------------
+#include "scheduling.h"
+
+#define TEST_SCHEDULER
+
+#if (!defined(TEST_SCHEDULER))
+
 #include <omp.h>
 
 #include <boost/program_options.hpp>
@@ -319,3 +325,11 @@ int main(int argc, char** argv)
 	// Exit
 	return 1;
 }
+
+#else
+int main(int argc, char **argv)
+{
+	TestScheduler();
+	return 0;
+}
+#endif
