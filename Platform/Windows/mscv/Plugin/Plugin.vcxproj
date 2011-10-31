@@ -74,7 +74,7 @@
     <IntDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
-    <LibraryPath>$(MPI_DIR)\lib\amd64;$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(MPI_DIR)\lib;$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</OutDir>
@@ -83,7 +83,7 @@
     <IntDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
-    <LibraryPath>$(MPI_DIR)\lib\amd64;$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(MPI_DIR)\lib;$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
