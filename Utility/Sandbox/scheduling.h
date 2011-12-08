@@ -318,7 +318,7 @@ void LoadBalancer(void)
 		boost::this_thread::sleep(boost::posix_time::seconds(1));
 
 		// Simulate a request
-		int requestSize = rand() % 2 + 2;
+		int requestSize = rand() % 5 + 5;
 		std::cout << "[" << rank << "] :: [LoadBalancer] :: Incoming request :: [" << requestSize << "]" << std::endl;
 		std::cout << "[" << rank << "] :: [LoadBalancer] :: Available :: [" << idleTaskGroup.Size - 1 << "]" << std::endl; 
 
