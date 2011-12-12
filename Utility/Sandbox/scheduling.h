@@ -26,6 +26,7 @@ ProcessType GetProcessType(int rank, int argc, char **argv)
 	return (rank) ? PT_Resource : PT_LoadBalancer; 
 }
 
+/*
 struct Message
 {
 	int CommandID;
@@ -261,7 +262,9 @@ int GetRank(void)
 
 	return rank;
 }
+*/
 
+/*
 void InitialiseGroups(TaskGroup &p_worldTaskGroup, TaskGroup &p_idleTaskGroup)
 {
 	std::cout << "Initialising World TaskGroup..." << std::endl;
@@ -285,7 +288,7 @@ void LoadBalancer(void)
 		idleTaskGroup;
 
 #pragma region non-ms
-	/*
+	
 	// Spawn parameters
 	// int *errorCodeList = new int[8];
 	// char portName[MPI_MAX_PORT_NAME];
@@ -297,7 +300,7 @@ void LoadBalancer(void)
 	// Publish communication port
 	// std::cout << "[LoadBalancer] :: Publishing Port" << std::endl;
 	// MPI_Publish_name("LoadBalancer", MPI_INFO_NULL, portName);
-	*/
+	
 #pragma endregion
 
 	// Synchronise processes :: Checkpoint 01
@@ -538,6 +541,238 @@ void Idle(void)
 		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 		
 		HandleLoadBalancerRequests(&context, context.idleTaskGroup);
+	}
+}
+*/
+
+class Task 
+{
+public:
+	enum TaskType 
+	{
+		LoadBalacer,
+		Coordinator,
+		Worker
+	} Type;
+			
+public:
+	int MasterRank,
+		CoordinatorRank,
+		Rank;		
+};
+
+class TaskGroup
+{
+public:
+	std::vector<Task*> TaskList;
+
+	int MasterRank,
+		CoordinatorRank;
+
+	int Size;
+
+public:
+	void CreateSubGroup(TaskGroup *p_group, int p_startRank, int p_endRank)
+	{
+		BOOST_ASSERT(p_group != NULL);
+
+		for (int index = p_startRank; index <= p_endRank; index++)
+			p_group->TaskList.push_back(TaskList[index]);
+
+		p_group->MasterRank = this->MasterRank;
+		p_group->CoordinatorRank = p_startRank;
+		p_group->Size = p_group->TaskList.size();
+	}
+
+	void Split(TaskGroup *p_group, int p_startRank, int p_endRank)
+	{
+		BOOST_ASSERT(p_group != NULL);
+
+		for (int index = p_startRank; index <= p_endRank; index++)
+		{
+			std::cout << "Pushing task[" << index << "], with rank = " << TaskList[index]->Rank << std::endl;
+			p_group->TaskList.push_back(TaskList[index]);
+		}
+
+		TaskList.erase(TaskList.begin() + p_startRank, TaskList.begin() + p_endRank + 1);
+		std::cout << "Size pre erase = " << Size << std::endl;
+		Size = TaskList.size();
+		std::cout << "Size post erase = " << Size << std::endl;
+
+		for (int n = 0; n < Size; n++)
+		{
+			std::cout << TaskList[n]->Rank << ", ";
+		}
+		std::cout << std::endl;
+
+		p_group->MasterRank = this->MasterRank;
+		p_group->CoordinatorRank = p_startRank;
+		p_group->Size = p_group->TaskList.size();
+	}
+};
+
+enum MessageType 
+{
+	Request = 0x01,
+	Release = 0x02
+};
+
+struct Message
+{
+	int Id;
+	int Value;
+};
+
+void SendMPIMessage(Task *p_destination, Message *p_message)
+{
+	MPI_Send(p_message, sizeof(Message), MPI_BYTE, p_destination->Rank, p_message->Id, MPI_COMM_WORLD);
+}
+
+bool TestMPIRecieve(MPI_Request *p_request)
+{
+	int flag;
+	MPI_Status status;
+
+	MPI_Test(p_request, &flag, &status);
+	return (flag != 0);
+}
+
+bool ReceiveMPIMessage(Task *p_source, Message &p_message, MPI_Request *p_request)
+{
+	MPI_Irecv(&p_message, sizeof(Message), MPI_BYTE, p_source->Rank, MPI_ANY_TAG, MPI_COMM_WORLD, p_request);
+	return TestMPIRecieve(p_request);
+}
+
+void LoadBalancer(void)
+{
+	std::vector<TaskGroup*> taskGroupList;
+
+	// Initialise resource group
+	TaskGroup *group = new TaskGroup();
+	MPI_Comm_size(MPI_COMM_WORLD, &(group->Size));
+	for (int index = 0; index < group->Size; index++)
+	{
+		Task *task = new Task();
+		task->Rank = index;
+		task->CoordinatorRank = 0;
+		task->MasterRank = 0;
+
+		group->TaskList.push_back(task);
+	}
+
+	// Fetch LB task
+	Task *task = group->TaskList[0];
+	std::cout << "[" << task->Rank << "] :: Master online" << std::endl;
+
+	TaskGroup idleGroup; group->CreateSubGroup(&idleGroup, 1, group->Size - 1);
+	std::cout << "[" << task->Rank << "] :: Idle group created with size = " << idleGroup.Size << std::endl;
+
+	while(true)
+	{
+		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+
+		int request = rand() % 2 + 2;
+		std::cout << "[" << task->Rank << "] :: Request size = " << request << std::endl;
+
+		// Issue resource request to coordinators
+		if (request > idleGroup.Size)
+		{
+			std::cout << "[" << task->Rank << "] :: Cannot satisfy request." << std::endl;
+		}
+		else
+		{
+			// Create task group from idle group
+			TaskGroup *newTaskGroup = new TaskGroup();
+			taskGroupList.push_back(newTaskGroup);
+			idleGroup.Split(newTaskGroup, 0, request - 1);
+
+			Message message;
+			message.Id = MessageType::Request; // enum to new task
+			message.Value = 0x00; // 00 = coord; 01 = worker
+
+			// Now we must inform PEs that they have been assigned to a new task group
+			for (int index = 0; index < newTaskGroup->Size; index++)
+			{
+				std::cout << "[" << task->Rank << "] :: Sending message to " << newTaskGroup->TaskList[index]->Rank << std::endl;
+
+				message.Value = (index != 0);
+				SendMPIMessage(newTaskGroup->TaskList[index], &message);
+			}
+
+			std::cout << "[" << task->Rank << "] :: Request satisfied!" << std::endl;
+		}
+	}
+}
+
+void Coordinator(void)
+{
+	std::cout << "Coordinator online" << std::endl;
+
+	while(true) 
+	{
+		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+	}
+}
+
+void Worker(void)
+{
+	std::cout << "Worker online" << std::endl;
+
+	while(true) 
+	{
+		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+	}
+}
+
+void Idle(void)
+{
+	// Initialise resource group
+	TaskGroup *group = new TaskGroup();
+	MPI_Comm_size(MPI_COMM_WORLD, &(group->Size));
+	for (int index = 0; index < group->Size; index++)
+	{
+		Task *task = new Task();
+		task->Rank = index;
+		task->CoordinatorRank = 0;
+		task->MasterRank = 0;
+
+		group->TaskList.push_back(task);
+	}
+
+	// Fetch task
+	Task *masterTask = group->TaskList[0];
+
+	int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	Task *task = group->TaskList[rank];
+	std::cout << "[" << task->Rank << "] :: Idle online" << std::endl;
+
+	MPI_Request request;
+	Message message;
+
+	while(true)
+	{
+		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+
+		if (!ReceiveMPIMessage(masterTask, message, &request))
+			while(!TestMPIRecieve(&request)) boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+
+		switch (message.Id)
+		{
+			case 0x01:
+			{
+				std::cout << "Message received : " << message.Id << ", " << message.Value << std::endl;
+				
+				if (message.Value == 0x00)
+					Coordinator();
+				else
+					Worker();
+
+				break;
+			}
+
+			default:
+				break;
+		}
 	}
 }
 

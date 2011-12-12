@@ -13,6 +13,7 @@ namespace Illumina
 {
 	namespace Core
 	{
+		/*		
 		class TaskGroup
 		{
 		public:
@@ -166,5 +167,6 @@ namespace Illumina
 
 			void Merge(void) { }
 		};
+		*/
 	}
 }
