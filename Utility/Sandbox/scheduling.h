@@ -26,6 +26,8 @@ ProcessType GetProcessType(int rank, int argc, char **argv)
 	return (rank) ? PT_Resource : PT_LoadBalancer; 
 }
 
+#pragma region old stuff
+
 /*
 struct Message
 {
@@ -544,6 +546,19 @@ void Idle(void)
 	}
 }
 */
+#pragma endregion
+
+enum MessageType 
+{
+	Request = 0x01,
+	Release = 0x02
+};
+
+struct Message
+{
+	int Id;
+	int Value;
+};
 
 class Task 
 {
@@ -559,6 +574,39 @@ public:
 	int MasterRank,
 		CoordinatorRank,
 		Rank;		
+
+public:
+	bool SendMessageSync(Task *p_destination, Message &p_message)
+	{
+		return MPI_SUCCESS == MPI_Send(&p_message, sizeof(Message), MPI_BYTE, p_destination->Rank, p_message.Id, MPI_COMM_WORLD);
+	}
+
+	bool SendMessageAsync(Task *p_destination, Message &p_message, MPI_Request *p_request)
+	{
+		MPI_Isend(&p_message, sizeof(Message), MPI_BYTE, p_destination->Rank, p_message.Id, MPI_COMM_WORLD, p_request);
+		return IsRequestComplete(p_request);
+	}
+
+	bool ReceiveMessageSync(Task *p_source, Message &p_message)
+	{
+		MPI_Status status;
+		return MPI_SUCCESS == MPI_Recv(&p_message, sizeof(Message), MPI_BYTE, p_source->Rank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+	}
+
+	bool ReceiveMessageAsync(Task *p_source, Message &p_message, MPI_Request *p_request)
+	{
+		MPI_Irecv(&p_message, sizeof(Message), MPI_BYTE, p_source->Rank, MPI_ANY_TAG, MPI_COMM_WORLD, p_request);
+		return IsRequestComplete(p_request);
+	}
+
+	bool IsRequestComplete(MPI_Request *p_request)
+	{
+		int flag;
+		MPI_Status status;
+
+		MPI_Test(p_request, &flag, &status);
+		return (flag != 0);
+	}
 };
 
 class TaskGroup
@@ -572,6 +620,15 @@ public:
 	int Size;
 
 public:
+	void Broadcast(Task *p_sender, Message &p_message)
+	{
+		for (std::vector<Task*>::iterator taskIterator = TaskList.begin(); 
+			 taskIterator != TaskList.end(); taskIterator++)
+		{
+			p_sender->SendMessageSync(*taskIterator, p_message);
+		}
+	}
+
 	void CreateSubGroup(TaskGroup *p_group, int p_startRank, int p_endRank)
 	{
 		BOOST_ASSERT(p_group != NULL);
@@ -609,18 +666,6 @@ public:
 		p_group->CoordinatorRank = p_startRank;
 		p_group->Size = p_group->TaskList.size();
 	}
-};
-
-enum MessageType 
-{
-	Request = 0x01,
-	Release = 0x02
-};
-
-struct Message
-{
-	int Id;
-	int Value;
 };
 
 void SendMPIMessage(Task *p_destination, Message *p_message)
@@ -696,7 +741,7 @@ void LoadBalancer(void)
 				std::cout << "[" << task->Rank << "] :: Sending message to " << newTaskGroup->TaskList[index]->Rank << std::endl;
 
 				message.Value = (index != 0);
-				SendMPIMessage(newTaskGroup->TaskList[index], &message);
+				task->SendMessageSync(newTaskGroup->TaskList[index], message);
 			}
 
 			std::cout << "[" << task->Rank << "] :: Request satisfied!" << std::endl;
@@ -708,8 +753,11 @@ void Coordinator(void)
 {
 	std::cout << "Coordinator online" << std::endl;
 
+
+
 	while(true) 
 	{
+
 		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 	}
 }
@@ -753,8 +801,9 @@ void Idle(void)
 	{
 		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 
-		if (!ReceiveMPIMessage(masterTask, message, &request))
-			while(!TestMPIRecieve(&request)) boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+		if (task->ReceiveMessageAsync(masterTask, message, &request))
+			while(!task->IsRequestComplete(&request))
+				boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
 		switch (message.Id)
 		{
