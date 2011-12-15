@@ -26,5 +26,8 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\taskgroup.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\task.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

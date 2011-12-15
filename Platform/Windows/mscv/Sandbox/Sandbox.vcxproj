@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\scheduling.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\task.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\taskgroup.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
