@@ -2,6 +2,7 @@
 
 #include <map>
 #include <vector>
+#include <cstdarg>
 
 #include <boost/thread.hpp>
 #include <boost/mpi.hpp>
@@ -19,12 +20,32 @@ namespace Illumina
 
 		struct Message
 		{
-			int CmdId;
-			int CmdValue;
+			int Id;
+			int Value[16];
+			int Size;
+
+			const void SetMessage(int p_id, ...)
+			{
+				Id = p_id;
+
+				va_list list;
+
+ 				/*va_start(list, p_id);
+ 
+				for (int nArg=0; nArg < nCount; nArg++)
+					 lSum += va_arg(list, int);
+ */
+				va_end(list);
+			}
 
 			const std::string ToString(void) const 
 			{
 				return "Message.String";
+			}
+
+			const int MessageSize(void) 
+			{
+				return sizeof(int) * (Size + 1);
 			}
 		};
 
@@ -58,24 +79,28 @@ namespace Illumina
 
 			bool Send(Task *p_destination, const Message &p_message)
 			{
-				return MPI_SUCCESS == MPI_Send((void*)&p_message, sizeof(Message), MPI_BYTE, p_destination->Rank, p_message.CmdId, MPI_COMM_WORLD);
+				//return MPI_SUCCESS == MPI_Send((void*)&p_message, sizeof(Message), MPI_BYTE, p_destination->GetWorkerRank(), p_message.CmdId, MPI_COMM_WORLD);
+				return MPI_SUCCESS == MPI_Send((void*)&p_message, p_message.MessageSize(), MPI_BYTE, p_destination->GetWorkerRank(), p_message.CmdId, MPI_COMM_WORLD);
 			}
 
 			bool SendAsync(Task *p_destination, const Message &p_message, MPI_Request *p_request)
 			{
-				MPI_Isend((void*)&p_message, sizeof(Message), MPI_BYTE, p_destination->Rank, p_message.CmdId, MPI_COMM_WORLD, p_request);
+				//MPI_Isend((void*)&p_message, sizeof(Message), MPI_BYTE, p_destination->GetWorkerRank(), p_message.CmdId, MPI_COMM_WORLD, p_request);
+				MPI_Isend((void*)&p_message, p_message.MessageSize(), MPI_BYTE, p_destination->GetWorkerRank(), p_message.CmdId, MPI_COMM_WORLD, p_request);
 				return IsRequestComplete(p_request);
 			}
 
 			bool Receive(Task *p_source, const Message &p_message)
 			{
 				MPI_Status status;
-				return MPI_SUCCESS == MPI_Recv((void*)&p_message, sizeof(Message), MPI_BYTE, p_source->Rank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+				return MPI_SUCCESS == MPI_Recv((void*)&p_message, p_message.MessageSize(), MPI_BYTE, p_source->GetWorkerRank(), MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+				//return MPI_SUCCESS == MPI_Recv((void*)&p_message, sizeof(Message), MPI_BYTE, p_source->GetWorkerRank(), MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 			}
 
 			bool ReceiveAsync(Task *p_source, const Message &p_message, MPI_Request *p_request)
 			{
-				MPI_Irecv((void*)&p_message, sizeof(Message), MPI_BYTE, p_source->Rank, MPI_ANY_TAG, MPI_COMM_WORLD, p_request);
+				MPI_Irecv((void*)&p_message, p_message.MessageSize(), MPI_BYTE, p_source->GetWorkerRank(), MPI_ANY_TAG, MPI_COMM_WORLD, p_request);
+				//MPI_Irecv((void*)&p_message, sizeof(Message), MPI_BYTE, p_source->GetWorkerRank(), MPI_ANY_TAG, MPI_COMM_WORLD, p_request);
 				return IsRequestComplete(p_request);
 			}
 
