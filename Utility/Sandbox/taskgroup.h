@@ -60,7 +60,7 @@ namespace Illumina
 			 */
 			void Broadcast(Task *p_sender, const Message &p_message)
 			{
-				std::cout << "[" << p_sender->Rank << "] :: Broadcast " << p_message.ToString() << std::endl;
+				std::cout << "[" << p_sender->GetWorkerRank() << "] :: Broadcast " << p_message.ToString() << std::endl;
 
 				for (std::vector<Task*>::iterator taskIterator = TaskList.begin(); 
 					 taskIterator != TaskList.end(); taskIterator++)
@@ -94,7 +94,7 @@ namespace Illumina
 
 				for (int index = p_startRank; index <= p_endRank; index++)
 				{
-					std::cout << "Pushing task[" << index << "], with rank = " << TaskList[index]->Rank << std::endl;
+					std::cout << "Pushing task[" << index << "], with rank = " << TaskList[index]->GetWorkerRank() << std::endl;
 					p_group->TaskList.push_back(TaskList[index]);
 				}
 

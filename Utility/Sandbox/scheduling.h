@@ -62,19 +62,22 @@ void Master(void)
 	}
 }
 
-void Coordinator(void)
+void Coordinator(Task *p_task)
 {
+	// Coordinator is online - first step should be handshaking with workers
 	std::cout << "Coordinator online" << std::endl;
+
+
 
 	while(true) 
 	{
-
 		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 	}
 }
 
-void Worker(void)
+void Worker(Task *p_task)
 {
+	// Worker is online - first step should be handshaking with coordinator
 	std::cout << "Worker online" << std::endl;
 
 	while(true) 
@@ -98,7 +101,7 @@ void Idle(void)
 	idleTask->SetCoordinatorRank(-1);
 	idleTask->SetWorkerRank(rank);
 
-	std::cout << "[" << idleTask->Rank << "] :: Idle online" << std::endl;
+	std::cout << "[" << idleTask->GetWorkerRank() << "] :: Idle online" << std::endl;
 
 	MPI_Request request;
 	Message idleMessage;
@@ -117,17 +120,24 @@ void Idle(void)
 		switch (idleMessage.CmdId)
 		{
 			case MessageType::Request:
-				std::cout << "Message received : " << idleMessage.CmdId << ", " << idleMessage.CmdValue << std::endl;
+			{
+				std::cout << "[" << idleTask->GetWorkerRank() << "] :: Message received : " 
+					<< idleMessage.CmdId << ", " << idleMessage.CmdValue << std::endl;
+
+				// Set coordinator for idle task
 				idleTask->SetCoordinatorRank(idleMessage.CmdValue);
+
+				// If this task is the coordinator, spawn coordinator code
 				if (idleTask->GetCoordinatorRank() == idleTask->GetWorkerRank())
 				{
-					Coordinator();
+					Coordinator(p_task);
 				}
 				else
 				{
-					Worker();
+					Worker(p_task);
 				}
 				break;
+			}
 
 			default:
 				break;
