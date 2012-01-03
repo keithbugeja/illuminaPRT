@@ -76,7 +76,6 @@ void Master(void)
 				}
 				else
 				{
-
 					// Create task group from idle group
 					TaskGroup *spawnGroup = new TaskGroup(groupIDSource++);
 					taskGroupList.AddTaskGroup(spawnGroup->GetId(), spawnGroup);

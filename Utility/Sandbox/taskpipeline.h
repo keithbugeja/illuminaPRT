@@ -139,7 +139,16 @@ namespace Illumina
 						}
 
 						case MT_Release:
+						{
+							ReleaseMessage *releaseMessage = (ReleaseMessage*)masterMessage;
+							int releaseCount = releaseMessage->GetReleaseCount();
+							
+							// Select arbitrarily a number of workers to eliminate
+							TaskGroup splitGroup; 
+							p_coordinator.group.Split(&splitGroup, p_coordinator.group.Size() - releaseCount, p_coordinator.group.Size()); 
+							
 							break;
+						}
 
 						default:
 							break;
