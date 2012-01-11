@@ -96,6 +96,8 @@ namespace Illumina
 			 */
 			void Broadcast(Task *p_sender, const Message &p_message)
 			{
+				ControlCommunicator communicator(p_sender);
+
 				// std::cout << "[" << p_sender->GetWorkerRank() << "] :: Broadcast " << p_message.ToString() << std::endl;
 
 				for (std::vector<Task*>::iterator taskIterator = TaskList.begin(); 
@@ -104,7 +106,7 @@ namespace Illumina
 					if (p_sender == *taskIterator) 
 						continue;
 
-					p_sender->Send(*taskIterator, p_message);
+					communicator.Send(p_message, (*taskIterator)->GetRank());
 				}
 			}
 
