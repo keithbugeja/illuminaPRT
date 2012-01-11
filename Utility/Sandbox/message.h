@@ -11,6 +11,15 @@ namespace Illumina
 		// 2. Messages between Coordinator from Master 
 		// 3. Messages between Coordinator and Workers
 
+		enum MessageMedium
+		{
+			MM_ControlStatic,
+			MM_ControlDynamic,
+			MM_ContextStatic,
+			MM_ContextDynamic,
+			MM_Count
+		};
+
 		enum MessageType
 		{
 			MT_Request		= 0x01,
@@ -19,12 +28,13 @@ namespace Illumina
 			MT_Register		= 0x04,
 			MT_Completed	= 0x05,		
 			MT_Synchronise	= 0x06,
+			MT_Acknowledge	= 0x07,
 			MT_Count
 		};
 
-		// Note that we should probably switch to templated messages, since many messages
-		// are command ids without any arguments!
-
+		/*
+		 * Base message class for fixed-length messages communication within communicator
+		 */
 		struct Message
 		{
 		public:
@@ -43,6 +53,7 @@ namespace Illumina
 			}
 		};
 
+		// RequestMessage -> Sent to idle workers to form a new task group
 		struct RequestMessage 
 			: public Message
 		{
@@ -69,21 +80,8 @@ namespace Illumina
 				return "Message.Request";
 			}
 		};
-
-		struct RegisterMessage
-			: public Message
-		{
-			RegisterMessage(void)
-			{
-				Id = MT_Register;
-			}
-
-			const std::string ToString(void) const
-			{
-				return "Message.Register";
-			}
-		};
 		
+		// Release Message -> Sent to coordinator to request release of a number of workers
 		struct ReleaseMessage 
 			: public Message
 		{
@@ -102,20 +100,8 @@ namespace Illumina
 			}
 		};
 
-		struct TerminateMessage
-			: public Message
-		{
-			TerminateMessage(void)
-			{
-				Id = MT_Terminate;
-			}
-
-			const std::string ToString(void) const
-			{
-				return "Message.Terminate";
-			}
-		};
-
+		// CompletedMessage -> Sent to master by workers completing their tasks
+		//	Senders are merged with idle group
 		struct CompletedMessage
 			: public Message
 		{
@@ -133,5 +119,27 @@ namespace Illumina
 				return "Message.Completed"; 
 			}
 		};
+
+		/*
+		 * Templated message class
+		 */
+		template<int T>
+		class TMessage
+			: public Message
+		{
+		public:
+			TMessage(void) { Id = T; }
+
+			const std::string ToString(void) const { return "Message.Template"; }
+		};
+
+		// RegisterMessage -> Sent to coordinators by workers, to register themselves
+		typedef TMessage<MT_Register> RegisterMessage;
+		
+		// TerminateMessage -> Sent to wokers by coordinator, to ask for idle transition
+		typedef TMessage<MT_Terminate> TerminateMessage;
+
+		// AcknowledgeMessage -> Sent to coordinators by workers, to signal completion of some task
+		typedef TMessage<MT_Acknowledge> AcknowledgeMessage;
 	}
 }

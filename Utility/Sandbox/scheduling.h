@@ -8,12 +8,19 @@ using namespace Illumina::Core;
 
 void Master(void)
 {
-	//std::vector<TaskGroup*> taskGroupList;
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	// Initialise Master
+	//////////////////////////////////////////////////////////////////////////////////////////////////
 
-	TaskGroupList taskGroupList;
-
+	// Create two task groups
+	// 1. Master : holds all the PEs including the master PE
+	// 2. Idle : holds currently idle PEs
 	TaskGroup *masterGroup = new TaskGroup(0, 0, 0),
 		*idleGroup = new TaskGroup(1, 0);
+
+	// Keeps track of the various groups the system PEs have
+	// been partitioned in.
+	TaskGroupList taskGroupList;
 
 	// Get size of global communicator
 	int size; MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -23,95 +30,117 @@ void Master(void)
 	{
 		Task *task = new Task(index, 0, -1);
 		masterGroup->TaskList.push_back(task);
-
-		// std::cout << task->ToString() << std::endl;
 	}
 
 	// Get master task
 	Task *masterTask = masterGroup->GetMasterTask();
-	
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	// DEBUG OUTPUT
+
 	BOOST_ASSERT(masterTask != NULL);
-	std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master online" << std::endl;
+	std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master started." << std::endl;
 
+	// Create idle subgroup
 	masterGroup->CreateSubGroup(idleGroup, 1, masterGroup->Size() - 1);
-	std::cout << "[" << masterTask->GetWorkerRank() << "] :: Idle group created with size = " << idleGroup->Size() << std::endl;
+	std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master created idle group created with size = " << idleGroup->Size() << std::endl;
 
-	// Used for async communication
-	MPI_Request request;
-	MPI_Status status;
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	// Initialise Master
+	//////////////////////////////////////////////////////////////////////////////////////////////////
 
-	// -- Set to some centralised ID provider
-	int groupIDSource = 2,
-		peRequest;
+	// Control communicator
+	ControlCommunicator masterCommunicator(masterTask);
 
-	Message rcptMessage;
+	// Group Id counter
+	int groupIDSource = 2;
+	int requestSize = 0;
+
+	// Buffers for asynchronous receive
+	MPI_Request receiveRequest;
+	MPI_Status receiveStatus;
+	Message receiveMessage;	
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	// Start master message-loop
+	//////////////////////////////////////////////////////////////////////////////////////////////////
 
 	while(true)
 	{
-		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
-
-		peRequest = rand() % 2 + 2;
-		std::cout << "[" << masterTask->GetWorkerRank() << "] :: Request size = " << peRequest << std::endl;
-
-		if (masterTask->ReceiveAnyAsync(rcptMessage, &request))
+		// Set up an asynchronous receive
+		if (!masterCommunicator.ReceiveAsync(receiveMessage, MPI_ANY_SOURCE, &receiveRequest, &receiveStatus))
 		{
-			while(!masterTask->IsRequestComplete(&request, &status))
+			// Loop until a receive buffer contains a new message
+			while(!masterCommunicator.IsRequestComplete(&receiveRequest, &receiveStatus))
 			{
-				// Issue resource request to coordinators
-				if (peRequest > idleGroup->Size())
+				boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+
+				// Generate request
+				requestSize = rand() % 2 + 8;
+				std::cout << "[" << masterTask->GetRank() << "] :: Master received request size of [" << requestSize << "]" << std::endl;
+
+				// Check if we can handle a request of the specified size
+				if (requestSize > idleGroup->Size())
 				{
-					boost::this_thread::sleep(boost::posix_time::milliseconds(500));
-					std::cout << "[" << masterTask->GetWorkerRank() << "] :: Cannot satisfy request!" << std::endl;
-					
+					std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master cannot satisfy request!" << std::endl;
+					/*
 					TerminateMessage terminateMessage;
+					ReleaseMessage releaseMessage(2);
 
 					if (taskGroupList.Size() > 0)
 					{
+						// Choose group to terminate
 						int terminateIndex = rand() % taskGroupList.Size();
 						TaskGroup *terminateGroup = taskGroupList.GetTaskGroupByIndex(terminateIndex);
-						Task *terminateCoordinator = terminateGroup->GetCoordinatorTask();
-					
-						masterTask->Send(terminateCoordinator, terminateMessage);
+
+						// Send termination / release message
+						masterCommunicator.Send(releaseMessage, terminateGroup->GetCoordinatorRank());
 					}
+					*/
 				}
 				else
 				{
-					// Create task group from idle group
-					TaskGroup *spawnGroup = new TaskGroup(groupIDSource++);
-					taskGroupList.AddTaskGroup(spawnGroup->GetId(), spawnGroup);
-					idleGroup->Split(spawnGroup, 0, peRequest - 1);
+					// If request can be satisifed, split idle group
+					TaskGroup *taskGroup = new TaskGroup(groupIDSource++);
+					taskGroupList.AddTaskGroup(taskGroup->GetId(), taskGroup);
+					idleGroup->Split(taskGroup, 0, requestSize - 1);
 
 					// Set group coordinator
-					spawnGroup->SetCoordinatorRank(spawnGroup->TaskList[0]->GetWorkerRank());
+					taskGroup->SetCoordinatorRank(taskGroup->TaskList[0]->GetRank());
 
 					// Now we must inform PEs that they have been assigned to a new task group
-					RequestMessage requestMessage(spawnGroup->GetId(), 
-						spawnGroup->GetCoordinatorRank(), 
-						spawnGroup->Size());
+					RequestMessage requestMessage(taskGroup->GetId(), 
+						taskGroup->GetCoordinatorRank(), 
+						taskGroup->Size());
 
-					spawnGroup->Broadcast(masterTask, requestMessage);
+					taskGroup->Broadcast(masterTask, requestMessage);
 					
-					//std::cout << spawnGroup->ToString() << std::endl;
-					std::cout << "[" << masterTask->GetWorkerRank() << "] :: Request satisfied!" << std::endl;
+					std::cout << taskGroup->ToString() << std::endl;
+					std::cout << "[" << masterTask->GetRank() << "] :: Master satisfied request for new task group [" << taskGroup->GetId() << "]" << std::endl;
 				}
 			}
 		}
 
-		// 
-		switch(rcptMessage.Id)
+		//////////////////////////////////////////////////////////////////////////////////////////////////
+		// Handle async received messages
+		//////////////////////////////////////////////////////////////////////////////////////////////////
+		switch(receiveMessage.Id)
 		{
 			case MT_Completed:
 			{
-				CompletedMessage *msg = (CompletedMessage*)&rcptMessage;
+				CompletedMessage *completedMessage = (CompletedMessage*)&receiveMessage;
 
-				int releasePE = status.MPI_SOURCE,
-					groupId = msg->GetGroupId();
-				
+				int releaseIndex = receiveStatus.MPI_SOURCE,
+					groupId = completedMessage->GetGroupId();
+			
+				std::cout << "[" << masterTask->GetRank() << "] :: Master received completed flag from [" << releaseIndex << 
+					"] of group [" << groupId << "]" << std::endl;
+
 				TaskGroup *taskGroup = taskGroupList.GetTaskGroupById(groupId);
 
 				if (taskGroup != NULL)
 				{
-					Task *task = taskGroup->FindTask(releasePE);
+					Task *task = taskGroup->FindTask(releaseIndex);
 					
 					if (task != NULL)
 						idleGroup->Merge(task);
@@ -123,51 +152,60 @@ void Master(void)
 	}
 }
 
+
 void Idle(void)
 {
+	// Determine task rank
+	int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+	// Declare master and idle tasks
 	Task *masterTask = new Task(),
 		*idleTask = new Task();
 
+	// Initialise master and idle tasks
 	masterTask->SetMasterRank(0);
 	masterTask->SetCoordinatorRank(-1);
 	masterTask->SetWorkerRank(0);
-
-	int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 	idleTask->SetMasterRank(0);
 	idleTask->SetCoordinatorRank(-1);
 	idleTask->SetWorkerRank(rank);
 
-	std::cout << "[" << idleTask->GetWorkerRank() << "] :: Idle online" << std::endl;
+	std::cout << "[" << idleTask->GetWorkerRank() << "] :: Idle task started" << std::endl;
 
-	MPI_Request request;
-	Message idleMessage;
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	ControlCommunicator idleCommunicator(idleTask);
+	
+	MPI_Request receiveRequest;
+	MPI_Status receiveStatus;
+	
+	Message receiveMessage;
 
 	while(true)
 	{
 		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 		
-		if (idleTask->ReceiveAsync(masterTask, idleMessage, &request))
+		if (!idleCommunicator.ReceiveAsync(receiveMessage, MPI_ANY_SOURCE, &receiveRequest, &receiveStatus)) 
 		{
-			std::cout << "[" << idleTask->GetWorkerRank() << "] :: Awaiting assignment..." << std::endl;
+			std::cout << "[" << idleTask->GetRank() << "] :: Idle task awaiting assignment..." << std::endl;
 
-			while(!idleTask->IsRequestComplete(&request))
+			while(!idleCommunicator.IsRequestComplete(&receiveRequest, &receiveStatus))
 			{
 				boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 			}
 		}
 
-		/*
-		 * Handle message
-		 */
-		switch (idleMessage.Id)
+		//////////////////////////////////////////////////////////////////////////////////////////////////
+		// Handle received message
+		//////////////////////////////////////////////////////////////////////////////////////////////////	
+		switch (receiveMessage.Id)
 		{
 			case MT_Request:
 			{
-				RequestMessage *requestMessage = (RequestMessage*)&idleMessage;
+				RequestMessage *requestMessage = (RequestMessage*)&receiveMessage;
 
-				std::cout << "[" << idleTask->GetWorkerRank() << "] :: Request received : " 					
-					<< ", Group Id = " << requestMessage->GetGroupId()
+				std::cout << "[" << idleTask->GetRank() << "] :: Idle task received request : " 					
+					<< "Group Id = " << requestMessage->GetGroupId()
 					<< ", Coordinator Id = " << requestMessage->GetCoordinatorId() 
 					<< ", Worker count = " << requestMessage->GetWorkerCount() 
 					<< std::endl;
@@ -180,30 +218,34 @@ void Idle(void)
 				// If this task is the coordinator, spawn coordinator code
 				if (idleTask->GetCoordinatorRank() == idleTask->GetWorkerRank())
 				{
+					std::cout << "[" << idleTask->GetRank() << "] :: Idle task changing to communicator for group [" << requestMessage->GetGroupId() << "]" << std::endl;
+
 					ITaskPipeline pipeline;
 
 					// Might have to revise constructor for coordinator!!!
 					ITaskPipeline::CoordinatorTask coordinator;
 					coordinator.task = idleTask;
-					coordinator.workerCount = requestMessage->GetWorkerCount() - 1;
+					coordinator.workerCount = 0;
 					coordinator.group.SetMasterRank(idleTask->GetMasterRank());
 					coordinator.group.SetCoordinatorRank(idleTask->GetWorkerRank());
 
-					//coordinator(idleTask, requestMessage->GetWorkerCount() - 1);
 					pipeline.Coordinator(coordinator);
 
 					// We need to tell master that we are ready
 					CompletedMessage completedMessage(groupId);
-					idleTask->SendToMaster(completedMessage);
+					idleCommunicator.SendToMaster(completedMessage);
 				}
 				else
 				{
+					std::cout << "[" << idleTask->GetRank() << "] :: Idle task changing to worker for group [" << requestMessage->GetGroupId() << "]" << std::endl;
+
 					ITaskPipeline pipeline;
+
 					pipeline.Worker(idleTask);
 
 					// We need to tell master that we are ready
 					CompletedMessage completedMessage(groupId);
-					idleTask->SendToMaster(completedMessage);
+					idleCommunicator.SendToMaster(completedMessage);
 				}
 				break;
 			}
@@ -214,7 +256,7 @@ void Idle(void)
 	}
 }
 
-void TestScheduler(int argc, char **argv)
+void RunAsServer(int argc, char **argv)
 {
 	// Initialise MPI
 	MPI_Init(&argc, &argv);

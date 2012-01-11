@@ -329,7 +329,7 @@ int main(int argc, char** argv)
 #else
 int main(int argc, char **argv)
 {
-	TestScheduler(argc, argv);
+	RunAsServer(argc, argv);
 	return 0;
 }
 #endif
