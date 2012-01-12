@@ -13,11 +13,19 @@ namespace Illumina
 
 		enum MessageMedium
 		{
-			MM_ControlStatic,
-			MM_ControlDynamic,
-			MM_ContextStatic,
-			MM_ContextDynamic,
-			MM_Count
+			MM_ChannelAny = MPI_ANY_TAG,
+			MM_ChannelGlobal,
+			MM_ChannelBroadcast,
+			MM_ChannelMasterStatic,
+			MM_ChannelMasterDynamic,
+			MM_ChannelWorkerStatic,
+			MM_ChannelWorkerDynamic,
+			MM_ChannelWorkerStatic_0,
+			MM_ChannelWorkerDynamic_0,
+			MM_ChannelWorkerStatic_1,
+			MM_ChannelWorkerDynamic_1,
+			MM_ChannelPipelineStatic,
+			MM_ChannelPipelineDynamic
 		};
 
 		enum MessageType

@@ -94,9 +94,9 @@ namespace Illumina
 			/*
 			 * Group communication
 			 */
-			void Broadcast(Task *p_sender, const Message &p_message)
+			void Broadcast(Task *p_sender, const Message &p_message, int p_channel = MM_ChannelBroadcast)
 			{
-				ControlCommunicator communicator(p_sender);
+				MessageCommunicator communicator;
 
 				// std::cout << "[" << p_sender->GetWorkerRank() << "] :: Broadcast " << p_message.ToString() << std::endl;
 
@@ -106,7 +106,7 @@ namespace Illumina
 					if (p_sender == *taskIterator) 
 						continue;
 
-					communicator.Send(p_message, (*taskIterator)->GetRank());
+					communicator.Send(p_message, (*taskIterator)->GetRank(), p_channel);
 				}
 			}
 
@@ -117,6 +117,16 @@ namespace Illumina
 			/*
 			 * Group operations
 			 */
+			void Remove(Task *p_task)
+			{
+				BOOST_ASSERT(p_task != NULL);
+
+				std::vector<Task*>::iterator taskIterator = std::find(TaskList.begin(), TaskList.end(), p_task);
+				
+				if (taskIterator != TaskList.end())
+					TaskList.erase(taskIterator);
+			}
+
 			void Merge(Task *p_task)
 			{
 				BOOST_ASSERT(p_task != NULL);
