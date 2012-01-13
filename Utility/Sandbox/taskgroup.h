@@ -161,7 +161,7 @@ namespace Illumina
 				p_group->SetMasterRank(this->GetMasterRank());
 				p_group->SetCoordinatorRank(p_startRank);
 			}
-
+			
 			std::string ToString(void) const
 			{
 				std::string result;
@@ -265,6 +265,21 @@ namespace Illumina
 			size_t Size(void) const
 			{
 				return m_taskGroupList.size();
+			}
+
+			std::string ToString(void)
+			{
+				std::string strOut;
+
+				for (std::vector<TaskGroup*>::iterator iter = m_taskGroupList.begin();
+					 iter!= m_taskGroupList.end(); ++iter)
+				{
+					strOut += boost::str(boost::format("[Id = %d, Size = %d]\n") 
+					% (*iter)->GetId()
+					% (*iter)->Size());
+				}
+
+				return strOut;
 			}
 		};
 	}

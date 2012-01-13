@@ -43,7 +43,7 @@ void Master(void)
 
 	// Create idle subgroup
 	masterGroup->CreateSubGroup(idleGroup, 1, masterGroup->Size() - 1);
-	std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master created idle group created with size = [" << idleGroup->Size() << "]" << std::endl;
+	std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master created idle group of size [" << idleGroup->Size() << "]." << std::endl;
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 	// Initialise Master
@@ -63,7 +63,8 @@ void Master(void)
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 	// Start master message-loop
 	//////////////////////////////////////////////////////////////////////////////////////////////////
-	bool satisfiedRequest = true;	
+	bool satisfiedRequest = true;
+	bool displayInfo = false;
 	int requestSize = 0;
 
 	while(true)
@@ -80,10 +81,25 @@ void Master(void)
 				if (satisfiedRequest) 
 				{
 					requestSize = rand() % 2 + 6;
-					std::cout << "[" << masterTask->GetRank() << "] :: Master received request size of [" << requestSize << "]" << std::endl;
+					std::cout << "[" << masterTask->GetRank() << "] :: Master received request size of [" << requestSize << "]." << std::endl;
 				}
 				else 
-					continue;
+				{
+					if (requestSize > idleGroup->Size()) 
+					{
+						if (!displayInfo)
+						{
+							displayInfo = true;
+							std::cout << "[" << masterTask->GetRank() << "] :: Task group list dump : " << std::endl << 
+								taskGroupList.ToString() << std::endl <<
+								"Idle group size [" << idleGroup->Size() << "]" << std::endl;
+						}
+
+						continue;
+					}
+					else
+						displayInfo = false;
+				}
 
 				// Check if we can handle a request of the specified size
 				if (requestSize > idleGroup->Size())
@@ -91,7 +107,7 @@ void Master(void)
 					std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master cannot satisfy request!" << std::endl;
 					
 					TerminateMessage terminateMessage;
-					ReleaseMessage releaseMessage(2);
+					ReleaseMessage releaseMessage(5);
 
 					if (taskGroupList.Size() > 0)
 					{
@@ -127,8 +143,7 @@ void Master(void)
 
 					taskGroup->Broadcast(masterTask, requestMessage, MM_ChannelMasterStatic);
 					
-					std::cout << taskGroup->ToString() << std::endl;
-					std::cout << "[" << masterTask->GetRank() << "] :: Master created new task group with Id = [" << taskGroup->GetId() << "]" << std::endl;
+					std::cout << "[" << masterTask->GetRank() << "] :: Master created new task group with Id [" << taskGroup->GetId() << "]." << std::endl;
 
 					satisfiedRequest = true;
 					boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
@@ -149,7 +164,7 @@ void Master(void)
 					groupId = completedMessage->GetGroupId();
 			
 				std::cout << "[" << masterTask->GetRank() << "] :: Master received [COMPLETED] from worker [" << releaseIndex << 
-					"] of group [" << groupId << "]" << std::endl;
+					"] of group [" << groupId << "]." << std::endl;
 
 				TaskGroup *taskGroup = taskGroupList.GetTaskGroupById(groupId);
 
@@ -158,7 +173,16 @@ void Master(void)
 					Task *task = taskGroup->FindTask(releaseIndex);
 					
 					if (task != NULL)
+					{
 						idleGroup->Merge(task);
+						taskGroup->Remove(task);
+
+						if (taskGroup->Size() == 0)
+						{
+							std::cout << "[" << masterTask->GetRank() << "] :: Master is disposing of group [" << groupId << "]." << std::endl;
+							taskGroupList.RemoveTaskGroup(taskGroup->GetId());
+						}
+					}
 				}
 
 				break;
@@ -223,7 +247,7 @@ void Idle(void)
 				std::cout << "[" << idleTask->GetRank() << "] :: Idle task received [REQUEST] for " 					
 					<< "group [" << requestMessage->GetGroupId() << "], "
 					<< "coordinator [" << requestMessage->GetCoordinatorId() << "], " 
-					<< "worker count [" << requestMessage->GetWorkerCount() << "]"
+					<< "worker count [" << requestMessage->GetWorkerCount() << "]."
 					<< std::endl;
 
 				int groupId = requestMessage->GetGroupId();
@@ -234,7 +258,7 @@ void Idle(void)
 				// If this task is the coordinator, spawn coordinator code
 				if (idleTask->GetCoordinatorRank() == idleTask->GetWorkerRank())
 				{
-					std::cout << "[" << idleTask->GetRank() << "] :: Idle task changing to communicator for group [" << requestMessage->GetGroupId() << "]" << std::endl;
+					std::cout << "[" << idleTask->GetRank() << "] :: Idle task changing to communicator for group [" << requestMessage->GetGroupId() << "]." << std::endl;
 
 					ITaskPipeline pipeline;
 
@@ -247,7 +271,7 @@ void Idle(void)
 
 					pipeline.Coordinator(coordinator);
 
-					std::cout << "[" << idleTask->GetRank() << "] :: Communicator changing back to idle task for group [" << requestMessage->GetGroupId() << "]" << std::endl;
+					std::cout << "[" << idleTask->GetRank() << "] :: Coordinator changing back to idle task for group [" << requestMessage->GetGroupId() << "]." << std::endl;
 
 					// We need to tell master that we are ready
 					CompletedMessage completedMessage(groupId);
@@ -255,13 +279,13 @@ void Idle(void)
 				}
 				else
 				{
-					std::cout << "[" << idleTask->GetRank() << "] :: Idle task changing to worker for group [" << requestMessage->GetGroupId() << "]" << std::endl;
+					std::cout << "[" << idleTask->GetRank() << "] :: Idle task changing to worker for group [" << requestMessage->GetGroupId() << "]." << std::endl;
 
 					ITaskPipeline pipeline;
 
 					pipeline.Worker(idleTask);
 
-					std::cout << "[" << idleTask->GetRank() << "] :: Worker changing back to idle task for group [" << requestMessage->GetGroupId() << "]" << std::endl;
+					std::cout << "[" << idleTask->GetRank() << "] :: Worker changing back to idle task for group [" << requestMessage->GetGroupId() << "]." << std::endl;
 
 					// We need to tell master that we are ready
 					CompletedMessage completedMessage(groupId);
