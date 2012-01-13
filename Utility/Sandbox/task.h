@@ -52,7 +52,7 @@ namespace Illumina
 			bool IsMaster(void) const { return Rank[TT_Worker] >= 0 && Rank[TT_Worker] == Rank[TT_Master]; }
 			bool IsCoordinator(void) const { return Rank[TT_Worker] >= 0 && Rank[TT_Worker] == Rank[TT_Coordinator]; }
 			bool IsWorker(void) const { return !(IsMaster() || IsCoordinator()); }
-
+			
 			std::string ToString(void) const
 			{
 				std::string strOut = boost::str(boost::format("[master = %d, coordinator = %d, worker = %d]") 

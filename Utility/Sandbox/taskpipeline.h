@@ -41,15 +41,19 @@ namespace Illumina
 				bool active,
 					terminating;
 
+				int terminateCount;
+
 				// Constructors
 				CoordinatorTask(void)
 					: active(true)
 					, terminating(false)
+					, terminateCount(0)
 				{ }
 
 				CoordinatorTask(Task *p_coordinator, int p_workerCount)
 					: active(true)
 					, terminating(false)
+					, terminateCount(0)
 					, task(p_coordinator)
 					, workerCount(p_workerCount)
 				{ }
@@ -89,7 +93,7 @@ namespace Illumina
 				buffer[packetSize] = 0;
 
 				// Display config string
-				std::cout << "[" << p_worker->GetRank() << "] : Worker has received argument map : [" << buffer << "]" << std::endl;
+				std::cout << "[" << p_worker->GetRank() << "] :: Worker has received argument map : [" << buffer << "]." << std::endl;
 
 				// Load argument string and initialise argument map
 				m_arguments.assign(buffer);
@@ -144,6 +148,89 @@ namespace Illumina
 				return result;
 			}
 
+			int CReleaseWorker(CoordinatorTask &p_coordinator, int p_releaseCount)
+			{
+				// Termination message to send workers
+				TerminateMessage terminateMessage;
+
+				// Get a snapshot of size of ready queue
+				int readyCount = p_coordinator.ready.Size();
+				
+				if (readyCount == 0) 
+					return 0;
+
+				if (readyCount > p_releaseCount)
+				{
+					// NOTE: We might have a memory leak here ... nobody is managing discarded tasks!
+					TaskGroup releaseGroup;
+					
+					// Split ready queue
+					p_coordinator.ready.Split(&releaseGroup, 1, p_releaseCount);
+
+					// Remove tasks from coordinator's group
+					for (std::vector<Task*>::iterator taskIterator = releaseGroup.TaskList.begin();
+						 taskIterator != releaseGroup.TaskList.end(); ++taskIterator)
+					{
+						p_coordinator.group.Remove(*taskIterator);
+					}
+
+					// Broadcast release
+					releaseGroup.Broadcast(p_coordinator.task, terminateMessage, MM_ChannelWorkerStatic);
+
+					// DEBUG OUT
+					std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator broadcast [TERMINATE] to [" << p_releaseCount << "] units. "<< std::endl;
+					// DEBUG OUT
+
+					return p_releaseCount;
+				}
+				else
+				{
+					// We can service the request from the RDY and STRT queues
+					if (readyCount + p_coordinator.startup.Size() >= p_releaseCount)
+					{
+						// NOTE: We might have a memory leak here ... nobody is managing discarded tasks!
+
+						// Remove tasks from coordinator's group
+						for (std::vector<Task*>::iterator taskIterator = p_coordinator.ready.TaskList.begin();
+							 taskIterator != p_coordinator.ready.TaskList.end(); ++taskIterator)
+						{
+							p_coordinator.group.Remove(*taskIterator);
+						}
+
+						p_coordinator.ready.Broadcast(p_coordinator.task, terminateMessage, MM_ChannelWorkerStatic);
+						int released = p_coordinator.ready.Size(); p_coordinator.ready.TaskList.clear();
+								
+						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator broadcast [TERMINATE] to [" << readyCount << "] units. "<< std::endl;
+						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator deferring [TERMINATE] broadcast to [" << p_releaseCount - readyCount << "] units. "<< std::endl;
+
+						return released;
+					}
+					else
+					{
+						// Start shutting down... terminate ready queue first
+						p_coordinator.ready.Broadcast(p_coordinator.task, terminateMessage, MM_ChannelWorkerStatic);
+						int released = p_coordinator.ready.Size(); p_coordinator.ready.TaskList.clear();
+
+						if (p_coordinator.startup.Size() > 0)
+						{
+							// Enter shutdown procedure if units are still being initialised
+							p_coordinator.terminating = true;
+
+							std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator broadcast [TERMINATE]. Waiting for tasks in [INIT] to complete." << std::endl;
+						}
+						else
+						{
+							// Otherwise quit coordinator
+							p_coordinator.active = false;
+
+							std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator broadcast [TERMINATE]. Taskgroup shutting down." << std::endl;
+						}
+
+						return released;
+					}
+				}
+			}
+
 			//////////////////////////////////////////////////////////////////////////////////////////////////	
 			// Event callbacks
 			//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,9 +242,9 @@ namespace Illumina
 					// Init task termination
 					case MT_Terminate:
 					{	
-						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] : Coordinator received [TERMINATE]." << std::endl;
+						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator received [TERMINATE]." << std::endl;
 						
-						p_coordinator.ready.Broadcast(p_coordinator.task, p_message, MM_ChannelWorkerStatic);
+						p_coordinator.terminateCount = p_coordinator.group.Size();
 						p_coordinator.terminating = true;
 						
 						break;
@@ -167,31 +254,10 @@ namespace Illumina
 					case MT_Release:
 					{
 						ReleaseMessage *releaseMessage = (ReleaseMessage*)&p_message;
-						int releaseCount = releaseMessage->GetReleaseCount();
+						p_coordinator.terminateCount += releaseMessage->GetReleaseCount();
 
-						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] : Coordinator received [RELEASE] :: PE = [" << releaseCount << "], RDY = [" << p_coordinator.ready.Size() << "], INIT = [" << p_coordinator.startup.Size() << "]" << std::endl;
+						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator received [RELEASE] :: PE [" << releaseMessage->GetReleaseCount() << "], RDY [" << p_coordinator.ready.Size() << "], INIT [" << p_coordinator.startup.Size() << "]." << std::endl;
 														
-						// We can satisfy request
-						if (p_coordinator.ready.Size() > releaseCount)
-						{
-							TaskGroup releaseGroup;
-							TerminateMessage terminateMessage;
-
-							p_coordinator.ready.Split(&releaseGroup, 1, releaseCount);
-							releaseGroup.Broadcast(p_coordinator.task, terminateMessage, MM_ChannelWorkerStatic);
-
-							std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] : Coordinator broadcast [TERMINATE] to [" << releaseCount << "] units. "<< std::endl;
-						}
-						else
-						{
-							TerminateMessage terminateMessage;
-
-							p_coordinator.ready.Broadcast(p_coordinator.task, p_message, MM_ChannelWorkerStatic);
-							p_coordinator.terminating = true;
-
-							std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] : Coordinator broadcast [TERMINATE]. Taskgroup shutting down." << std::endl;
-						}
-
 						break;
 					}
 				}
@@ -207,10 +273,10 @@ namespace Illumina
 					// Register worker and put it in startup queue
 					case MT_Register:
 					{
-						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] : Coordinator registering worker [" << p_status->MPI_SOURCE << "]" << std::endl;
+						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator registering worker [" << p_status->MPI_SOURCE << "]." << std::endl;
 						CRegisterWorker(p_coordinator, p_status->MPI_SOURCE);							
 
-						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] : Coordinator initialising worker [" << p_status->MPI_SOURCE << "]" << std::endl;
+						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator initialising worker [" << p_status->MPI_SOURCE << "]." << std::endl;
 						CInitialiseWorker(p_coordinator, p_status->MPI_SOURCE);							
 						break;
 					}
@@ -218,13 +284,13 @@ namespace Illumina
 					// Acknowledge worker has completed startup and move to ready queue
 					case MT_Acknowledge:
 					{
-						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] : Coordinator received acknowledge from [" << p_status->MPI_SOURCE << "]" << std::endl;
+						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator received acknowledge from [" << p_status->MPI_SOURCE << "]." << std::endl;
 
 						Task *task = p_coordinator.startup.FindTask(p_status->MPI_SOURCE);
 						p_coordinator.startup.Remove(task);
 						p_coordinator.ready.TaskList.push_back(task);
 
-						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] : Coordinator updating size of ready group [" << p_coordinator.ready.Size() << "]" << std::endl;
+						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator updating size of ready group [" << p_coordinator.ready.Size() << "]." << std::endl;
 						break;
 					}
 				}
@@ -267,7 +333,7 @@ namespace Illumina
 				masterTask->SetWorkerRank(0);
 
 				// DEBUG
-				std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] : Initialising coordinator..." << std::endl;
+				std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Initialising coordinator." << std::endl;
 				// DEBUG
 
 				// Setup master and worker communication channels
@@ -300,6 +366,19 @@ namespace Illumina
 					// Get the number of allotted workers for this frame
 					int workersForFrame = p_coordinator.ready.Size();
 
+					// Process termination requests
+					if (p_coordinator.terminateCount > 0)
+					{
+						p_coordinator.terminateCount -= CReleaseWorker(p_coordinator, p_coordinator.terminateCount);
+						
+						if (p_coordinator.terminateCount == 0 && p_coordinator.terminating)
+						{
+							p_coordinator.active = false;
+							continue;
+						}
+					}
+
+					// Wait for asynchronous receive to complete
 					while(!masterMessageIn && !workerMessageIn)
 					{
 						workerMessageIn = workerCommunicator.IsRequestComplete(&workerRequest, &workerStatus);
@@ -311,7 +390,9 @@ namespace Illumina
 						ExecuteCoordinator(p_coordinator);
 					}
 
-					std::cout << "Message flags : [" << masterMessageIn << ", " << workerMessageIn << "]" << std::endl;
+					// DEBUG
+					std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator message flags are [MASTER : " << masterMessageIn << ", WORKER : " << workerMessageIn << "]." << std::endl;
+					// DEBUG
 				}
 
 				return true;
@@ -337,10 +418,9 @@ namespace Illumina
 
 				for(bool terminate = false; !terminate; ) 
 				{
-					std::cout << "Waiting from coordinator..." << std::endl;
+					std::cout << "[" << p_worker->GetRank() << "] :: Worker online waiting for coordinator message." << std::endl;
 
 					// Worker action is synchronous
-					//p_worker->ReceiveFromCoordinator(msg);
 					workerCommunicator.ReceiveFromCoordinator(msg);
 
 					switch(msg.Id)
