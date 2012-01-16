@@ -35,5 +35,8 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\message.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\renderpipeline.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
