@@ -60,11 +60,16 @@ namespace Illumina
 			};
 
 		private:
+			bool m_verbose;
+		
 			// Keep original argument string
 			std::string m_arguments;
 
 			// Store argument map for easy access to parameters
 			ArgumentMap m_argumentMap;
+
+		protected:
+			bool IsVerbose(void) { return m_verbose; }
 
 		protected:
 			//////////////////////////////////////////////////////////////////////////////////////////////////	
@@ -308,7 +313,7 @@ namespace Illumina
 					return OnCoordinatorReceiveControlMessage_W(p_coordinator, p_message, p_status, p_request);
 			}
 
-		public:
+		protected:
 			virtual bool OnInitialiseCoordinator(ArgumentMap &p_argumentMap) { return true; }
 			virtual bool OnShutdownCoordinator(void) { return true; }
 
@@ -322,9 +327,18 @@ namespace Illumina
 			// 4. Shutdown worker (C->W) (coordinator asks worker to shutdown)
 
 		public:
+			ITaskPipeline(bool p_verbose = true)
+				: m_verbose(p_verbose)
+			{ }
+
 			bool Coordinator(CoordinatorTask &p_coordinator)
 			{
-				m_arguments = "script=cornell.ilm;";
+				// Initialise taskgroup arguments
+				m_arguments = "script=Scene/cornell_jensen.ilm;";
+				m_argumentMap.Initialise(m_arguments);
+
+				// Trigger coordinator initialisation event
+				OnInitialiseCoordinator(m_argumentMap);
 
 				// Create a task to represent master process
 				Task *masterTask = new Task();
@@ -394,6 +408,9 @@ namespace Illumina
 					std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator message flags are [MASTER : " << masterMessageIn << ", WORKER : " << workerMessageIn << "]." << std::endl;
 					// DEBUG
 				}
+
+				// Trigger coordinator shutdown event
+				OnShutdownCoordinator();
 
 				return true;
 			}

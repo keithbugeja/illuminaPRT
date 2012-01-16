@@ -10,6 +10,38 @@
 // Move factories to CorePlugins.dll
 // Finish scene loaders
 //----------------------------------------------------------------------------------------------
+#include <omp.h>
+
+#include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/timer.hpp>
+
+// Illumina Environment
+#include "System/EngineKernel.h"
+#include "Scene/Environment.h"
+
+// Factories
+#include "Camera/CameraFactories.h"
+#include "Device/DeviceFactories.h"
+#include "Light/LightFactories.h"
+#include "Space/SpaceFactories.h"
+#include "Shape/ShapeFactories.h"
+#include "Filter/FilterFactories.h"
+#include "Sampler/SamplerFactories.h"
+#include "Texture/TextureFactories.h"
+#include "Material/MaterialFactories.h"
+#include "Renderer/RendererFactories.h"
+#include "Integrator/IntegratorFactories.h"
+
+#include "Staging/Acceleration.h"
+
+using namespace Illumina::Core;
+
+void MessageOut(const std::string& p_strMessage, bool p_bVerbose)
+{
+	if (p_bVerbose) std::cout << p_strMessage << std::endl;
+}
+
 #include "scheduling.h"
 
 #define TEST_SCHEDULER
@@ -327,9 +359,102 @@ int main(int argc, char** argv)
 }
 
 #else
-int main(int argc, char **argv)
+#define Major 0
+#define Minor 5
+#define Build 0
+
+int main(int argc, char** argv)
 {
-	RunAsServer(argc, argv);
+	std::cout << "Illumina Renderer Service : Version " << Major << "." << Minor << "." << Build << " http://www.illuminaprt.codeplex.com " << std::endl;
+	std::cout << "Copyright (C) 2010-2012 Keith Bugeja" << std::endl << std::endl;
+
+	// default options
+	int nIterations = 1;
+	bool bVerbose = false;
+	std::string strScript("default.ilm");
+
+	// Declare the supported options.
+	boost::program_options::options_description description("Allowed Settings");
+
+	description.add_options()
+		("help", "show this message")
+		("verbose", boost::program_options::value<bool>(), "show extended information")
+		("script", boost::program_options::value<std::string>(), "script file to render")
+		("workdir", boost::program_options::value<std::string>(), "working directory")
+		("iterations", boost::program_options::value<int>(), "interations to execute")
+		;
+
+	// Declare variable map
+	boost::program_options::variables_map variableMap;
+
+	// Parse command line options
+	try 
+	{
+		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, description), variableMap);
+		boost::program_options::notify(variableMap);
+	} 
+	catch (boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::program_options::unknown_option> > &exception) 
+	{
+		std::cout << "Unknown option [" << exception.get_option_name() << "] : Please use --help to display help message." << std::endl;
+		return 1;
+	}
+	catch (boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::program_options::invalid_option_value> > &exception) 
+	{
+		std::cout << "Error parsing input for [" << exception.get_option_name() << "] : Invalid argument value." << std::endl;
+		return 1;
+	}
+
+	// --help
+	if (variableMap.count("help"))
+	{
+		std::cout << description << std::endl;
+		return 1;
+	}
+
+	// --verbose
+	if (variableMap.count("verbose"))
+	{
+		bVerbose = variableMap["verbose"].as<bool>();
+		std::cout << "Verbose mode [" << (bVerbose ? "ON]" : "OFF]") << std::endl;
+	}
+
+	// --iterations
+	if (variableMap.count("iterations"))
+	{
+		try {
+			nIterations = variableMap["iterations"].as<int>();
+		} catch (...) { nIterations = 1; } 
+		std::cout << "Iterations [" << nIterations << "]" << std::endl;
+	}
+
+	// --script
+	if (variableMap.count("script"))
+	{
+		strScript = variableMap["script"].as<std::string>();
+		std::cout << "Script [" << strScript << "]" << std::endl;
+	}
+
+	// --workdir
+	boost::filesystem::path cwdPath;
+
+	if (variableMap.count("workdir"))
+	{
+		cwdPath = boost::filesystem::path(variableMap["workdir"].as<std::string>());
+	}
+	else
+	{
+		// Setting working directory
+		boost::filesystem::path scriptPath(strScript);
+		cwdPath = boost::filesystem::path(scriptPath.parent_path());
+	}
+
+	try {
+		boost::filesystem::current_path(cwdPath);
+		std::cout << "Working directory [" << cwdPath.string() << "]" << std::endl;;
+	} catch (...) { std::cerr << "Error : Unable to set working directory to " << cwdPath.string() << std::endl; }
+
+	// -- start service
+	RunAsServer(argc, argv, bVerbose);
 	return 0;
 }
 #endif
