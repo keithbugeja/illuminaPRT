@@ -15,6 +15,7 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/timer.hpp>
+#include <boost/asio.hpp>
 
 // Illumina Environment
 #include "System/EngineKernel.h"

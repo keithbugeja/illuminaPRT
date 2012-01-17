@@ -11,13 +11,20 @@ namespace Illumina
 			: public ITaskPipeline
 		{
 		protected:
+			MPIRender *m_mpirender;
 			Environment *m_environment;
 		
 		public:
 			RenderPipeline(Environment *p_environment, bool p_verbose = true)
 				: ITaskPipeline(p_verbose)
-				, m_environment(p_environment)
+				, m_environment(p_environment)				
+				, m_mpirender(new MPIRender(p_environment))
 			{ }
+
+			~RenderPipeline(void)
+			{ 
+				delete m_mpirender;
+			}
 
 			bool LoadScene(const std::string &p_strScript, bool p_bVerbose)
 			{
@@ -39,6 +46,10 @@ namespace Illumina
 				// Initialise integrator and renderer
 				pIntegrator->Initialise(m_environment->GetScene(), m_environment->GetCamera());
 				pRenderer->Initialise();
+
+				m_mpirender->Initialise();
+
+				pIntegrator->Prepare(m_environment->GetScene());
 
 				// Initialisation complete
 				MessageOut("Initialisation complete. Rendering in progress...", p_bVerbose);
@@ -87,12 +98,18 @@ namespace Illumina
 				float alpha = Maths::Pi;
 
 				// Cornell
+				/*
 				Vector3 lookFrom(70, 0, 70),
 					lookAt(0, 0, 0);
+				*/
+				Vector3 lookFrom(800, 100, 200),
+					lookAt(0, 200, 100);
 
 				// Update space
 				pSpace->Update();
 	 
+				m_mpirender->RenderCoordinator(&p_coordinator);
+
 				// Render frame
 				// pRenderer->Render();
 
@@ -147,6 +164,23 @@ namespace Illumina
 
 			bool ExecuteWorker(Task *p_worker)
 			{
+				ICamera *pCamera = m_environment->GetCamera();
+				ISpace *pSpace = m_environment->GetSpace();
+				float alpha = Maths::Pi;
+
+				// Cornell
+				/*
+				Vector3 lookFrom(70, 0, 70),
+					lookAt(0, 0, 0);
+				*/
+				Vector3 lookFrom(800, 100, 200),
+					lookAt(0, 200, 100);
+
+				// Update space
+				pSpace->Update();
+
+				m_mpirender->RenderWorker(p_worker);
+
 				return true;
 			}
 		};
