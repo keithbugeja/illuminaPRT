@@ -1,15 +1,177 @@
 #pragma once
 
+#include <stack>
+#include <queue>
 #include <vector>
+
+#include <boost/thread.hpp>
+
 #include "taskgroup.h"
 #include "taskpipeline.h"
 #include "renderpipeline.h"
 
+#include "../../Core/Threading/Spinlock.h"
+
+using boost::asio::ip::tcp;
 using namespace Illumina::Core;
 
-void Master(Environment *p_environment, bool p_bVerbose)
+/***************************************************************************************************
+ * Client communication shit
+ ***************************************************************************************************/
+Illumina::Core::Spinlock g_clientSessionInfoLock;
+
+struct ClientSessionInfo
 {
-	//////////////////////////////////////////////////////////////////////////////////////////////////
+	std::string Script;
+	std::string IP;
+	int Priority;
+	int Size;
+};
+
+std::queue<ClientSessionInfo*> g_clientConnectQueue;
+
+
+std::map<std::string, ClientSessionInfo*> g_clientIPSessionMap;
+std::map<std::string, TaskGroup*> g_clientIPTaskGroupMap;
+
+
+enum ClientControlMessageType
+{
+	CCMT_Terminate
+};
+
+class IClientControlMessage
+{
+public:
+	int Id;
+};
+
+class TerminateClientMessage
+	: public IClientControlMessage
+{
+public:
+	std::string ClientIP;
+
+	TerminateClientMessage(std::string &p_clientIP)
+		: ClientIP(p_clientIP)
+	{ 
+		Id = CCMT_Terminate;
+	}
+};
+
+Illumina::Core::Spinlock g_clientControlQueueLock;
+std::queue<IClientControlMessage*> g_clientControlQueue;
+
+/***************************************************************************************************
+ * Communication thread
+ ***************************************************************************************************/
+typedef boost::shared_ptr<tcp::socket> socket_ptr;
+
+void ClientSession(socket_ptr p_socket)
+{
+	std::string clientIP = p_socket->remote_endpoint().address().to_string();
+	std::cout << "Connection established with [" << clientIP << "]" << std::endl;
+	
+	try
+	{
+		std::string commandString;
+
+		for (;;)
+		{
+			char commandBuffer[1024];
+
+			boost::system::error_code error;
+			memset(commandBuffer, 0, 1024);
+			size_t length = p_socket->read_some(boost::asio::buffer(commandBuffer, 1024), error);
+
+			commandString.assign(commandBuffer);
+			std::cout << "Received :: " << commandString << std::endl;
+
+			if (commandString.find("[CMD_CONN]") != std::string::npos)
+			{
+				// Send a new request
+				ClientSessionInfo *request = new ClientSessionInfo();
+	
+				request->IP = clientIP;
+				request->Script = "Scene/cornell_jensen.ilm";
+				request->Priority = 0;
+				request->Size = 8;
+
+				g_clientSessionInfoLock.Lock();
+				g_clientConnectQueue.push(request);
+				g_clientSessionInfoLock.Unlock();
+			}
+			else if (commandString.find("[CMD_TERM]") != std::string::npos)
+			{
+				TerminateClientMessage *message = new TerminateClientMessage(clientIP);
+
+				g_clientControlQueueLock.Lock();
+				g_clientControlQueue.push(message);
+				g_clientControlQueueLock.Unlock();
+
+				// close connection
+				std::cout << "Closing connection with [" << message->ClientIP << "]" << std::endl;
+				break;
+			}
+			else if (commandString.find("[CMD_LFT]") != std::string::npos)
+			{
+				std::cout << "[" << clientIP << "] : [Left]" << std::cout;
+			}
+			else if (commandString.find("[CMD_RGT]") != std::string::npos)
+			{
+				std::cout << "[" << clientIP << "] : [Right]" << std::cout;
+			}
+			else if (commandString.find("[CMD_FWD]") != std::string::npos)
+			{
+				std::cout << "[" << clientIP << "] : [Forwards]" << std::cout;
+			}
+			else if (commandString.find("[CMD_BWD]") != std::string::npos)
+			{
+				std::cout << "[" << clientIP << "] : [Backwards]" << std::cout;
+			}
+
+			/*
+			if (error == boost::asio::error::eof)
+			{
+			}
+			else 
+			{
+
+				// if (error)
+					// throw boost::system::system_error(error); // Some other error.
+			}
+			*/
+			// boost::asio::write(*p_socket, boost::asio::buffer(data, length));
+		}	
+	}
+	catch (std::exception& e)
+	{
+		std::cerr << "Exception in thread: " << e.what() << "\n";
+	}
+}
+
+void MasterCommunication(TaskGroupList *p_taskGroupList)
+{
+	boost::asio::io_service ios;
+
+	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), 66600);
+	boost::asio::ip::tcp::acceptor acceptor(ios, endpoint);
+	boost::asio::ip::tcp::socket socket(ios);
+	
+	for (;;)
+	{
+		socket_ptr clientSocket(new boost::asio::ip::tcp::socket(ios));
+		acceptor.accept(*clientSocket);
+		boost::thread handlerThread(boost::bind(ClientSession, clientSocket));
+	}
+}
+
+/***************************************************************************************************
+ * Master process
+ ***************************************************************************************************/
+void Master(bool p_bVerbose)
+{
+   	//////////////////////////////////////////////////////////////////////////////////////////////////
 	// Initialise Master
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,6 +184,12 @@ void Master(Environment *p_environment, bool p_bVerbose)
 	// Keeps track of the various groups the system PEs have
 	// been partitioned in.
 	TaskGroupList taskGroupList;
+
+	
+	// -- launch
+	boost::thread communicationThread(MasterCommunication, &taskGroupList);  
+	// -- launch
+
 
 	// Get size of global communicator
 	int size; MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -66,7 +234,8 @@ void Master(Environment *p_environment, bool p_bVerbose)
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 	bool satisfiedRequest = true;
 	bool displayInfo = false;
-	int requestSize = 6;
+
+	ClientSessionInfo *clientRequest = NULL;
 
 	while(true)
 	{
@@ -76,81 +245,134 @@ void Master(Environment *p_environment, bool p_bVerbose)
 			// Loop until a receive buffer contains a new message
 			while(!masterCommunicator.IsRequestComplete(&receiveRequest, &receiveStatus))
 			{
-				//boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+				boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
 
-				/*
-				// Generate request
-				if (satisfiedRequest) 
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				// Do we have any pending messages for clients?
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				if (g_clientControlQueue.size() > 0)
 				{
-					requestSize = rand() % 2 + 6;
-					std::cout << "[" << masterTask->GetRank() << "] :: Master received request size of [" << requestSize << "]." << std::endl;
-				}
-				else 
-				{
-					if (requestSize > idleGroup->Size()) 
+					// Pop message, if available
+					g_clientControlQueueLock.Lock();
+
+					IClientControlMessage *message = NULL;
+
+					if (g_clientControlQueue.size() > 0)
 					{
-						if (!displayInfo)
-						{
-							displayInfo = true;
-							std::cout << "[" << masterTask->GetRank() << "] :: Task group list dump : " << std::endl << 
-								taskGroupList.ToString() << std::endl <<
-								"Idle group size [" << idleGroup->Size() << "]" << std::endl;
-						}
+						message = g_clientControlQueue.front();
+						g_clientControlQueue.pop();
+					} 
+					else 
+						message = NULL;
 
-						continue;
+					g_clientControlQueueLock.Unlock();
+
+					if (message != NULL)
+					{
+						// Parse message
+						switch (message->Id)
+						{
+							case CCMT_Terminate:
+							{
+								std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master popped [CLIENT_TERMINATE] from message queue" << std::endl;
+
+								TerminateClientMessage *cstMessage = (TerminateClientMessage*)message;
+								TaskGroup *taskGroup = g_clientIPTaskGroupMap[cstMessage->ClientIP];
+
+								std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master sent [TERMINATE] to coordinator [" << 
+									taskGroup->GetCoordinatorRank() << "]." << std::endl;
+
+								TerminateMessage terminateMessage;
+								masterCommunicator.Send(terminateMessage, taskGroup->GetCoordinatorRank());
+								break;
+							}
+
+							default:
+								break;
+						}
+					}
+				}
+
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				// If we have a pending connection request, serve
+				//////////////////////////////////////////////////////////////////////////////////////////////////
+				if (g_clientConnectQueue.size() > 0)
+				{
+					g_clientSessionInfoLock.Lock();
+					
+					if (g_clientConnectQueue.size() > 0)
+					{
+						clientRequest = g_clientConnectQueue.front();
+						g_clientConnectQueue.pop();
+					}
+
+					g_clientSessionInfoLock.Unlock();
+				}
+
+				// Generate request
+				if (clientRequest != NULL) 
+				{
+					std::cout << "[" << masterTask->GetRank() << "] :: Master received request size of [" << clientRequest->Size << "] from [" << clientRequest->IP << "]" << std::endl;
+
+					// Check if we can handle a request of the specified size
+					if (clientRequest->Size > idleGroup->Size())
+					{
+						// Push request to back of queue
+						g_clientSessionInfoLock.Lock();
+						g_clientConnectQueue.push(clientRequest);
+						g_clientSessionInfoLock.Unlock();
+
+						clientRequest = NULL;
+
+						/*  std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master cannot satisfy request!" << std::endl;
+					
+						TerminateMessage terminateMessage;
+						ReleaseMessage releaseMessage(5);
+
+						if (taskGroupList.Size() > 0)
+						{
+							// Choose group to terminate
+							int terminateIndex = rand() % taskGroupList.Size();
+							TaskGroup *terminateGroup = taskGroupList.GetTaskGroupByIndex(terminateIndex);
+
+							// Send termination / release message
+							masterCommunicator.Send(releaseMessage, terminateGroup->GetCoordinatorRank());
+
+							std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master sent [RELEASE] to coordinator [" << 
+								terminateGroup->GetCoordinatorRank() << "] for [" << 
+								releaseMessage.GetReleaseCount() << "] units." << std::endl;
+						} */
+
+						satisfiedRequest = false;
+						boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
 					}
 					else
-						displayInfo = false;
-				}
-				*/
-				
-				// Check if we can handle a request of the specified size
-				if (requestSize > idleGroup->Size())
-				{
-/*					std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master cannot satisfy request!" << std::endl;
-					
-					TerminateMessage terminateMessage;
-					ReleaseMessage releaseMessage(5);
-
-					if (taskGroupList.Size() > 0)
 					{
-						// Choose group to terminate
-						int terminateIndex = rand() % taskGroupList.Size();
-						TaskGroup *terminateGroup = taskGroupList.GetTaskGroupByIndex(terminateIndex);
+						// If request can be satisifed, split idle group
+						TaskGroup *taskGroup = new TaskGroup(groupIDSource++);
+						taskGroupList.AddTaskGroup(taskGroup->GetId(), taskGroup);
+						idleGroup->Split(taskGroup, 0, clientRequest->Size - 1);
 
-						// Send termination / release message
-						masterCommunicator.Send(releaseMessage, terminateGroup->GetCoordinatorRank());
+						// Set group coordinator
+						taskGroup->SetCoordinatorRank(taskGroup->TaskList[0]->GetRank());
 
-						std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master sent [RELEASE] to coordinator [" << 
-							terminateGroup->GetCoordinatorRank() << "] for [" << 
-							releaseMessage.GetReleaseCount() << "] units." << std::endl;
-					}
+						// Now we must inform PEs that they have been assigned to a new task group
+						RequestMessage requestMessage(taskGroup->GetId(), 
+							taskGroup->GetCoordinatorRank(), 
+							taskGroup->Size());
 
-*/
-					satisfiedRequest = false;
-					boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-				}
-				else
-				{
-					// If request can be satisifed, split idle group
-					TaskGroup *taskGroup = new TaskGroup(groupIDSource++);
-					taskGroupList.AddTaskGroup(taskGroup->GetId(), taskGroup);
-					idleGroup->Split(taskGroup, 0, requestSize - 1);
-
-					// Set group coordinator
-					taskGroup->SetCoordinatorRank(taskGroup->TaskList[0]->GetRank());
-
-					// Now we must inform PEs that they have been assigned to a new task group
-					RequestMessage requestMessage(taskGroup->GetId(), 
-						taskGroup->GetCoordinatorRank(), 
-						taskGroup->Size());
-
-					taskGroup->Broadcast(masterTask, requestMessage, MM_ChannelMasterStatic);
+						taskGroup->Broadcast(masterTask, requestMessage, MM_ChannelMasterStatic);
 					
-					std::cout << "[" << masterTask->GetRank() << "] :: Master created new task group with Id [" << taskGroup->GetId() << "]." << std::endl;
+						// Index requests
+						g_clientIPTaskGroupMap[clientRequest->IP] = taskGroup;
+						g_clientIPSessionMap[clientRequest->IP] = clientRequest;
 
-					satisfiedRequest = true;
-					boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+						std::cout << "[" << masterTask->GetRank() << "] :: Master created new task group with Id [" << taskGroup->GetId() << "]." << std::endl;
+
+						clientRequest = NULL;
+						satisfiedRequest = true;
+						boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+					}
 				}
 			}
 		}
@@ -193,10 +415,15 @@ void Master(Environment *p_environment, bool p_bVerbose)
 			}
 		}
 	}
+
+	// Join threads
+	communicationThread.join();
 }
 
-
-void Idle(Environment *p_environment, bool p_bVerbose)
+/***************************************************************************************************
+ * Idle process
+ ***************************************************************************************************/
+void Idle(EngineKernel *p_engineKernel, bool p_bVerbose)
 {
 	// Determine task rank
 	int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -264,17 +491,17 @@ void Idle(Environment *p_environment, bool p_bVerbose)
 				{
 					std::cout << "[" << idleTask->GetRank() << "] :: Idle task changing to communicator for group [" << requestMessage->GetGroupId() << "]." << std::endl;
 
-					//ITaskPipeline pipeline;
-					RenderPipeline pipeline(p_environment, p_bVerbose);
+					Environment *environment = new Environment(p_engineKernel);
+					RenderPipeline pipeline(environment, p_bVerbose);
 
 					// Might have to revise constructor for coordinator!!!
 					ITaskPipeline::CoordinatorTask coordinator;
 					coordinator.task = idleTask;
-					coordinator.workerCount = 0;
 					coordinator.group.SetMasterRank(idleTask->GetMasterRank());
 					coordinator.group.SetCoordinatorRank(idleTask->GetWorkerRank());
 
 					pipeline.Coordinator(coordinator);
+					// delete environment;
 
 					std::cout << "[" << idleTask->GetRank() << "] :: Coordinator changing back to idle task for group [" << requestMessage->GetGroupId() << "]." << std::endl;
 
@@ -286,11 +513,12 @@ void Idle(Environment *p_environment, bool p_bVerbose)
 				{
 					std::cout << "[" << idleTask->GetRank() << "] :: Idle task changing to worker for group [" << requestMessage->GetGroupId() << "]." << std::endl;
 
-					//ITaskPipeline pipeline;
-					RenderPipeline pipeline(p_environment, p_bVerbose);
+					Environment *environment = new Environment(p_engineKernel);
+					RenderPipeline pipeline(environment, p_bVerbose);
 
 					pipeline.Worker(idleTask);
-
+					// delete environment;
+	
 					std::cout << "[" << idleTask->GetRank() << "] :: Worker changing back to idle task for group [" << requestMessage->GetGroupId() << "]." << std::endl;
 
 					// We need to tell master that we are ready
@@ -306,7 +534,10 @@ void Idle(Environment *p_environment, bool p_bVerbose)
 	}
 }
 
-void InitialiseIllumina(Environment **p_environment, bool p_bVerbose)
+/***************************************************************************************************
+ * Initialise Illumina
+ ***************************************************************************************************/
+void InitialiseIllumina(EngineKernel **p_engineKernel, bool p_bVerbose)
 {
 	//----------------------------------------------------------------------------------------------
 	// Engine Kernel
@@ -400,18 +631,15 @@ void InitialiseIllumina(Environment **p_environment, bool p_bVerbose)
 	engineKernel->GetMaterialManager()->RegisterFactory("Mirror", new MirrorMaterialFactory());
 	engineKernel->GetMaterialManager()->RegisterFactory("Glass", new GlassMaterialFactory());
 	engineKernel->GetMaterialManager()->RegisterFactory("Group", new MaterialGroupFactory());
-	
-	//----------------------------------------------------------------------------------------------
-	// Environment
-	//----------------------------------------------------------------------------------------------
-	MessageOut("Initialising Environment...", p_bVerbose);
-	*p_environment = new Environment(engineKernel);
+
+	*p_engineKernel = engineKernel;
 }
 
-void ShutdownIllumina(Environment *p_environment, bool p_bVerbose)
+/***************************************************************************************************
+ * Shutdown Illumina
+ ***************************************************************************************************/
+void ShutdownIllumina(EngineKernel *p_engineKernel, bool p_bVerbose)
 {
-	p_environment->GetRenderer()->Shutdown();
-	p_environment->GetIntegrator()->Shutdown();
 }
 
 /*
@@ -484,25 +712,30 @@ void randomshit(void)
 }
 */
 
+/***************************************************************************************************
+ * RunAs method
+ ***************************************************************************************************/
 void RunAsServer(int argc, char **argv, bool p_bVerbose)
 {
-	Environment *environment = NULL;
-
 	// Initialise MPI
 	MPI_Init(&argc, &argv);
 	
 	// Get Process Rank
 	int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-	// Load Illumina Environment
-	InitialiseIllumina(&environment, p_bVerbose);
-
 	// We need to detect whether this is running as load balancer, coordinator or worker
-	if (rank == 0) Master(environment, p_bVerbose);
-	else Idle(environment, p_bVerbose);
+	if (rank == 0)
+	{
+		Master(p_bVerbose);
+	}
+	else 
+	{
+		EngineKernel *engineKernel = NULL;
 
-	// Shutdown Illumina Environment
-	ShutdownIllumina(environment, p_bVerbose);
+		InitialiseIllumina(&engineKernel, p_bVerbose);
+		Idle(engineKernel, p_bVerbose);
+		ShutdownIllumina(engineKernel, p_bVerbose);
+	}
 
 	// Finalise MPI
 	MPI_Finalize();

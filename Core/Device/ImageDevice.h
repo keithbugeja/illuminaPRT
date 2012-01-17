@@ -35,6 +35,11 @@ namespace Illumina
 			void Set(int p_nX, int p_nY, const Spectrum &p_spectrum);
 			void Set(float p_fX, float p_fY, const Spectrum &p_spectrum);
 
+			// --> TEMPORARY --- until EGPGV paper is sorted out!
+			std::string GetFilename(void) const { return m_strFilename; }
+			void SetFilename(std::string &p_fname) { m_strFilename = p_fname; }
+			// --> TEMPORARY --- until EGPGV paper is sorted out!
+
 		protected:
 			void ToneMap(void);
 			float HDRToLDR(float p_fValue);

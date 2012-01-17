@@ -23,9 +23,6 @@ namespace Illumina
 		public:
 			struct CoordinatorTask
 			{
-				// Number of workers registered with coordinator
-				int workerCount;
-
 				// Coordinator task and worker group
 				Task *task;
 				TaskGroup group;
@@ -50,12 +47,11 @@ namespace Illumina
 					, terminateCount(0)
 				{ }
 
-				CoordinatorTask(Task *p_coordinator, int p_workerCount)
+				CoordinatorTask(Task *p_coordinator)
 					: active(true)
 					, terminating(false)
 					, terminateCount(0)
 					, task(p_coordinator)
-					, workerCount(p_workerCount)
 				{ }
 			};
 
@@ -151,6 +147,15 @@ namespace Illumina
 				bool result = TaskCommunicator::Send((void*)m_arguments.c_str(), m_arguments.size(), p_rank, MM_ChannelWorkerDynamic_0);
 
 				return result;
+			}
+
+			bool CSynchroniseWorker(CoordinatorTask &p_coordinator)
+			{
+				SynchroniseMessage synchroniseMessage;
+
+				p_coordinator.ready.Broadcast(p_coordinator.task, synchroniseMessage, MM_ChannelWorkerStatic);
+
+				return true;
 			}
 
 			int CReleaseWorker(CoordinatorTask &p_coordinator, int p_releaseCount)
@@ -331,9 +336,13 @@ namespace Illumina
 				: m_verbose(p_verbose)
 			{ }
 
+			virtual ~ITaskPipeline(void) { }
+
 			bool Coordinator(CoordinatorTask &p_coordinator)
 			{
+				// TODO: arguments should come from master!
 				// Initialise taskgroup arguments
+				//m_arguments = "script=Scene/sponza.ilm;";
 				m_arguments = "script=Scene/cornell_jensen.ilm;";
 				m_argumentMap.Initialise(m_arguments);
 
@@ -398,6 +407,9 @@ namespace Illumina
 						workerMessageIn = workerCommunicator.IsRequestComplete(&workerRequest, &workerStatus);
 						masterMessageIn = masterCommunicator.IsRequestComplete(&masterRequest, &masterStatus);
 
+						// Prepare workers for work
+						CSynchroniseWorker(p_coordinator);
+
 						boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
 						// Do a coordinator frame
@@ -444,16 +456,15 @@ namespace Illumina
 					{
 						case MT_Synchronise:
 						{
-							// We need a barrier here before we start execution
-
-							// Do a worker frame
 							ExecuteWorker(p_worker);
+							break;
 						}
 
 						case MT_Terminate:
 						{
 							// We are terminating this worker
 							terminate = true;
+							break;
 						}
 
 						default:

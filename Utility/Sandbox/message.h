@@ -25,7 +25,8 @@ namespace Illumina
 			MM_ChannelWorkerStatic_1,
 			MM_ChannelWorkerDynamic_1,
 			MM_ChannelPipelineStatic,
-			MM_ChannelPipelineDynamic
+			MM_ChannelPipelineDynamic,
+			MM_ChannelUserBase = 0x1000
 		};
 
 		enum MessageType
@@ -149,5 +150,7 @@ namespace Illumina
 
 		// AcknowledgeMessage -> Sent to coordinators by workers, to signal completion of some task
 		typedef TMessage<MT_Acknowledge> AcknowledgeMessage;
+
+		typedef TMessage<MT_Synchronise> SynchroniseMessage;
 	}
 }
