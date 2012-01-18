@@ -153,24 +153,63 @@ namespace Illumina
 			: public TaskCommunicator
 		{
 		public:
-			bool Send(const Message &p_message, int p_rank, int p_tag) {
-				return TaskCommunicator::Send((void*)&p_message, p_message.MessageSize(), p_rank, p_tag);
+			bool Send(IMessage *p_message, int p_rank, int p_tag) {
+				return TaskCommunicator::Send(p_message->MessageBuffer(), p_message->MessageSize(), p_rank, p_tag);
 			}
 
-			bool Receive(const Message &p_message, int p_rank, int p_tag) {
-				return TaskCommunicator::Receive((void*)&p_message, p_message.MessageSize(), p_rank, p_tag);
+			bool Receive(IMessage *p_message, int p_rank, int p_tag) 
+			{
+				switch (p_message->MessageType())
+				{
+					case IMessage::IMT_Variable:
+					{
+						MPI_Status status; TaskCommunicator::Probe(p_rank, p_tag, &status);
+						return TaskCommunicator::Receive(p_message->MessageBuffer(), TaskCommunicator::GetSize(&status), p_rank, p_tag, &status);
+					}
+
+					case IMessage::IMT_Fixed:
+					{
+						return TaskCommunicator::Receive(p_message->MessageBuffer(), p_message->MessageSize(), p_rank, p_tag);
+					}
+
+					default:
+						return false;
+				}
 			}
 
-			bool Receive(const Message &p_message, int p_tag, MPI_Status *p_statusOut) {
-				return TaskCommunicator::Receive((void*)&p_message, p_message.MessageSize(), MPI_ANY_SOURCE, p_tag, p_statusOut);
+			bool Receive(IMessage *p_message, int p_tag, MPI_Status *p_statusOut) 
+			{
+				switch (p_message->MessageType())
+				{
+					case IMessage::IMT_Variable:
+					{
+						MPI_Status status; TaskCommunicator::Probe(MPI_ANY_SOURCE, p_tag, p_statusOut);
+						return TaskCommunicator::Receive(p_message->MessageBuffer(), TaskCommunicator::GetSize(p_statusOut), p_statusOut->MPI_SOURCE, p_tag, p_statusOut);
+					}
+
+					case IMessage::IMT_Fixed:
+					{
+						return TaskCommunicator::Receive(p_message->MessageBuffer(), p_message->MessageSize(), MPI_ANY_SOURCE, p_tag, p_statusOut);
+					}
+
+					default:
+						return false;
+				}
 			}
 
-			bool SendAsynchronous(const Message &p_message, int p_rank, int p_tag, MPI_Request *p_request) {
-				return TaskCommunicator::SendAsynchronous((void*)&p_message, p_message.MessageSize(), p_rank, p_tag, p_request);
+			bool SendAsynchronous(IMessage *p_message, int p_rank, int p_tag, MPI_Request *p_request) {
+				return TaskCommunicator::SendAsynchronous(p_message->MessageBuffer(), p_message->MessageSize(), p_rank, p_tag, p_request);
 			}
 
-			bool ReceiveAsynchronous(const Message &p_message, int p_rank, int p_tag, MPI_Request *p_request, MPI_Status *p_status = MPI_STATUS_IGNORE) {
-				return TaskCommunicator::ReceiveAsynchronous((void*)&p_message, p_message.MessageSize(), p_rank, p_tag, p_request, p_status);
+			bool ReceiveAsynchronous(IMessage *p_message, int p_rank, int p_tag, MPI_Request *p_request, MPI_Status *p_status = MPI_STATUS_IGNORE) 
+			{
+				if (p_message->MessageType() != IMessage::IMT_Fixed)
+				{
+					std::cout << "ReceiveAsynchronous::Error - Cannot receive variable-sized messages asynchronously!" << std::endl;
+					return false;
+				}
+
+				return TaskCommunicator::ReceiveAsynchronous(p_message->MessageBuffer(), p_message->MessageSize(), p_rank, p_tag, p_request, p_status);
 			}
 		};
 
@@ -194,35 +233,35 @@ namespace Illumina
 				: m_rank(p_task->Rank)
 			{ }
 
-			bool SendToCoordinator(const Message &p_message, int p_tag) {
+			bool SendToCoordinator(IMessage *p_message, int p_tag) {
 				return MessageCommunicator::Send(p_message, m_rank[Task::TT_Coordinator], p_tag);
 			}
 
-			bool ReceiveFromCoordinator(const Message &p_message, int p_tag) {
+			bool ReceiveFromCoordinator(IMessage *p_message, int p_tag) {
 				return MessageCommunicator::Receive(p_message, m_rank[Task::TT_Coordinator], p_tag);
 			}
 
-			bool SendToCoordinatorAsynchronous(const Message &p_message, int p_tag, MPI_Request *p_request) {
+			bool SendToCoordinatorAsynchronous(IMessage *p_message, int p_tag, MPI_Request *p_request) {
 				return MessageCommunicator::SendAsynchronous(p_message, m_rank[Task::TT_Coordinator], p_tag, p_request);
 			}
 
-			bool ReceiveFromCoordinatorAsynchronous(const Message &p_message, int p_tag, MPI_Request *p_request) {
+			bool ReceiveFromCoordinatorAsynchronous(IMessage *p_message, int p_tag, MPI_Request *p_request) {
 				return MessageCommunicator::ReceiveAsynchronous(p_message, m_rank[Task::TT_Coordinator], p_tag, p_request);
 			}
 
-			bool SendToMaster(const Message &p_message, int p_tag) {
+			bool SendToMaster(IMessage *p_message, int p_tag) {
 				return MessageCommunicator::Send(p_message, m_rank[Task::TT_Master], p_tag);
 			}
 
-			bool ReceiveFromMaster(const Message &p_message, int p_tag) {
+			bool ReceiveFromMaster(IMessage *p_message, int p_tag) {
 				return MessageCommunicator::Receive(p_message, m_rank[Task::TT_Master], p_tag);
 			}
 
-			bool SendToMasterAsynchronous(const Message &p_message, int p_tag, MPI_Request *p_request) {
+			bool SendToMasterAsynchronous(IMessage *p_message, int p_tag, MPI_Request *p_request) {
 				return MessageCommunicator::SendAsynchronous(p_message, m_rank[Task::TT_Master], p_tag, p_request);
 			}
 
-			bool ReceiveFromMasterAsynchronous(const Message &p_message, int p_tag, MPI_Request *p_request) {
+			bool ReceiveFromMasterAsynchronous(IMessage *p_message, int p_tag, MPI_Request *p_request) {
 				return MessageCommunicator::ReceiveAsynchronous(p_message, m_rank[Task::TT_Master], p_tag, p_request);
 			}
 		};
@@ -246,58 +285,58 @@ namespace Illumina
 			{ }
 
 
-			bool SendToCoordinator(const Message &p_message) 
+			bool SendToCoordinator(IMessage *p_message) 
 			{
 				return MailboxCommunicator::SendToCoordinator(p_message, T);
 			}
 
-			bool ReceiveFromCoordinator(const Message &p_message) {
+			bool ReceiveFromCoordinator(IMessage *p_message) {
 				return MailboxCommunicator::ReceiveFromCoordinator(p_message, T);
 			}
 
-			bool SendToCoordinatorAsynchronous(const Message &p_message, MPI_Request *p_request) {
+			bool SendToCoordinatorAsynchronous(IMessage *p_message, MPI_Request *p_request) {
 				return MailboxCommunicator::SendToCoordinatorAsynchronous(p_message, T, p_request);
 			}
 
-			bool ReceiveFromCoordinatorAsynchronous(const Message &p_message, MPI_Request *p_request) {
+			bool ReceiveFromCoordinatorAsynchronous(IMessage *p_message, MPI_Request *p_request) {
 				return MailboxCommunicator::ReceiveFromCoordinatorAsynchronous(p_message, T, p_request);
 			}
 
 
-			bool SendToMaster(const Message &p_message) {
+			bool SendToMaster(IMessage *p_message) {
 				return MailboxCommunicator::SendToMaster(p_message, T);
 			}
 
-			bool ReceiveFromMaster(const Message &p_message) {
+			bool ReceiveFromMaster(IMessage *p_message) {
 				return MailboxCommunicator::ReceiveFromMaster(p_message, T);
 			}
 
-			bool SendToMasterAsynchronous(const Message &p_message, MPI_Request *p_request) {
+			bool SendToMasterAsynchronous(IMessage *p_message, MPI_Request *p_request) {
 				return MailboxCommunicator::SendToMasterAsynchronous(p_message, T, p_request);
 			}
 
-			bool ReceiveFromMasterAsynchronous(const Message &p_message, MPI_Request *p_request) {
+			bool ReceiveFromMasterAsynchronous(IMessage *p_message, MPI_Request *p_request) {
 				return MailboxCommunicator::ReceiveFromMasterAsynchronous(p_message, T, p_request);
 			}
 
 
-			bool Send(const Message &p_message, int p_rank) {
+			bool Send(IMessage *p_message, int p_rank) {
 				return MailboxCommunicator::Send(p_message, p_rank, T);
 			}
 
-			bool Receive(const Message &p_message, int p_rank) {
+			bool Receive(IMessage *p_message, int p_rank) {
 				return MailboxCommunicator::Receive(p_message, p_rank, T);
 			}
 
-			bool Receive(const Message &p_message, MPI_Status *p_statusOut) {
+			bool Receive(IMessage *p_message, MPI_Status *p_statusOut) {
 				return MailboxCommunicator::Receive(p_message, T, p_statusOut);
 			}
 
-			bool SendAsynchronous(const Message &p_message, int p_rank, MPI_Request *p_request) {
+			bool SendAsynchronous(IMessage *p_message, int p_rank, MPI_Request *p_request) {
 				return MailboxCommunicator::SendAsychronous(p_message, p_rank, T, p_request);
 			}
 
-			bool ReceiveAsynchronous(const Message &p_message, int p_rank, MPI_Request *p_request, MPI_Status *p_status = MPI_STATUS_IGNORE) {
+			bool ReceiveAsynchronous(IMessage *p_message, int p_rank, MPI_Request *p_request, MPI_Status *p_status = MPI_STATUS_IGNORE) {
 				return MailboxCommunicator::ReceiveAsynchronous(p_message, p_rank, T, p_request, p_status);
 			}
 		};

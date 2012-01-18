@@ -15,11 +15,11 @@ namespace Illumina
 			Environment *m_environment;
 		
 		public:
-			RenderPipeline(Environment *p_environment, bool p_verbose = true)
-				: ITaskPipeline(p_verbose)
+			RenderPipeline(Environment *p_environment, std::string &p_arguments, bool p_verbose = true)
+				: ITaskPipeline(p_arguments, p_verbose)
 				, m_environment(p_environment)				
 				, m_mpirender(new MPIRender(p_environment))
-			{ }
+			{  }
 
 			~RenderPipeline(void)
 			{ 
@@ -89,6 +89,71 @@ namespace Illumina
 			bool OnShutdownWorker(void) 
 			{ 
 				return true; 
+			}
+
+			void OnCoordinatorReceiveMasterMessage(CoordinatorTask &p_coordinator, Message &p_message, MPI_Status *p_status, MPI_Request *p_request)
+			{
+				switch(p_message.Id)
+				{
+					// Init task termination
+					case MT_Direction:
+					{	
+						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator received [DIRECTION]." << std::endl;
+
+						DirectionMessage *msg = (DirectionMessage*)&p_message;
+						ParseDirectionMessage(msg);
+
+						Vector3 observer = m_environment->GetCamera()->GetObserver();
+						PositionMessage posMsg(observer);
+						p_coordinator.ready.Broadcast(p_coordinator.task, &posMsg, MM_ChannelWorkerStatic);
+
+						//p_coordinator.ready.Broadcast(p_coordinator.task, &p_message, MM_ChannelWorkerStatic);
+						break;
+					}
+				}
+			}
+
+			void OnCoordinatorReceiveWorkerMessage(CoordinatorTask &p_coordinator, Message &p_message, MPI_Status *p_status, MPI_Request *p_request)
+			{ }
+
+			void OnWorkerReceiveCoordinatorMessage(Task *p_worker, Message &p_message)
+			{
+				switch(p_message.Id)
+				{
+					case MT_Position:
+					{
+						std::cout << "[" << p_worker->GetRank() << "] :: Worker received [POSITION]." << std::endl;
+						PositionMessage *msg = (PositionMessage*)&p_message;
+						m_environment->GetCamera()->MoveTo(msg->GetPosition());
+						//DirectionMessage *msg = (DirectionMessage*)&p_message;
+						//ParseDirectionMessage(msg);
+					}
+				}
+			}
+
+			void ParseDirectionMessage(DirectionMessage *p_message)
+			{
+				switch(p_message->GetDirection())
+				{
+					case CCDMT_Left:
+						m_environment->GetCamera()->Move(Vector3::UnitXNeg * 5);
+						break;
+					case CCDMT_Right:
+						m_environment->GetCamera()->Move(Vector3::UnitXPos * 5);
+						break;
+					case CCDMT_Forwards:
+						m_environment->GetCamera()->Move(Vector3::UnitZNeg * 5);
+						break;
+					case CCDMT_Backwards:
+						m_environment->GetCamera()->Move(Vector3::UnitZPos * 5);
+						break;
+					case CCDMT_Up:
+						m_environment->GetCamera()->Move(Vector3::UnitYPos * 5);
+						break;
+					case CCDMT_Down:
+						m_environment->GetCamera()->Move(Vector3::UnitYNeg * 5);
+						break;
+				}
 			}
 
 			bool ExecuteCoordinator(CoordinatorTask &p_coordinator)

@@ -5,7 +5,9 @@
 #include <vector>
 
 #include <boost/thread.hpp>
+#include <boost/algorithm/string.hpp>
 
+#include "defs.h"
 #include "taskgroup.h"
 #include "taskpipeline.h"
 #include "renderpipeline.h"
@@ -18,8 +20,6 @@ using namespace Illumina::Core;
 /***************************************************************************************************
  * Client communication shit
  ***************************************************************************************************/
-Illumina::Core::Spinlock g_clientSessionInfoLock;
-
 struct ClientSessionInfo
 {
 	std::string Script;
@@ -28,44 +28,63 @@ struct ClientSessionInfo
 	int Size;
 };
 
-std::queue<ClientSessionInfo*> g_clientConnectQueue;
+enum ClientControlMessageType
+{
+	CCMT_Terminate,
+	CCMT_Direction
+};
 
+struct IClientControlMessage
+{
+	int Id;
+	std::string ClientIP;
+};
+
+template<int T>
+struct TClientControlMessage
+	: public IClientControlMessage
+{
+	TClientControlMessage(std::string &p_clientIP)
+	{
+		ClientIP = p_clientIP;
+		Id = T;
+	}
+};
+
+typedef TClientControlMessage<CCMT_Terminate> TerminateClientMessage;
+
+struct DirectionClientMessage
+	: IClientControlMessage
+{
+	int Direction;
+
+	DirectionClientMessage(std::string &p_clientIP, ClientControlDirectionMessageType p_direction)
+	{
+		Id = CCMT_Direction;
+		ClientIP = p_clientIP;
+		Direction = p_direction;
+	}
+};
+
+std::queue<IClientControlMessage*> g_clientControlQueue;
+std::queue<ClientSessionInfo*> g_clientConnectQueue;
 
 std::map<std::string, ClientSessionInfo*> g_clientIPSessionMap;
 std::map<std::string, TaskGroup*> g_clientIPTaskGroupMap;
 
-
-enum ClientControlMessageType
-{
-	CCMT_Terminate
-};
-
-class IClientControlMessage
-{
-public:
-	int Id;
-};
-
-class TerminateClientMessage
-	: public IClientControlMessage
-{
-public:
-	std::string ClientIP;
-
-	TerminateClientMessage(std::string &p_clientIP)
-		: ClientIP(p_clientIP)
-	{ 
-		Id = CCMT_Terminate;
-	}
-};
-
+Illumina::Core::Spinlock g_clientSessionInfoLock;
 Illumina::Core::Spinlock g_clientControlQueueLock;
-std::queue<IClientControlMessage*> g_clientControlQueue;
 
 /***************************************************************************************************
  * Communication thread
  ***************************************************************************************************/
 typedef boost::shared_ptr<tcp::socket> socket_ptr;
+
+void TokeniseCommand(std::string &p_command, std::vector<std::string> &p_arguments)
+{
+	p_arguments.clear();
+	boost::split(p_arguments, p_command, boost::is_any_of(":"));
+}
 
 void ClientSession(socket_ptr p_socket)
 {
@@ -74,6 +93,7 @@ void ClientSession(socket_ptr p_socket)
 	
 	try
 	{
+		std::vector<std::string> commandTokens;
 		std::string commandString;
 
 		for (;;)
@@ -89,13 +109,17 @@ void ClientSession(socket_ptr p_socket)
 
 			if (commandString.find("[CMD_CONN]") != std::string::npos)
 			{
+				// We found a connection command : parse arguments
+				// Should be in the format : [CMD_CONN]:script_path:priority:units
+				TokeniseCommand(commandString, commandTokens);
+
 				// Send a new request
 				ClientSessionInfo *request = new ClientSessionInfo();
 	
 				request->IP = clientIP;
-				request->Script = "Scene/cornell_jensen.ilm";
-				request->Priority = 0;
-				request->Size = 8;
+				request->Script = commandTokens[1];
+				request->Priority = boost::lexical_cast<int>(commandTokens[2]);
+				request->Size = boost::lexical_cast<int>(commandTokens[3]);
 
 				g_clientSessionInfoLock.Lock();
 				g_clientConnectQueue.push(request);
@@ -116,20 +140,58 @@ void ClientSession(socket_ptr p_socket)
 			else if (commandString.find("[CMD_LFT]") != std::string::npos)
 			{
 				std::cout << "[" << clientIP << "] : [Left]" << std::cout;
+				
+				DirectionClientMessage *message = new DirectionClientMessage(clientIP, CCDMT_Left);
+
+				g_clientControlQueueLock.Lock();
+				g_clientControlQueue.push(message);
+				g_clientControlQueueLock.Unlock();
 			}
 			else if (commandString.find("[CMD_RGT]") != std::string::npos)
 			{
 				std::cout << "[" << clientIP << "] : [Right]" << std::cout;
+				DirectionClientMessage *message = new DirectionClientMessage(clientIP, CCDMT_Right);
+
+				g_clientControlQueueLock.Lock();
+				g_clientControlQueue.push(message);
+				g_clientControlQueueLock.Unlock();
 			}
 			else if (commandString.find("[CMD_FWD]") != std::string::npos)
 			{
 				std::cout << "[" << clientIP << "] : [Forwards]" << std::cout;
+				DirectionClientMessage *message = new DirectionClientMessage(clientIP, CCDMT_Forwards);
+
+				g_clientControlQueueLock.Lock();
+				g_clientControlQueue.push(message);
+				g_clientControlQueueLock.Unlock();
 			}
 			else if (commandString.find("[CMD_BWD]") != std::string::npos)
 			{
 				std::cout << "[" << clientIP << "] : [Backwards]" << std::cout;
-			}
+				DirectionClientMessage *message = new DirectionClientMessage(clientIP, CCDMT_Backwards);
 
+				g_clientControlQueueLock.Lock();
+				g_clientControlQueue.push(message);
+				g_clientControlQueueLock.Unlock();
+			}
+			else if (commandString.find("[CMD_UP]") != std::string::npos)
+			{
+				std::cout << "[" << clientIP << "] : [Up]" << std::cout;
+				DirectionClientMessage *message = new DirectionClientMessage(clientIP, CCDMT_Up);
+
+				g_clientControlQueueLock.Lock();
+				g_clientControlQueue.push(message);
+				g_clientControlQueueLock.Unlock();
+			}
+			else if (commandString.find("[CMD_DN]") != std::string::npos)
+			{
+				std::cout << "[" << clientIP << "] : [Down]" << std::cout;
+				DirectionClientMessage *message = new DirectionClientMessage(clientIP, CCDMT_Down);
+
+				g_clientControlQueueLock.Lock();
+				g_clientControlQueue.push(message);
+				g_clientControlQueueLock.Unlock();
+			}
 			/*
 			if (error == boost::asio::error::eof)
 			{
@@ -240,12 +302,12 @@ void Master(bool p_bVerbose)
 	while(true)
 	{
 		// Set up an asynchronous receive on ChannelMasterStatic
-		if (!masterCommunicator.ReceiveAsynchronous(receiveMessage, MPI_ANY_SOURCE, &receiveRequest, &receiveStatus))
+		if (!masterCommunicator.ReceiveAsynchronous(&receiveMessage, MPI_ANY_SOURCE, &receiveRequest, &receiveStatus))
 		{
 			// Loop until a receive buffer contains a new message
 			while(!masterCommunicator.IsRequestComplete(&receiveRequest, &receiveStatus))
 			{
-				boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+				//boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
 
 				//////////////////////////////////////////////////////////////////////////////////////////////////
 				// Do we have any pending messages for clients?
@@ -283,13 +345,31 @@ void Master(bool p_bVerbose)
 									taskGroup->GetCoordinatorRank() << "]." << std::endl;
 
 								TerminateMessage terminateMessage;
-								masterCommunicator.Send(terminateMessage, taskGroup->GetCoordinatorRank());
+								masterCommunicator.Send(&terminateMessage, taskGroup->GetCoordinatorRank());
+								break;
+							}
+
+							case CCMT_Direction:
+							{
+								std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master popped [CLIENT_DIRECTION] from message queue" << std::endl;
+
+								DirectionClientMessage *cstMessage = (DirectionClientMessage*)message;
+								TaskGroup *taskGroup = g_clientIPTaskGroupMap[cstMessage->ClientIP];
+
+								std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master sent [DIRECTION] to coordinator [" << 
+									taskGroup->GetCoordinatorRank() << "]." << std::endl;
+
+								DirectionMessage directionMessage(cstMessage->Direction);
+								masterCommunicator.Send(&directionMessage, taskGroup->GetCoordinatorRank());
 								break;
 							}
 
 							default:
 								break;
 						}
+
+						delete message;
+						message = NULL;
 					}
 				}
 
@@ -344,7 +424,7 @@ void Master(bool p_bVerbose)
 						} */
 
 						satisfiedRequest = false;
-						boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+						// boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
 					}
 					else
 					{
@@ -357,11 +437,22 @@ void Master(bool p_bVerbose)
 						taskGroup->SetCoordinatorRank(taskGroup->TaskList[0]->GetRank());
 
 						// Now we must inform PEs that they have been assigned to a new task group
-						RequestMessage requestMessage(taskGroup->GetId(), 
-							taskGroup->GetCoordinatorRank(), 
-							taskGroup->Size());
+						//RequestMessage requestMessage(taskGroup->GetId(), 
+						//	taskGroup->GetCoordinatorRank(), 
+						//	taskGroup->Size());
 
-						taskGroup->Broadcast(masterTask, requestMessage, MM_ChannelMasterStatic);
+						RequestMessageVL requestMessage(taskGroup->GetId(), 
+							taskGroup->GetCoordinatorRank(), 
+							clientRequest->Script);
+
+						std::cout << requestMessage.Data->Id << ", " <<
+							requestMessage.Data->CoordinatorId << ", " <<
+							requestMessage.Data->GroupId << ", " <<
+							requestMessage.Data->Config << ", " << 
+							requestMessage.MessageSize() << std::endl;
+
+						// taskGroup->Broadcast(masterTask, requestMessage, MM_ChannelMasterStatic);
+						taskGroup->Broadcast(masterTask, &requestMessage, MM_ChannelMasterDynamic);
 					
 						// Index requests
 						g_clientIPTaskGroupMap[clientRequest->IP] = taskGroup;
@@ -371,7 +462,7 @@ void Master(bool p_bVerbose)
 
 						clientRequest = NULL;
 						satisfiedRequest = true;
-						boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+						//boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
 					}
 				}
 			}
@@ -449,10 +540,13 @@ void Idle(EngineKernel *p_engineKernel, bool p_bVerbose)
 	MPI_Request receiveRequest;
 	MPI_Status receiveStatus;
 	
+	char messageBuffer[2048];
+	VarlenMessage messageVarlen(messageBuffer, 2048);
 	Message receiveMessage;
 
 	while(true)
 	{
+		/*
 		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 		
 		// Set up receive from Master on ChannelMasterStatic
@@ -464,35 +558,40 @@ void Idle(EngineKernel *p_engineKernel, bool p_bVerbose)
 			{
 				boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 			}
-		}
+		}*/
+
+		TaskCommunicator::Probe(idleTask->GetMasterRank(), MM_ChannelMasterDynamic, &receiveStatus);
+		TaskCommunicator::Receive((void*)messageBuffer, TaskCommunicator::GetSize(&receiveStatus), idleTask->GetMasterRank(), MM_ChannelMasterDynamic, &receiveStatus);
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////
 		// Handle received message
 		//////////////////////////////////////////////////////////////////////////////////////////////////	
-		switch (receiveMessage.Id)
+		switch (messageVarlen.MessageId())
+		//switch (receiveMessage.Id)
 		{
 			case MT_Request:
 			{
-				RequestMessage *requestMessage = (RequestMessage*)&receiveMessage;
+				// RequestMessage *requestMessage = (RequestMessage*)&receiveMessage;
+				RequestMessageVL requestMessage((void*)messageBuffer);
 
 				std::cout << "[" << idleTask->GetRank() << "] :: Idle task received [REQUEST] for " 					
-					<< "group [" << requestMessage->GetGroupId() << "], "
-					<< "coordinator [" << requestMessage->GetCoordinatorId() << "], " 
-					<< "worker count [" << requestMessage->GetWorkerCount() << "]."
+					<< "group [" << requestMessage.GetGroupId() << "], "
+					<< "coordinator [" << requestMessage.GetCoordinatorId() << "], " 
+					<< "arguments [" << requestMessage.GetConfig() << "]. "
 					<< std::endl;
 
-				int groupId = requestMessage->GetGroupId();
+				int groupId = requestMessage.GetGroupId();
 
 				// Set coordinator for idle task
-				idleTask->SetCoordinatorRank(requestMessage->GetCoordinatorId());
+				idleTask->SetCoordinatorRank(requestMessage.GetCoordinatorId());
 
 				// If this task is the coordinator, spawn coordinator code
 				if (idleTask->GetCoordinatorRank() == idleTask->GetWorkerRank())
 				{
-					std::cout << "[" << idleTask->GetRank() << "] :: Idle task changing to communicator for group [" << requestMessage->GetGroupId() << "]." << std::endl;
+					std::cout << "[" << idleTask->GetRank() << "] :: Idle task changing to communicator for group [" << requestMessage.GetGroupId() << "]." << std::endl;
 
 					Environment *environment = new Environment(p_engineKernel);
-					RenderPipeline pipeline(environment, p_bVerbose);
+					RenderPipeline pipeline(environment, std::string(requestMessage.GetConfig()), p_bVerbose);
 
 					// Might have to revise constructor for coordinator!!!
 					ITaskPipeline::CoordinatorTask coordinator;
@@ -503,27 +602,27 @@ void Idle(EngineKernel *p_engineKernel, bool p_bVerbose)
 					pipeline.Coordinator(coordinator);
 					// delete environment;
 
-					std::cout << "[" << idleTask->GetRank() << "] :: Coordinator changing back to idle task for group [" << requestMessage->GetGroupId() << "]." << std::endl;
+					std::cout << "[" << idleTask->GetRank() << "] :: Coordinator changing back to idle task for group [" << requestMessage.GetGroupId() << "]." << std::endl;
 
 					// We need to tell master that we are ready
 					CompletedMessage completedMessage(groupId);
-					masterCommunicator.SendToMaster(completedMessage);
+					masterCommunicator.SendToMaster((IMessage*)&completedMessage);
 				}
 				else
 				{
-					std::cout << "[" << idleTask->GetRank() << "] :: Idle task changing to worker for group [" << requestMessage->GetGroupId() << "]." << std::endl;
+					std::cout << "[" << idleTask->GetRank() << "] :: Idle task changing to worker for group [" << requestMessage.GetGroupId() << "]." << std::endl;
 
 					Environment *environment = new Environment(p_engineKernel);
-					RenderPipeline pipeline(environment, p_bVerbose);
+					RenderPipeline pipeline(environment, std::string(requestMessage.GetConfig()), p_bVerbose);
 
 					pipeline.Worker(idleTask);
 					// delete environment;
 	
-					std::cout << "[" << idleTask->GetRank() << "] :: Worker changing back to idle task for group [" << requestMessage->GetGroupId() << "]." << std::endl;
+					std::cout << "[" << idleTask->GetRank() << "] :: Worker changing back to idle task for group [" << requestMessage.GetGroupId() << "]." << std::endl;
 
 					// We need to tell master that we are ready
 					CompletedMessage completedMessage(groupId);
-					masterCommunicator.SendToMaster(completedMessage);
+					masterCommunicator.SendToMaster((IMessage*)&completedMessage);
 				}
 				break;
 			}
