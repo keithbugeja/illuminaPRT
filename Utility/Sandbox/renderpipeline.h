@@ -107,7 +107,6 @@ namespace Illumina
 						PositionMessage posMsg(observer);
 						p_coordinator.ready.Broadcast(p_coordinator.task, &posMsg, MM_ChannelWorkerStatic);
 
-						//p_coordinator.ready.Broadcast(p_coordinator.task, &p_message, MM_ChannelWorkerStatic);
 						break;
 					}
 				}
@@ -125,8 +124,6 @@ namespace Illumina
 						std::cout << "[" << p_worker->GetRank() << "] :: Worker received [POSITION]." << std::endl;
 						PositionMessage *msg = (PositionMessage*)&p_message;
 						m_environment->GetCamera()->MoveTo(msg->GetPosition());
-						//DirectionMessage *msg = (DirectionMessage*)&p_message;
-						//ParseDirectionMessage(msg);
 					}
 				}
 			}

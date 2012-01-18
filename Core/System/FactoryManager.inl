@@ -185,3 +185,13 @@ T* FactoryManager<T>::ReleaseInstance(const std::string& p_strInstanceName)
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
+template<class T>
+void FactoryManager<T>::ReleaseInstances(void)
+{
+	for (std::map<std::string, T*>::iterator instanceIterator = m_instanceMap.begin();
+		 instanceIterator != m_instanceMap.end(); ++instanceIterator)
+	{
+		m_instanceMap.erase((*instanceIterator).first);
+		Safe_Delete((*instanceIterator).second);
+	}
+}

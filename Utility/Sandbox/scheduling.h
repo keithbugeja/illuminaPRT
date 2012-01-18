@@ -137,6 +137,33 @@ void ClientSession(socket_ptr p_socket)
 				std::cout << "Closing connection with [" << message->ClientIP << "]" << std::endl;
 				break;
 			}
+			else if (commandString.find("[CMD_RSCADD]") != std::string::npos)
+			{
+				// We found a grow command : parse arguments
+				// Should be in the format : [CMD_RSCADD]:units
+				TokeniseCommand(commandString, commandTokens);
+
+				//ResourceAddClientMessage *message = 
+				//	new ResourceAddClientMessage(clientIP, boost::lexical_cast<int>(commandTokens[1]));
+
+				//g_clientControlQueueLock.Lock();
+				//g_clientControlQueue.push(message);
+				//g_clientControlQueueLock.Unlock();
+			}
+			else if (commandString.find("[CMD_RSCSUB]") != std::string::npos)
+			{
+				// We found a grow command : parse arguments
+				// Should be in the format : [CMD_RSCSUB]:units
+				TokeniseCommand(commandString, commandTokens);
+
+				//ResourceSubClientMessage *message = 
+				//	new ResourceSubClientMessage(clientIP, boost::lexical_cast<int>(commandTokens[1]));
+
+				//g_clientControlQueueLock.Lock();
+				//g_clientControlQueue.push(message);
+				//g_clientControlQueueLock.Unlock();
+				
+			}
 			else if (commandString.find("[CMD_LFT]") != std::string::npos)
 			{
 				std::cout << "[" << clientIP << "] : [Left]" << std::cout;
@@ -192,18 +219,6 @@ void ClientSession(socket_ptr p_socket)
 				g_clientControlQueue.push(message);
 				g_clientControlQueueLock.Unlock();
 			}
-			/*
-			if (error == boost::asio::error::eof)
-			{
-			}
-			else 
-			{
-
-				// if (error)
-					// throw boost::system::system_error(error); // Some other error.
-			}
-			*/
-			// boost::asio::write(*p_socket, boost::asio::buffer(data, length));
 		}	
 	}
 	catch (std::exception& e)
@@ -233,7 +248,7 @@ void MasterCommunication(TaskGroupList *p_taskGroupList)
  ***************************************************************************************************/
 void Master(bool p_bVerbose)
 {
-   	//////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////////////////
 	// Initialise Master
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -511,6 +526,23 @@ void Master(bool p_bVerbose)
 	communicationThread.join();
 }
 
+void FreeEnvironment(Environment *p_environment)
+{
+	p_environment->GetEngineKernel()->GetCameraManager()->ReleaseInstances();
+	p_environment->GetEngineKernel()->GetDeviceManager()->ReleaseInstances();
+	p_environment->GetEngineKernel()->GetFilterManager()->ReleaseInstances();
+	p_environment->GetEngineKernel()->GetIntegratorManager()->ReleaseInstances();
+	p_environment->GetEngineKernel()->GetLightManager()->ReleaseInstances();
+	p_environment->GetEngineKernel()->GetMaterialManager()->ReleaseInstances();
+	p_environment->GetEngineKernel()->GetRendererManager()->ReleaseInstances();
+	p_environment->GetEngineKernel()->GetSamplerManager()->ReleaseInstances();
+	p_environment->GetEngineKernel()->GetShapeManager()->ReleaseInstances();
+	p_environment->GetEngineKernel()->GetSpaceManager()->ReleaseInstances();
+	p_environment->GetEngineKernel()->GetTextureManager()->ReleaseInstances();
+
+	delete p_environment;
+}
+
 /***************************************************************************************************
  * Idle process
  ***************************************************************************************************/
@@ -600,7 +632,7 @@ void Idle(EngineKernel *p_engineKernel, bool p_bVerbose)
 					coordinator.group.SetCoordinatorRank(idleTask->GetWorkerRank());
 
 					pipeline.Coordinator(coordinator);
-					// delete environment;
+					FreeEnvironment(environment);
 
 					std::cout << "[" << idleTask->GetRank() << "] :: Coordinator changing back to idle task for group [" << requestMessage.GetGroupId() << "]." << std::endl;
 
@@ -616,7 +648,7 @@ void Idle(EngineKernel *p_engineKernel, bool p_bVerbose)
 					RenderPipeline pipeline(environment, std::string(requestMessage.GetConfig()), p_bVerbose);
 
 					pipeline.Worker(idleTask);
-					// delete environment;
+					FreeEnvironment(environment);
 	
 					std::cout << "[" << idleTask->GetRank() << "] :: Worker changing back to idle task for group [" << requestMessage.GetGroupId() << "]." << std::endl;
 
