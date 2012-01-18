@@ -156,7 +156,9 @@
     <ClCompile Include="..\..\..\..\Utility\Sandbox\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\message.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\mpirender.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\renderpipeline.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\scheduling.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\task.h" />

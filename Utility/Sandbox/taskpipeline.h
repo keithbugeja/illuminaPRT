@@ -9,15 +9,6 @@ namespace Illumina
 	{
 		//////////////////////////////////////////////////////////////////////////////////////////////////	
 		//////////////////////////////////////////////////////////////////////////////////////////////////	
-		class WorkerTask
-			: public Task
-		{
-		public:
-			int PipelineStage;
-		};
-
-		//////////////////////////////////////////////////////////////////////////////////////////////////	
-		//////////////////////////////////////////////////////////////////////////////////////////////////	
 		class ITaskPipeline
 		{
 		public:
@@ -55,6 +46,8 @@ namespace Illumina
 				{ }
 			};
 
+		//////////////////////////////////////////////////////////////////////////////////////////////////	
+		//////////////////////////////////////////////////////////////////////////////////////////////////	
 		private:
 			bool m_verbose;
 		
@@ -67,6 +60,8 @@ namespace Illumina
 		protected:
 			bool IsVerbose(void) { return m_verbose; }
 
+		//////////////////////////////////////////////////////////////////////////////////////////////////	
+		//////////////////////////////////////////////////////////////////////////////////////////////////	
 		protected:
 			//////////////////////////////////////////////////////////////////////////////////////////////////	
 			// Worker methods
@@ -78,7 +73,12 @@ namespace Illumina
 
 				// Register worker with coordinator
 				RegisterMessage registerMessage; 
-				communicator.SendToCoordinator(registerMessage);
+
+				std::cout << "Sending register message..." << std::endl;
+
+				communicator.SendToCoordinator((IMessage*)&registerMessage);
+
+				std::cout << "Register sent..." << std::endl;
 
 				// Receive configuration information
 				char buffer[512];
@@ -115,7 +115,7 @@ namespace Illumina
 				
 				// Inform the coordinator initialisation is complete
 				AcknowledgeMessage acknowledge;
-				communicator.SendToCoordinator(acknowledge);
+				communicator.SendToCoordinator((IMessage*)&acknowledge);
 
 				// We are now ready to receive work!
 				return true;	
@@ -131,7 +131,7 @@ namespace Illumina
 			//////////////////////////////////////////////////////////////////////////////////////////////////	
 			bool CRegisterWorker(CoordinatorTask &p_coordinator, int p_rank)
 			{
-				WorkerTask *workerTask = new WorkerTask();
+				Task *workerTask = new Task();
 				workerTask->SetCoordinatorRank(p_coordinator.task->GetWorkerRank());
 				workerTask->SetWorkerRank(p_rank);
 
@@ -153,7 +153,7 @@ namespace Illumina
 			{
 				SynchroniseMessage synchroniseMessage;
 
-				p_coordinator.ready.Broadcast(p_coordinator.task, synchroniseMessage, MM_ChannelWorkerStatic);
+				p_coordinator.ready.Broadcast(p_coordinator.task, (IMessage*)&synchroniseMessage, MM_ChannelWorkerStatic);
 
 				return true;
 			}
@@ -185,7 +185,7 @@ namespace Illumina
 					}
 
 					// Broadcast release
-					releaseGroup.Broadcast(p_coordinator.task, terminateMessage, MM_ChannelWorkerStatic);
+					releaseGroup.Broadcast(p_coordinator.task, (IMessage*)&terminateMessage, MM_ChannelWorkerStatic);
 
 					// DEBUG OUT
 					std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator broadcast [TERMINATE] to [" << p_releaseCount << "] units. "<< std::endl;
@@ -207,7 +207,7 @@ namespace Illumina
 							p_coordinator.group.Remove(*taskIterator);
 						}
 
-						p_coordinator.ready.Broadcast(p_coordinator.task, terminateMessage, MM_ChannelWorkerStatic);
+						p_coordinator.ready.Broadcast(p_coordinator.task, (IMessage*)&terminateMessage, MM_ChannelWorkerStatic);
 						int released = p_coordinator.ready.Size(); p_coordinator.ready.TaskList.clear();
 								
 						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator broadcast [TERMINATE] to [" << readyCount << "] units. "<< std::endl;
@@ -218,7 +218,7 @@ namespace Illumina
 					else
 					{
 						// Start shutting down... terminate ready queue first
-						p_coordinator.ready.Broadcast(p_coordinator.task, terminateMessage, MM_ChannelWorkerStatic);
+						p_coordinator.ready.Broadcast(p_coordinator.task, (IMessage*)&terminateMessage, MM_ChannelWorkerStatic);
 						int released = p_coordinator.ready.Size(); p_coordinator.ready.TaskList.clear();
 
 						if (p_coordinator.startup.Size() > 0)
@@ -270,6 +270,12 @@ namespace Illumina
 														
 						break;
 					}
+
+					default:
+					{
+						OnCoordinatorReceiveMasterMessage(p_coordinator, p_message, p_status, p_request);
+						break;
+					}
 				}
 
 				return true;
@@ -303,6 +309,12 @@ namespace Illumina
 						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator updating size of ready group [" << p_coordinator.ready.Size() << "]." << std::endl;
 						break;
 					}
+
+					default:
+					{
+						OnCoordinatorReceiveWorkerMessage(p_coordinator, p_message, p_status, p_request);
+						break;
+					}
 				}
 
 				return true;
@@ -325,6 +337,11 @@ namespace Illumina
 			virtual bool OnInitialiseWorker(ArgumentMap &p_argumentMap) { return true; }
 			virtual bool OnShutdownWorker(void) { return true; }
 
+			virtual void OnCoordinatorReceiveMasterMessage(CoordinatorTask &p_coordinator, Message &p_message, MPI_Status *p_status, MPI_Request *p_request) { }
+			virtual void OnCoordinatorReceiveWorkerMessage(CoordinatorTask &p_coordinator, Message &p_message, MPI_Status *p_status, MPI_Request *p_request) { }
+
+			virtual void OnWorkerReceiveCoordinatorMessage(Task *p_worker, Message &p_message) { }
+
 			// Codify standard messages between coordinators and workers:
 			// 1. Register worker (W->C) (coordinator knows of worker)
 			// 2. Initialise worker (C->W) (coordinator sends script name to worker)
@@ -332,20 +349,17 @@ namespace Illumina
 			// 4. Shutdown worker (C->W) (coordinator asks worker to shutdown)
 
 		public:
-			ITaskPipeline(bool p_verbose = true)
-				: m_verbose(p_verbose)
-			{ }
+			ITaskPipeline(std::string &p_arguments, bool p_verbose = true)
+				: m_arguments(p_arguments)
+				, m_verbose(p_verbose)
+			{ 
+				m_argumentMap.Initialise(m_arguments);
+			}
 
 			virtual ~ITaskPipeline(void) { }
 
 			bool Coordinator(CoordinatorTask &p_coordinator)
 			{
-				// TODO: arguments should come from master!
-				// Initialise taskgroup arguments
-				//m_arguments = "script=Scene/sponza.ilm;";
-				m_arguments = "script=Scene/cornell_jensen.ilm;";
-				m_argumentMap.Initialise(m_arguments);
-
 				// Trigger coordinator initialisation event
 				OnInitialiseCoordinator(m_argumentMap);
 
@@ -378,12 +392,12 @@ namespace Illumina
 					// Set up asynchronous receives for coordinator
 					if (workerMessageIn) {
 						OnCoordinatorReceiveControlMessage(p_coordinator, workerMessage, &workerStatus, &workerRequest);
-						workerMessageIn = workerCommunicator.ReceiveAsynchronous(workerMessage, MPI_ANY_SOURCE, &workerRequest, &workerStatus);
+						workerMessageIn = workerCommunicator.ReceiveAsynchronous(&workerMessage, MPI_ANY_SOURCE, &workerRequest, &workerStatus);
 					}
 
 					if (masterMessageIn) {
 						OnCoordinatorReceiveControlMessage(p_coordinator, masterMessage, &masterStatus, &masterRequest);
-						masterMessageIn = masterCommunicator.ReceiveAsynchronous(masterMessage, p_coordinator.task->GetMasterRank(), &masterRequest, &masterStatus);
+						masterMessageIn = masterCommunicator.ReceiveAsynchronous(&masterMessage, p_coordinator.task->GetMasterRank(), &masterRequest, &masterStatus);
 					}
 
 					// Get the number of allotted workers for this frame
@@ -410,7 +424,7 @@ namespace Illumina
 						// Prepare workers for work
 						CSynchroniseWorker(p_coordinator);
 
-						boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+						// boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
 						// Do a coordinator frame
 						ExecuteCoordinator(p_coordinator);
@@ -450,7 +464,7 @@ namespace Illumina
 					std::cout << "[" << p_worker->GetRank() << "] :: Worker online waiting for coordinator message." << std::endl;
 
 					// Worker action is synchronous
-					workerCommunicator.ReceiveFromCoordinator(msg);
+					workerCommunicator.ReceiveFromCoordinator(&msg);
 
 					switch(msg.Id)
 					{
@@ -468,6 +482,7 @@ namespace Illumina
 						}
 
 						default:
+							OnWorkerReceiveCoordinatorMessage(p_worker, msg);
 							break;
 					}
 				}
@@ -476,15 +491,8 @@ namespace Illumina
 			}
 
 		protected:
-			virtual bool ExecuteCoordinator(CoordinatorTask &p_coordinator)
-			{
-				return true;
-			}
-
-			virtual bool ExecuteWorker(Task *p_worker)
-			{
-				return true;
-			}
+			virtual bool ExecuteCoordinator(CoordinatorTask &p_coordinator) { return true; }
+			virtual bool ExecuteWorker(Task *p_worker) { return true; }
 		};
 	}
 }
