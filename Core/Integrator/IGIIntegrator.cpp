@@ -122,7 +122,7 @@ void IGIIntegrator::TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLCount,
 
 		--nVPLIndex;
 
-		std::cout << "Path [" << nVPLIndex << "] : Bounces [" << intersections << "]" << std::endl;
+		// std::cout << "Path [" << nVPLIndex << "] : Bounces [" << intersections << "]" << std::endl;
 	}
 }
 //----------------------------------------------------------------------------------------------

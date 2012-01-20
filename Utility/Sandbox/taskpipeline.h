@@ -12,6 +12,8 @@ namespace Illumina
 		class ITaskPipeline
 		{
 		public:
+			//////////////////////////////////////////////////////////////////////////////////////////////////	
+			//////////////////////////////////////////////////////////////////////////////////////////////////	
 			struct CoordinatorTask
 			{
 				// Coordinator task and worker group
@@ -153,7 +155,9 @@ namespace Illumina
 			{
 				SynchroniseMessage synchroniseMessage;
 
+				std::cout << "Synchronising workers..." << std::endl;
 				p_coordinator.ready.Broadcast(p_coordinator.task, (IMessage*)&synchroniseMessage, MM_ChannelWorkerStatic);
+				std::cout << "Synchronise sent..." << std::endl;
 
 				return true;
 			}
@@ -341,12 +345,6 @@ namespace Illumina
 			virtual void OnCoordinatorReceiveWorkerMessage(CoordinatorTask &p_coordinator, Message &p_message, MPI_Status *p_status, MPI_Request *p_request) { }
 
 			virtual void OnWorkerReceiveCoordinatorMessage(Task *p_worker, Message &p_message) { }
-
-			// Codify standard messages between coordinators and workers:
-			// 1. Register worker (W->C) (coordinator knows of worker)
-			// 2. Initialise worker (C->W) (coordinator sends script name to worker)
-			// 3. Worker ready (W->C) (coordinator knows worker can be moved to ready queue)
-			// 4. Shutdown worker (C->W) (coordinator asks worker to shutdown)
 
 		public:
 			ITaskPipeline(std::string &p_arguments, bool p_verbose = true)

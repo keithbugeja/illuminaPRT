@@ -271,7 +271,7 @@ namespace Illumina
 			const std::string ToString(void) const { return "VarlenMessage.Base"; }
 		};
 
-		class RequestMessageVL
+		class RequestMessage
 			: public VarlenMessage
 		{
 		public:
@@ -287,14 +287,14 @@ namespace Illumina
 			bool m_ownMessage;
 
 		public:
-			RequestMessageVL(void *p_messageBuffer)
+			RequestMessage(void *p_messageBuffer)
 				: m_ownMessage(false)
 			{
 				m_messageBuffer = Data = (t_messageStructure*)p_messageBuffer;
 				m_messageSize = sizeof(t_messageStructure);
 			}
 
-			RequestMessageVL(int p_groupId, int p_coordinatorId, const std::string &p_config)
+			RequestMessage(int p_groupId, int p_coordinatorId, const std::string &p_config)
 				: m_ownMessage(true)
 			{
 				m_messageBuffer = Data = new t_messageStructure();
@@ -305,7 +305,7 @@ namespace Illumina
 				SetMessage(p_groupId, p_coordinatorId, p_config);
 			}
 
-			~RequestMessageVL(void) 
+			~RequestMessage(void) 
 			{ 
 				if (m_ownMessage) delete Data; 
 			}

@@ -7,34 +7,159 @@ namespace Illumina
 {
 	namespace Core
 	{
+		/*
+	void InitialiseIllumina(EngineKernel **p_engineKernel, bool p_bVerbose)
+	{
+	}
+
+	void ShutdownIllumina(EngineKernel *p_engineKernel, bool p_bVerbose)
+	{
+		delete p_engineKernel;
+	}
+
+	*/
 		class RenderPipeline
 			: public ITaskPipeline
 		{
 		protected:
 			MPIRender *m_mpirender;
 			Environment *m_environment;
+			EngineKernel *m_engineKernel;
 		
 		public:
-			RenderPipeline(Environment *p_environment, std::string &p_arguments, bool p_verbose = true)
+			RenderPipeline(std::string &p_arguments, bool p_verbose = true)
 				: ITaskPipeline(p_arguments, p_verbose)
-				, m_environment(p_environment)				
-				, m_mpirender(new MPIRender(p_environment))
+				, m_mpirender(NULL)
+				, m_environment(NULL)				
+				, m_engineKernel(NULL)
 			{  }
 
 			~RenderPipeline(void)
 			{ 
-				delete m_mpirender;
+			}
+
+			bool Initialise(ArgumentMap &p_argumentMap)
+			{
+				//----------------------------------------------------------------------------------------------
+				// Engine Kernel
+				//----------------------------------------------------------------------------------------------
+				m_engineKernel = new EngineKernel();
+
+				//----------------------------------------------------------------------------------------------
+				// Sampler
+				//----------------------------------------------------------------------------------------------
+				m_engineKernel->GetSamplerManager()->RegisterFactory("Random", new RandomSamplerFactory());
+				m_engineKernel->GetSamplerManager()->RegisterFactory("Jitter", new JitterSamplerFactory());
+				m_engineKernel->GetSamplerManager()->RegisterFactory("Multijitter", new MultijitterSamplerFactory());
+
+				//----------------------------------------------------------------------------------------------
+				// Filter
+				//----------------------------------------------------------------------------------------------
+				m_engineKernel->GetFilterManager()->RegisterFactory("Box", new BoxFilterFactory());
+				m_engineKernel->GetFilterManager()->RegisterFactory("Tent", new TentFilterFactory());
+
+				//----------------------------------------------------------------------------------------------
+				// Space
+				//----------------------------------------------------------------------------------------------
+				m_engineKernel->GetSpaceManager()->RegisterFactory("Basic", new BasicSpaceFactory());
+
+				//----------------------------------------------------------------------------------------------
+				// Integrator
+				//----------------------------------------------------------------------------------------------
+				m_engineKernel->GetIntegratorManager()->RegisterFactory("PathTracing", new PathIntegratorFactory());
+				m_engineKernel->GetIntegratorManager()->RegisterFactory("IGI", new IGIIntegratorFactory());
+				m_engineKernel->GetIntegratorManager()->RegisterFactory("Photon", new PhotonIntegratorFactory());
+				m_engineKernel->GetIntegratorManager()->RegisterFactory("Whitted", new WhittedIntegratorFactory());
+				m_engineKernel->GetIntegratorManager()->RegisterFactory("Test", new TestIntegratorFactory());
+
+				//----------------------------------------------------------------------------------------------
+				// Renderer
+				//----------------------------------------------------------------------------------------------
+				m_engineKernel->GetRendererManager()->RegisterFactory("Basic", new BasicRendererFactory());
+				m_engineKernel->GetRendererManager()->RegisterFactory("Multithreaded", new MultithreadedRendererFactory());
+				m_engineKernel->GetRendererManager()->RegisterFactory("Distributed", new DistributedRendererFactory());
+
+				//----------------------------------------------------------------------------------------------
+				// Device
+				//----------------------------------------------------------------------------------------------
+				m_engineKernel->GetDeviceManager()->RegisterFactory("Image", new ImageDeviceFactory());
+
+				//----------------------------------------------------------------------------------------------
+				// Cameras
+				//----------------------------------------------------------------------------------------------
+				m_engineKernel->GetCameraManager()->RegisterFactory("Perspective", new PerspectiveCameraFactory());
+				m_engineKernel->GetCameraManager()->RegisterFactory("ThinLens", new ThinLensCameraFactory());
+
+				//----------------------------------------------------------------------------------------------
+				// Lights
+				//----------------------------------------------------------------------------------------------
+				m_engineKernel->GetLightManager()->RegisterFactory("Point", new PointLightFactory());
+				m_engineKernel->GetLightManager()->RegisterFactory("DiffuseArea", new DiffuseAreaLightFactory());
+				m_engineKernel->GetLightManager()->RegisterFactory("InfiniteArea", new InfiniteAreaLightFactory());
+
+				//----------------------------------------------------------------------------------------------
+				// Shapes
+				//----------------------------------------------------------------------------------------------
+				m_engineKernel->GetShapeManager()->RegisterFactory("KDTreeMesh", new KDTreeMeshShapeFactory());
+				m_engineKernel->GetShapeManager()->RegisterFactory("Quad", new QuadMeshShapeFactory());
+				m_engineKernel->GetShapeManager()->RegisterFactory("Triangle", new TriangleShapeFactory());
+				m_engineKernel->GetShapeManager()->RegisterFactory("Sphere", new SphereShapeFactory());
+
+				//----------------------------------------------------------------------------------------------
+				// Textures
+				//----------------------------------------------------------------------------------------------
+				m_engineKernel->GetTextureManager()->RegisterFactory("Image", new ImageTextureFactory());
+				m_engineKernel->GetTextureManager()->RegisterFactory("Noise", new NoiseTextureFactory());
+				m_engineKernel->GetTextureManager()->RegisterFactory("Marble", new MarbleTextureFactory());
+
+				//----------------------------------------------------------------------------------------------
+				// Materials
+				//----------------------------------------------------------------------------------------------
+				m_engineKernel->GetMaterialManager()->RegisterFactory("Matte", new MatteMaterialFactory());
+				m_engineKernel->GetMaterialManager()->RegisterFactory("Mirror", new MirrorMaterialFactory());
+				m_engineKernel->GetMaterialManager()->RegisterFactory("Glass", new GlassMaterialFactory());
+				m_engineKernel->GetMaterialManager()->RegisterFactory("Group", new MaterialGroupFactory());
+
+				//----------------------------------------------------------------------------------------------
+				// Environment
+				//----------------------------------------------------------------------------------------------
+				m_environment = new Environment(m_engineKernel);
+
+				//----------------------------------------------------------------------------------------------
+				// MPIRender
+				//----------------------------------------------------------------------------------------------
+				int spp = 1, 
+					tileWidth = 8, 
+					tileHeight = 8;
+
+				if (p_argumentMap.ContainsArgument("spp"))
+					p_argumentMap.GetArgument("spp", spp);
+
+				if (p_argumentMap.ContainsArgument("tw"))
+					p_argumentMap.GetArgument("tw", tileWidth);
+
+				if (p_argumentMap.ContainsArgument("th"))
+					p_argumentMap.GetArgument("th", tileHeight);
+
+				m_mpirender = new MPIRender(m_environment, spp, tileWidth, tileHeight);
+
+				return true;
+			}
+
+			bool Shutdown(void)
+			{
+				if (m_mpirender) delete m_mpirender;
+				if (m_environment) delete m_environment;
+				if (m_engineKernel) delete m_engineKernel;
+				
+				return true;
 			}
 
 			bool LoadScene(const std::string &p_strScript, bool p_bVerbose)
 			{
-				// Load environment script
-				MessageOut("Loading Environment script...", p_bVerbose);
-
 				if (!m_environment->Load(p_strScript))
 				{
 					std::cerr << "Error : Unable to load environment script." << std::endl;
-					//exit(-1);
 					return false;
 				}
 
@@ -46,13 +171,10 @@ namespace Illumina
 				// Initialise integrator and renderer
 				pIntegrator->Initialise(m_environment->GetScene(), m_environment->GetCamera());
 				pRenderer->Initialise();
-
 				m_mpirender->Initialise();
 
+				// Prepare integrator with current scene
 				pIntegrator->Prepare(m_environment->GetScene());
-
-				// Initialisation complete
-				MessageOut("Initialisation complete. Rendering in progress...", p_bVerbose);
 
 				return true;
 			}
@@ -62,16 +184,14 @@ namespace Illumina
 				std::string script;
 
 				if (p_argumentMap.GetArgument("script", script))
-				{
-					return LoadScene(script, IsVerbose());
-				}
+					return (Initialise(p_argumentMap) && LoadScene(script, IsVerbose()));
 
 				return false; 
 			}
 			
 			bool OnShutdownCoordinator(void) 
 			{ 
-				return true; 
+				return Shutdown();
 			}
 
 			bool OnInitialiseWorker(ArgumentMap &p_argumentMap) 
@@ -79,16 +199,14 @@ namespace Illumina
 				std::string script;
 
 				if (p_argumentMap.GetArgument("script", script))
-				{
-					return LoadScene(script, IsVerbose());
-				}
+					return (Initialise(p_argumentMap) && LoadScene(script, IsVerbose()));
 
 				return false; 
 			}
 			
 			bool OnShutdownWorker(void) 
 			{ 
-				return true; 
+				return Shutdown();
 			}
 
 			void OnCoordinatorReceiveMasterMessage(CoordinatorTask &p_coordinator, Message &p_message, MPI_Status *p_status, MPI_Request *p_request)
@@ -132,22 +250,22 @@ namespace Illumina
 			{
 				switch(p_message->GetDirection())
 				{
-					case CCDMT_Left:
+					case CIT_Left:
 						m_environment->GetCamera()->Move(Vector3::UnitXNeg * 5);
 						break;
-					case CCDMT_Right:
+					case CIT_Right:
 						m_environment->GetCamera()->Move(Vector3::UnitXPos * 5);
 						break;
-					case CCDMT_Forwards:
+					case CIT_Forwards:
 						m_environment->GetCamera()->Move(Vector3::UnitZNeg * 5);
 						break;
-					case CCDMT_Backwards:
+					case CIT_Backwards:
 						m_environment->GetCamera()->Move(Vector3::UnitZPos * 5);
 						break;
-					case CCDMT_Up:
+					case CIT_Up:
 						m_environment->GetCamera()->Move(Vector3::UnitYPos * 5);
 						break;
-					case CCDMT_Down:
+					case CIT_Down:
 						m_environment->GetCamera()->Move(Vector3::UnitYNeg * 5);
 						break;
 				}
