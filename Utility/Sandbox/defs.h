@@ -1,11 +1,11 @@
 #pragma once
 
-enum ClientControlDirectionMessageType
+enum ClientInputType
 {
-	CCDMT_Left,
-	CCDMT_Right,
-	CCDMT_Up,
-	CCDMT_Down,
-	CCDMT_Forwards,
-	CCDMT_Backwards
+	CIT_Left,
+	CIT_Right,
+	CIT_Up,
+	CIT_Down,
+	CIT_Forwards,
+	CIT_Backwards
 };

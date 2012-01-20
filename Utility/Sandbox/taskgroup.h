@@ -106,6 +106,8 @@ namespace Illumina
 					if (p_sender == *taskIterator) 
 						continue;
 
+					std::cout << "[" << p_message->ToString() << "] to " << (*taskIterator)->GetRank() << std::endl;
+
 					communicator.Send(p_message, (*taskIterator)->GetRank(), p_channel);
 				}
 			}
