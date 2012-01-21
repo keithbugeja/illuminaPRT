@@ -9,6 +9,20 @@ using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 template<class T>
+FactoryManager<T>::~FactoryManager(void)
+{
+	for (std::map<std::string, T*>::iterator instanceIterator = m_instanceMap.begin();
+		 instanceIterator != m_instanceMap.end(); ++instanceIterator)
+	{
+		std::cout << "Disposing of [" << (*instanceIterator).first << "]" << std::endl;
+
+		m_instanceMap.erase((*instanceIterator).first);
+		Safe_Delete((*instanceIterator).second);
+	}
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+template<class T>
 bool FactoryManager<T>::ContainsFactory(const std::string& p_strFactoryName)
 {
 	return (m_factoryInstanceMap.find(p_strFactoryName) != m_factoryInstanceMap.end());
@@ -59,10 +73,10 @@ void FactoryManager<T>::UnregisterFactory(const std::string& p_strFactoryName)
 {
 	//std::cout << "Factory Manager unregistering factory '" << p_strFactoryName << "' ..." << std::endl;
 
-	if (ContainsFactory(p_strFactoryName))
-		m_factoryInstanceMap.erase(p_strFactoryName);
-
-	throw new Exception("Cannot unregister factory. No factory found!");
+	if (!ContainsFactory(p_strFactoryName))
+		throw new Exception("Cannot unregister factory. No factory found!");
+	
+	m_factoryInstanceMap.erase(p_strFactoryName);
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
@@ -185,13 +199,3 @@ T* FactoryManager<T>::ReleaseInstance(const std::string& p_strInstanceName)
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-template<class T>
-void FactoryManager<T>::ReleaseInstances(void)
-{
-	for (std::map<std::string, T*>::iterator instanceIterator = m_instanceMap.begin();
-		 instanceIterator != m_instanceMap.end(); ++instanceIterator)
-	{
-		m_instanceMap.erase((*instanceIterator).first);
-		Safe_Delete((*instanceIterator).second);
-	}
-}
