@@ -387,6 +387,60 @@ namespace Illumina
 				// Message loop 
 				while (p_coordinator.active)
 				{
+					// Try to process as many pending messages as are available
+					do 
+					{
+						workerMessageIn = workerCommunicator.ProbeAsynchronous(MPI_ANY_SOURCE, MM_ChannelWorkerStatic, &workerStatus);
+						masterMessageIn = masterCommunicator.ProbeAsynchronous(p_coordinator.task->GetMasterRank(), MM_ChannelMasterStatic, &masterStatus);
+
+						if (workerMessageIn) {
+							workerCommunicator.Receive(&workerMessage, workerStatus.MPI_SOURCE);
+							OnCoordinatorReceiveControlMessage(p_coordinator, workerMessage, &workerStatus, &workerRequest);
+						}
+
+						if (masterMessageIn) {
+							masterCommunicator.Receive(&masterMessage, p_coordinator.task->GetMasterRank());
+							OnCoordinatorReceiveControlMessage(p_coordinator, masterMessage, &masterStatus, &masterRequest);
+						}
+					} while (masterMessageIn || workerMessageIn);
+
+					// Process termination requests
+					if (p_coordinator.terminateCount > 0)
+					{
+						p_coordinator.terminateCount -= CReleaseWorker(p_coordinator, p_coordinator.terminateCount);
+						
+						if (p_coordinator.terminateCount == 0 && p_coordinator.terminating)
+						{
+							p_coordinator.active = false;
+							continue;
+						}
+					}
+
+					// Execute context pipeline until any messages (from workers or master) are available...
+					while(!masterMessageIn && !workerMessageIn)
+					{
+						workerMessageIn = workerCommunicator.ProbeAsynchronous(MPI_ANY_SOURCE, MM_ChannelWorkerStatic, &workerStatus);
+						masterMessageIn = masterCommunicator.ProbeAsynchronous(p_coordinator.task->GetMasterRank(), MM_ChannelMasterStatic, &masterStatus);
+
+						// Prepare workers for work
+						CSynchroniseWorker(p_coordinator);
+
+						// Do a coordinator frame
+						std::cout << "[" << p_coordinator.task->GetRank() << "] :: Coordinator starting execution of pipeline." << std::endl;
+						ExecuteCoordinator(p_coordinator);
+						std::cout << "[" << p_coordinator.task->GetRank() << "] :: Coordinator completed execution of pipeline." << std::endl;
+					}
+
+					// DEBUG
+					std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator message flags are [MASTER : " << masterMessageIn << ", WORKER : " << workerMessageIn << "]." << std::endl;
+					// DEBUG
+				}
+
+
+				/*
+				// Message loop 
+				while (p_coordinator.active)
+				{
 					// Set up asynchronous receives for coordinator
 					if (workerMessageIn) {
 						OnCoordinatorReceiveControlMessage(p_coordinator, workerMessage, &workerStatus, &workerRequest);
@@ -424,14 +478,19 @@ namespace Illumina
 
 						// boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
+						std::cout << "[" << p_coordinator.task->GetRank() << "] :: Coordinator starting execution of pipeline." << std::endl;
+
 						// Do a coordinator frame
 						ExecuteCoordinator(p_coordinator);
+
+						std::cout << "[" << p_coordinator.task->GetRank() << "] :: Coordinator completed execution of pipeline." << std::endl;
 					}
 
 					// DEBUG
 					std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator message flags are [MASTER : " << masterMessageIn << ", WORKER : " << workerMessageIn << "]." << std::endl;
 					// DEBUG
 				}
+				*/
 
 				// Trigger coordinator shutdown event
 				OnShutdownCoordinator();
@@ -464,11 +523,17 @@ namespace Illumina
 					// Worker action is synchronous
 					workerCommunicator.ReceiveFromCoordinator(&msg);
 
+					std::cout << "[" << p_worker->GetRank() << "] :: Worker received coordinator message with Id = [" << msg.Id << "]" << std::endl;
+
 					switch(msg.Id)
 					{
 						case MT_Synchronise:
 						{
+							std::cout << "[" << p_worker->GetRank() << "] :: Worker starting execution of pipeline." << std::endl;
+
 							ExecuteWorker(p_worker);
+
+							std::cout << "[" << p_worker->GetRank() << "] :: Worker completed execution of pipeline." << std::endl;
 							break;
 						}
 
@@ -484,6 +549,9 @@ namespace Illumina
 							break;
 					}
 				}
+
+				// Trigger worker shutdown event
+				OnShutdownWorker();
 
 				return true;
 			}

@@ -869,8 +869,6 @@ void Idle(bool p_bVerbose)
 					// We need to tell master that we are ready
 					CompletedMessage completedMessage(groupId);
 					masterCommunicator.SendToMaster((IMessage*)&completedMessage);
-
-					std::cout << "[ COOOOOOOOOOORRDDDDDDDDD CLOSE ]" << std::endl;
 				}
 				else
 				{
@@ -884,8 +882,6 @@ void Idle(bool p_bVerbose)
 					// We need to tell master that we are ready
 					CompletedMessage completedMessage(groupId);
 					masterCommunicator.SendToMaster((IMessage*)&completedMessage);
-
-					std::cout << "[ WWOOOOOOOOORK CLOSE ]" << std::endl;
 				}
 
 				break;

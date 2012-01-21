@@ -47,7 +47,8 @@ namespace Illumina
 		{
 		protected:
 			int m_nMaxVPL,
-				m_nMaxSets,
+				m_nMaxSet,
+				m_nMaxSetQuad,
 				m_nMaxRayDepth,
 				m_nShadowSampleCount;
 
@@ -61,8 +62,8 @@ namespace Illumina
 			std::vector<VirtualPointLight> VirtualPointLightList;
 
 		public:
-			IGIIntegrator(const std::string &p_strName, int p_nMaxVPL = 256, float p_fGTermMax = 0.01f, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
-			IGIIntegrator(int p_nMaxVPL = 256, float p_fGTermMax = 0.01f, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
+			IGIIntegrator(const std::string &p_strName, int p_nMaxVPL = 256, int p_nVPLSet = 3, float p_fGTermMax = 0.01f, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
+			IGIIntegrator(int p_nMaxVPL = 256, int p_nVPLSet = 3, float p_fGTermMax = 0.01f, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
 
 			bool Initialise(Scene *p_pScene, ICamera *p_pCamera);
 			bool Shutdown(void);

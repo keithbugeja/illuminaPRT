@@ -98,35 +98,7 @@ namespace Illumina
 				return "Message.Base";
 			}
 		};
-
-		// RequestMessage -> Sent to idle workers to form a new task group
-		/* struct RequestMessage 
-			: public Message
-		{
-			RequestMessage(int p_groupId, int p_coordinatorId, int p_workerCount)
-			{
-				SetMessage(p_groupId, p_coordinatorId, p_workerCount);
-			}
-
-			void SetMessage(int p_groupId, int p_coordinatorId, int p_workerCount)
-			{
-				Id = MT_Request;
-
-				Value[0] = p_groupId;
-				Value[1] = p_coordinatorId;
-				Value[2] = p_workerCount;
-			}
-
-			int GetGroupId(void) const { return Value[0]; }
-			int GetCoordinatorId(void) const { return Value[1]; }
-			int GetWorkerCount(void) const { return Value[2]; }
-
-			const std::string ToString(void) const
-			{
-				return "Message.Request";
-			}
-		}; */
-		
+				
 		// Release Message -> Sent to coordinator to request release of a number of workers
 		struct ReleaseMessage 
 			: public Message

@@ -85,7 +85,8 @@ namespace Illumina
 			 */
 			Illumina::Core::IIntegrator *CreateInstance(ArgumentMap &p_argumentMap)
 			{
-				int maxVPLs = 64, 
+				int maxVPL = 64, 
+					vplSet = 3,
 					raydepth = 4,
 					shadowrays = 1;
 
@@ -94,26 +95,27 @@ namespace Illumina
 
 				std::string strId;
 
-				p_argumentMap.GetArgument("MaxVPL", maxVPLs);
+				p_argumentMap.GetArgument("VPLSet", vplSet);
+				p_argumentMap.GetArgument("MaxVPL", maxVPL);
 				p_argumentMap.GetArgument("MaxGTerm", gTermMax);
 				p_argumentMap.GetArgument("RayDepth", raydepth);
 				p_argumentMap.GetArgument("ShadowRays", shadowrays);
 				p_argumentMap.GetArgument("Epsilon", reflectEpsilon);
 
 				if (p_argumentMap.GetArgument("Id", strId))
-					return CreateInstance(strId, maxVPLs, gTermMax, raydepth, shadowrays, reflectEpsilon);
+					return CreateInstance(strId, maxVPL, vplSet, gTermMax, raydepth, shadowrays, reflectEpsilon);
 
-				return CreateInstance(maxVPLs, gTermMax, raydepth, shadowrays, reflectEpsilon);
+				return CreateInstance(maxVPL, vplSet, gTermMax, raydepth, shadowrays, reflectEpsilon);
 			}
 
-			Illumina::Core::IIntegrator *CreateInstance(const std::string &p_strId, int p_nMaxVPLs, float p_fGTermMax, int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
+			Illumina::Core::IIntegrator *CreateInstance(const std::string &p_strId, int p_nMaxVPL, int p_nVPLSet, float p_fGTermMax, int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
 			{
-				return new IGIIntegrator(p_strId, p_nMaxVPLs, p_fGTermMax, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
+				return new IGIIntegrator(p_strId, p_nMaxVPL, p_nVPLSet, p_fGTermMax, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
 			}
 
-			Illumina::Core::IIntegrator *CreateInstance(int p_nMaxVPLs, float p_fGTermMax, int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
+			Illumina::Core::IIntegrator *CreateInstance(int p_nMaxVPL, int p_nVPLSet, float p_fGTermMax, int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
 			{
-				return new IGIIntegrator(p_nMaxVPLs, p_fGTermMax, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
+				return new IGIIntegrator(p_nMaxVPL, p_nVPLSet, p_fGTermMax, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
 			}
 		};
 

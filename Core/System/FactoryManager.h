@@ -31,6 +31,8 @@ namespace Illumina
 			T* FindItem(const std::string &p_strItemName);
 
 		public:
+			virtual ~FactoryManager(void);
+
 			void RegisterFactory(const std::string &p_strFactoryName, Factory<T> *p_pFactory);
 			void UnregisterFactory(const std::string &p_strFactoryName);
 			
@@ -45,10 +47,6 @@ namespace Illumina
 			T* CreateInstance(const std::string &p_strFactoryName, const std::string &p_strInstanceName, ArgumentMap &p_argumentMap);
 			T* RequestInstance(const std::string &p_strInstanceName);
 			T* ReleaseInstance(const std::string &p_strInstanceName);
-			
-			// TEMP_REV::FEB_12
-			void ReleaseInstances(void);
-			// TEMP_REV::FEB_12
 		};
 	}
 }

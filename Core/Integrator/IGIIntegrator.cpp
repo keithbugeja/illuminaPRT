@@ -21,19 +21,22 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-IGIIntegrator::IGIIntegrator(const std::string &p_strName, int p_nMaxVPL, float p_fGTermMax, int p_nMaxRayDepth, int p_nShadowSampleCount, float p_fReflectEpsilon)
+IGIIntegrator::IGIIntegrator(const std::string &p_strName, int p_nMaxVPL, int p_nVPLSet, float p_fGTermMax, int p_nMaxRayDepth, int p_nShadowSampleCount, float p_fReflectEpsilon)
 	: IIntegrator(p_strName) 
 	, m_nMaxVPL(p_nMaxVPL)
-	, m_nMaxSets(9)
+	, m_nMaxSet(p_nVPLSet)
+	, m_nMaxSetQuad(p_nVPLSet * p_nVPLSet)
 	, m_nShadowSampleCount(p_nShadowSampleCount)
 	, m_nMaxRayDepth(p_nMaxRayDepth)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
 	, m_fGTermMax(p_fGTermMax)
 { }
 //----------------------------------------------------------------------------------------------
-IGIIntegrator::IGIIntegrator(int p_nMaxVPL, float p_fGTermMax, int p_nMaxRayDepth, int p_nShadowSampleCount, float p_fReflectEpsilon)
-	: m_nMaxVPL(p_nMaxVPL) 
-	, m_nMaxSets(9)
+IGIIntegrator::IGIIntegrator(int p_nMaxVPL, int p_nVPLSet, float p_fGTermMax, int p_nMaxRayDepth, int p_nShadowSampleCount, float p_fReflectEpsilon)
+	: IIntegrator()
+	, m_nMaxVPL(p_nMaxVPL)
+	, m_nMaxSet(p_nVPLSet)
+	, m_nMaxSetQuad(p_nVPLSet * p_nVPLSet)
 	, m_nShadowSampleCount(p_nShadowSampleCount)
 	, m_nMaxRayDepth(p_nMaxRayDepth)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
@@ -69,7 +72,7 @@ void IGIIntegrator::TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLCount,
 
 	Ray lightRay;
 
-	std::cout << "Total VPL Count : [" << p_nVPLCount << "]" << std::endl;
+	// std::cout << "Total VPL Count : [" << p_nVPLCount << "]" << std::endl;
 
 	for (int nVPLIndex = p_nVPLCount; nVPLIndex > 0; )
 	{
@@ -131,8 +134,8 @@ bool IGIIntegrator::Prepare(Scene *p_pScene)
 	//VirtualPointLightList.clear();
 	//TraceVPLs(p_pScene, 0, m_nMaxVPL, VirtualPointLightList);
 
-	// Assume we're using a set of 4 VPL Lists
-	for (int set = 0; set < 9; ++set)
+	// Assume we're using a set of 9 VPL Lists
+	for (int set = 0; set < m_nMaxSetQuad; ++set)
 	{
 		VirtualPointLightSet.push_back(std::vector<VirtualPointLight>());
 		TraceVPLs(p_pScene, 0, m_nMaxVPL, VirtualPointLightSet.back());
@@ -162,10 +165,16 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 	Ray ray(p_ray); 
 
 	float pdf;
+	int setId;
 
 	//choose a set
 	//int setId = (int)(p_pScene->GetSampler()->Get1DSample() * 9);
-	int setId = (int)p_pContext->SurfacePosition.X % 3 + ((int)(p_pContext->SurfacePosition.Y) % 3) * 3;
+
+	if (m_nMaxSet == 1) 
+		setId = 0;
+	else
+		setId = (int)p_pContext->SurfacePosition.X % m_nMaxSet + ((int)(p_pContext->SurfacePosition.Y) % m_nMaxSet) * m_nMaxSet;
+	
 	std::vector<VirtualPointLight> &vpll = VirtualPointLightSet[setId];
 
 	for (int rayDepth = 0; rayDepth < m_nMaxRayDepth; rayDepth++)

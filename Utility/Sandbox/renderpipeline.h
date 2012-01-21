@@ -148,9 +148,140 @@ namespace Illumina
 
 			bool Shutdown(void)
 			{
-				if (m_mpirender) delete m_mpirender;
-				if (m_environment) delete m_environment;
-				if (m_engineKernel) delete m_engineKernel;
+				//----------------------------------------------------------------------------------------------
+				// MPIRender
+				//----------------------------------------------------------------------------------------------
+				if (m_mpirender) 
+					delete m_mpirender;
+
+				//----------------------------------------------------------------------------------------------
+				// Environment
+				//----------------------------------------------------------------------------------------------
+				if (m_environment) 
+					delete m_environment;
+
+				//----------------------------------------------------------------------------------------------
+				// EngineKernel
+				//----------------------------------------------------------------------------------------------
+				if (m_engineKernel) 
+				{
+					//----------------------------------------------------------------------------------------------
+					// Sampler
+					//----------------------------------------------------------------------------------------------
+					delete m_engineKernel->GetSamplerManager()->RequestFactory("Random");
+					delete m_engineKernel->GetSamplerManager()->RequestFactory("Jitter");
+					delete m_engineKernel->GetSamplerManager()->RequestFactory("Multijitter");
+
+					m_engineKernel->GetSamplerManager()->UnregisterFactory("Random");
+					m_engineKernel->GetSamplerManager()->UnregisterFactory("Jitter");
+					m_engineKernel->GetSamplerManager()->UnregisterFactory("Multijitter");
+
+					//----------------------------------------------------------------------------------------------
+					// Filter
+					//----------------------------------------------------------------------------------------------
+					delete m_engineKernel->GetFilterManager()->RequestFactory("Box");
+					delete m_engineKernel->GetFilterManager()->RequestFactory("Tent");
+
+					m_engineKernel->GetFilterManager()->UnregisterFactory("Box");
+					m_engineKernel->GetFilterManager()->UnregisterFactory("Tent");
+
+					//----------------------------------------------------------------------------------------------
+					// Space
+					//----------------------------------------------------------------------------------------------
+					delete m_engineKernel->GetSpaceManager()->RequestFactory("Basic");
+					m_engineKernel->GetSpaceManager()->UnregisterFactory("Basic");
+
+					//----------------------------------------------------------------------------------------------
+					// Integrator
+					//----------------------------------------------------------------------------------------------
+					delete m_engineKernel->GetIntegratorManager()->RequestFactory("PathTracing");
+					delete m_engineKernel->GetIntegratorManager()->RequestFactory("IGI");
+					delete m_engineKernel->GetIntegratorManager()->RequestFactory("Photon");
+					delete m_engineKernel->GetIntegratorManager()->RequestFactory("Whitted");
+					delete m_engineKernel->GetIntegratorManager()->RequestFactory("Test");
+
+					m_engineKernel->GetIntegratorManager()->UnregisterFactory("PathTracing");
+					m_engineKernel->GetIntegratorManager()->UnregisterFactory("IGI");
+					m_engineKernel->GetIntegratorManager()->UnregisterFactory("Photon");
+					m_engineKernel->GetIntegratorManager()->UnregisterFactory("Whitted");
+					m_engineKernel->GetIntegratorManager()->UnregisterFactory("Test");
+
+					//----------------------------------------------------------------------------------------------
+					// Renderer
+					//----------------------------------------------------------------------------------------------
+					delete m_engineKernel->GetRendererManager()->RequestFactory("Basic");
+					delete m_engineKernel->GetRendererManager()->RequestFactory("Multithreaded");
+					delete m_engineKernel->GetRendererManager()->RequestFactory("Distributed");
+
+					m_engineKernel->GetRendererManager()->UnregisterFactory("Basic");
+					m_engineKernel->GetRendererManager()->UnregisterFactory("Multithreaded");
+					m_engineKernel->GetRendererManager()->UnregisterFactory("Distributed");
+
+					//----------------------------------------------------------------------------------------------
+					// Device
+					//----------------------------------------------------------------------------------------------
+					delete m_engineKernel->GetDeviceManager()->RequestFactory("Image");
+					m_engineKernel->GetDeviceManager()->UnregisterFactory("Image");
+
+					//----------------------------------------------------------------------------------------------
+					// Cameras
+					//----------------------------------------------------------------------------------------------
+					delete m_engineKernel->GetCameraManager()->RequestFactory("Perspective");
+					delete m_engineKernel->GetCameraManager()->RequestFactory("ThinLens");
+
+					m_engineKernel->GetCameraManager()->UnregisterFactory("Perspective");
+					m_engineKernel->GetCameraManager()->UnregisterFactory("ThinLens");
+
+					//----------------------------------------------------------------------------------------------
+					// Lights
+					//----------------------------------------------------------------------------------------------
+					delete m_engineKernel->GetLightManager()->RequestFactory("Point");
+					delete m_engineKernel->GetLightManager()->RequestFactory("DiffuseArea");
+					delete m_engineKernel->GetLightManager()->RequestFactory("InfiniteArea");
+
+					m_engineKernel->GetLightManager()->UnregisterFactory("Point");
+					m_engineKernel->GetLightManager()->UnregisterFactory("DiffuseArea");
+					m_engineKernel->GetLightManager()->UnregisterFactory("InfiniteArea");
+
+					//----------------------------------------------------------------------------------------------
+					// Shapes
+					//----------------------------------------------------------------------------------------------
+					delete m_engineKernel->GetShapeManager()->RequestFactory("KDTreeMesh");
+					delete m_engineKernel->GetShapeManager()->RequestFactory("Quad");
+					delete m_engineKernel->GetShapeManager()->RequestFactory("Triangle");
+					delete m_engineKernel->GetShapeManager()->RequestFactory("Sphere");
+
+					m_engineKernel->GetShapeManager()->UnregisterFactory("KDTreeMesh");
+					m_engineKernel->GetShapeManager()->UnregisterFactory("Quad");
+					m_engineKernel->GetShapeManager()->UnregisterFactory("Triangle");
+					m_engineKernel->GetShapeManager()->UnregisterFactory("Sphere");
+
+					//----------------------------------------------------------------------------------------------
+					// Textures
+					//----------------------------------------------------------------------------------------------
+					delete m_engineKernel->GetTextureManager()->RequestFactory("Image");
+					delete m_engineKernel->GetTextureManager()->RequestFactory("Noise");
+					delete m_engineKernel->GetTextureManager()->RequestFactory("Marble");
+
+					m_engineKernel->GetTextureManager()->UnregisterFactory("Image");
+					m_engineKernel->GetTextureManager()->UnregisterFactory("Noise");
+					m_engineKernel->GetTextureManager()->UnregisterFactory("Marble");
+
+					//----------------------------------------------------------------------------------------------
+					// Materials
+					//----------------------------------------------------------------------------------------------
+					delete m_engineKernel->GetMaterialManager()->RequestFactory("Matte");
+					delete m_engineKernel->GetMaterialManager()->RequestFactory("Mirror");
+					delete m_engineKernel->GetMaterialManager()->RequestFactory("Glass");
+					delete m_engineKernel->GetMaterialManager()->RequestFactory("Group");
+
+					m_engineKernel->GetMaterialManager()->UnregisterFactory("Matte");
+					m_engineKernel->GetMaterialManager()->UnregisterFactory("Mirror");
+					m_engineKernel->GetMaterialManager()->UnregisterFactory("Glass");
+					m_engineKernel->GetMaterialManager()->UnregisterFactory("Group");
+
+					delete m_engineKernel;
+				}
 				
 				return true;
 			}
@@ -344,6 +475,7 @@ namespace Illumina
 
 			bool ExecuteWorker(Task *p_worker)
 			{
+				/*
 				ICamera *pCamera = m_environment->GetCamera();
 				ISpace *pSpace = m_environment->GetSpace();
 				float alpha = Maths::Pi;
@@ -353,11 +485,11 @@ namespace Illumina
 				Vector3 lookFrom(70, 0, 70),
 					lookAt(0, 0, 0);
 				*/
-				Vector3 lookFrom(800, 100, 200),
-					lookAt(0, 200, 100);
-
+				//Vector3 lookFrom(800, 100, 200),
+				//	lookAt(0, 200, 100);
+				
 				// Update space
-				pSpace->Update();
+				// pSpace->Update();
 
 				m_mpirender->RenderWorker(p_worker);
 
