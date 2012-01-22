@@ -412,7 +412,7 @@ void MasterCommunication(TaskGroupList *p_taskGroupList)
 {
 	boost::asio::io_service ios;
 
-	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), 66600);
+	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), 6660);
 	boost::asio::ip::tcp::acceptor acceptor(ios, endpoint);
 	boost::asio::ip::tcp::socket socket(ios);
 	
