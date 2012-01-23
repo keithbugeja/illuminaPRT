@@ -233,15 +233,87 @@ void ClientAdjust(ClientSessionInfo *p_clientSessionInfo, int p_count)
 
 void ClientInput(ClientSessionInfo *p_session, std::vector<std::string>& p_commandTokens)
 {
+}
 
+void ClientStreamSession(socket_ptr p_socket, ClientSessionInfo *p_session)
+{
+	Illumina::Core::ImagePPM image;
+
+	int size = /* 32*32*3 */ 512 * 512 * 3;
+	char buf[512 * 512 * 3];
+	std::fstream fstr;
+
+	char magicNumber[2], whitespace;
+	int	width, height, colours;
+
+	for (;;)
+	{
+		std::cout << "Try Open" << std::endl;
+
+		try 
+		{
+			fstr.open("Output//result_1.ppm");
+
+			if (fstr.is_open())
+			{
+				std::cout << "Readfile" << std::endl;
+				
+				fstr.get(magicNumber[0]);
+				fstr.get(magicNumber[1]);
+				fstr.get(whitespace);
+				fstr >> std::noskipws >> width;
+				fstr.get(whitespace);
+				fstr >> std::noskipws >> height;
+				fstr.get(whitespace);
+				fstr >> std::noskipws >> colours;
+				fstr.get(whitespace);
+
+				fstr.read(buf, size);
+				fstr.close();
+
+				std::cout << "Send body to " << p_socket->remote_endpoint().address().to_string() << ":" << p_socket->remote_endpoint().port() << std::endl;
+
+				boost::asio::write(*p_socket, boost::asio::buffer(buf, size)); 
+
+				std::cout << "Sent body" << std::endl;
+			}
+		}
+		catch(boost::system::system_error e)
+		{
+			std::cout << "EXC:" << e.what() << ", " << std::endl;
+			std::cout << "wait" << std::endl;
+			boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+		}
+	}
+}
+
+void ClientStream(boost::asio::io_service &p_ios, ClientSessionInfo *p_clientSessionInfo, std::vector<std::string>& p_commandTokens)
+{
+	std::cout << "[" << p_clientSessionInfo->IP << ":" << p_clientSessionInfo->Id << "] :: Received [Initialise Image Stream]." << std::endl;
+
+    tcp::resolver resolver(p_ios);
+    tcp::resolver::query query(tcp::v4(), p_clientSessionInfo->IP, p_commandTokens[1]);
+    tcp::resolver::iterator iterator = resolver.resolve(query);
+
+	socket_ptr clientSocket(new tcp::socket(p_ios));
+	tcp::socket *s = clientSocket.get();
+    boost::asio::connect(*s, iterator);
+
+	std::cout << "Stream connection initialised!";
+
+	boost::thread handlerThread(boost::bind(ClientStreamSession, clientSocket, p_clientSessionInfo));
+
+	std::cout << "Stream OK!";
 }
 
 void ClientSession(socket_ptr p_socket)
 {
+	boost::asio::io_service io_service;
+
 	// Get client IP 
 	std::string clientIP = p_socket->remote_endpoint().address().to_string();
 	std::cout << "Connection established with [" << clientIP << "]" << std::endl;
-	
+
 	try
 	{
 		ClientSessionInfo *clientSessionInfo = NULL;
@@ -338,6 +410,12 @@ void ClientSession(socket_ptr p_socket)
 							TokeniseCommand(commandString, commandTokens);
 							ClientInput(clientSessionInfo, commandTokens);
 						}
+						// Stream
+						else if (commandString.find("[CMD_STREAM]") != std::string::npos)
+						{
+							TokeniseCommand(commandString, commandTokens);
+							ClientStream(io_service, clientSessionInfo, commandTokens);
+						}
 					}
 				}
 			}
@@ -412,14 +490,15 @@ void MasterCommunication(TaskGroupList *p_taskGroupList)
 {
 	boost::asio::io_service ios;
 
-	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), 6660);
-	boost::asio::ip::tcp::acceptor acceptor(ios, endpoint);
-	boost::asio::ip::tcp::socket socket(ios);
+	tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), 6660);
+	tcp::acceptor acceptor(ios, endpoint);
 	
 	for (;;)
 	{
-		socket_ptr clientSocket(new boost::asio::ip::tcp::socket(ios));
+		// Potential race hazard!! Change after paper demo!
+		socket_ptr clientSocket(new tcp::socket(ios));
 		acceptor.accept(*clientSocket);
+
 		boost::thread handlerThread(boost::bind(ClientSession, clientSocket));
 	}
 }
