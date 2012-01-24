@@ -43,6 +43,9 @@ inline int GetNextClientID(void) {
 struct ClientSessionInfo
 {
 	bool Admin;
+	bool StreamActive;
+
+	boost::thread *StreamThread;
 
 	int Id;
 	int Priority;
@@ -198,6 +201,9 @@ void ClientDisconnect(ClientSessionInfo *p_clientSessionInfo)
 	g_clientMessageQueueLock.Lock();
 	g_clientMessageQueue.push(message);
 	g_clientMessageQueueLock.Unlock();
+
+	// Terminate streaming thread, if running
+	p_clientSessionInfo->StreamActive = false;
 }
 
 void ClientAdjust(ClientSessionInfo *p_clientSessionInfo, int p_count)
@@ -233,77 +239,97 @@ void ClientAdjust(ClientSessionInfo *p_clientSessionInfo, int p_count)
 
 void ClientInput(ClientSessionInfo *p_session, std::vector<std::string>& p_commandTokens)
 {
+	std::cout << "[" << p_session->IP << ":" << p_session->Id << "] :: Received [Input]." << std::endl;
+
+	int inputCMD = boost::lexical_cast<int>(p_commandTokens[1]);
+	InputMessage *message = new InputMessage(p_session, ClientInputType(inputCMD));
+
+	g_clientMessageQueueLock.Lock();
+	g_clientMessageQueue.push(message);
+	g_clientMessageQueueLock.Unlock();	
 }
 
 void ClientStreamSession(socket_ptr p_socket, ClientSessionInfo *p_session)
 {
 	Illumina::Core::ImagePPM image;
 
-	int size = /* 32*32*3 */ 512 * 512 * 3;
-	char buf[512 * 512 * 3];
-	std::fstream fstr;
+	int width = 512, height = 512, channels = 3,
+		size = width * height * channels;
 
-	char magicNumber[2], whitespace;
-	int	width, height, colours;
+	int biteSize = 4 * 1024;
 
-	for (;;)
+	unsigned char *transferBuffer = new unsigned char[size];
+
+	std::string resultImage = 
+		boost::str(boost::format("Output/result_%d.ppm") 
+		% p_session->Group->GetCoordinatorRank());
+
+	while(p_session->StreamActive)
 	{
-		std::cout << "Try Open" << std::endl;
-
 		try 
 		{
-			fstr.open("Output//result_1.ppm");
+			// std::cout << "Load image [" << resultImage << "]" << std::endl;
 
-			if (fstr.is_open())
+			Illumina::Core::Image *buffer = image.Load(resultImage);
+
+			// std::cout << "Convert image [" << resultImage << "]" << std::endl;
+
+			// If we couldn't load image, try again next iteration
+			if (buffer == NULL)
+				continue;
+
+			float *imageBuffer = buffer->GetImageBuffer();
+			unsigned char *dstBuffer = transferBuffer;
+
+			for (int index = 0; index < 512 * 512; index++)
 			{
-				std::cout << "Readfile" << std::endl;
-				
-				fstr.get(magicNumber[0]);
-				fstr.get(magicNumber[1]);
-				fstr.get(whitespace);
-				fstr >> std::noskipws >> width;
-				fstr.get(whitespace);
-				fstr >> std::noskipws >> height;
-				fstr.get(whitespace);
-				fstr >> std::noskipws >> colours;
-				fstr.get(whitespace);
+				dstBuffer[2] = (unsigned char)(256 * (imageBuffer[0]));
+				dstBuffer[1] = (unsigned char)(256 * (imageBuffer[1]));
+				dstBuffer[0] = (unsigned char)(256 * (imageBuffer[2]));
 
-				fstr.read(buf, size);
-				fstr.close();
-
-				std::cout << "Send body to " << p_socket->remote_endpoint().address().to_string() << ":" << p_socket->remote_endpoint().port() << std::endl;
-
-				boost::asio::write(*p_socket, boost::asio::buffer(buf, size)); 
-
-				std::cout << "Sent body" << std::endl;
+				dstBuffer += 3;
+				imageBuffer += 3;
 			}
+
+			delete buffer;
+
+			// std::cout << "Sending image to [" << p_socket->remote_endpoint().address().to_string() << "]." << std::endl;
+			
+			for (int chunk = 0; chunk < size; chunk += biteSize)
+			{
+				// std::cout << ".";
+				boost::asio::write(*p_socket, boost::asio::buffer((void*)(transferBuffer + chunk), biteSize)); 
+			}
+				
+			std::cout << "Image [" << resultImage << "] sent to [" << p_socket->remote_endpoint().address().to_string() << "]." << std::endl;
 		}
 		catch(boost::system::system_error e)
-		{
-			std::cout << "EXC:" << e.what() << ", " << std::endl;
-			std::cout << "wait" << std::endl;
-			boost::this_thread::sleep(boost::posix_time::milliseconds(10));
-		}
+		{ }
+
+		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 	}
+
+	std::cout << "Closing image stream for session [" << p_session->IP << ":" << p_session->Id << "]." << std::endl;
+
+	// Release transfer buffer
+	delete[] transferBuffer;
 }
 
 void ClientStream(boost::asio::io_service &p_ios, ClientSessionInfo *p_clientSessionInfo, std::vector<std::string>& p_commandTokens)
 {
 	std::cout << "[" << p_clientSessionInfo->IP << ":" << p_clientSessionInfo->Id << "] :: Received [Initialise Image Stream]." << std::endl;
 
-	tcp::resolver resolver(p_ios);
-	tcp::resolver::query query(tcp::v4(), p_clientSessionInfo->IP, p_commandTokens[1]);
-	tcp::resolver::iterator iterator = resolver.resolve(query);
+    tcp::resolver resolver(p_ios);
+    tcp::resolver::query query(tcp::v4(), p_clientSessionInfo->IP, p_commandTokens[1]);
+    tcp::resolver::iterator iterator = resolver.resolve(query);
 
 	socket_ptr clientSocket(new tcp::socket(p_ios));
-	tcp::socket *s = clientSocket.get();
-	boost::asio::connect(*s, iterator);
+    boost::asio::connect(*clientSocket, iterator);
 
-	std::cout << "Stream connection initialised!";
+	p_clientSessionInfo->StreamActive = true;
+	p_clientSessionInfo->StreamThread = new boost::thread(boost::bind(ClientStreamSession, clientSocket, p_clientSessionInfo));
 
-	boost::thread handlerThread(boost::bind(ClientStreamSession, clientSocket, p_clientSessionInfo));
-
-	std::cout << "Stream OK!";
+	std::cout << "[" << p_clientSessionInfo->IP << ":" << p_clientSessionInfo->Id << "] :: Initialised image streaming..." << std::endl;
 }
 
 void ClientSession(socket_ptr p_socket)
@@ -419,67 +445,11 @@ void ClientSession(socket_ptr p_socket)
 					}
 				}
 			}
-			/*
-			else if (commandString.find("[CMD_LFT]") != std::string::npos)
-			{
-				std::cout << "[" << clientIP << "] : [Left]" << std::cout;
-				
-				DirectionClientMessage *message = new DirectionClientMessage(clientIP, CCDMT_Left);
-
-				g_clientControlQueueLock.Lock();
-				g_clientControlQueue.push(message);
-				g_clientControlQueueLock.Unlock();
-			}
-			else if (commandString.find("[CMD_RGT]") != std::string::npos)
-			{
-				std::cout << "[" << clientIP << "] : [Right]" << std::cout;
-				DirectionClientMessage *message = new DirectionClientMessage(clientIP, CCDMT_Right);
-
-				g_clientControlQueueLock.Lock();
-				g_clientControlQueue.push(message);
-				g_clientControlQueueLock.Unlock();
-			}
-			else if (commandString.find("[CMD_FWD]") != std::string::npos)
-			{
-				std::cout << "[" << clientIP << "] : [Forwards]" << std::cout;
-				DirectionClientMessage *message = new DirectionClientMessage(clientIP, CCDMT_Forwards);
-
-				g_clientControlQueueLock.Lock();
-				g_clientControlQueue.push(message);
-				g_clientControlQueueLock.Unlock();
-			}
-			else if (commandString.find("[CMD_BWD]") != std::string::npos)
-			{
-				std::cout << "[" << clientIP << "] : [Backwards]" << std::cout;
-				DirectionClientMessage *message = new DirectionClientMessage(clientIP, CCDMT_Backwards);
-
-				g_clientControlQueueLock.Lock();
-				g_clientControlQueue.push(message);
-				g_clientControlQueueLock.Unlock();
-			}
-			else if (commandString.find("[CMD_UP]") != std::string::npos)
-			{
-				std::cout << "[" << clientIP << "] : [Up]" << std::cout;
-				DirectionClientMessage *message = new DirectionClientMessage(clientIP, CCDMT_Up);
-
-				g_clientControlQueueLock.Lock();
-				g_clientControlQueue.push(message);
-				g_clientControlQueueLock.Unlock();
-			}
-			else if (commandString.find("[CMD_DN]") != std::string::npos)
-			{
-				std::cout << "[" << clientIP << "] : [Down]" << std::cout;
-				DirectionClientMessage *message = new DirectionClientMessage(clientIP, CCDMT_Down);
-
-				g_clientControlQueueLock.Lock();
-				g_clientControlQueue.push(message);
-				g_clientControlQueueLock.Unlock();
-			} 
-			*/
 		}
 
 		clientSessionInfo = NULL;
 	}
+
 	catch (std::exception& e)
 	{
 		std::cerr << "Exception in thread: " << e.what() << "\n";
@@ -765,6 +735,17 @@ void Master(bool p_bVerbose)
 									"] to release [" << releasePEMessage->Count << "] units. " << std::endl;
 
 								break;
+							}
+
+							case CMT_Input:
+							{
+								ClientSessionInfo *session = message->SessionInfo;
+								InputMessage *inputMessage = (InputMessage*)message;
+
+								std::cout << "[" << masterTask->GetRank() << "] :: Master popped [CLIENT_INPUT] from message queue" << std::endl;
+
+								DirectionMessage directionMessage(inputMessage->Input);
+								masterCommunicator.Send(&directionMessage, session->Group->GetCoordinatorRank());
 							}
 
 							/*
