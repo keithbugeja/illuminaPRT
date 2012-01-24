@@ -291,13 +291,13 @@ void ClientStream(boost::asio::io_service &p_ios, ClientSessionInfo *p_clientSes
 {
 	std::cout << "[" << p_clientSessionInfo->IP << ":" << p_clientSessionInfo->Id << "] :: Received [Initialise Image Stream]." << std::endl;
 
-    tcp::resolver resolver(p_ios);
-    tcp::resolver::query query(tcp::v4(), p_clientSessionInfo->IP, p_commandTokens[1]);
-    tcp::resolver::iterator iterator = resolver.resolve(query);
+	tcp::resolver resolver(p_ios);
+	tcp::resolver::query query(tcp::v4(), p_clientSessionInfo->IP, p_commandTokens[1]);
+	tcp::resolver::iterator iterator = resolver.resolve(query);
 
 	socket_ptr clientSocket(new tcp::socket(p_ios));
 	tcp::socket *s = clientSocket.get();
-    boost::asio::connect(*s, iterator);
+	boost::asio::connect(*s, iterator);
 
 	std::cout << "Stream connection initialised!";
 
