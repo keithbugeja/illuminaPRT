@@ -321,23 +321,23 @@ namespace Illumina
 
 
 			bool Send(IMessage *p_message, int p_rank) {
-				return MailboxCommunicator::Send(p_message, p_rank, T);
+				return MessageCommunicator::Send(p_message, p_rank, T);
 			}
 
 			bool Receive(IMessage *p_message, int p_rank) {
-				return MailboxCommunicator::Receive(p_message, p_rank, T);
+				return MessageCommunicator::Receive(p_message, p_rank, T);
 			}
 
 			bool Receive(IMessage *p_message, MPI_Status *p_statusOut) {
-				return MailboxCommunicator::Receive(p_message, T, p_statusOut);
+				return MessageCommunicator::Receive(p_message, T, p_statusOut);
 			}
 
 			bool SendAsynchronous(IMessage *p_message, int p_rank, MPI_Request *p_request) {
-				return MailboxCommunicator::SendAsychronous(p_message, p_rank, T, p_request);
+				return MessageCommunicator::SendAsynchronous(p_message, p_rank, T, p_request);
 			}
 
 			bool ReceiveAsynchronous(IMessage *p_message, int p_rank, MPI_Request *p_request, MPI_Status *p_status = MPI_STATUS_IGNORE) {
-				return MailboxCommunicator::ReceiveAsynchronous(p_message, p_rank, T, p_request, p_status);
+				return MessageCommunicator::ReceiveAsynchronous(p_message, p_rank, T, p_request, p_status);
 			}
 		};
 

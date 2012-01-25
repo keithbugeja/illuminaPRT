@@ -6,13 +6,17 @@
 //----------------------------------------------------------------------------------------------
 using namespace Illumina::Core;
 
+#include <map>
+#include <string>
+
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 template<class T>
 FactoryManager<T>::~FactoryManager(void)
 {
-	for (std::map<std::string, T*>::iterator instanceIterator = m_instanceMap.begin();
-		 instanceIterator != m_instanceMap.end(); ++instanceIterator)
+	typename std::map<std::string, T*>::iterator instanceIterator; 
+	
+	for (instanceIterator = m_instanceMap.begin(); instanceIterator != m_instanceMap.end(); ++instanceIterator)
 	{
 		std::cout << "Disposing of [" << (*instanceIterator).first << "]" << std::endl;
 
