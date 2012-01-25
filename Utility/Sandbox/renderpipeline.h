@@ -7,17 +7,6 @@ namespace Illumina
 {
 	namespace Core
 	{
-		/*
-	void InitialiseIllumina(EngineKernel **p_engineKernel, bool p_bVerbose)
-	{
-	}
-
-	void ShutdownIllumina(EngineKernel *p_engineKernel, bool p_bVerbose)
-	{
-		delete p_engineKernel;
-	}
-
-	*/
 		class RenderPipeline
 			: public ITaskPipeline
 		{
@@ -68,7 +57,7 @@ namespace Illumina
 				//----------------------------------------------------------------------------------------------
 				m_engineKernel->GetIntegratorManager()->RegisterFactory("PathTracing", new PathIntegratorFactory());
 				m_engineKernel->GetIntegratorManager()->RegisterFactory("IGI", new IGIIntegratorFactory());
-				m_engineKernel->GetIntegratorManager()->RegisterFactory("Photon", new PhotonIntegratorFactory());
+				//m_engineKernel->GetIntegratorManager()->RegisterFactory("Photon", new PhotonIntegratorFactory());
 				m_engineKernel->GetIntegratorManager()->RegisterFactory("Whitted", new WhittedIntegratorFactory());
 				m_engineKernel->GetIntegratorManager()->RegisterFactory("Test", new TestIntegratorFactory());
 
@@ -196,13 +185,13 @@ namespace Illumina
 					//----------------------------------------------------------------------------------------------
 					delete m_engineKernel->GetIntegratorManager()->RequestFactory("PathTracing");
 					delete m_engineKernel->GetIntegratorManager()->RequestFactory("IGI");
-					delete m_engineKernel->GetIntegratorManager()->RequestFactory("Photon");
+					//delete m_engineKernel->GetIntegratorManager()->RequestFactory("Photon");
 					delete m_engineKernel->GetIntegratorManager()->RequestFactory("Whitted");
 					delete m_engineKernel->GetIntegratorManager()->RequestFactory("Test");
 
 					m_engineKernel->GetIntegratorManager()->UnregisterFactory("PathTracing");
 					m_engineKernel->GetIntegratorManager()->UnregisterFactory("IGI");
-					m_engineKernel->GetIntegratorManager()->UnregisterFactory("Photon");
+					//m_engineKernel->GetIntegratorManager()->UnregisterFactory("Photon");
 					m_engineKernel->GetIntegratorManager()->UnregisterFactory("Whitted");
 					m_engineKernel->GetIntegratorManager()->UnregisterFactory("Test");
 
@@ -406,90 +395,22 @@ namespace Illumina
 			{
 				ICamera *pCamera = m_environment->GetCamera();
 				ISpace *pSpace = m_environment->GetSpace();
-				float alpha = Maths::Pi;
-
-				// Cornell
-				/*
-				Vector3 lookFrom(70, 0, 70),
-					lookAt(0, 0, 0);
-				*/
-				Vector3 lookFrom(800, 100, 200),
-					lookAt(0, 200, 100);
 
 				// Update space
 				pSpace->Update();
 	 
 				m_mpirender->RenderCoordinator(&p_coordinator);
 
-				// Render frame
-				// pRenderer->Render();
-
-				/*
-				// Initialise timing
-				boost::timer frameTimer;
-				float fTotalFramesPerSecond = 0.f;
-
-				ICamera *pCamera = environment.GetCamera();
-				float alpha = Maths::Pi;
-
-				// Cornell
-				//Vector3 lookFrom(70, 0, 70),
-				//	lookAt(0, 0, 0);
-	
-				// Kiti
-				//Vector3 lookFrom(-19, 1, -19),
-				//	lookAt(0, 8, 0);
-	
-				// Sponza
-				//Vector3 lookFrom(800, 100, 200),
-				//	lookAt(0, 200, 100);
-				for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
-				{
-					//alpha += Maths::PiTwo / 256;
-
-					frameTimer.restart();
-		
-					//pCamera->MoveTo(lookFrom);
-					//pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
-					//pCamera->LookAt(lookAt);
-	 
-					// Update space
-					pSpace->Update();
-	 
-					// Render frame
-					pRenderer->Render();
-	 
-					// Compute frames per second
-					fTotalFramesPerSecond += (float)(1.0f / frameTimer.elapsed());
-		
-					if (p_bVerbose)
-					{
-						std::cout << std::endl;
-						std::cout << "-- Frame Render Time : [" << frameTimer.elapsed() << "s]" << std::endl;
-						std::cout << "-- Frames per second : [" << fTotalFramesPerSecond / nFrame << "]" << std::endl;
-					}
-				}
-				*/
 				return true;
 			}
 
 			bool ExecuteWorker(Task *p_worker)
 			{
-				/*
 				ICamera *pCamera = m_environment->GetCamera();
 				ISpace *pSpace = m_environment->GetSpace();
-				float alpha = Maths::Pi;
 
-				// Cornell
-				/*
-				Vector3 lookFrom(70, 0, 70),
-					lookAt(0, 0, 0);
-				*/
-				//Vector3 lookFrom(800, 100, 200),
-				//	lookAt(0, 200, 100);
-				
 				// Update space
-				// pSpace->Update();
+				pSpace->Update();
 
 				m_mpirender->RenderWorker(p_worker);
 

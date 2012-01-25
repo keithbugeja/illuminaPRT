@@ -36,6 +36,8 @@ namespace Illumina
 		class IAccelerationStructure
 		{
 		public:
+			virtual ~IAccelerationStructure() { }
+
 			virtual void Remove(T &p_element) = 0;
 			virtual void Insert(T &p_element) = 0;
 
@@ -246,6 +248,9 @@ namespace Illumina
 		class KDTree 
 			: public ITreeAccelerationStructure<T>
 		{
+			using ITreeAccelerationStructure<T>::PartitionType;
+			using ITreeAccelerationStructure<T>::NodeType;
+
 			int m_nMaxTreeDepth,
 				m_nMaxLeafObjects;
 
@@ -265,7 +270,7 @@ namespace Illumina
 			{
 				int nodesFreed = 0;
 
-				if (p_pNode != NULL && p_pNode->Type == Internal)
+				if (p_pNode != NULL && p_pNode->Type == ITreeAccelerationStructure<T>::Internal)
 				{
 					nodesFreed += ReleaseNode(p_pNode->ChildNode[0]);
 					nodesFreed += ReleaseNode(p_pNode->ChildNode[1]);
@@ -286,7 +291,7 @@ namespace Illumina
 				, m_fMinNodeWidth(p_fMinNodeWidth)
 			{ }
 
-			KDTree::~KDTree(void)
+			~KDTree(void)
 			{
 				ReleaseNode(RootNode.ChildNode[0]);
 				ReleaseNode(RootNode.ChildNode[1]);
@@ -338,14 +343,14 @@ namespace Illumina
 				// If we have enough objects, we consider this node a leaf
 				if ((int)p_objectList.Size() <= m_nMaxLeafObjects || p_nDepth == m_nMaxTreeDepth || p_pNode->BoundingBox.GetRadius() <= m_fMinNodeWidth)
 				{
-					p_pNode->Type = Leaf; 
+					p_pNode->Type = ITreeAccelerationStructure<T>::Leaf; 
 					p_pNode->ObjectList.PushBack(p_objectList);
 				}
 				else
 				{
-					p_pNode->Type = Internal;
+					p_pNode->Type = ITreeAccelerationStructure<T>::Internal;
 					p_pNode->Axis = p_nAxis;
-					p_pNode->Partition = FindPartitionPlane(p_objectList, p_pNode->BoundingBox, p_nAxis, SurfaceAreaHeuristic);
+					p_pNode->Partition = FindPartitionPlane(p_objectList, p_pNode->BoundingBox, p_nAxis, ITreeAccelerationStructure<T>::SurfaceAreaHeuristic);
 
 					List<T*> leftList, rightList;
 					leftList.Clear(); rightList.Clear(); 
@@ -394,7 +399,7 @@ namespace Illumina
 				bool result = false;
 
 				// Should not have any objects in list
-				if (p_pNode->Type == Internal)
+				if (p_pNode->Type == ITreeAccelerationStructure<T>::Internal)
 				{
 					int axis = p_pNode->Axis;
 

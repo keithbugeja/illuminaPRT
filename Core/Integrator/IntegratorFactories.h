@@ -13,7 +13,7 @@
 #include "Integrator/Integrator.h"
 #include "Integrator/PathIntegrator.h"
 #include "Integrator/IGIIntegrator.h"
-#include "Integrator/PhotonIntegrator.h"
+// #include "Integrator/PhotonIntegrator.h"
 #include "Integrator/WhittedIntegrator.h"
 #include "Integrator/TestIntegrator.h"
 
@@ -119,6 +119,7 @@ namespace Illumina
 			}
 		};
 
+		/*
 		class PhotonIntegratorFactory : public Illumina::Core::Factory<Illumina::Core::IIntegrator>
 		{
 		public:
@@ -127,14 +128,14 @@ namespace Illumina
 				throw new Exception("Method not supported!");
 			}
 
-			/*
-			 * Arguments
-			 * -- Id {String}
-			 * -- RayDepth {Integer}
-			 * -- ShadowRays {Integer}
-			 * -- Photons {Integer}
-			 * -- Epsilon {Float}
-			 */
+			//
+			// Arguments
+			// -- Id {String}
+			// -- RayDepth {Integer}
+			// -- ShadowRays {Integer}
+			// -- Photons {Integer}
+			// -- Epsilon {Float}
+			//
 			Illumina::Core::IIntegrator *CreateInstance(ArgumentMap &p_argumentMap)
 			{
 				int raydepth = 6,
@@ -166,6 +167,7 @@ namespace Illumina
 				return new PhotonIntegrator(p_nPhotons, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
 			}
 		};
+		*/
 
 		class WhittedIntegratorFactory : public Illumina::Core::Factory<Illumina::Core::IIntegrator>
 		{
