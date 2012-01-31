@@ -30,6 +30,9 @@ namespace mpi = boost::mpi;
 #include "../../Core/Filter/Filter.h"
 
 #include "taskpipeline.h"
+
+// #define TEST_SCHEDULER_COMM 1
+
 //----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
@@ -110,7 +113,9 @@ namespace Illumina
 
 			bool RenderCoordinator(ITaskPipeline::CoordinatorTask *p_coordinator)
 			{
-				((ImageDevice*)m_pDevice)->SetFilename(boost::str(boost::format("Output/result_%d.ppm") % p_coordinator->task->GetRank()));
+				std::string filename = boost::str(boost::format("Output/result_%d.ppm") % p_coordinator->task->GetRank());
+
+				((ImageDevice*)m_pDevice)->SetFilename(filename);
 
 				int deviceWidth = m_pDevice->GetWidth(),
 					deviceHeight = m_pDevice->GetHeight();
@@ -129,16 +134,17 @@ namespace Illumina
 				std::map<int, time_t> jobTime;
 				std::map<int, int> jobsCompleted;
 
-				// boost::progress_display renderProgress(tilesPerScreen);
+				//--------------------------------------------------
+				// Timings
+				//--------------------------------------------------
 				boost::timer renderTimer;
 				renderTimer.restart();
-
 				time_t startTime = time(NULL);
 
 				//--------------------------------------------------
 				// Prepare device for rendering
 				//--------------------------------------------------
-				m_pDevice->BeginFrame();
+				// m_pDevice->BeginFrame();
 
 				//--------------------------------------------------
 				// Prepare integrator for rending frame
@@ -159,7 +165,7 @@ namespace Illumina
 				//--------------------------------------------------
 				// Distribute initial workload to workers
 				//--------------------------------------------------
-				std::cout << "Distributing initial workload to " << p_coordinator->ready.Size() << " workers..." << std::endl;
+				// std::cout << "[" << p_coordinator->task->GetRank() << "] Distributing initial workload to " << p_coordinator->ready.Size() << " workers..." << std::endl;
 
 				if (p_coordinator->ready.Size() > 0)
 				{
@@ -216,6 +222,7 @@ namespace Illumina
 							// std::cout << "Workers waiting : " << waiting << std::endl;
 						}
 
+					#if (!defined(TEST_SCHEDULER_COMM))
 						// Aggregate result to buffer
 						int startTileX = tile.GetId() % tilesPerRow,
 							startTileY = tile.GetId() / tilesPerRow,
@@ -232,27 +239,26 @@ namespace Illumina
 								m_pDevice->Set(deviceWidth - startPixelX - x - 1, deviceHeight - startPixelY - y - 1, L);
 							}
 						}
-
-						// ++renderProgress;
+					#endif
 					}
 				}
+				/*
 				else
 				{
-					std::cout << "Rendering empty frame : not enough workers available." << std::endl;
+					std::cout << "[" << p_coordinator->task->GetRank() << "] Rendering empty frame : not enough workers available." << std::endl;
 				}
+				*/
 
 				//--------------------------------------------------
 				// Frame completed
 				//--------------------------------------------------
-				m_pDevice->EndFrame();
+				// m_pDevice->EndFrame();
 
+				/*
 				std::cout << "-------------------------------------------------------------------------" << std::endl;
-				std::cout << "Total Render Time : " << renderTimer.elapsed() << " seconds" << std::endl;
-		
-				time_t endTime = time(NULL);
-
-				std::cout << "Total Render Time (system) : " << endTime - startTime << " seconds " << std::endl;
-
+				std::cout << "[" << p_coordinator->task->GetRank() << "] Total Render Time : " << renderTimer.elapsed() << " seconds" << std::endl;
+				time_t endTime = time(NULL); std::cout << "[" << p_coordinator->task->GetRank() << "] Total Render Time (system) : " << endTime - startTime << " seconds " << std::endl;
+				
 				for (std::vector<Task*>::iterator taskIterator = p_coordinator->ready.TaskList.begin();
 					 taskIterator != p_coordinator->ready.TaskList.end(); ++taskIterator)
 				{
@@ -264,6 +270,7 @@ namespace Illumina
 				}
 
 				std::cout << "-------------------------------------------------------------------------" << std::endl;
+				*/
 
 				return true;
 			}
@@ -301,13 +308,14 @@ namespace Illumina
 					//--------------------------------------------------
 					if (tileId == -1) 
 					{
-						std::cout << "Worker [" << p_worker->GetRank() << "] terminating ... " << std::endl;
+						// std::cout << "Worker [" << p_worker->GetRank() << "] terminating ... " << std::endl;
 						break;
 					}
 					else
 					{
 						// std::cout << "Worker [" << p_worker->GetRank() << "] has received tile [" << tileId << "] ... " << std::endl;
 
+					#if (!defined(TEST_SCHEDULER_COMM))
 						//--------------------------------------------------
 						// We have task id - render
 						//--------------------------------------------------
@@ -353,7 +361,7 @@ namespace Illumina
 								tile.GetImageData()->Set(x, y, RGBPixel(Li[0], Li[1], Li[2]));
 							}
 						} 
-
+					#endif
 						//--------------------------------------------------
 						// Send back result
 						//--------------------------------------------------

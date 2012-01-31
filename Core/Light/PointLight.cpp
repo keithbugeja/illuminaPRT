@@ -66,7 +66,22 @@ Spectrum PointLight::SampleRadiance(const Vector3 &p_surfacePoint, float p_u, fl
 //----------------------------------------------------------------------------------------------
 Spectrum PointLight::SampleRadiance(const Scene *p_pScene, float p_u, float p_v, float p_w, float p_x, Ray &p_ray, float &p_pdf)
 {
-	throw new Exception("Cannot sample point light radiance without a reference point!");
+	Vector3 normal;
+
+	p_ray.Direction = Montecarlo::UniformSampleSphere(p_w, p_x);
+	p_ray.Origin = SamplePoint(p_u, p_v, normal, p_pdf) + p_ray.Direction * 1e-3f; normal = -normal;
+	
+	p_ray.Min = 1e-3f;
+	p_ray.Max = Maths::Maximum;
+
+	if (Vector3::Dot(p_ray.Direction, normal) < 0) 
+		p_ray.Direction *= -1.0f;
+
+	p_pdf = Montecarlo::UniformSpherePdf();
+	
+	return m_intensity;
+
+	// throw new Exception("Cannot sample point light radiance without a reference point!");
 }
 //----------------------------------------------------------------------------------------------
 Vector3 PointLight::SamplePoint(float p_u, float p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf)

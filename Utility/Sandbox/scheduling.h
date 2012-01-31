@@ -921,7 +921,9 @@ void Idle(bool p_bVerbose)
 					coordinator.group.SetMasterRank(idleTask->GetMasterRank());
 					coordinator.group.SetCoordinatorRank(idleTask->GetWorkerRank());
 
-					RenderPipeline pipeline(std::string(requestMessage.GetConfig()), p_bVerbose);
+					std::string config; config.assign(requestMessage.GetConfig());
+
+					RenderPipeline pipeline(config, p_bVerbose);
 					pipeline.Coordinator(coordinator);
 
 					std::cout << "[" << idleTask->GetRank() << "] :: Coordinator changing back to idle task for group [" << requestMessage.GetGroupId() << "]." << std::endl;

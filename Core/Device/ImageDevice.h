@@ -37,7 +37,7 @@ namespace Illumina
 
 			// --> TEMPORARY --- until EGPGV paper is sorted out!
 			std::string GetFilename(void) const { return m_strFilename; }
-			void SetFilename(std::string &p_fname) { m_strFilename = p_fname; }
+			void SetFilename(const std::string &p_fname) { m_strFilename = p_fname; }
 			// --> TEMPORARY --- until EGPGV paper is sorted out!
 
 		protected:

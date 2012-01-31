@@ -38,19 +38,13 @@
 
 using namespace Illumina::Core;
 
-void MessageOut(const std::string& p_strMessage, bool p_bVerbose)
-{
-	if (p_bVerbose) std::cout << p_strMessage << std::endl;
-}
-
-#include "scheduling.h"
-
-#define TEST_SCHEDULER
+//#define TEST_SCHEDULER
 
 #if (!defined(TEST_SCHEDULER))
 
 #include <omp.h>
 
+/*
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/timer.hpp>
@@ -73,6 +67,7 @@ void MessageOut(const std::string& p_strMessage, bool p_bVerbose)
 #include "Integrator/IntegratorFactories.h"
 
 #include "Staging/Acceleration.h"
+*/
 
 using namespace Illumina::Core;
 
@@ -124,9 +119,9 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	Message("Registering Integrators...", p_bVerbose);
 	engineKernel.GetIntegratorManager()->RegisterFactory("PathTracing", new PathIntegratorFactory());
 	engineKernel.GetIntegratorManager()->RegisterFactory("IGI", new IGIIntegratorFactory());
-	engineKernel.GetIntegratorManager()->RegisterFactory("Photon", new PhotonIntegratorFactory());
+	//engineKernel.GetIntegratorManager()->RegisterFactory("Photon", new PhotonIntegratorFactory());
 	engineKernel.GetIntegratorManager()->RegisterFactory("Whitted", new WhittedIntegratorFactory());
-	engineKernel.GetIntegratorManager()->RegisterFactory("Test", new TestIntegratorFactory());
+	//engineKernel.GetIntegratorManager()->RegisterFactory("Test", new TestIntegratorFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Renderer
@@ -360,6 +355,12 @@ int main(int argc, char** argv)
 }
 
 #else
+void MessageOut(const std::string& p_strMessage, bool p_bVerbose)
+{
+	if (p_bVerbose) std::cout << p_strMessage << std::endl;
+}
+#include "scheduling.h"
+
 #define Major 0
 #define Minor 5
 #define Build 0

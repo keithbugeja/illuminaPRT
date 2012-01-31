@@ -52,6 +52,7 @@ namespace Illumina
 		//////////////////////////////////////////////////////////////////////////////////////////////////	
 		private:
 			bool m_verbose;
+			int m_requiredResources;
 		
 			// Keep original argument string
 			std::string m_arguments;
@@ -155,9 +156,9 @@ namespace Illumina
 			{
 				SynchroniseMessage synchroniseMessage;
 
-				std::cout << "Synchronising workers..." << std::endl;
+				// std::cout << "Synchronising workers..." << std::endl;
 				p_coordinator.ready.Broadcast(p_coordinator.task, (IMessage*)&synchroniseMessage, MM_ChannelWorkerStatic);
-				std::cout << "Synchronise sent..." << std::endl;
+				// std::cout << "Synchronise sent..." << std::endl;
 
 				return true;
 			}
@@ -347,11 +348,15 @@ namespace Illumina
 			virtual void OnWorkerReceiveCoordinatorMessage(Task *p_worker, Message &p_message) { }
 
 		public:
-			ITaskPipeline(std::string &p_arguments, bool p_verbose = true)
+			ITaskPipeline(const std::string &p_arguments, bool p_verbose = true)
 				: m_arguments(p_arguments)
 				, m_verbose(p_verbose)
+				, m_requiredResources(1)
 			{ 
 				m_argumentMap.Initialise(m_arguments);
+
+				// Get minimum resource count
+				m_argumentMap.GetArgument("rr", m_requiredResources);
 			}
 
 			virtual ~ITaskPipeline(void) { }
@@ -383,6 +388,15 @@ namespace Illumina
 				// Message flags
 				bool masterMessageIn = true, 
 					workerMessageIn = true;
+
+				bool nextFrameOutput = false;
+
+				double runningTime = 0, 
+					outputTime = 1,
+					spanTime = 0;
+
+				int frameCount = 0,
+					lastWorkerCount = 0;
 
 				// Message loop 
 				while (p_coordinator.active)
@@ -419,78 +433,62 @@ namespace Illumina
 					// Execute context pipeline until any messages (from workers or master) are available...
 					while(!masterMessageIn && !workerMessageIn)
 					{
+						// Timer shit
+						boost::timer renderTimer;
+						renderTimer.restart();
+
+						// If the number of workers has changed, reset running average
+						if (lastWorkerCount != p_coordinator.ready.Size())
+						{
+							lastWorkerCount = p_coordinator.ready.Size();
+
+							runningTime = 0; 
+							frameCount = 0;
+						}
+
+						// Messages
 						workerMessageIn = workerCommunicator.ProbeAsynchronous(MPI_ANY_SOURCE, MM_ChannelWorkerStatic, &workerStatus);
 						masterMessageIn = masterCommunicator.ProbeAsynchronous(p_coordinator.task->GetMasterRank(), MM_ChannelMasterStatic, &masterStatus);
 
 						// Prepare workers for work
-						CSynchroniseWorker(p_coordinator);
-
-						// Do a coordinator frame
-						std::cout << "[" << p_coordinator.task->GetRank() << "] :: Coordinator starting execution of pipeline." << std::endl;
-						ExecuteCoordinator(p_coordinator);
-						std::cout << "[" << p_coordinator.task->GetRank() << "] :: Coordinator completed execution of pipeline." << std::endl;
-					}
-
-					// DEBUG
-					std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator message flags are [MASTER : " << masterMessageIn << ", WORKER : " << workerMessageIn << "]." << std::endl;
-					// DEBUG
-				}
-
-
-				/*
-				// Message loop 
-				while (p_coordinator.active)
-				{
-					// Set up asynchronous receives for coordinator
-					if (workerMessageIn) {
-						OnCoordinatorReceiveControlMessage(p_coordinator, workerMessage, &workerStatus, &workerRequest);
-						workerMessageIn = workerCommunicator.ReceiveAsynchronous(&workerMessage, MPI_ANY_SOURCE, &workerRequest, &workerStatus);
-					}
-
-					if (masterMessageIn) {
-						OnCoordinatorReceiveControlMessage(p_coordinator, masterMessage, &masterStatus, &masterRequest);
-						masterMessageIn = masterCommunicator.ReceiveAsynchronous(&masterMessage, p_coordinator.task->GetMasterRank(), &masterRequest, &masterStatus);
-					}
-
-					// Get the number of allotted workers for this frame
-					int workersForFrame = p_coordinator.ready.Size();
-
-					// Process termination requests
-					if (p_coordinator.terminateCount > 0)
-					{
-						p_coordinator.terminateCount -= CReleaseWorker(p_coordinator, p_coordinator.terminateCount);
-						
-						if (p_coordinator.terminateCount == 0 && p_coordinator.terminating)
-						{
-							p_coordinator.active = false;
+						if (p_coordinator.ready.Size() < m_requiredResources)
 							continue;
-						}
-					}
 
-					// Wait for asynchronous receive to complete
-					while(!masterMessageIn && !workerMessageIn)
-					{
-						workerMessageIn = workerCommunicator.IsRequestComplete(&workerRequest, &workerStatus);
-						masterMessageIn = masterCommunicator.IsRequestComplete(&masterRequest, &masterStatus);
-
-						// Prepare workers for work
+						// Synchronise workers
 						CSynchroniseWorker(p_coordinator);
 
-						// boost::this_thread::sleep(boost::posix_time::milliseconds(250));
-
-						std::cout << "[" << p_coordinator.task->GetRank() << "] :: Coordinator starting execution of pipeline." << std::endl;
+						// Debug
+						if (outputTime >= 1)
+						{
+							std::cout << "-------------------------------------------------------------------------" << std::endl;
+							std::cout << "[" << p_coordinator.task->GetRank() << "] Distributing initial workload to [" << lastWorkerCount << "] workers." << std::endl;
+						}
 
 						// Do a coordinator frame
 						ExecuteCoordinator(p_coordinator);
 
-						std::cout << "[" << p_coordinator.task->GetRank() << "] :: Coordinator completed execution of pipeline." << std::endl;
+						// Timer output
+						spanTime = renderTimer.elapsed();
+						runningTime += spanTime; 
+						frameCount++;
+
+						// Do not output at less than sub-second intervals
+						if (outputTime >= 1) 
+						{
+							outputTime = 0;
+
+							std::cout << "[" << p_coordinator.task->GetRank() << "] Last Frame Time : " << spanTime << " seconds" << std::endl;
+							std::cout << "[" << p_coordinator.task->GetRank() << "] Average Frame Time : " << runningTime / frameCount << " seconds" << std::endl;
+							std::cout << "-------------------------------------------------------------------------" << std::endl;
+						}
+
+						outputTime += spanTime;
 					}
 
 					// DEBUG
 					std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator message flags are [MASTER : " << masterMessageIn << ", WORKER : " << workerMessageIn << "]." << std::endl;
 					// DEBUG
 				}
-				*/
 
 				// Trigger coordinator shutdown event
 				OnShutdownCoordinator();
@@ -518,22 +516,22 @@ namespace Illumina
 
 				for(bool terminate = false; !terminate; ) 
 				{
-					std::cout << "[" << p_worker->GetRank() << "] :: Worker online waiting for coordinator message." << std::endl;
+					// std::cout << "[" << p_worker->GetRank() << "] :: Worker online waiting for coordinator message." << std::endl;
 
 					// Worker action is synchronous
 					workerCommunicator.ReceiveFromCoordinator(&msg);
 
-					std::cout << "[" << p_worker->GetRank() << "] :: Worker received coordinator message with Id = [" << msg.Id << "]" << std::endl;
+					// std::cout << "[" << p_worker->GetRank() << "] :: Worker received coordinator message with Id = [" << msg.Id << "]" << std::endl;
 
 					switch(msg.Id)
 					{
 						case MT_Synchronise:
 						{
-							std::cout << "[" << p_worker->GetRank() << "] :: Worker starting execution of pipeline." << std::endl;
+							// std::cout << "[" << p_worker->GetRank() << "] :: Worker starting execution of pipeline." << std::endl;
 
 							ExecuteWorker(p_worker);
 
-							std::cout << "[" << p_worker->GetRank() << "] :: Worker completed execution of pipeline." << std::endl;
+							// std::cout << "[" << p_worker->GetRank() << "] :: Worker completed execution of pipeline." << std::endl;
 							break;
 						}
 

@@ -106,33 +106,14 @@ namespace Illumina
 					if (p_sender == *taskIterator) 
 						continue;
 
-					std::cout << "[" << p_message->ToString() << "] to " << (*taskIterator)->GetRank() << std::endl;
+					// std::cout << "[" << p_message->ToString() << "] to " << (*taskIterator)->GetRank() << std::endl;
 
 					communicator.Send(p_message, (*taskIterator)->GetRank(), p_channel);
 				}
 			}
-
-			/*
-			void Broadcast(Task *p_sender, const VarlenMessage &p_message, int p_channel = MM_ChannelBroadcast)
-			{
-				MessageCommunicator communicator;
-
-				// std::cout << "[" << p_sender->GetWorkerRank() << "] :: Broadcast " << p_message.ToString() << std::endl;
-
-				for (std::vector<Task*>::iterator taskIterator = TaskList.begin(); 
-					 taskIterator != TaskList.end(); taskIterator++)
-				{
-					if (p_sender == *taskIterator) 
-						continue;
-
-					communicator.Send(p_message, (*taskIterator)->GetRank(), p_channel);
-				}
-			}
-			*/
 
 			void Barrier(void)
-			{
-			}
+			{ }
 
 			/*
 			 * Group operations
