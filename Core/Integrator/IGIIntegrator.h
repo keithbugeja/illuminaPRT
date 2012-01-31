@@ -47,10 +47,12 @@ namespace Illumina
 		{
 		protected:
 			int m_nMaxVPL,
-				m_nMaxSet,
-				m_nMaxSetQuad,
+				m_nMaxPath,
+				m_nTileWidth,
+				m_nTileArea,
 				m_nMaxRayDepth,
-				m_nShadowSampleCount;
+				m_nShadowSampleCount,
+				m_nIndirectSampleCount;
 
 			float m_fReflectEpsilon,
 				m_fGTermMax;
@@ -62,8 +64,8 @@ namespace Illumina
 			std::vector<VirtualPointLight> VirtualPointLightList;
 
 		public:
-			IGIIntegrator(const std::string &p_strName, int p_nMaxVPL = 256, int p_nVPLSet = 3, float p_fGTermMax = 0.01f, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
-			IGIIntegrator(int p_nMaxVPL = 256, int p_nVPLSet = 3, float p_fGTermMax = 0.01f, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
+			IGIIntegrator(const std::string &p_strName, int p_nMaxVPL = 256, int p_nMaxPath = 8, int p_nTileWidth = 3, float p_fGTermMax = 0.01f, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, int p_nIndirectSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
+			IGIIntegrator(int p_nMaxVPL = 256, int p_nMaxPath = 8, int p_nTileWidth = 3, float p_fGTermMax = 0.01f, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, int p_nIndirectSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
 
 			bool Initialise(Scene *p_pScene, ICamera *p_pCamera);
 			bool Shutdown(void);
@@ -74,8 +76,7 @@ namespace Illumina
 		
 		protected:
 			Spectrum Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, int p_nDepth);
-
-			void TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLCount, std::vector<VirtualPointLight> &p_vplList);
+			void TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLPaths, int p_nMaxVPLs, int p_nMaxBounces, std::vector<VirtualPointLight> &p_vplList);
 		};
 	}
 }

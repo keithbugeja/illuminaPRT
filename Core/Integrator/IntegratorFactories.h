@@ -86,36 +86,40 @@ namespace Illumina
 			Illumina::Core::IIntegrator *CreateInstance(ArgumentMap &p_argumentMap)
 			{
 				int maxVPL = 64, 
-					vplSet = 3,
+					maxPath = 8,
+					tileWidth = 3,
 					raydepth = 4,
-					shadowrays = 1;
+					shadowrays = 64,
+					indirectrays = 16;
 
 				float reflectEpsilon = 1e-4f,
 					gTermMax = 0.01f;
 
 				std::string strId;
 
-				p_argumentMap.GetArgument("VPLSet", vplSet);
 				p_argumentMap.GetArgument("MaxVPL", maxVPL);
+				p_argumentMap.GetArgument("MaxPath", maxPath);
 				p_argumentMap.GetArgument("MaxGTerm", gTermMax);
+				p_argumentMap.GetArgument("TileWidth", tileWidth);
 				p_argumentMap.GetArgument("RayDepth", raydepth);
+				p_argumentMap.GetArgument("IndirectRays", indirectrays);
 				p_argumentMap.GetArgument("ShadowRays", shadowrays);
 				p_argumentMap.GetArgument("Epsilon", reflectEpsilon);
 
 				if (p_argumentMap.GetArgument("Id", strId))
-					return CreateInstance(strId, maxVPL, vplSet, gTermMax, raydepth, shadowrays, reflectEpsilon);
+					return CreateInstance(strId, maxVPL, maxPath, tileWidth, gTermMax, raydepth, shadowrays, indirectrays, reflectEpsilon);
 
-				return CreateInstance(maxVPL, vplSet, gTermMax, raydepth, shadowrays, reflectEpsilon);
+				return CreateInstance(maxVPL, maxPath, tileWidth, gTermMax, raydepth, shadowrays, indirectrays, reflectEpsilon);
 			}
 
-			Illumina::Core::IIntegrator *CreateInstance(const std::string &p_strId, int p_nMaxVPL, int p_nVPLSet, float p_fGTermMax, int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
+			Illumina::Core::IIntegrator *CreateInstance(const std::string &p_strId, int p_nMaxVPL, int p_nMaxPath, int p_nTileWidth, float p_fGTermMax, int p_nRayDepth, int p_nShadowRays, int p_nIndirectRays, float p_fReflectEpsilon)
 			{
-				return new IGIIntegrator(p_strId, p_nMaxVPL, p_nVPLSet, p_fGTermMax, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
+				return new IGIIntegrator(p_strId, p_nMaxVPL, p_nMaxPath, p_nTileWidth, p_fGTermMax, p_nRayDepth, p_nShadowRays, p_nIndirectRays, p_fReflectEpsilon);
 			}
 
-			Illumina::Core::IIntegrator *CreateInstance(int p_nMaxVPL, int p_nVPLSet, float p_fGTermMax, int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
+			Illumina::Core::IIntegrator *CreateInstance(int p_nMaxVPL, int p_nMaxPath, int p_nTileWidth, float p_fGTermMax, int p_nRayDepth, int p_nShadowRays, int p_nIndirectRays, float p_fReflectEpsilon)
 			{
-				return new IGIIntegrator(p_nMaxVPL, p_nVPLSet, p_fGTermMax, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
+				return new IGIIntegrator(p_nMaxVPL, p_nMaxPath, p_nTileWidth, p_fGTermMax, p_nRayDepth, p_nShadowRays, p_nIndirectRays, p_fReflectEpsilon);
 			}
 		};
 
@@ -210,6 +214,7 @@ namespace Illumina
 			}
 		};
 
+		/*
 		class TestIntegratorFactory : public Illumina::Core::Factory<Illumina::Core::IIntegrator>
 		{
 		public:
@@ -218,10 +223,10 @@ namespace Illumina
 				return new TestIntegrator();
 			}
 
-			/*
-			 * Arguments
-			 * -- Id {String}
-			 */
+			//
+			// Arguments
+			// -- Id {String}
+			//
 			Illumina::Core::IIntegrator *CreateInstance(ArgumentMap &p_argumentMap)
 			{
 				std::string strId;
@@ -237,5 +242,6 @@ namespace Illumina
 				return new TestIntegrator(p_strId);
 			}
 		};
+		*/
 	}
 }

@@ -16,7 +16,7 @@ namespace Illumina
 			EngineKernel *m_engineKernel;
 		
 		public:
-			RenderPipeline(std::string &p_arguments, bool p_verbose = true)
+			RenderPipeline(const std::string &p_arguments, bool p_verbose = true)
 				: ITaskPipeline(p_arguments, p_verbose)
 				, m_mpirender(NULL)
 				, m_environment(NULL)				
@@ -59,7 +59,7 @@ namespace Illumina
 				m_engineKernel->GetIntegratorManager()->RegisterFactory("IGI", new IGIIntegratorFactory());
 				//m_engineKernel->GetIntegratorManager()->RegisterFactory("Photon", new PhotonIntegratorFactory());
 				m_engineKernel->GetIntegratorManager()->RegisterFactory("Whitted", new WhittedIntegratorFactory());
-				m_engineKernel->GetIntegratorManager()->RegisterFactory("Test", new TestIntegratorFactory());
+				//m_engineKernel->GetIntegratorManager()->RegisterFactory("Test", new TestIntegratorFactory());
 
 				//----------------------------------------------------------------------------------------------
 				// Renderer
@@ -187,13 +187,13 @@ namespace Illumina
 					delete m_engineKernel->GetIntegratorManager()->RequestFactory("IGI");
 					//delete m_engineKernel->GetIntegratorManager()->RequestFactory("Photon");
 					delete m_engineKernel->GetIntegratorManager()->RequestFactory("Whitted");
-					delete m_engineKernel->GetIntegratorManager()->RequestFactory("Test");
+					//delete m_engineKernel->GetIntegratorManager()->RequestFactory("Test");
 
 					m_engineKernel->GetIntegratorManager()->UnregisterFactory("PathTracing");
 					m_engineKernel->GetIntegratorManager()->UnregisterFactory("IGI");
 					//m_engineKernel->GetIntegratorManager()->UnregisterFactory("Photon");
 					m_engineKernel->GetIntegratorManager()->UnregisterFactory("Whitted");
-					m_engineKernel->GetIntegratorManager()->UnregisterFactory("Test");
+					//m_engineKernel->GetIntegratorManager()->UnregisterFactory("Test");
 
 					//----------------------------------------------------------------------------------------------
 					// Renderer

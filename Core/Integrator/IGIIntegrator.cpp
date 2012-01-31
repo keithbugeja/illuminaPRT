@@ -21,23 +21,27 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-IGIIntegrator::IGIIntegrator(const std::string &p_strName, int p_nMaxVPL, int p_nVPLSet, float p_fGTermMax, int p_nMaxRayDepth, int p_nShadowSampleCount, float p_fReflectEpsilon)
+IGIIntegrator::IGIIntegrator(const std::string &p_strName, int p_nMaxVPL, int p_nMaxPath, int p_nTileWidth, float p_fGTermMax, int p_nMaxRayDepth, int p_nShadowSampleCount, int p_nIndirectSampleCount, float p_fReflectEpsilon)
 	: IIntegrator(p_strName) 
 	, m_nMaxVPL(p_nMaxVPL)
-	, m_nMaxSet(p_nVPLSet)
-	, m_nMaxSetQuad(p_nVPLSet * p_nVPLSet)
+	, m_nMaxPath(p_nMaxPath)
+	, m_nTileWidth(p_nTileWidth)
+	, m_nTileArea(p_nTileWidth * p_nTileWidth)
 	, m_nShadowSampleCount(p_nShadowSampleCount)
+	, m_nIndirectSampleCount(p_nIndirectSampleCount)
 	, m_nMaxRayDepth(p_nMaxRayDepth)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
 	, m_fGTermMax(p_fGTermMax)
 { }
 //----------------------------------------------------------------------------------------------
-IGIIntegrator::IGIIntegrator(int p_nMaxVPL, int p_nVPLSet, float p_fGTermMax, int p_nMaxRayDepth, int p_nShadowSampleCount, float p_fReflectEpsilon)
+IGIIntegrator::IGIIntegrator(int p_nMaxVPL, int p_nMaxPath, int p_nTileWidth, float p_fGTermMax, int p_nMaxRayDepth, int p_nShadowSampleCount, int p_nIndirectSampleCount, float p_fReflectEpsilon)
 	: IIntegrator()
 	, m_nMaxVPL(p_nMaxVPL)
-	, m_nMaxSet(p_nVPLSet)
-	, m_nMaxSetQuad(p_nVPLSet * p_nVPLSet)
+	, m_nMaxPath(p_nMaxPath)
+	, m_nTileWidth(p_nTileWidth)
+	, m_nTileArea(p_nTileWidth * p_nTileWidth)
 	, m_nShadowSampleCount(p_nShadowSampleCount)
+	, m_nIndirectSampleCount(p_nIndirectSampleCount)
 	, m_nMaxRayDepth(p_nMaxRayDepth)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
 	, m_fGTermMax(p_fGTermMax)
@@ -53,7 +57,7 @@ bool IGIIntegrator::Shutdown(void)
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-void IGIIntegrator::TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLCount, std::vector<VirtualPointLight> &p_vplList)
+void IGIIntegrator::TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLPaths, int p_nMaxVPLs, int p_nMaxBounces, std::vector<VirtualPointLight> &p_vplList)
 {
 	Intersection intersection;
 	IMaterial *pMaterial;
@@ -72,9 +76,9 @@ void IGIIntegrator::TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLCount,
 
 	Ray lightRay;
 
-	// std::cout << "Total VPL Count : [" << p_nVPLCount << "]" << std::endl;
+	// std::cout << "Total paths : [" << p_nVPLPaths << "], Max VPLs : [" << p_nMaxVPLs << "], Max Bounces = [" << p_nMaxBounces << "]" << std::endl;
 
-	for (int nVPLIndex = p_nVPLCount; nVPLIndex > 0; )
+	for (int nVPLIndex = p_nVPLPaths; nVPLIndex > 0; )
 	{
 		// Sample light for ray, pdf and radiance along ray
 		p_pScene->GetSampler()->Get2DSamples(pSample2D, 2);
@@ -108,6 +112,9 @@ void IGIIntegrator::TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLCount,
 			if (f.IsBlack() || pdf == 0.0f)
 				break;
 
+			if (intersections > p_nMaxBounces)
+				break;
+
 			Spectrum contribScale = f * Vector3::AbsDot(wIn, intersection.Surface.ShadingBasisWS.W) / pdf;
 
 			// Possibly terminate virtual light path with Russian roulette
@@ -127,6 +134,14 @@ void IGIIntegrator::TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLCount,
 
 		// std::cout << "Path [" << nVPLIndex << "] : Bounces [" << intersections << "]" << std::endl;
 	}
+
+	if (p_vplList.size() > p_nMaxVPLs)
+	{
+		// std::cout << "Trimming VPL list from [" << p_vplList.size() << "] to [" << p_nMaxVPLs << "]" << std::endl;
+		p_vplList.erase(p_vplList.begin() + p_nMaxVPLs, p_vplList.end());
+	}
+
+	// std::cout << "VPL Count : [" << p_vplList.size() << "]" << std::endl; 
 }
 //----------------------------------------------------------------------------------------------
 bool IGIIntegrator::Prepare(Scene *p_pScene)
@@ -135,10 +150,10 @@ bool IGIIntegrator::Prepare(Scene *p_pScene)
 	//TraceVPLs(p_pScene, 0, m_nMaxVPL, VirtualPointLightList);
 
 	// Assume we're using a set of 9 VPL Lists
-	for (int set = 0; set < m_nMaxSetQuad; ++set)
+	for (int set = 0; set < m_nTileArea; ++set)
 	{
 		VirtualPointLightSet.push_back(std::vector<VirtualPointLight>());
-		TraceVPLs(p_pScene, 0, m_nMaxVPL, VirtualPointLightSet.back());
+		TraceVPLs(p_pScene, 0, m_nMaxPath, m_nMaxVPL, m_nMaxRayDepth, VirtualPointLightSet.back());
 	}
 
 	return true;
@@ -146,10 +161,12 @@ bool IGIIntegrator::Prepare(Scene *p_pScene)
 //----------------------------------------------------------------------------------------------
 Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
 {
-	VisibilityQuery visibilityQuery(p_pScene);
+	VisibilityQuery visibilityQuery(p_pScene),
+		vplQuery(p_pScene);
 
 	Spectrum pathThroughput(1.0f), 
-		L(0.0f);
+		L(0.0f),
+		E(0.0f);
 
 	IMaterial *pMaterial = NULL;
 
@@ -167,17 +184,16 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 	float pdf;
 	int setId;
 
-	//choose a set
-	//int setId = (int)(p_pScene->GetSampler()->Get1DSample() * 9);
-
-	if (m_nMaxSet == 1) 
+	if (m_nTileWidth == 1) 
 		setId = 0;
 	else
-		setId = (int)p_pContext->SurfacePosition.X % m_nMaxSet + ((int)(p_pContext->SurfacePosition.Y) % m_nMaxSet) * m_nMaxSet;
+		setId = (int)p_pContext->SurfacePosition.X % m_nTileWidth + ((int)(p_pContext->SurfacePosition.Y) % m_nTileWidth) * m_nTileWidth;
 	
 	std::vector<VirtualPointLight> &vpll = VirtualPointLightSet[setId];
+		
 
-	for (int rayDepth = 0; rayDepth < m_nMaxRayDepth; rayDepth++)
+	//for (int rayDepth = 0; rayDepth < m_nMaxRayDepth; rayDepth++)
+	for (int rayDepth = 0; rayDepth < 1; rayDepth++)
 	{
 		//----------------------------------------------------------------------------------------------
 		// No intersection
@@ -228,45 +244,80 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 		//----------------------------------------------------------------------------------------------
 		if (!specularBounce)
 			L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
-			//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
 
-		std::vector<VirtualPointLight>::iterator vplIterator;
-		
-		VisibilityQuery vplQuery(p_pScene);
-		
-		int contributions = 0;
-		Spectrum E;
+		E = 0;
 
-		//for (vplIterator = VirtualPointLightList.begin(); vplIterator != VirtualPointLightList.end(); ++vplIterator)
-		for (vplIterator = vpll.begin(); vplIterator != vpll.end(); ++vplIterator)
+		if (m_nIndirectSampleCount == 0)
 		{
-			const VirtualPointLight &vpl = *vplIterator;
-
-			Vector3 distance = p_intersection.Surface.PointWS - vpl.Context.Surface.PointWS;
-			float d2 = distance.LengthSquared();
-
-			wIn = Vector3::Normalize(vpl.Context.Surface.PointWS - p_intersection.Surface.PointWS);
-			Spectrum f = IIntegrator::F(p_pScene, p_intersection, wOut, wIn);;
+			std::vector<VirtualPointLight>::iterator vplIterator;
 			
-			if (f.IsBlack()) 
-				continue;
+			for (vplIterator = vpll.begin(); vplIterator != vpll.end(); ++vplIterator)
+			{
+				const VirtualPointLight &vpl = *vplIterator;
+
+				Vector3 distance = p_intersection.Surface.PointWS - vpl.Context.Surface.PointWS;
+				float d2 = distance.LengthSquared();
+
+				wIn = Vector3::Normalize(vpl.Context.Surface.PointWS - p_intersection.Surface.PointWS);
+				Spectrum f = IIntegrator::F(p_pScene, p_intersection, wOut, wIn);;
 			
-			float cosX = Maths::Max(0, Vector3::Dot(wIn, p_intersection.Surface.ShadingBasisWS.W));
-			float cosY = Maths::Max(0, Vector3::Dot(-wIn, vpl.Context.Surface.ShadingBasisWS.W));
-			float G = Maths::Min((cosX * cosY) / d2, 0.01f);
-
-			Spectrum Llight = f * G * vpl.Power;
+				if (f.IsBlack()) 
+					continue;
 			
-			contributions++;
+				float cosX = Maths::Max(0, Vector3::Dot(wIn, p_intersection.Surface.ShadingBasisWS.W));
+				float cosY = Maths::Max(0, Vector3::Dot(-wIn, vpl.Context.Surface.ShadingBasisWS.W));
+				float G = Maths::Min((cosX * cosY) / d2, 0.01f);
 
-			vplQuery.SetSegment(p_intersection.Surface.PointWS, 1e-1f, vpl.Context.Surface.PointWS, 1e-1f);
+				Spectrum Llight = f * G * vpl.Power;
+			
+				vplQuery.SetSegment(p_intersection.Surface.PointWS, 1e-1f, vpl.Context.Surface.PointWS, 1e-1f);
 
-			if (!vplQuery.IsOccluded())
-				E += Llight;
+				if (!vplQuery.IsOccluded())
+					E += Llight;
+			}
+
+			L += E / vpll.size();
 		}
+		else
+		{
+			int stride = Maths::Max(1, vpll.size() / m_nIndirectSampleCount),
+				contributions = 0;
 
-		//L += E / VirtualPointLightList.size(); //contributions;
-		L += E / vpll.size(); //contributions;
+			for (int vplIndex = 0; vplIndex < vpll.size(); vplIndex += stride)
+			{
+				contributions++;
+
+				int sampledVPLIndex = (rand() % stride) + vplIndex;
+			
+				if (sampledVPLIndex >= vpll.size())
+					break;
+
+				const VirtualPointLight &vpl = vpll[sampledVPLIndex];
+
+
+				Vector3 distance = p_intersection.Surface.PointWS - vpl.Context.Surface.PointWS;
+				float d2 = distance.LengthSquared();
+
+				wIn = Vector3::Normalize(vpl.Context.Surface.PointWS - p_intersection.Surface.PointWS);
+				Spectrum f = IIntegrator::F(p_pScene, p_intersection, wOut, wIn);;
+			
+				if (f.IsBlack()) 
+					continue;
+			
+				float cosX = Maths::Max(0, Vector3::Dot(wIn, p_intersection.Surface.ShadingBasisWS.W));
+				float cosY = Maths::Max(0, Vector3::Dot(-wIn, vpl.Context.Surface.ShadingBasisWS.W));
+				float G = Maths::Min((cosX * cosY) / d2, 0.01f);
+
+				Spectrum Llight = f * G * vpl.Power;
+
+				vplQuery.SetSegment(p_intersection.Surface.PointWS, 1e-1f, vpl.Context.Surface.PointWS, 1e-1f);
+
+				if (!vplQuery.IsOccluded())
+					E += Llight;
+			}
+
+			L += E / contributions;
+		}
 
 		//----------------------------------------------------------------------------------------------
 		// Sample bsdf for next direction

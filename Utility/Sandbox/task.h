@@ -221,6 +221,9 @@ namespace Illumina
 			int *m_rank;
 
 		public:
+			using MessageCommunicator::SendAsynchronous;
+
+		public:
 			MailboxCommunicator(void)
 				: m_rank(NULL)
 			{ }
