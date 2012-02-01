@@ -7,7 +7,6 @@
 #pragma once
 
 #include "Integrator/Integrator.h"
-#include "Maths/Random.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {
@@ -21,8 +20,6 @@ namespace Illumina
 				m_nShadowSampleCount;
 
 			bool m_bEnableShadowRays;
-
-			Random m_random;
 
 		public:
 			WhittedIntegrator(const std::string &p_strName, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 16, bool p_bEnableShadowRays = true);

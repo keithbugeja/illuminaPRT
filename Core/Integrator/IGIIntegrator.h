@@ -8,7 +8,6 @@
 
 #include "Integrator/Integrator.h"
 #include "Geometry/Intersection.h"
-#include "Maths/Random.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {
@@ -56,8 +55,6 @@ namespace Illumina
 
 			float m_fReflectEpsilon,
 				m_fGTermMax;
-
-			Random m_random;
 
 		public:
 			std::vector<std::vector<VirtualPointLight>> VirtualPointLightSet;

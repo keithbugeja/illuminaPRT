@@ -131,6 +131,8 @@ bool KDTreeMesh::Compile(void)
 	// Update Stats
 	m_statistics.m_triangleCount = objectCount;
 
+	std::cout << "Mesh contains: " << triangleList.Size() << " Triangles" << std::endl;
+
 	return true;
 }
 
