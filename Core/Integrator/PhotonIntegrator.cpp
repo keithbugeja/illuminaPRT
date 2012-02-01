@@ -295,10 +295,13 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 			if (xi > continueProbability)
 				break;
 
-			photonRay.Min = 0.f;
-			photonRay.Max = Maths::Maximum;
-			photonRay.Origin = intersection.Surface.PointWS + wIn * m_fReflectEpsilon;
-			photonRay.Direction = wIn;
+			photonRay.Set(intersection.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, 0.f, Maths::Maximum);
+
+			//photonRay.Min = 0.f;
+			//photonRay.Max = Maths::Maximum;
+			//photonRay.Origin = intersection.Surface.PointWS + wIn * m_fReflectEpsilon;
+			//photonRay.Direction = wIn;
+			//Vector3::Inverse(photonRay.Direction, photonRay.DirectionInverseCache);
 
 			photonPower = photonPower * (xi / continueProbability) * f;
 		}
@@ -506,11 +509,14 @@ Spectrum PhotonIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSce
 		Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, o, i, sample.U, sample.V, &pdf, BxDF::Type(BxDF::Reflection), &bxdfType);
 		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, i, wIn, false);
 
+		ray.Set(p_intersection.Surface.PointWS + wIn * 1E-4f, wIn, 1E-4f, Maths::Maximum);
+
 		//ray.Origin = p_intersection.Surface.PointWS + p_intersection.Surface.ShadingNormal * 1E-4f;
-		ray.Origin = p_intersection.Surface.PointWS + wIn * 1E-4f;
-		ray.Direction = wIn;
-		ray.Min = 1E-4f;
-		ray.Max = Maths::Maximum;
+		//ray.Origin = p_intersection.Surface.PointWS + wIn * 1E-4f;
+		//ray.Direction = wIn;
+		//ray.Min = 1E-4f;
+		//ray.Max = Maths::Maximum;
+		//Vector3::Inverse(ray.Direction, ray.DirectionInverseCache);
 
 		if (!f.IsBlack() && pdf != 0.f)
 		{
@@ -530,10 +536,13 @@ Spectrum PhotonIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSce
 		Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, o, i, sample.U, sample.V, &pdf, BxDF::Type(BxDF::Transmission), &bxdfType);
 		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, i, wIn);
 
-		ray.Direction = wIn;
-		ray.Origin = p_intersection.Surface.PointWS  + wIn * 1E-4f;
-		ray.Min = 1e-4f;
-		ray.Max = Maths::Maximum;
+		ray.Set(p_intersection.Surface.PointWS + wIn * 1E-4f, wIn, 1E-4f, Maths::Maximum);
+
+		//ray.Direction = wIn;
+		//ray.Origin = p_intersection.Surface.PointWS  + wIn * 1E-4f;
+		//ray.Min = 1e-4f;
+		//ray.Max = Maths::Maximum;
+		//Vector3::Inverse(ray.Direction, ray.DirectionInverseCache);
 
 		if (!f.IsBlack() && pdf != 0.f)
 		{

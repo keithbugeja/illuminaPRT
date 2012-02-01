@@ -124,10 +124,14 @@ void IGIIntegrator::TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLPaths,
 
 			alpha *= contribScale / rrProb;
 
-			lightRay.Direction = wIn;
-			lightRay.Origin = intersection.Surface.PointWS + wIn * 1e-3f;
-			lightRay.Min = 1e-3f;
-			lightRay.Max = Maths::Maximum;
+			//lightRay.Set(intersection.Surface.PointWS + wIn * 1E-3f, wIn, 1E-3f, Maths::Maximum);
+			lightRay.Set(intersection.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, 0.f, Maths::Maximum);
+			
+			//lightRay.Direction = wIn;
+			//lightRay.Origin = intersection.Surface.PointWS + wIn * 1e-3f;
+			//lightRay.Min = 1e-3f;
+			//lightRay.Max = Maths::Maximum;
+			//Vector3::Inverse(lightRay.Direction, lightRay.DirectionInverseCache);
 		}
 
 		--nVPLIndex;
@@ -353,10 +357,13 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 		// -- ray is moved by a small epsilon in sampled direction
 		// -- ray origin is set to point of intersection
 		//----------------------------------------------------------------------------------------------
-		ray.Min = 0.f;
-		ray.Max = Maths::Maximum;
-		ray.Origin = p_intersection.Surface.PointWS + wIn * m_fReflectEpsilon;
-		ray.Direction = wIn;
+		ray.Set(p_intersection.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, 0.f, Maths::Maximum);
+
+		//ray.Min = 0.f;
+		//ray.Max = Maths::Maximum;
+		//ray.Origin = p_intersection.Surface.PointWS + wIn * m_fReflectEpsilon;
+		//ray.Direction = wIn;
+		//Vector3::Inverse(ray.Direction, ray.DirectionInverseCache);
 		
 		// Update path contribution at current stage
 		pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;

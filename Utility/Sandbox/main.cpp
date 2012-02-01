@@ -13,8 +13,8 @@
 #include <omp.h>
 
 #include <boost/program_options.hpp>
+#include <boost/chrono.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/timer.hpp>
 #include <boost/asio.hpp>
 
 // Illumina Environment
@@ -99,7 +99,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	engineKernel.GetSamplerManager()->RegisterFactory("Random", new RandomSamplerFactory());
 	engineKernel.GetSamplerManager()->RegisterFactory("Jitter", new JitterSamplerFactory());
 	engineKernel.GetSamplerManager()->RegisterFactory("Multijitter", new MultijitterSamplerFactory());
-	engineKernel.GetSamplerManager()->RegisterFactory("Precomputation", new MultijitterSamplerFactory());
+	engineKernel.GetSamplerManager()->RegisterFactory("Precomputation", new PrecomputationSamplerFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Filter
@@ -206,7 +206,6 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	Message("Initialisation complete. Rendering in progress...", p_bVerbose);
 
 	// Initialise timing
-	boost::timer frameTimer;
 	float fTotalFramesPerSecond = 0.f;
 
 	ICamera *pCamera = environment.GetCamera();
@@ -219,15 +218,18 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	// Kiti
 	//Vector3 lookFrom(-19, 1, -19),
 	//	lookAt(0, 8, 0);
-	
+
+	double highResolutionTimerMultipler = ((double)boost::chrono::high_resolution_clock::period::num) / boost::chrono::high_resolution_clock::period::den;
+	double elapsed = 0;
+
 	// Sponza
 	//Vector3 lookFrom(800, 100, 200),
 	//	lookAt(0, 200, 100);
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
-		//alpha += Maths::PiTwo / 256;
+		boost::chrono::high_resolution_clock::time_point start = boost::chrono::high_resolution_clock::now();
 
-		frameTimer.restart();
+		//alpha += Maths::PiTwo / 256;
 		
 		//pCamera->MoveTo(lookFrom);
 		//pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
@@ -238,15 +240,18 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	 
 		// Render frame
 		pRenderer->Render();
-	 
+
+		boost::chrono::high_resolution_clock::time_point end = boost::chrono::high_resolution_clock::now();
+
 		// Compute frames per second
-		fTotalFramesPerSecond += (float)(1.0f / frameTimer.elapsed());
+		elapsed = highResolutionTimerMultipler * (end - start).count();
+		fTotalFramesPerSecond += (float)(1.0f / elapsed);
 		
 		if (p_bVerbose)
 		{
 			std::cout << std::endl;
-			std::cout << "-- Frame Render Time : [" << frameTimer.elapsed() << "s]" << std::endl;
-			std::cout << "-- Frames per second : [" << fTotalFramesPerSecond / nFrame << "]" << std::endl;
+			std::cout << "-- Frame Render Time : [" << elapsed << "s]" << std::endl;
+			std::cout << "-- Frames per second : [" << fTotalFramesPerSecond / (nFrame + 1)<< "]" << std::endl;
 		}
 	}
 

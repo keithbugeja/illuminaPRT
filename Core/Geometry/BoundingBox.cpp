@@ -4,6 +4,9 @@
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
+#include <float.h>
+#include <math.h>
+
 #include <iostream>
 
 #include "Geometry/BoundingBox.h"
@@ -13,6 +16,12 @@
 #include "Geometry/Transform.h"
 
 using namespace Illumina::Core;
+
+//----------------------------------------------------------------------------------------------
+static const float flt_plus_inf = -logf(0);	// let's keep C and C++ compilers happy.
+static const float ALIGN_16
+	ps_cst_plus_inf[4]	= {  flt_plus_inf,  flt_plus_inf,  flt_plus_inf,  flt_plus_inf },
+	ps_cst_minus_inf[4]	= { -flt_plus_inf, -flt_plus_inf, -flt_plus_inf, -flt_plus_inf }; 
 //----------------------------------------------------------------------------------------------
 AxisAlignedBoundingBox::AxisAlignedBoundingBox(void)
 { }
@@ -145,13 +154,65 @@ bool AxisAlignedBoundingBox::Intersects(const Ray &p_ray) const
 //----------------------------------------------------------------------------------------------
 bool AxisAlignedBoundingBox::Intersects(const Ray &p_ray, float &p_hitIn, float &p_hitOut) const
 {
+	/*
+	// you may already have those values hanging around somewhere
+	const __m128
+		plus_inf	= loadps(ps_cst_plus_inf),
+		minus_inf	= loadps(ps_cst_minus_inf);
+
+	// use whatever's apropriate to load.
+	const __m128
+		box_min	= loadps(&m_minExtent),
+		box_max	= loadps(&m_maxExtent),
+		pos	= loadps(&p_ray.Origin),
+		inv_dir	= loadps(&p_ray.DirectionInverseCache);
+
+	// use a div if inverted directions aren't available
+	const __m128 l1 = mulps(subps(box_min, pos), inv_dir);
+	const __m128 l2 = mulps(subps(box_max, pos), inv_dir);
+
+	// the order we use for those min/max is vital to filter out
+	// NaNs that happens when an inv_dir is +/- inf and
+	// (box_min - pos) is 0. inf * 0 = NaN
+	const __m128 filtered_l1a = minps(l1, plus_inf);
+	const __m128 filtered_l2a = minps(l2, plus_inf);
+
+	const __m128 filtered_l1b = maxps(l1, minus_inf);
+	const __m128 filtered_l2b = maxps(l2, minus_inf);
+
+	// now that we're back on our feet, test those slabs.
+	__m128 lmax = maxps(filtered_l1a, filtered_l2a);
+	__m128 lmin = minps(filtered_l1b, filtered_l2b);
+
+	// unfold back. try to hide the latency of the shufps & co.
+	const __m128 lmax0 = rotatelps(lmax);
+	const __m128 lmin0 = rotatelps(lmin);
+	lmax = minss(lmax, lmax0);
+	lmin = maxss(lmin, lmin0);
+
+	const __m128 lmax1 = muxhps(lmax,lmax);
+	const __m128 lmin1 = muxhps(lmin,lmin);
+	lmax = minss(lmax, lmax1);
+	lmin = maxss(lmin, lmin1);
+
+	const bool ret = _mm_comige_ss(lmax, _mm_setzero_ps()) & _mm_comige_ss(lmax,lmin);
+
+	storess(lmin, &p_hitIn);
+	storess(lmax, &p_hitOut);
+
+	return  ret;
+	*/
+
+	/**/
 	// Implementation from http://ompf.org/ray/ray_box.html
 	// based on geimer-muller ray-box intersection
 
-	Vector3 rcpDirection =
-		Vector3(1.0f / p_ray.Direction.X,
-				1.0f / p_ray.Direction.Y,
-				1.0f / p_ray.Direction.Z);
+	//Vector3 rcpDirection =
+	//	Vector3(1.0f / p_ray.Direction.X,
+	//			1.0f / p_ray.Direction.Y,
+	//			1.0f / p_ray.Direction.Z);
+
+	const Vector3 &rcpDirection = p_ray.DirectionInverseCache;
 
 	float rMin = (m_minExtent.X - p_ray.Origin.X) * rcpDirection.X,
 		rMax = (m_maxExtent.X - p_ray.Origin.X) * rcpDirection.X,
@@ -175,6 +236,7 @@ bool AxisAlignedBoundingBox::Intersects(const Ray &p_ray, float &p_hitIn, float 
 	p_hitOut = limitMax;
 
 	return ((limitMax >= 0.0f) & (limitMax >= limitMin));
+	/**/
 }
 //----------------------------------------------------------------------------------------------
 bool AxisAlignedBoundingBox::Intersects(const IBoundingVolume &p_volume) const

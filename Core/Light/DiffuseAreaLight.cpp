@@ -75,13 +75,15 @@ Spectrum DiffuseAreaLight::SampleRadiance(const Scene *p_pScene, float p_u, floa
 
 	p_ray.Direction = Montecarlo::UniformSampleSphere(p_w, p_x);
 	p_ray.Origin = SamplePoint(p_u, p_v, normal, p_pdf) + p_ray.Direction * 1e-3f; normal = -normal;
-	
+
 	p_ray.Min = 1e-3f;
 	p_ray.Max = Maths::Maximum;
 
 	if (Vector3::Dot(p_ray.Direction, normal) < 0) 
 		p_ray.Direction *= -1.0f;
-	
+
+	Vector3::Inverse(p_ray.Direction, p_ray.DirectionInverseCache);
+
 	p_pdf = m_pShape->GetPdf(p_ray.Origin) * Maths::InvPiTwo;
 
 	return Radiance(p_ray.Origin, normal, p_ray.Direction);
@@ -109,6 +111,15 @@ Vector3 DiffuseAreaLight::SamplePoint(const Vector3 &p_viewPoint, float p_u, flo
 	else
 	{
 		surfacePoint = m_pShape->SamplePoint(p_viewPoint, p_u, p_v, surfaceNormal);
+		
+		/*
+		//---TEMP
+		surfacePoint.Set(0, 29.9, 0);
+		surfaceNormal = (p_viewPoint - surfacePoint);
+		surfaceNormal.Normalize();
+		//---TEMP
+		*/
+
 		p_pdf = m_pShape->GetPdf(surfacePoint);
 	}
 

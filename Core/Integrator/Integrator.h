@@ -27,7 +27,7 @@ namespace Illumina
 			int SampleIndex;
 
 			Vector2 SurfacePosition;
-			Vector2 NormalisedPosition;
+			Vector2 NormalisedPosition;			
 		};
 
 		//----------------------------------------------------------------------------------------------

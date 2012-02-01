@@ -17,9 +17,12 @@ namespace Illumina
 		class Ray
 		{
 		public:
-			Vector3 Origin,
-				Direction;
+			Vector3 Origin;
+			Vector3 Direction;
 		
+			Vector3 DirectionInverseCache;
+		
+		public:
 			float Min, Max;
 
 		public:
@@ -31,6 +34,7 @@ namespace Illumina
 			inline Ray operator-(void) const;
 
 			inline void Set(const Vector3 &p_origin, const Vector3 &p_direction, float p_fMin = 0.0f, float p_fMax = Maths::Maximum);
+			inline void SetDirection(const Vector3 &p_direction);
 
 			inline Vector3 PointAlongRay(float p_fDistance) const;
 			inline void PointAlongRay(float p_fDistance, Vector3 &p_out);

@@ -14,10 +14,19 @@ inline Ray Ray::operator-(void) const
 //----------------------------------------------------------------------------------------------
 inline void Ray::Set(const Vector3 &p_origin, const Vector3 &p_direction, float p_fMin, float p_fMax)
 {
-	Origin = p_origin;
-	Direction = p_direction;
 	Min = p_fMin;
 	Max = p_fMax;
+
+	Origin = p_origin;
+	Direction = p_direction;
+
+	Vector3::Inverse(Direction, DirectionInverseCache);
+}
+//----------------------------------------------------------------------------------------------
+inline void Ray::SetDirection(const Vector3 &p_direction)
+{
+	Direction = p_direction;
+	Vector3::Inverse(Direction, DirectionInverseCache);
 }
 //----------------------------------------------------------------------------------------------
 inline Vector3 Ray::PointAlongRay(float p_fDistance) const {
@@ -46,6 +55,7 @@ inline Ray& Ray::operator=(const Ray &p_ray)
 {
 	Origin = p_ray.Origin;
 	Direction = p_ray.Direction;
+	DirectionInverseCache = p_ray.DirectionInverseCache;
 	Min = p_ray.Min;
 	Max = p_ray.Max;
 

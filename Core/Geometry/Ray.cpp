@@ -16,14 +16,18 @@ Ray::Ray(const Vector3 &p_origin, const Vector3 &p_direction)
 	, Direction(p_direction)
 	, Min(0.0f)
 	, Max(Maths::Maximum) 
-{ }
+{ 
+	Vector3::Inverse(Direction, DirectionInverseCache);
+}
 //----------------------------------------------------------------------------------------------
 Ray::Ray(const Vector3 &p_origin, const Vector3 &p_direction, float p_fMin, float p_fMax)
 	: Origin(p_origin)
 	, Direction(p_direction)
 	, Min(p_fMin)
 	, Max(p_fMax) 
-{ }
+{ 
+	Vector3::Inverse(Direction, DirectionInverseCache);
+}
 //----------------------------------------------------------------------------------------------
 Ray::Ray(const Ray &p_ray) {
 	*this = p_ray;
@@ -37,6 +41,8 @@ void Ray::Apply(const Transformation &p_transformation, const Ray &p_ray, Ray &p
 
 	p_out.Min = p_ray.Min;
 	p_out.Max = p_ray.Max;
+
+	Vector3::Inverse(p_out.Direction, p_out.DirectionInverseCache);
 }
 //----------------------------------------------------------------------------------------------
 void Ray::ApplyInverse(const Transformation &p_transformation, const Ray &p_ray, Ray &p_out)
@@ -47,6 +53,8 @@ void Ray::ApplyInverse(const Transformation &p_transformation, const Ray &p_ray,
 
 	p_out.Min = p_ray.Min;
 	p_out.Max = p_ray.Max;
+
+	Vector3::Inverse(p_out.Direction, p_out.DirectionInverseCache);
 }
 //----------------------------------------------------------------------------------------------
 std::string Ray::ToString(void) const

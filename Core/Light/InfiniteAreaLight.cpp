@@ -85,10 +85,15 @@ Spectrum InfiniteAreaLight::SampleRadiance(const Scene *p_pScene, float p_u, flo
 {
 	p_pdf = 0.5f / Maths::PiTwo;
 
-	p_ray.Direction = -Montecarlo::UniformSampleSphere(p_u, p_v);
-	p_ray.Origin = p_ray.Direction * -1e+38f;
-	p_ray.Min = 1e-03;
-	p_ray.Max = Maths::Maximum;
+	p_ray.Set(p_ray.Direction * -1E+38f, 
+		-Montecarlo::UniformSampleSphere(p_u, p_v), 
+		1E-03, Maths::Maximum);
+
+	//p_ray.Direction = -Montecarlo::UniformSampleSphere(p_u, p_v);
+	//p_ray.Origin = p_ray.Direction * -1e+38f;
+	//p_ray.Min = 1e-03;
+	//p_ray.Max = Maths::Maximum;
+	//Vector3::Inverse(p_ray.Direction, p_ray.DirectionInverseCache);
 
 	return Radiance(p_ray.Direction);
 }

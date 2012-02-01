@@ -9,6 +9,14 @@
 
 using namespace Illumina::Core;
 
+#if (defined(min))
+#undef min
+#endif
+
+#if (defined(max))
+#undef max
+#endif
+
 const float Maths::E			= Maths::Exp(1.0f);
 const float Maths::Pi			= Maths::Atan(1.0f) * 4.0f;
 const float Maths::PiTwo		= Maths::Atan(1.0f) * 8.0f;

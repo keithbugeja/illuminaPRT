@@ -59,6 +59,9 @@ void PerspectiveCamera::GetRay(float p_fPixelX, float p_fPixelY, float p_fXi1, f
 		m_up * p_fPixelY;
 
 	p_ray.Origin = m_centre;
-	p_ray.Direction = m_corner + Vector3::Normalize(target - m_centre);
+	p_ray.SetDirection(m_corner + Vector3::Normalize(target - m_centre));
+	
+	//p_ray.Direction = m_corner + Vector3::Normalize(target - m_centre);
+	//Vector3::Inverse(p_ray.Direction, p_ray.DirectionInverseCache);
 }
 //----------------------------------------------------------------------------------------------
