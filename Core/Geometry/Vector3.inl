@@ -260,6 +260,25 @@ inline float Vector3::TripleProduct(const Vector3 &p_vector1, const Vector3 &p_v
 	return Vector3::Dot(p_vector1, Vector3::Cross(p_vector2, p_vector3));
 }
 //----------------------------------------------------------------------------------------------
+inline void Vector3::Inverse(void) 
+{
+	X = 1.0f / X;
+	Y = 1.0f / Y;
+	Z = 1.0f / Z;
+}
+//----------------------------------------------------------------------------------------------
+inline Vector3 Vector3::Inverse(const Vector3 &p_vector) 
+{
+	return Vector3(1.0f/p_vector.X, 1.0f/p_vector.Y, 1.0f/p_vector.Z);
+}
+//----------------------------------------------------------------------------------------------
+inline void Vector3::Inverse(const Vector3 &p_vector, Vector3 &p_out) 
+{
+	p_out.X = 1.0f / p_vector.X;
+	p_out.Y = 1.0f / p_vector.Y;
+	p_out.Z = 1.0f / p_vector.Z;
+}
+//----------------------------------------------------------------------------------------------
 inline Vector3 Vector3::Normalize(const Vector3 &p_vector) {
 	return p_vector / p_vector.Length();
 }

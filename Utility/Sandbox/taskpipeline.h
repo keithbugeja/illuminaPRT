@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/chrono.hpp>
 #include "../../Core/System/ArgumentMap.h"
 #include "task.h"
 
@@ -433,9 +434,8 @@ namespace Illumina
 					// Execute context pipeline until any messages (from workers or master) are available...
 					while(!masterMessageIn && !workerMessageIn)
 					{
-						// Timer shit
-						boost::timer renderTimer;
-						renderTimer.restart();
+						// Start timer
+						boost::chrono::high_resolution_clock::time_point start = boost::chrono::high_resolution_clock::now();
 
 						// If the number of workers has changed, reset running average
 						if (lastWorkerCount != p_coordinator.ready.Size())
@@ -468,7 +468,8 @@ namespace Illumina
 						ExecuteCoordinator(p_coordinator);
 
 						// Timer output
-						spanTime = renderTimer.elapsed();
+						boost::chrono::high_resolution_clock::time_point end = boost::chrono::high_resolution_clock::now();
+						spanTime = (((double)boost::chrono::high_resolution_clock::period::num) / boost::chrono::high_resolution_clock::period::den) * (end - start).count();
 						runningTime += spanTime; 
 						frameCount++;
 

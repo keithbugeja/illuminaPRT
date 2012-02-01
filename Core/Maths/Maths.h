@@ -10,6 +10,8 @@
 #include <limits>
 #include <math.h>
 
+#include "System/IlluminaPRT.h"
+
 namespace Illumina
 {
 	namespace Core
@@ -61,7 +63,8 @@ namespace Illumina
 				return p_fValue * p_fValue;
 			}
 
-			inline static float Sqrt(float p_fValue) {
+			inline static float Sqrt(const float p_fValue) 
+			{
 				return sqrt(p_fValue);
 			}
 

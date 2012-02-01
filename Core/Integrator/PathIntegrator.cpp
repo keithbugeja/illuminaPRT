@@ -149,10 +149,13 @@ Spectrum PathIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 		// -- ray is moved by a small epsilon in sampled direction
 		// -- ray origin is set to point of intersection
 		//----------------------------------------------------------------------------------------------
-		ray.Min = 0.f;
-		ray.Max = Maths::Maximum;
-		ray.Origin = p_intersection.Surface.PointWS + wIn * m_fReflectEpsilon;
-		ray.Direction = wIn;
+		ray.Set(p_intersection.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, 0.f, Maths::Maximum);
+
+		//ray.Min = 0.f;
+		//ray.Max = Maths::Maximum;
+		//ray.Origin = p_intersection.Surface.PointWS + wIn * m_fReflectEpsilon;
+		//ray.Direction = wIn;
+		//Vector3::Inverse(ray.Direction, ray.DirectionInverseCache);
 		
 		// Update path contribution at current stage
 		pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;

@@ -70,7 +70,10 @@
 				#define __ARCHITECTURE_X86__
 			#endif
 
-			#define ALIGN_16
+			#include <xmmintrin.h>
+			#include <emmintrin.h>
+
+			#define ALIGN_16 __attribute__ ((aligned (16)))
 
 			// Define Int32 and Int64
 			typedef uint32_t Int32;
@@ -78,8 +81,11 @@
 		#endif
 
 		// Aligned malloc and free call ordinary malloc and free functions
-		inline void* AlignedMalloc(size_t size, int boundary) {
-			return malloc(size);
+		inline void* AlignedMalloc(size_t size, int boundary) 
+		{
+			void *memory; 
+			posix_memalign(&memory, boundary, size);
+			return memory;
 		}
 
 		template<class T> void AlignedFree(T*& p) {
@@ -105,15 +111,21 @@
 					#define __ARCHITECTURE_X86__
 			#endif
 
-			#define ALIGN_16
+			#include <xmmintrin.h>
+			#include <emmintrin.h>
+
+			#define ALIGN_16 __attribute__ ((aligned (16)))
 
 			// Define Int32 and Int64
 			typedef uint32_t Int32;
 			typedef uint64_t Int64;
 
 			// Aligned malloc and free call ordinary malloc and free functions
-			inline void* AlignedMalloc(size_t size, int boundary) {
-				return malloc(size);
+			inline void* AlignedMalloc(size_t size, int boundary) 
+			{
+				void *memory; 
+				posix_memalign(&memory, boundary, size);
+				return memory;
 			}
 
 			template<class T> void AlignedFree(T*& p) {
@@ -136,6 +148,18 @@
 		}
 	#endif
 #endif
+
+// turn those verbose intrinsics into something readable.
+#define loadps(mem)			_mm_load_ps((const float * const)(mem))
+#define storess(ss,mem)		_mm_store_ss((float * const)(mem),(ss))
+#define minss				_mm_min_ss
+#define maxss				_mm_max_ss
+#define minps				_mm_min_ps
+#define maxps				_mm_max_ps
+#define mulps				_mm_mul_ps
+#define subps				_mm_sub_ps
+#define rotatelps(ps)		_mm_shuffle_ps((ps),(ps), 0x39)	// a,b,c,d -> b,c,d,a
+#define muxhps(low,high)	_mm_movehl_ps((low),(high))	// low{a,b,c,d}|high{e,f,g,h} = {c,d,g,h}
 
 // MakeInt64 (Little-endian)
 inline Int64 MakeInt64(Int32 hi, Int32 lo) {

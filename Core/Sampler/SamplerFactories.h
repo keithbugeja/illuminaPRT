@@ -95,5 +95,31 @@ namespace Illumina
 				return new RandomSampler(p_strId);
 			}
 		};
+
+		class PrecomputationSamplerFactory : public Illumina::Core::Factory<Illumina::Core::ISampler>
+		{
+		public:
+			Illumina::Core::ISampler *CreateInstance(void)
+			{
+				return new PrecomputationSampler();
+			}
+
+			// Arguments
+			// -- Id {String}
+			Illumina::Core::ISampler *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strId;
+
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId);
+
+				return CreateInstance();
+			}
+
+			Illumina::Core::ISampler *CreateInstance(const std::string &p_strId)
+			{
+				return new PrecomputationSampler(p_strId);
+			}
+		};
 	}
 }

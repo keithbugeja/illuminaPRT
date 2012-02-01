@@ -157,7 +157,8 @@ bool KDTreeMesh::Intersects(const Ray &p_ray)
 {
 	Ray ray(p_ray);
 
-	return Intersect_Recursive(&m_rootNode, ray);
+	//return Intersect_Recursive(&m_rootNode, ray);
+	return Intersect_Stack(&m_rootNode, ray);
 }
 
 //----------------------------------------------------------------------------------------------

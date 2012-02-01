@@ -11,6 +11,7 @@
 
 #include "Maths/Maths.h"
 #include "Threading/List.h"
+
 //----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
@@ -32,7 +33,7 @@ namespace Illumina
 			/* Vector elements */
 			ALIGN_16 union
 			{
-				struct	{float X, Y, Z, W;};
+				struct	{ float X, Y, Z, W; };
 				float	Element[4];
 			};
 
@@ -84,6 +85,7 @@ namespace Illumina
 			inline int ArgMaxComponent() const;
 			inline int ArgMinComponent() const;
 
+			inline void Inverse(void);
 			inline void Normalize(void);
 			inline float Length(void) const;
 			inline float LengthSquared(void) const;
@@ -102,6 +104,8 @@ namespace Illumina
 			static inline Vector3 Cross(const Vector3 &p_vector1, const Vector3 &p_vector2);
 			static inline Vector3 Normalize(const Vector3 &p_vector);
 			static inline void Normalize(const Vector3 &p_vector, Vector3 &p_out);
+			static inline Vector3 Inverse(const Vector3 &p_vector);
+			static inline void Inverse(const Vector3 &p_vector, Vector3 &p_out);
 
 			static inline Vector3 Max(const Vector3 &p_vector1, const Vector3 &p_vector2);
 			static inline Vector3 Min(const Vector3 &p_vector1, const Vector3 &p_vector2);

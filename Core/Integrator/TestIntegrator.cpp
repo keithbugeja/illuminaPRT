@@ -114,10 +114,13 @@ Spectrum TestIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 			//f = 0;
 
 			//ray.Origin = p_intersection.Surface.PointWS + p_intersection.Surface.ShadingNormal * 1E-4f;
-			ray.Origin = p_intersection.Surface.PointWS + wIn * 1E-4f;
-			ray.Direction = wIn;
-			ray.Min = 1E-4f;
-			ray.Max = Maths::Maximum;
+			ray.Set(p_intersection.Surface.PointWS + wIn * 1E-4f, wIn, 1E-4f, Maths::Maximum);
+
+			//ray.Origin = p_intersection.Surface.PointWS + wIn * 1E-4f;
+			//ray.Direction = wIn;
+			//ray.Min = 1E-4f;
+			//ray.Max = Maths::Maximum;
+			//Vector3::Inverse(ray.Direction, ray.DirectionInverseCache);
 
 			if (!f.IsBlack() && pdf != 0.f)
 			{
@@ -147,10 +150,13 @@ Spectrum TestIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 			//ray.Min = 0.f;
 			//ray.Max = Maths::Maximum;
 
-			ray.Direction = wIn;
-			ray.Origin = p_intersection.Surface.PointWS  + wIn * 1E-4f;
-			ray.Min = 1e-4f;
-			ray.Max = Maths::Maximum;
+			ray.Set(p_intersection.Surface.PointWS + wIn * 1E-4f, wIn, 1E-4f, Maths::Maximum);
+
+			//ray.Direction = wIn;
+			//ray.Origin = p_intersection.Surface.PointWS  + wIn * 1E-4f;
+			//ray.Min = 1e-4f;
+			//ray.Max = Maths::Maximum;
+			//Vector3::Inverse(ray.Direction, ray.DirectionInverseCache);
 
 			if (!f.IsBlack() && pdf != 0.f)
 			{
