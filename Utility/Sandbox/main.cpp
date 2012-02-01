@@ -99,6 +99,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	engineKernel.GetSamplerManager()->RegisterFactory("Random", new RandomSamplerFactory());
 	engineKernel.GetSamplerManager()->RegisterFactory("Jitter", new JitterSamplerFactory());
 	engineKernel.GetSamplerManager()->RegisterFactory("Multijitter", new MultijitterSamplerFactory());
+	engineKernel.GetSamplerManager()->RegisterFactory("Precomputation", new MultijitterSamplerFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Filter
