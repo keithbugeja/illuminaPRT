@@ -23,6 +23,8 @@ static const float ALIGN_16
 	ps_cst_plus_inf[4]	= {  flt_plus_inf,  flt_plus_inf,  flt_plus_inf,  flt_plus_inf },
 	ps_cst_minus_inf[4]	= { -flt_plus_inf, -flt_plus_inf, -flt_plus_inf, -flt_plus_inf }; 
 //----------------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------------
 AxisAlignedBoundingBox::AxisAlignedBoundingBox(void)
 { }
 //----------------------------------------------------------------------------------------------
@@ -203,7 +205,6 @@ bool AxisAlignedBoundingBox::Intersects(const Ray &p_ray, float &p_hitIn, float 
 	return  ret;
 	*/
 
-	/**/
 	// Implementation from http://ompf.org/ray/ray_box.html
 	// based on geimer-muller ray-box intersection
 
@@ -236,7 +237,6 @@ bool AxisAlignedBoundingBox::Intersects(const Ray &p_ray, float &p_hitIn, float 
 	p_hitOut = limitMax;
 
 	return ((limitMax >= 0.0f) & (limitMax >= limitMin));
-	/**/
 }
 //----------------------------------------------------------------------------------------------
 bool AxisAlignedBoundingBox::Intersects(const IBoundingVolume &p_volume) const

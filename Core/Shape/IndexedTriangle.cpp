@@ -251,6 +251,51 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 //----------------------------------------------------------------------------------------------
 bool IndexedTriangle::Intersects(const Ray &p_ray)
 {	
+	/*
+	Vector3 edge1, edge2, tvec, pvec, qvec;
+	double det, inv_det;
+	float u, v, a, t;
+
+	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
+		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
+		&v2 = m_pMesh->VertexList[m_nVertexID[2]];
+
+	Vector3::Subtract(v1.Position, v0.Position, edge1);
+	Vector3::Subtract(v2.Position, v0.Position, edge2);
+
+	Vector3::Cross(p_ray.Direction, edge2, pvec);
+
+	det = Vector3::Dot(edge1, pvec);
+	
+	if (det > -EPSILON && det < EPSILON)
+		return false;
+
+	inv_det = 1.0 / det;
+
+	Vector3::Subtract(p_ray.Origin, v0.Position, tvec);
+	
+	u = Vector3::Dot(tvec, pvec) * inv_det;
+	if (u < 0.0 || u > 1.0)
+		return false;
+
+	Vector3::Cross(tvec, edge1, qvec);
+
+	v = Vector3::Dot(p_ray.Direction, qvec) * inv_det;
+	if (v < 0.0 || v > 1.0)
+		return false;
+
+	a = 1 - u - v;
+	if (a < 0.0 || a > 1.0)
+		return false;
+
+	t = Vector3::Dot(edge2, qvec) * inv_det;
+	if (t < p_ray.Min || t > p_ray.Max)
+		return false;
+	
+	return true;
+	*/
+
+	/**/
 	// 23s sponza
 	double edge1[3], edge2[3], tvec[3], pvec[3], qvec[3];
 	double det, inv_det;
@@ -293,7 +338,7 @@ bool IndexedTriangle::Intersects(const Ray &p_ray)
 		return false;
 	
 	return true;
-
+	/**/
 	/*
 	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
 		&v1 = m_pMesh->VertexList[m_nVertexID[1]],

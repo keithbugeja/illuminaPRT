@@ -86,26 +86,26 @@ namespace Illumina
 			inline int ArgMinComponent() const;
 
 			inline void Inverse(void);
-			inline void Normalize(void);
 			inline float Length(void) const;
 			inline float LengthSquared(void) const;
-			inline float Dot(const Vector3 &p_vector) const;
-			inline float AbsDot(const Vector3 &p_vector) const;
-			inline Vector3 Cross(const Vector3 &p_vector) const;
+			FORCEINLINE void Normalize(void);
+			FORCEINLINE float Dot(const Vector3 &p_vector) const;
+			FORCEINLINE float AbsDot(const Vector3 &p_vector) const;
+			FORCEINLINE Vector3 Cross(const Vector3 &p_vector) const;
 
 			static inline void Add(const Vector3 &p_vector1, const Vector3 &p_vector2, Vector3 &p_out);
 			static inline void Subtract(const Vector3 &p_vector1, const Vector3 &p_vector2, Vector3 &p_out);
 			static inline float Distance(const Vector3& p_point1, const Vector3& p_point2);
 			static inline float DistanceSquared(const Vector3& p_point1, const Vector3& p_point2);
-			static inline float Dot(const Vector3 &p_vector1, const Vector3 &p_vector2);
-			static inline float AbsDot(const Vector3 &p_vector1, const Vector3 &p_vector2);
 			static inline float TripleProduct(const Vector3 &p_vector1, const Vector3 &p_vector2, const Vector3 &p_vector3);
-			static inline void Cross(const Vector3 &p_vector1, const Vector3 &p_vector2, Vector3 &p_out);
-			static inline Vector3 Cross(const Vector3 &p_vector1, const Vector3 &p_vector2);
-			static inline Vector3 Normalize(const Vector3 &p_vector);
-			static inline void Normalize(const Vector3 &p_vector, Vector3 &p_out);
 			static inline Vector3 Inverse(const Vector3 &p_vector);
 			static inline void Inverse(const Vector3 &p_vector, Vector3 &p_out);
+			static FORCEINLINE float Dot(const Vector3 &p_vector1, const Vector3 &p_vector2);
+			static FORCEINLINE float AbsDot(const Vector3 &p_vector1, const Vector3 &p_vector2);
+			static FORCEINLINE void Cross(const Vector3 &p_vector1, const Vector3 &p_vector2, Vector3 &p_out);
+			static FORCEINLINE Vector3 Cross(const Vector3 &p_vector1, const Vector3 &p_vector2);
+			static FORCEINLINE Vector3 Normalize(const Vector3 &p_vector);
+			static FORCEINLINE void Normalize(const Vector3 &p_vector, Vector3 &p_out);
 
 			static inline Vector3 Max(const Vector3 &p_vector1, const Vector3 &p_vector2);
 			static inline Vector3 Min(const Vector3 &p_vector1, const Vector3 &p_vector2);

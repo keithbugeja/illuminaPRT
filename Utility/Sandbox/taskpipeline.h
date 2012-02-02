@@ -22,9 +22,6 @@ namespace Illumina
 				TaskGroup group;
 
 				// Scheduling groups 
-				//	ready = can receive task 
-				//	startup = initialisation stage
-				//	shutdown = release stage
 				TaskGroup ready;
 				TaskGroup startup;
 				TaskGroup shutdown;
@@ -156,11 +153,7 @@ namespace Illumina
 			bool CSynchroniseWorker(CoordinatorTask &p_coordinator)
 			{
 				SynchroniseMessage synchroniseMessage;
-
-				// std::cout << "Synchronising workers..." << std::endl;
 				p_coordinator.ready.Broadcast(p_coordinator.task, (IMessage*)&synchroniseMessage, MM_ChannelWorkerStatic);
-				// std::cout << "Synchronise sent..." << std::endl;
-
 				return true;
 			}
 
@@ -392,7 +385,8 @@ namespace Illumina
 
 				bool nextFrameOutput = false;
 
-				double runningTime = 0, 
+				double start, end,
+					runningTime = 0, 
 					outputTime = 1,
 					spanTime = 0;
 
@@ -435,7 +429,7 @@ namespace Illumina
 					while(!masterMessageIn && !workerMessageIn)
 					{
 						// Start timer
-						boost::chrono::high_resolution_clock::time_point start = boost::chrono::high_resolution_clock::now();
+						start = Platform::GetTime();
 
 						// If the number of workers has changed, reset running average
 						if (lastWorkerCount != p_coordinator.ready.Size())
@@ -468,8 +462,8 @@ namespace Illumina
 						ExecuteCoordinator(p_coordinator);
 
 						// Timer output
-						boost::chrono::high_resolution_clock::time_point end = boost::chrono::high_resolution_clock::now();
-						spanTime = (((double)boost::chrono::high_resolution_clock::period::num) / boost::chrono::high_resolution_clock::period::den) * (end - start).count();
+						end = Platform::GetTime();
+						spanTime = Platform::ToSeconds(end - start);
 						runningTime += spanTime; 
 						frameCount++;
 

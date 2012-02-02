@@ -31,19 +31,24 @@ MultithreadedRenderer::MultithreadedRenderer(const std::string &p_strName, Scene
 //----------------------------------------------------------------------------------------------
 void MultithreadedRenderer::Render(void)
 {
+	static int updateIO = 1;
+
+	if (++updateIO == 5) 
+		updateIO = 0;
+
 	BOOST_ASSERT(m_pScene != NULL && m_pIntegrator != NULL && m_pFilter != NULL && 
 		m_pScene->GetCamera() != NULL && m_pScene->GetSpace() != NULL && m_pScene->GetSampler() != NULL);
 
 	int height = m_pDevice->GetHeight(),
 		width = m_pDevice->GetWidth();
 
-	m_pDevice->BeginFrame();
+	if (!updateIO) m_pDevice->BeginFrame();
 	
 	boost::progress_display renderProgress(height);
 
 	m_pIntegrator->Prepare(m_pScene);
 
-	#pragma omp parallel for schedule(guided)
+	#pragma omp parallel for schedule(static, 8) num_threads(4)
 	for (int y = 0; y < height; ++y)
 	{
 		Vector2 *pSampleBuffer = new Vector2[m_nSampleCount];
@@ -78,9 +83,9 @@ void MultithreadedRenderer::Render(void)
 
 		delete[] pSampleBuffer;
 		
-		++renderProgress;
+		// ++renderProgress;
 	}
 
-	m_pDevice->EndFrame();
+	if(!updateIO) m_pDevice->EndFrame();
 }
 //----------------------------------------------------------------------------------------------
