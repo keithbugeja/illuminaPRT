@@ -44,33 +44,6 @@ using namespace Illumina::Core;
 
 #include <omp.h>
 
-/*
-#include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/timer.hpp>
-
-// Illumina Environment
-#include "System/EngineKernel.h"
-#include "Scene/Environment.h"
-
-// Factories
-#include "Camera/CameraFactories.h"
-#include "Device/DeviceFactories.h"
-#include "Light/LightFactories.h"
-#include "Space/SpaceFactories.h"
-#include "Shape/ShapeFactories.h"
-#include "Filter/FilterFactories.h"
-#include "Sampler/SamplerFactories.h"
-#include "Texture/TextureFactories.h"
-#include "Material/MaterialFactories.h"
-#include "Renderer/RendererFactories.h"
-#include "Integrator/IntegratorFactories.h"
-
-#include "Staging/Acceleration.h"
-*/
-
-using namespace Illumina::Core;
-
 void Message(const std::string& p_strMessage, bool p_bVerbose)
 {
 	if (p_bVerbose) std::cout << p_strMessage << std::endl;
@@ -227,7 +200,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	//	lookAt(0, 200, 100);
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
-		boost::chrono::high_resolution_clock::time_point start = boost::chrono::high_resolution_clock::now();
+		double start = Platform::GetTime();
+		//boost::chrono::high_resolution_clock::time_point start = boost::chrono::high_resolution_clock::now();
 
 		//alpha += Maths::PiTwo / 256;
 		
@@ -241,10 +215,11 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		// Render frame
 		pRenderer->Render();
 
-		boost::chrono::high_resolution_clock::time_point end = boost::chrono::high_resolution_clock::now();
+		double end = Platform::GetTime();
+		//boost::chrono::high_resolution_clock::time_point end = boost::chrono::high_resolution_clock::now();
 
 		// Compute frames per second
-		elapsed = highResolutionTimerMultipler * (end - start).count();
+		elapsed = Platform::ToSeconds(end - start);
 		fTotalFramesPerSecond += (float)(1.0f / elapsed);
 		
 		if (p_bVerbose)

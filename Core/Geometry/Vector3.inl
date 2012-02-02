@@ -182,19 +182,19 @@ inline float Vector3::LengthSquared(void) const {
 	return Vector3::Dot(*this, *this);
 }
 //----------------------------------------------------------------------------------------------
-inline void Vector3::Normalize(void) {
+FORCEINLINE void Vector3::Normalize(void) {
 	*this = Vector3::Normalize(*this);
 }
 //----------------------------------------------------------------------------------------------
-inline float Vector3::Dot(const Vector3 &p_vector) const {
+FORCEINLINE float Vector3::Dot(const Vector3 &p_vector) const {
 	return Vector3::Dot(*this, p_vector);
 }
 //----------------------------------------------------------------------------------------------
-inline float Vector3::AbsDot(const Vector3 &p_vector) const {
+FORCEINLINE float Vector3::AbsDot(const Vector3 &p_vector) const {
 	return Vector3::AbsDot(*this, p_vector);
 }
 //----------------------------------------------------------------------------------------------
-inline Vector3 Vector3::Cross(const Vector3 &p_vector) const {
+FORCEINLINE Vector3 Vector3::Cross(const Vector3 &p_vector) const {
 	return Vector3::Cross(*this, p_vector);
 }
 //----------------------------------------------------------------------------------------------
@@ -228,28 +228,28 @@ inline void Vector3::Subtract(const Vector3 &p_vector1, const Vector3 &p_vector2
 	#endif
 }
 //----------------------------------------------------------------------------------------------
-inline float Vector3::Dot(const Vector3 &p_vector1, const Vector3 &p_vector2)
+FORCEINLINE float Vector3::Dot(const Vector3 &p_vector1, const Vector3 &p_vector2)
 {
 	return p_vector1.X * p_vector2.X + 
 		p_vector1.Y * p_vector2.Y + 
 		p_vector1.Z * p_vector2.Z;
 }
 //----------------------------------------------------------------------------------------------
-inline float Vector3::AbsDot(const Vector3 &p_vector1, const Vector3 &p_vector2)
+FORCEINLINE float Vector3::AbsDot(const Vector3 &p_vector1, const Vector3 &p_vector2)
 {
 	return Maths::FAbs(p_vector1.X * p_vector2.X +
 		p_vector1.Y * p_vector2.Y + 
 		p_vector1.Z * p_vector2.Z);
 }
 //----------------------------------------------------------------------------------------------
-inline Vector3 Vector3::Cross(const Vector3 &p_vector1, const Vector3 &p_vector2)
+FORCEINLINE Vector3 Vector3::Cross(const Vector3 &p_vector1, const Vector3 &p_vector2)
 {
 	return Vector3(p_vector1.Y * p_vector2.Z - p_vector1.Z * p_vector2.Y,
 		p_vector1.X * p_vector2.Z - p_vector1.Z * p_vector2.X,
 		p_vector1.X * p_vector2.Y - p_vector1.Y * p_vector2.X);
 }
 //----------------------------------------------------------------------------------------------
-inline void Vector3::Cross(const Vector3 &p_vector1, const Vector3 &p_vector2, Vector3 &p_out)
+FORCEINLINE void Vector3::Cross(const Vector3 &p_vector1, const Vector3 &p_vector2, Vector3 &p_out)
 {
 	p_out.Set(p_vector1.Y * p_vector2.Z - p_vector1.Z * p_vector2.Y,
 		p_vector1.X * p_vector2.Z - p_vector1.Z * p_vector2.X,
@@ -279,11 +279,11 @@ inline void Vector3::Inverse(const Vector3 &p_vector, Vector3 &p_out)
 	p_out.Z = 1.0f / p_vector.Z;
 }
 //----------------------------------------------------------------------------------------------
-inline Vector3 Vector3::Normalize(const Vector3 &p_vector) {
+FORCEINLINE Vector3 Vector3::Normalize(const Vector3 &p_vector) {
 	return p_vector / p_vector.Length();
 }
 //----------------------------------------------------------------------------------------------
-inline void Vector3::Normalize(const Vector3 &p_vector, Vector3 &p_out)
+FORCEINLINE void Vector3::Normalize(const Vector3 &p_vector, Vector3 &p_out)
 {
 	float length = p_vector.Length();
 	p_out.Set(p_vector.X / length, p_vector.Y / length, p_vector.Z / length);

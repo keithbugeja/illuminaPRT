@@ -9,157 +9,170 @@
 #include <malloc.h>
 #include <boost/timer.hpp>
 
+//----------------------------------------------------------------------------------------------
+//	Compiler detection.
+//----------------------------------------------------------------------------------------------
+#if defined(__APPLE_CC__)
+
+	// Detected compiler :: GCC
+	#define __COMPILER_APPLE_GCC__
+
+	#include <stdint.h>
+	#include <float.h>
+	#include <limits.h>
+
+#elif defined(__GNUC__)
+
+	// Detected compiler :: GCC
+	#define __COMPILER_GCC__
+
+	#include <stdint.h>
+	#include <float.h>
+	#include <limits.h>
+	#include <inttypes.h>
+
+#elif defined(_MSC_VER)
+
+	// Detected compiler :: Microsoft Visual C++ compiler
+	#define __COMPILER_MSVC__
+
+#else
+
+	#error Compiler unsupported.
+
+#endif
+
+//----------------------------------------------------------------------------------------------
+//	Platform detection.
+//----------------------------------------------------------------------------------------------
 #if (defined(_WIN64) || defined(_WIN32))
+
 	// Detect OS :: Windows
 	#define __PLATFORM_WINDOWS__
 
 	// General include files for windows platform
 	#include <windows.h>
 
-	// Are we using the Visual C++ compiler?
-	#if defined(_MSC_VER)
-		#include <intrin.h>
-
-		// Detected compiler :: Microsoft Visual C++ compiler
-		#define __COMPILER_MSVC__
-
-		// Detect Architecture :: 32/64 bit platform
-		#if defined(_WIN64)
-			#define __ARCHITECTURE_X64__
-
-			// SSE functionality :: Enable SSE
-			#define SSE_ENABLED
-		#else
-			#define __ARCHITECTURE_X86__
-		#endif
-
-		// Define Int32 and Int64
-		typedef __int32 Int32;
-		typedef __int64 Int64;
-
-		// Alignment macro for specifying 16-byte boundary alignment of types
-		#if defined(SSE_ENABLED)
-			#include <xmmintrin.h>
-			#include <emmintrin.h>
-			#include <mmintrin.h>
-
-			#define ALIGN_16 _declspec(align(16))
-		#else
-			#define ALIGN_16
-		#endif
-
-		// Aligned Malloc and Free, which allow user to specify alignment boundary
-		inline void* AlignedMalloc(size_t size, int boundary) {
-			return _aligned_malloc(size, boundary);
-		}
-
-		template<class T> void AlignedFree(T*& p) {
-			_aligned_free(p);
-		}
+	// Detect Architecture :: 32/64 bit platform
+	#if defined(_WIN64)
+		#define __ARCHITECTURE_X64__
 	#else
-		#if defined(__GNUC__)
-			#include <inttypes.h>
-
-			// Detected compiler :: GCC
-			#define __COMPILER_GCC__
-
-			// Detect Architecture :: 32/64 bit platform
-			#if (defined(__x86_64) || defined(__x86_64__))
-				#define __ARCHITECTURE_X64__
-			#else
-				#define __ARCHITECTURE_X86__
-			#endif
-
-			#include <xmmintrin.h>
-			#include <emmintrin.h>
-
-			#define ALIGN_16 __attribute__ ((aligned (16)))
-
-			// Define Int32 and Int64
-			typedef uint32_t Int32;
-			typedef uint64_t Int64;
-		#endif
-
-		// Aligned malloc and free call ordinary malloc and free functions
-		inline void* AlignedMalloc(size_t size, int boundary) 
-		{
-			void *memory; 
-			posix_memalign(&memory, boundary, size);
-			return memory;
-		}
-
-		template<class T> void AlignedFree(T*& p) {
-			free(p);
-		}
-	#endif
-#else
-	#if (defined(__linux) || defined(__linux__))
-
-		// Detect OS :: Linux
-		#define __PLATFORM_LINUX__
-
-		#if defined(__GNUC__)
-			#include <inttypes.h>
-
-			// Detected compiler :: GCC
-			#define __COMPILER_GCC__
-
-			// Detect Architecture :: 32/64 bit platform
-			#if (defined(__x86_64) || defined(__x86_64__))
-					#define __ARCHITECTURE_X64__
-			#else
-					#define __ARCHITECTURE_X86__
-			#endif
-
-			#include <xmmintrin.h>
-			#include <emmintrin.h>
-
-			#define ALIGN_16 __attribute__ ((aligned (16)))
-
-			// Define Int32 and Int64
-			typedef uint32_t Int32;
-			typedef uint64_t Int64;
-
-			// Aligned malloc and free call ordinary malloc and free functions
-			inline void* AlignedMalloc(size_t size, int boundary) 
-			{
-				void *memory; 
-				posix_memalign(&memory, boundary, size);
-				return memory;
-			}
-
-			template<class T> void AlignedFree(T*& p) {
-				free(p);
-			}
-		#endif
-	#else
-		#define __COMPILER_UNKNOWN__
-		#define __PLATFORM_UNKNOWN__
 		#define __ARCHITECTURE_X86__
-		#define ALIGN_16
-
-		// Aligned malloc and free call ordinary malloc and free functions
-		inline void* AlignedMalloc(size_t size, int boundary) {
-			return malloc(size);
-		}
-
-		template<class T> void AlignedFree(T*& p) {
-			free(p);
-		}
 	#endif
+
+#elif defined(__linux__)
+
+	// Detect OS :: Linux
+	#define __PLATFORM_LINUX__
+	#include <float.h>
+
+	// Detect Architecture :: 32/64 bit platform
+	#if (defined(__x86_64__))
+		#define __ARCHITECTURE_X64__
+	#else
+		#define __ARCHITECTURE_X86__
+	#endif
+
+#elif (defined(__APPLE__) || defined(__MACOSX__) || defined(__APPLE_GCC__))
+
+	// Detect OS :: OSX
+	#define __PLATFORM_OSX__
+
+	// Detect Architecture :: 32/64 bit platform
+	#if (defined(__x86_64__))
+		#define __ARCHITECTURE_X64__
+	#else
+		#define __ARCHITECTURE_X86__
+	#endif
+
+#else
+	
+	#error Platform unsupported.
+
 #endif
 
-// turn those verbose intrinsics into something readable.
-#define loadps(mem)			_mm_load_ps((const float * const)(mem))
-#define storess(ss,mem)		_mm_store_ss((float * const)(mem),(ss))
-#define minss				_mm_min_ss
-#define maxss				_mm_max_ss
-#define minps				_mm_min_ps
-#define maxps				_mm_max_ps
-#define mulps				_mm_mul_ps
-#define subps				_mm_sub_ps
-#define rotatelps(ps)		_mm_shuffle_ps((ps),(ps), 0x39)	// a,b,c,d -> b,c,d,a
-#define muxhps(low,high)	_mm_movehl_ps((low),(high))	// low{a,b,c,d}|high{e,f,g,h} = {c,d,g,h}
+//----------------------------------------------------------------------------------------------
+//	Setup some compiler specific stuff
+//----------------------------------------------------------------------------------------------
+#if defined __COMPILER_APPLE_GCC__
+	
+	// Macro for a stronger inlining hint
+	#define FORCEINLINE				inline __attribute__((always_inline))
+
+	// Hint no function inlining
+	#define NOINLINE				__attribute__((noinline))
+	
+	// Alignment macro for specifying 16-byte boundary alignment of types
+	#define ALIGN_16				__attribute__ ((aligned (16)))
+
+	// Define Int32 and Int64
+	typedef uint32_t Int32;
+	typedef uint64_t Int64;
+
+	// Aligned malloc and free call ordinary malloc and free functions
+	inline void* AlignedMalloc(size_t size, int boundary) 
+	{
+		void *memory; 
+		posix_memalign(&memory, boundary, size);
+		return memory;
+	}
+
+	template<class T> void AlignedFree(T*& p) {
+		free(p);
+	}
+
+#elif defined __COMPILER_GCC__
+	
+	// Macro for a stronger inlining hint
+	#define FORCEINLINE				inline __attribute__((always_inline))
+
+	// Hint no function inlining
+	#define NOINLINE				__attribute__((noinline))
+
+	// Alignment macro for specifying 16-byte boundary alignment of types
+	#define ALIGN_16				__attribute__ ((aligned (16)))
+
+	// Define Int32 and Int64
+	typedef uint32_t Int32;
+	typedef uint64_t Int64;
+
+	// Aligned malloc and free call ordinary malloc and free functions
+	inline void* AlignedMalloc(size_t size, int boundary) 
+	{
+		void *memory; 
+		posix_memalign(&memory, boundary, size);
+		return memory;
+	}
+
+	template<class T> void AlignedFree(T*& p) {
+		free(p);
+	}
+
+#elif defined __COMPILER_MSVC__
+	
+	// Macro for a stronger inlining hint
+	#define FORCEINLINE				__forceinline
+
+	// Hint no function inlining
+	#define NOINLINE				__declspec(noinline)
+
+	// Alignment macro for specifying 16-byte boundary alignment of types
+	#define ALIGN_16				__declspec(align(16))
+
+	// Define Int32 and Int64
+	typedef __int32 Int32;
+	typedef __int64 Int64;
+
+	// Aligned Malloc and Free, which allow user to specify alignment boundary
+	inline void* AlignedMalloc(size_t size, int boundary) {
+		return _aligned_malloc(size, boundary);
+	}
+
+	template<class T> void AlignedFree(T*& p) {
+		_aligned_free(p);
+	}
+
+#endif
 
 // MakeInt64 (Little-endian)
 inline Int64 MakeInt64(Int32 hi, Int32 lo) {
@@ -190,6 +203,30 @@ template<class T> void Safe_Delete(T*& p)
 }
 
 //----------------------------------------------------------------------------------------------
+// SSE stuff
+//----------------------------------------------------------------------------------------------
+
+// Include SSE headers
+#include <mmintrin.h>
+#include <xmmintrin.h>
+#include <emmintrin.h>	// includes <xmmintrin.h>
+
+#define SSE_ENABLED
+
+// turn those verbose intrinsics into something readable.
+#define loadps(mem)			_mm_load_ps((const float * const)(mem))
+#define storess(ss,mem)		_mm_store_ss((float * const)(mem),(ss))
+#define minss				_mm_min_ss
+#define maxss				_mm_max_ss
+#define minps				_mm_min_ps
+#define maxps				_mm_max_ps
+#define mulps				_mm_mul_ps
+#define subps				_mm_sub_ps
+#define rotatelps(ps)		_mm_shuffle_ps((ps),(ps), 0x39)	// a,b,c,d -> b,c,d,a
+#define muxhps(low,high)	_mm_movehl_ps((low),(high))	// low{a,b,c,d}|high{e,f,g,h} = {c,d,g,h}
+
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
@@ -203,6 +240,7 @@ namespace Illumina
 			static long long int GetCycles(void);
 			static int GetProcessorCount(void);
 			static double GetTime(void);
+			static double ToSeconds(double);
 		};
 	}
 }
