@@ -167,6 +167,7 @@
     <ClCompile Include="..\..\..\..\Core\Object\UniqueID.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\BasicRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\DistributedRenderer.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Renderer\MultipassRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\MultithreadedRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\Renderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Sampler\JitterSampler.cpp" />
@@ -257,6 +258,7 @@
     <ClInclude Include="..\..\..\..\Core\Object\UniqueID.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\BasicRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\DistributedRenderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\MultipassRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\MultithreadedRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\Renderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\RendererFactories.h" />

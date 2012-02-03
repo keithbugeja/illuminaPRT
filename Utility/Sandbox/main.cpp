@@ -102,6 +102,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	//----------------------------------------------------------------------------------------------
 	Message("Registering Renderers...", p_bVerbose);
 	engineKernel.GetRendererManager()->RegisterFactory("Basic", new BasicRendererFactory());
+	engineKernel.GetRendererManager()->RegisterFactory("Multipass", new MultipassRendererFactory());
 	engineKernel.GetRendererManager()->RegisterFactory("Multithreaded", new MultithreadedRendererFactory());
 	engineKernel.GetRendererManager()->RegisterFactory("Distributed", new DistributedRendererFactory());
 

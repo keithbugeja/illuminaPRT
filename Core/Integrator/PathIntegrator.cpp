@@ -41,6 +41,11 @@ bool PathIntegrator::Shutdown(void)
 	return true;
 }
 //----------------------------------------------------------------------------------------------
+Spectrum PathIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_intersection)
+{
+	throw new Illumina::Core::Exception("Path Integrator does not support Radiance from Intersection!"); 
+}
+//----------------------------------------------------------------------------------------------
 Spectrum PathIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
 {
 	VisibilityQuery visibilityQuery(p_pScene);
@@ -48,17 +53,17 @@ Spectrum PathIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 	Spectrum pathThroughput(1.0f), 
 		L(0.0f);
 
+	Ray ray(p_ray); 
+	
 	IMaterial *pMaterial = NULL;
-
 	bool specularBounce = false;
 
 	BxDF::Type bxdfType;
-
-	Vector3 wIn, wOut,
+	
+	Vector3 wIn, wOut, 
 		wInLocal, wOutLocal; 
-	Vector2 sample;
 
-	Ray ray(p_ray); 
+	Vector2 sample;
 
 	float pdf;
 	
@@ -113,7 +118,6 @@ Spectrum PathIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 		//----------------------------------------------------------------------------------------------
 		if (!specularBounce)
 			L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
-			//L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
 			
 		//----------------------------------------------------------------------------------------------
 		// Sample bsdf for next direction
@@ -150,12 +154,6 @@ Spectrum PathIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 		// -- ray origin is set to point of intersection
 		//----------------------------------------------------------------------------------------------
 		ray.Set(p_intersection.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, 0.f, Maths::Maximum);
-
-		//ray.Min = 0.f;
-		//ray.Max = Maths::Maximum;
-		//ray.Origin = p_intersection.Surface.PointWS + wIn * m_fReflectEpsilon;
-		//ray.Direction = wIn;
-		//Vector3::Inverse(ray.Direction, ray.DirectionInverseCache);
 		
 		// Update path contribution at current stage
 		pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
@@ -169,6 +167,7 @@ Spectrum PathIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 
 			if (p_pScene->GetSampler()->Get1DSample() > continueProbability)
 				break;
+
 			pathThroughput /= continueProbability;
 		}
 	}

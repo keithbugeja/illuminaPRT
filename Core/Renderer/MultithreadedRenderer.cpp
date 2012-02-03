@@ -31,9 +31,10 @@ MultithreadedRenderer::MultithreadedRenderer(const std::string &p_strName, Scene
 //----------------------------------------------------------------------------------------------
 void MultithreadedRenderer::Render(void)
 {
-	static int updateIO = 1;
+	const int updateRate = 5;
+	static int updateIO = updateRate;
 
-	if (++updateIO == 5) 
+	if (++updateIO >= updateRate) 
 		updateIO = 0;
 
 	BOOST_ASSERT(m_pScene != NULL && m_pIntegrator != NULL && m_pFilter != NULL && 
@@ -83,7 +84,7 @@ void MultithreadedRenderer::Render(void)
 
 		delete[] pSampleBuffer;
 		
-		// ++renderProgress;
+		++renderProgress;
 	}
 
 	if(!updateIO) m_pDevice->EndFrame();

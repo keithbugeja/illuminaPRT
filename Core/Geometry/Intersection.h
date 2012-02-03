@@ -8,6 +8,7 @@
 
 #include "System/IlluminaPRT.h"
 
+#include "Spectrum/Spectrum.h"
 #include "Geometry/Transform.h"
 #include "Shape/DifferentialSurface.h"
 //----------------------------------------------------------------------------------------------
@@ -25,6 +26,9 @@ namespace Illumina
 		public:
 			DifferentialSurface Surface;
 			Transformation WorldTransform;
+			Spectrum Direct, Indirect, Reflectance;
+			Ray EyeRay;
+			bool Valid;
 
 		public:
 			Intersection(void);
