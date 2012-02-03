@@ -57,110 +57,211 @@ bool IGIIntegrator::Shutdown(void)
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-void IGIIntegrator::TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLPaths, int p_nMaxVPLs, int p_nMaxBounces, std::vector<VirtualPointLight> &p_vplList)
+void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, int p_nMaxPointLights, int p_nMaxBounces, std::vector<VirtualPointLight> &p_virtualPointLightList)
 {
+	VirtualPointLight pointLight;
 	Intersection intersection;
 	IMaterial *pMaterial;
 	BxDF::Type bxdfType;
+	Ray lightRay;
 
-	Spectrum alpha;
+	Spectrum contribution, 
+		alpha, f;
 
-	Vector3 lightPoint,
-		lightDirection,
-		normal, wIn, wOut;
+	Vector3 normal, 
+		wOut, wIn;
 
 	Vector2 pSample2D[2];
 
-	float pdf;
+	float continueProbability, 
+		pdf;
+
 	int intersections;
 
-	Ray lightRay;
-
-	// std::cout << "Total paths : [" << p_nVPLPaths << "], Max VPLs : [" << p_nMaxVPLs << "], Max Bounces = [" << p_nMaxBounces << "]" << std::endl;
-
-	for (int nVPLIndex = p_nVPLPaths; nVPLIndex > 0; )
+	// Trace either a maximum number of paths or virtual point lights
+	for (int lightIndex = 0, nPathIndex = p_nMaxPaths; nPathIndex > 0 && p_virtualPointLightList.size() < p_nMaxPointLights; --nPathIndex)
 	{
-		// Sample light for ray, pdf and radiance along ray
+		// Get samples for initial position and direction
 		p_pScene->GetSampler()->Get2DSamples(pSample2D, 2);
-		alpha = p_pScene->LightList[p_nLightIdx]->SampleRadiance(p_pScene, 
-			pSample2D[0].U, pSample2D[0].V, pSample2D[1].U, pSample2D[1].V, lightRay, pdf);
+		
+		// Get initial radiance, position and direction
+		alpha = p_pScene->LightList[lightIndex]->SampleRadiance(
+			p_pScene, pSample2D[0].U, pSample2D[0].V, 
+			pSample2D[1].U, pSample2D[1].V, lightRay, pdf);
 
-		lightRay.Origin += lightRay.Direction * 1e-1f;
-
+		// If pdf or radiance are zero, choose a new path
 		if (pdf == 0.0f || alpha.IsBlack())
 			continue;
 
+		// Scale radiance by pdf
 		alpha /= pdf;
 
-		// Do we have an intersection?
+		// Adjust ray origin to avoid intersecting light geometry
+		lightRay.Origin += lightRay.Direction * 1e-1f;
+
+		// Start tracing virtual point light path
 		for (intersections = 1; p_pScene->Intersects(lightRay, intersection); ++intersections)
 		{
 			wOut = -lightRay.Direction;
 			pMaterial = intersection.GetMaterial();
 			Spectrum Le = alpha * pMaterial->Rho(wOut, intersection.Surface) / Maths::Pi;
 
-			VirtualPointLight vpl;
+			// Set point light parameters
+			pointLight.Context = intersection;
+			pointLight.Direction = wOut;
+			pointLight.Power = Le;
 
-			vpl.Context = intersection;
-			vpl.Direction = wOut;
-			vpl.Power = Le;
+			// Push point light on list
+			p_virtualPointLightList.push_back(pointLight);
 
-			p_vplList.push_back(vpl);
-
-			Spectrum f = SampleF(p_pScene, intersection, wOut, wIn, pdf, bxdfType);
+			// Sample new direction
+			f = SampleF(p_pScene, intersection, wOut, wIn, pdf, bxdfType);
 			
-			if (f.IsBlack() || pdf == 0.0f)
+			// If reflectivity or pdf are zero, end path
+			if (f.IsBlack() || pdf == 0.0f || intersections > p_nMaxBounces)
 				break;
 
-			if (intersections > p_nMaxBounces)
-				break;
-
-			Spectrum contribScale = f * Vector3::AbsDot(wIn, intersection.Surface.ShadingBasisWS.W) / pdf;
+			// Compute contribution of path
+			contribution = f * Vector3::AbsDot(wIn, intersection.Surface.ShadingBasisWS.W) / pdf;
 
 			// Possibly terminate virtual light path with Russian roulette
-			float rrProb = Maths::Min(1.f, (contribScale[0] + contribScale[1] + contribScale[2]) * 0.33f);
-			if (p_pScene->GetSampler()->Get1DSample() > rrProb)
+			continueProbability = Maths::Min(1.f, (contribution[0] + contribution[1] + contribution[2]) * 0.33f);
+			if (p_pScene->GetSampler()->Get1DSample() > continueProbability)
 					break;
 
-			alpha *= contribScale / rrProb;
+			// Modify contribution accordingly
+			alpha *= contribution / continueProbability;
 
-			//lightRay.Set(intersection.Surface.PointWS + wIn * 1E-3f, wIn, 1E-3f, Maths::Maximum);
+			// Set new ray position and direction
 			lightRay.Set(intersection.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, 0.f, Maths::Maximum);
-			
-			//lightRay.Direction = wIn;
-			//lightRay.Origin = intersection.Surface.PointWS + wIn * 1e-3f;
-			//lightRay.Min = 1e-3f;
-			//lightRay.Max = Maths::Maximum;
-			//Vector3::Inverse(lightRay.Direction, lightRay.DirectionInverseCache);
 		}
 
-		--nVPLIndex;
-
-		// std::cout << "Path [" << nVPLIndex << "] : Bounces [" << intersections << "]" << std::endl;
+		// Increment light index, and reset if we traversed all scene lights
+		if (++lightIndex == p_pScene->LightList.Size())
+			lightIndex = 0;
 	}
 
-	if (p_vplList.size() > p_nMaxVPLs)
-	{
-		// std::cout << "Trimming VPL list from [" << p_vplList.size() << "] to [" << p_nMaxVPLs << "]" << std::endl;
-		p_vplList.erase(p_vplList.begin() + p_nMaxVPLs, p_vplList.end());
-	}
-
-	// std::cout << "VPL Count : [" << p_vplList.size() << "]" << std::endl; 
+	// Just in case we traced more than is required
+	if (p_virtualPointLightList.size() > p_nMaxPointLights)
+		p_virtualPointLightList.erase(p_virtualPointLightList.begin() + p_nMaxPointLights, p_virtualPointLightList.end());
 }
 //----------------------------------------------------------------------------------------------
 bool IGIIntegrator::Prepare(Scene *p_pScene)
 {
-	//VirtualPointLightList.clear();
-	//TraceVPLs(p_pScene, 0, m_nMaxVPL, VirtualPointLightList);
-
-	// Assume we're using a set of 9 VPL Lists
-	for (int set = 0; set < m_nTileArea; ++set)
+	for (int pointLightSet = m_nTileArea; pointLightSet != 0; --pointLightSet)
 	{
 		VirtualPointLightSet.push_back(std::vector<VirtualPointLight>());
-		TraceVPLs(p_pScene, 0, m_nMaxPath, m_nMaxVPL, m_nMaxRayDepth, VirtualPointLightSet.back());
+		TraceVirtualPointLights(p_pScene, m_nMaxPath, m_nMaxVPL, m_nMaxRayDepth, VirtualPointLightSet.back());
 	}
 
 	return true;
+}
+//----------------------------------------------------------------------------------------------
+Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_intersection)
+{
+	VisibilityQuery visibilityQuery(p_pScene),
+		vplQuery(p_pScene);
+
+	Spectrum pathThroughput(1.0f), 
+		L(0.0f),
+		E(0.0f);
+
+	IMaterial *pMaterial = NULL;
+
+	bool specularBounce = false;
+
+	BxDF::Type bxdfType;
+
+	Vector3 wIn, wOut,
+		wInLocal, wOutLocal; 
+
+	Vector2 sample;
+
+	float pdf;
+	int setId;
+	if (m_nTileWidth == 1) 
+		setId = 0;
+	else
+		setId = (int)p_pContext->SurfacePosition.X % m_nTileWidth + ((int)(p_pContext->SurfacePosition.Y) % m_nTileWidth) * m_nTileWidth;
+	
+	std::vector<VirtualPointLight> &pointLightSet = VirtualPointLightSet[setId];
+
+	std::vector<VirtualPointLight>::iterator pointLightIterator;
+
+	if (p_intersection.Valid)
+	{
+		if (p_intersection.HasMaterial()) 
+		{
+			// Get material for intersection primitive
+			pMaterial = p_intersection.GetMaterial();
+
+			//----------------------------------------------------------------------------------------------
+			// Sample lights for specular / first bounce
+			//----------------------------------------------------------------------------------------------
+			wOut = -Vector3::Normalize(p_intersection.EyeRay.Direction);
+
+			if (!p_intersection.IsEmissive())
+			{
+				E = 0.f;
+				p_intersection.Reflectance = 1.f;
+
+				// Sample direct lighting
+				p_intersection.Direct = SampleAllLights(p_pScene, p_intersection, 
+					p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, 
+					wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+			
+				for (pointLightIterator = pointLightSet.begin(); 
+					 pointLightIterator != pointLightSet.end(); ++pointLightIterator)
+				{
+					const VirtualPointLight &pointLight = *pointLightIterator;
+
+					// Test immediately if the point light is occluded
+					vplQuery.SetSegment(p_intersection.Surface.PointWS, 1e-1f, pointLight.Context.Surface.PointWS, 1e-1f);
+
+					// Ignore if such is the case.
+					if (vplQuery.IsOccluded()) 
+						continue;
+
+					// Sample reflectivity
+					wIn = Vector3::Normalize(pointLight.Context.Surface.PointWS - p_intersection.Surface.PointWS);
+					Spectrum f = IIntegrator::F(p_pScene, p_intersection, wOut, wIn);;
+			
+					if (f.IsBlack()) continue;
+					
+					__m128 iPointWS	= _mm_load_ps(p_intersection.Surface.PointWS.Element);
+					__m128 cPointWS	= _mm_load_ps(pointLight.Context.Surface.PointWS.Element); 
+
+					__m128 distance = _mm_sub_ps(iPointWS, cPointWS);
+					__m128 distSqr = _mm_dp_ps(distance, distance, 0xFF);
+
+					float d2 = distSqr.m128_f32[0];
+			
+					float cosX = Maths::Max(0, Vector3::Dot(wIn, p_intersection.Surface.ShadingBasisWS.W));
+					float cosY = Maths::Max(0, Vector3::Dot(-wIn, pointLight.Context.Surface.ShadingBasisWS.W));
+					float G = Maths::Min((cosX * cosY) / d2, 0.01f);
+
+					//p_intersection.Reflectance *= f;
+					// E += f * pointLight.Power * G;
+					
+					Spectrum Llight = f * G * pointLight.Power;
+					E += Llight;
+				}
+
+				p_intersection.Indirect = E / pointLightSet.size();
+			}
+			else
+			{
+				p_intersection.Direct = p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
+			}
+		}
+	}
+	else
+	{
+		for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
+			p_intersection.Direct = p_pScene->LightList[lightIndex]->Radiance(-p_intersection.EyeRay);
+	}
+
+	return p_intersection.Direct + p_intersection.Indirect;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)

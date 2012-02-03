@@ -12,6 +12,7 @@
 
 #include "Renderer/Renderer.h"
 #include "Renderer/BasicRenderer.h"
+#include "Renderer/MultipassRenderer.h"
 #include "Renderer/DistributedRenderer.h"
 #include "Renderer/MultithreadedRenderer.h"
 
@@ -50,6 +51,40 @@ namespace Illumina
 			Illumina::Core::IRenderer *CreateInstance(int p_nSamples)
 			{
 				return new BasicRenderer(NULL, NULL, NULL, NULL, p_nSamples);
+			}
+		};
+
+		class MultipassRendererFactory : public Illumina::Core::Factory<Illumina::Core::IRenderer>
+		{
+		public:
+			Illumina::Core::IRenderer *CreateInstance(void)
+			{
+				return new MultipassRenderer();
+			}
+
+			// Arguments
+			// -- Id
+			// -- Samples
+			Illumina::Core::IRenderer *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				int samples = 1;
+				p_argumentMap.GetArgument("Samples", samples);
+
+				std::string strId;
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId, samples);
+
+				return CreateInstance(samples);
+			}
+
+			Illumina::Core::IRenderer *CreateInstance(const std::string &p_strId, int p_nSamples)
+			{
+				return new MultipassRenderer(p_strId, NULL, NULL, NULL, NULL, p_nSamples);
+			}
+
+			Illumina::Core::IRenderer *CreateInstance(int p_nSamples)
+			{
+				return new MultipassRenderer(NULL, NULL, NULL, NULL, p_nSamples);
 			}
 		};
 
