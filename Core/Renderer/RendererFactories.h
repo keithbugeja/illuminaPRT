@@ -68,23 +68,33 @@ namespace Illumina
 			Illumina::Core::IRenderer *CreateInstance(ArgumentMap &p_argumentMap)
 			{
 				int samples = 1;
+
+				// disc. buffer (will be moved to pp-filter factory)
+				int dbSize = 3;
+				float dbDistance = 10,
+					dbCos = 0.75;
+
 				p_argumentMap.GetArgument("Samples", samples);
+				p_argumentMap.GetArgument("DB_Size", dbSize);
+				p_argumentMap.GetArgument("DB_Distance", dbDistance);
+				p_argumentMap.GetArgument("DB_Cos", dbCos);
+
 
 				std::string strId;
 				if (p_argumentMap.GetArgument("Id", strId))
-					return CreateInstance(strId, samples);
+					return CreateInstance(strId, samples, dbSize, dbDistance, dbCos);
 
-				return CreateInstance(samples);
+				return CreateInstance(samples, dbSize, dbDistance, dbCos);
 			}
 
-			Illumina::Core::IRenderer *CreateInstance(const std::string &p_strId, int p_nSamples)
+			Illumina::Core::IRenderer *CreateInstance(const std::string &p_strId, int p_nSamples, int p_nDBSize, float p_fDBDist, float p_fDBCos)
 			{
-				return new MultipassRenderer(p_strId, NULL, NULL, NULL, NULL, p_nSamples);
+				return new MultipassRenderer(p_strId, NULL, NULL, NULL, NULL, p_nSamples, p_nDBSize, p_fDBDist, p_fDBCos);
 			}
 
-			Illumina::Core::IRenderer *CreateInstance(int p_nSamples)
+			Illumina::Core::IRenderer *CreateInstance(int p_nSamples, int p_nDBSize, float p_fDBDist, float p_fDBCos)
 			{
-				return new MultipassRenderer(NULL, NULL, NULL, NULL, p_nSamples);
+				return new MultipassRenderer(NULL, NULL, NULL, NULL, p_nSamples, p_nDBSize, p_fDBDist, p_fDBCos);
 			}
 		};
 

@@ -29,11 +29,6 @@ using namespace Illumina::Core;
 	(c1[0] * (c2[1]*c3[2] - c3[1]*c2[2]) - \
 	 c1[1] * (c2[0]*c3[2] - c3[0]*c2[2]) + \
 	 c1[2] * (c2[0]*c3[1] - c3[0]*c2[1])) 
-
-/* #define DET(v1, v2, v3) \
-	(v1[0] * v2[1] * v3[2] + v1[1] * v2[2] * v3[0] + v1[2] * v2[0] * v3[1] - \
-	 v3[0] * v2[1] * v1[2] - v3[1] * v2[2] * v1[0] - v3[2] * v2[0] * v1[1])
-	 */
 //----------------------------------------------------------------------------------------------
 IndexedTriangle::IndexedTriangle(ITriangleMesh *p_pMesh, 
 	int p_nV1, int p_nV2, int p_nV3, int p_nGroupId)
@@ -87,9 +82,10 @@ int IndexedTriangle::GetGroupId(void) const {
 //----------------------------------------------------------------------------------------------
 bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surface)
 {
+	/**/
 	double edge1[3], edge2[3], tvec[3], pvec[3], qvec[3];
 	double det, inv_det;
-	float u, v, a, t;
+	float alpha, beta, gamma, t;
 
 	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
 		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
@@ -102,32 +98,29 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 
 	det = DOT(edge1, pvec);
 	
-	if (det > -EPSILON && det < EPSILON)
-		return false;
+	//if (det > -EPSILON && det < EPSILON)
+	//	return false;
 
 	inv_det = 1.0 / det;
 
 	SUB(tvec, p_ray.Origin.Element, v0.Position.Element);
 
-	u = DOT(tvec, pvec) * inv_det;
-	if (u < 0.0 || u > 1.0)
+	beta = DOT(tvec, pvec) * inv_det;
+	if (beta < 0.0 || beta > 1.0)
 		return false;
 
 	CROSS(qvec, tvec, edge1);
 
-	v = DOT(p_ray.Direction.Element, qvec) * inv_det;
-	if (v < 0.0 || v > 1.0)
-		return false;
-
-	a = 1 - u - v;
-	if (a < 0.0 || a > 1.0)
+	gamma = DOT(p_ray.Direction.Element, qvec) * inv_det;
+	if (gamma < 0.0 || gamma > 1.0 || (alpha = 1.0 - beta - gamma) < 0)
 		return false;
 
 	t = DOT(edge2, qvec) * inv_det;
 	if (t < p_ray.Min || t > p_ray.Max)
 		return false;
+	/**/
 
-	/*
+	/**//*
 	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]];
 	const Vertex &v1 = m_pMesh->VertexList[m_nVertexID[1]];
 	const Vertex &v2 = m_pMesh->VertexList[m_nVertexID[2]];
@@ -171,51 +164,7 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 	float t = A.Determinant() * invDetA;
 	if (t < p_ray.Min || t > p_ray.Max)
 		return false;
-	*/
-
-/*
-	double edge1[3], edge2[3], tvec[3], pvec[3], qvec[3];
-	double det, inv_det;
-	float u, v, a, t;
-
-	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
-		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
-		&v2 = m_pMesh->VertexList[m_nVertexID[2]];
-
-	SUB(edge1, v1.Position.Element, v0.Position.Element);
-	SUB(edge2, v2.Position.Element, v0.Position.Element);
-
-	CROSS(pvec, p_ray.Direction.Element, edge2);
-
-	det = DOT(edge1, pvec);
-	
-	if (det > -EPSILON && det < EPSILON)
-		return false;
-
-	inv_det = 1.0 / det;
-
-	SUB(tvec, p_ray.Origin.Element, v0.Position.Element);
-
-	u = DOT(tvec, pvec) * inv_det;
-	if (u < 0.0 || u > 1.0)
-		return false;
-
-	CROSS(qvec, tvec, edge1);
-
-	v = DOT(p_ray.Direction.Element, qvec) * inv_det;
-	if (v < 0.0 || v > 1.0)
-		return false;
-
-	a = 1 - u - v;
-	if (a < 0.0 || a > 1.0)
-		return false;
-
-	t = DOT(edge2, qvec) * inv_det;
-	if (t < p_ray.Min || t > p_ray.Max)
-		return false;
-	*/
-
-	float alpha = a, beta = u, gamma = v;
+	/**/
 
 	// Populate differential surface
 	p_surface.SetShape(this);
@@ -238,65 +187,48 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 	/* 
 	if (p_surface.ShadingNormal.X != p_surface.ShadingNormal.X)
 		std::cerr << "Warning : Indeterminate normal computation!" << std::endl;
-		*/
-
-	//// Set geometry normal
-	//p_surface.GeometryNormal = Vector3::Normalize(Vector3::Cross(CA, BA));
-
-	//if (p_surface.GeometryNormal.Dot(p_surface.ShadingNormal) < 0)
-	//	p_surface.GeometryNormal = -p_surface.GeometryNormal;
+	*/
 
 	return true;
 }
 //----------------------------------------------------------------------------------------------
 bool IndexedTriangle::Intersects(const Ray &p_ray)
 {	
-	/*
-	Vector3 edge1, edge2, tvec, pvec, qvec;
-	double det, inv_det;
-	float u, v, a, t;
-
-	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
-		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
-		&v2 = m_pMesh->VertexList[m_nVertexID[2]];
-
-	Vector3::Subtract(v1.Position, v0.Position, edge1);
-	Vector3::Subtract(v2.Position, v0.Position, edge2);
-
-	Vector3::Cross(p_ray.Direction, edge2, pvec);
-
-	det = Vector3::Dot(edge1, pvec);
-	
-	if (det > -EPSILON && det < EPSILON)
-		return false;
-
-	inv_det = 1.0 / det;
-
-	Vector3::Subtract(p_ray.Origin, v0.Position, tvec);
-	
-	u = Vector3::Dot(tvec, pvec) * inv_det;
-	if (u < 0.0 || u > 1.0)
-		return false;
-
-	Vector3::Cross(tvec, edge1, qvec);
-
-	v = Vector3::Dot(p_ray.Direction, qvec) * inv_det;
-	if (v < 0.0 || v > 1.0)
-		return false;
-
-	a = 1 - u - v;
-	if (a < 0.0 || a > 1.0)
-		return false;
-
-	t = Vector3::Dot(edge2, qvec) * inv_det;
-	if (t < p_ray.Min || t > p_ray.Max)
-		return false;
-	
-	return true;
-	*/
-
 	/**/
-	// 23s sponza
+	float te1xte2[3], 
+		edge2[3], 
+		interm[3];
+
+	float *te1 = (m_pMesh->VertexList[m_nVertexID[1]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position).Element;
+	float *te2 = (m_pMesh->VertexList[m_nVertexID[2]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position).Element;
+
+	CROSS(te1xte2, te1, te2);
+
+	const float rcp = 1.0f / DOT(te1xte2, p_ray.Direction.Element);
+	SUB(edge2, m_pMesh->VertexList[m_nVertexID[0]].Position, p_ray.Origin.Element);
+
+	const float toverd = DOT(te1xte2, edge2) * rcp;
+
+	if (toverd > p_ray.Max - EPSILON || toverd < EPSILON)
+		return false;
+
+	CROSS(interm, p_ray.Direction.Element, edge2);
+	
+	const float uoverd = DOT( interm, te2) * -rcp;
+	//if ( uoverd < 0.0f || uoverd > 1.f)
+		//return false;
+
+	const float voverd = DOT( interm, te1) * rcp;
+	if (( uoverd < 0.0f || uoverd > 1.f) || ( voverd > 1.f || uoverd + voverd > 1.0f || voverd < 0.0f ))
+		return false;
+
+	return true;
+	/**/
+
+	/* 
+	 * Muller-Trumbore
+	 */
+	/**//*
 	double edge1[3], edge2[3], tvec[3], pvec[3], qvec[3];
 	double det, inv_det;
 	float u, v, a, t;
@@ -312,8 +244,8 @@ bool IndexedTriangle::Intersects(const Ray &p_ray)
 
 	det = DOT(edge1, pvec);
 	
-	if (det > -EPSILON && det < EPSILON)
-		return false;
+	//if (det > -EPSILON && det < EPSILON)
+		//return false;
 
 	inv_det = 1.0 / det;
 
@@ -326,20 +258,17 @@ bool IndexedTriangle::Intersects(const Ray &p_ray)
 	CROSS(qvec, tvec, edge1);
 
 	v = DOT(p_ray.Direction.Element, qvec) * inv_det;
-	if (v < 0.0 || v > 1.0)
-		return false;
-
-	a = 1 - u - v;
-	if (a < 0.0 || a > 1.0)
+	if (v < 0.0 || v > 1.0 || (1 - u - v < 0))
 		return false;
 
 	t = DOT(edge2, qvec) * inv_det;
 	if (t < p_ray.Min || t > p_ray.Max)
 		return false;
-	
+
 	return true;
 	/**/
-	/*
+
+	/**/ /*
 	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
 		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
 		&v2 = m_pMesh->VertexList[m_nVertexID[2]];
@@ -386,7 +315,7 @@ bool IndexedTriangle::Intersects(const Ray &p_ray)
 		return false;
 
 	return true;
-	*/
+	/**/
 }
 //----------------------------------------------------------------------------------------------
 float IndexedTriangle::GetArea(void) const

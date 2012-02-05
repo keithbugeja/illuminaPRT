@@ -19,6 +19,25 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
+MultipassRenderer::MultipassRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount,
+	int p_nDBSize, float p_fDBDist, float p_fDBCos)
+	: IRenderer(p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
+	, m_nSampleCount(p_nSampleCount)
+	, m_nDBSize(p_nDBSize)
+	, m_fDBDist(p_fDBDist)
+	, m_fDBCos(p_fDBCos)
+{ }
+//----------------------------------------------------------------------------------------------
+MultipassRenderer::MultipassRenderer(const std::string &p_strName, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount,
+	int p_nDBSize, float p_fDBDist, float p_fDBCos)
+	: IRenderer(p_strName, p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
+	, m_nSampleCount(p_nSampleCount)
+	, m_nDBSize(p_nDBSize)
+	, m_fDBDist(p_fDBDist)
+	, m_fDBCos(p_fDBCos)
+{ }
+//----------------------------------------------------------------------------------------------
+/*
 MultipassRenderer::MultipassRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
 	: IRenderer(p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
 	, m_nSampleCount(p_nSampleCount)
@@ -28,138 +47,137 @@ MultipassRenderer::MultipassRenderer(const std::string &p_strName, Scene *p_pSce
 	: IRenderer(p_strName, p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
 	, m_nSampleCount(p_nSampleCount)
 { }
+*/
+//----------------------------------------------------------------------------------------------
+bool MultipassRenderer::Initialise(void)
+{
+	BOOST_ASSERT(m_pDevice != NULL);
+
+	m_nWidth = m_pDevice->GetWidth();
+	m_nHeight = m_pDevice->GetHeight();
+
+	m_pGeometryBuffer = new Intersection[m_nWidth * m_nHeight];
+
+	return true;
+}
+//----------------------------------------------------------------------------------------------
+bool MultipassRenderer::Shutdown(void)
+{
+	delete[] m_pGeometryBuffer;
+
+	return true;
+}
 //----------------------------------------------------------------------------------------------
 void MultipassRenderer::ComputeIntersectionPass(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight)
 {
+	double start = Platform::GetTime();
+
 	IntegratorContext context;
 	Intersection *pIntersection = p_pGeometryBuffer;
 		
-	int height = m_pDevice->GetHeight(),
-		width = m_pDevice->GetWidth();
+	// No supersampling
+	context.SampleIndex = 0;
+
+	float rcpWidth = 1.f / m_nWidth,
+		rcpHeight = 1.f / m_nHeight;
 
 	for (int y = p_nTileY; y < p_nTileHeight; ++y)
 	{
 		for (int x = p_nTileX; x < p_nTileWidth; ++x)
 		{
-			context.SampleIndex = 0;
 			context.SurfacePosition.Set(x + 0.5f, y + 0.5f);
-			context.NormalisedPosition.Set(context.SurfacePosition.X / width, context.SurfacePosition.Y / height);
+			context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
 
-			pIntersection->EyeRay = m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.5f, 0.5f);
+			m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.5f, 0.5f, pIntersection->EyeRay);
 			pIntersection->Valid = m_pScene->Intersects(pIntersection->EyeRay, *pIntersection);
 
 			// Move geometry buffer pointer
 			++pIntersection;
 		}
 	}
+
+	double end = Platform::GetTime();
+	std::cout << "Intersection pass : " << Platform::ToSeconds(end - start) << "s" << std::endl;
 }
 //----------------------------------------------------------------------------------------------
 void MultipassRenderer::ComputeShadingPass(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight)
 {
+	// Start shading
+	double start = Platform::GetTime();
+
 	Intersection *pIntersection = p_pGeometryBuffer;
 	IntegratorContext context;
-
 	Spectrum Li(0), Le(0);
+		
+	// No supersampling
+	context.SampleIndex = 0;
 
-	int height = m_pDevice->GetHeight(),
-		width = m_pDevice->GetWidth();
+	float rcpWidth = 1.f / m_nWidth,
+		rcpHeight = 1.f / m_nHeight;
 
 	for (int y = p_nTileY; y < p_nTileHeight; ++y)
 	{
 		for (int x = p_nTileX; x < p_nTileWidth; ++x)
 		{
-			context.SampleIndex = 0;
 			context.SurfacePosition.Set(x + 0.5f, y + 0.5f);
-			context.NormalisedPosition.Set(context.SurfacePosition.X / width, context.SurfacePosition.Y / height);
+			context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
 
 			Li = m_pIntegrator->Radiance(&context, m_pScene, *pIntersection);
 			
-			// m_pDevice->Set(width - (x + 1), height - (y + 1), Li);
-
-			// Move geometry buffer pointer
 			++pIntersection;
 		}
 	}
 
-	int size = 2;
+	double end = Platform::GetTime();
+	std::cout << "Shading pass : " << Platform::ToSeconds(end - start) << "s" << std::endl;
+	
+	// Start post-processing
+	start = Platform::GetTime();
 
-	for (int y = p_nTileY + size; y < p_nTileHeight - size; ++y)
+	for (int y = p_nTileY + m_nDBSize; y < p_nTileHeight - m_nDBSize; ++y)
 	{
-		for (int x = p_nTileX + size; x < p_nTileWidth - size; ++x)
+		for (int x = p_nTileX + m_nDBSize; x < p_nTileWidth - m_nDBSize; ++x)
 		{
 			const int indexSrc = x + y * p_nTileWidth;
 			const Vector3 &normal = p_pGeometryBuffer[indexSrc].Surface.ShadingBasisWS.W;
 			const Vector3 &depth = p_pGeometryBuffer[indexSrc].Surface.PointWS;
 
-			float contrib = 0; Le = 0;
+			float contrib = 1; 
+			Le = p_pGeometryBuffer[indexSrc].Indirect;
 
-			for (int dy = -size; dy <= size; dy++)
+			for (int dy = -m_nDBSize; dy <= m_nDBSize; dy++)
 			{
-				for (int dx = -size; dx <= size; dx++)
+				for (int dx = -m_nDBSize; dx <= m_nDBSize; dx++)
 				{
+					// Central contribution already accumulated
+					if (dx == 0 && dy == 0) continue;
+					
+					// Get index of contributor
 					const int index = (x + dx) + (y + dy) * p_nTileWidth;
+
+					// If a valid intersection, compute
 					if (!p_pGeometryBuffer[index].Valid) continue;
 
-					if (/*(Vector3::DistanceSquared(depth, p_pGeometryBuffer[index].Surface.PointWS) < 1.f) &&*/
-						(Vector3::Dot(normal, p_pGeometryBuffer[index].Surface.ShadingBasisWS.W) > 0.75f))
+					if (
+						(Vector3::DistanceSquared(depth, p_pGeometryBuffer[index].Surface.PointWS) < m_fDBDist) &&
+						(Vector3::Dot(normal, p_pGeometryBuffer[index].Surface.ShadingBasisWS.W) > m_fDBCos)
+					)
 					{
-						Le += p_pGeometryBuffer[index].Indirect;
-						contrib += Vector3::Dot(normal, p_pGeometryBuffer[index].Surface.ShadingBasisWS.W);
+						Le += p_pGeometryBuffer[index].Indirect; 
+						contrib++;						
 					}
 				}
 			}
 
-			if (contrib <= 1)
-			{
-				Li = p_pGeometryBuffer[indexSrc].Direct + p_pGeometryBuffer[indexSrc].Indirect; // * p_pGeometryBuffer[indexSrc].Reflectance;
-			}
-			else
-			{
-				Li = p_pGeometryBuffer[indexSrc].Direct + Le / contrib;//(Le /* * p_pGeometryBuffer[indexSrc].Reflectance*/) / contrib;
-			}
+			Li = p_pGeometryBuffer[indexSrc].Direct + 
+				(Le * p_pGeometryBuffer[indexSrc].Reflectance) / contrib;
 
-			/*
-			for (int y = rc->sy; y < rc->ey; y++)
-			{
-				for (int x = rc->sx; x < rc->ex; x++)
-				{
-					const int index = y * width + x;
-					Vec3 curNorm = dsc->hc[index].sNormal,
-						 curDepth = dsc->hc[index].hitPoint;
-					float totalWeight = 0.0f;
-
-					// Zero buffer
-					buffer[index].Set(0.0f, 0.0f, 0.0f);
-
-					for (int j = -size; j <= size; j++)
-					{
-						for (int i = -size; i <= size; i++)
-						{
-							const int indexbox = ((y + j) * width) + (x + i);
-							if (dsc->hc[index].bsdf == NULL) 
-								continue;
-
-							if ((curDepth - dsc->hc[indexbox].hitPoint).MagnitudeSquare() < 1.0f &&
-								(curNorm.Dot(dsc->hc[indexbox].sNormal) > 0.75))// &&
-								//dsc->hc[index].bsdf->light == dsc->hc[indexbox].bsdf->light)) 
-							{
-								buffer[index] += b[indexbox];
-								totalWeight += 1.0f;
-							}
-						}
-					}
-
-					if (totalWeight != 0.0f)
-						buffer[index] /= totalWeight;
-					else
-					   buffer[index] = b[index];
-				}
-			}
-			*/
-
-			m_pDevice->Set(width - (x + 1), height - (y + 1), Li);
+			m_pDevice->Set(m_nWidth - (x + 1), m_nHeight - (y + 1), Li);
 		}
 	}
+
+	end = Platform::GetTime();
+	std::cout << "Discontinuity pass : " << Platform::ToSeconds(end - start) << "s" << std::endl;
 }
 //----------------------------------------------------------------------------------------------
 void MultipassRenderer::Render(void)
@@ -176,16 +194,13 @@ void MultipassRenderer::Render(void)
 	int height = m_pDevice->GetHeight(),
 		width = m_pDevice->GetWidth();
 
-	Intersection *pGeometryBuffer = new Intersection[width * height];
-
 	if (!updateIO) m_pDevice->BeginFrame();
 	
-	boost::progress_display renderProgress(height);
+	//boost::progress_display renderProgress(height);
+	//m_pIntegrator->Prepare(m_pScene);
 
-	m_pIntegrator->Prepare(m_pScene);
-
-	ComputeIntersectionPass(pGeometryBuffer, 0, 0, width, height);
-	ComputeShadingPass(pGeometryBuffer, 0, 0, width, height);
+	ComputeIntersectionPass(m_pGeometryBuffer, 0, 0, width, height);
+	ComputeShadingPass(m_pGeometryBuffer, 0, 0, width, height);
 	
 	/*
 	#pragma omp parallel for schedule(static, 8) num_threads(4)
@@ -226,8 +241,6 @@ void MultipassRenderer::Render(void)
 		++renderProgress;
 	}
 	*/
-
-	delete[] pGeometryBuffer;
 
 	if(!updateIO) { std::cout << "Persisting frame..." << std::endl; m_pDevice->EndFrame(); }
 }

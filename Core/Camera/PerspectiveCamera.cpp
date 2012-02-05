@@ -43,13 +43,11 @@ PerspectiveCamera::PerspectiveCamera(const std::string &p_strName, const Vector3
 //----------------------------------------------------------------------------------------------
 Ray PerspectiveCamera::GetRay(float p_fPixelX, float p_fPixelY, float p_fXi1, float p_fXi2) const 
 {
-	Vector3 origin = m_centre;
-	
 	Vector3 target = m_corner + 
 		m_across * p_fPixelX + 
 		m_up * p_fPixelY;
 
-	return Ray(origin, Vector3::Normalize(target - origin));
+	return Ray(m_centre, Vector3::Normalize(target - m_centre));
 }
 //----------------------------------------------------------------------------------------------
 void PerspectiveCamera::GetRay(float p_fPixelX, float p_fPixelY, float p_fXi1, float p_fXi2, Ray &p_ray) const 
@@ -58,10 +56,6 @@ void PerspectiveCamera::GetRay(float p_fPixelX, float p_fPixelY, float p_fXi1, f
 		m_across * p_fPixelX + 
 		m_up * p_fPixelY;
 
-	p_ray.Origin = m_centre;
-	p_ray.SetDirection(m_corner + Vector3::Normalize(target - m_centre));
-	
-	//p_ray.Direction = m_corner + Vector3::Normalize(target - m_centre);
-	//Vector3::Inverse(p_ray.Direction, p_ray.DirectionInverseCache);
+	p_ray.Set(m_centre, Vector3::Normalize(target - m_centre));
 }
 //----------------------------------------------------------------------------------------------

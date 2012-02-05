@@ -159,9 +159,17 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, Intersection &p_intersectio
 //----------------------------------------------------------------------------------------------
 bool GeometricPrimitive::Intersect(const Ray &p_ray)
 {
-	const Ray &invRay = p_ray.ApplyInverse(WorldTransform);
-	return (m_pShape->GetBoundingVolume()->Intersects(p_ray) && 
-			m_pShape->Intersects(invRay));
+	if (!WorldTransform.IsIdentity())
+	{
+		const Ray &invRay = p_ray.ApplyInverse(WorldTransform);
+		return (m_pShape->GetBoundingVolume()->Intersects(invRay) && 
+				m_pShape->Intersects(invRay));
+	}
+	else
+	{
+		return (m_pShape->GetBoundingVolume()->Intersects(p_ray) && 
+				m_pShape->Intersects(p_ray));
+	}
 }
 //----------------------------------------------------------------------------------------------
 std::string GeometricPrimitive::ToString(void) const { 

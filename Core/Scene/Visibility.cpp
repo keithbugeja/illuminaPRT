@@ -32,13 +32,13 @@ VisibilityQuery::VisibilityQuery(Scene *p_pScene, const Vector3 &p_segmentStart,
 //----------------------------------------------------------------------------------------------
 bool VisibilityQuery::IsOccluded(void)
 {
-	BOOST_ASSERT(m_pScene != NULL);
+	// BOOST_ASSERT(m_pScene != NULL);
 	return m_pScene->Intersects(m_queryRay);
 }
 //----------------------------------------------------------------------------------------------
 bool VisibilityQuery::IsOccluded(IPrimitive *p_pExclude)
 {
-	BOOST_ASSERT(m_pScene != NULL);
+	// BOOST_ASSERT(m_pScene != NULL);
 	return m_pScene->Intersects(m_queryRay, p_pExclude);
 }
 //----------------------------------------------------------------------------------------------
