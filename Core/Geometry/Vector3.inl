@@ -4,6 +4,10 @@
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
+static const float ALIGN_16 __vector_sse_two[4]		= {2.0f,  2.0f,  2.0f,  2.0f};
+static const float ALIGN_16 __vector_sse_one[4]		= {1.0f,  1.0f,  1.0f,  1.0f};
+static const float ALIGN_16 __vector_sse_zero[4]	= {0.0f,  0.0f,  0.0f,  0.0f};
+//----------------------------------------------------------------------------------------------
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -46,8 +50,7 @@ inline Vector3 Vector3::operator*(float p_fValue) const {
 }
 //----------------------------------------------------------------------------------------------
 inline Vector3 Vector3::operator/(float p_fValue) const {
-	//BOOST_ASSERT(p_fValue != 0.0f);
-	return Vector3(*this * (1.0f / p_fValue));
+		return Vector3(*this * (1.0f / p_fValue));
 }
 //----------------------------------------------------------------------------------------------
 inline Vector3 Vector3::operator*(const Vector3 &p_vector) const {
@@ -174,8 +177,18 @@ inline int Vector3::ArgMinComponent() const
 	return argmin;
 }
 //----------------------------------------------------------------------------------------------
-inline float Vector3::Length(void) const {
-	return Maths::Sqrt(X * X + Y * Y + Z * Z);
+inline float Vector3::Length(void) const 
+{
+	#if (defined(SSE_ENABLED))
+		__m128 a = _mm_load_ps(this->Element);
+		__m128 r = _mm_dp_ps(a, a, 0x71);
+		r = _mm_rsqrt_ss(r);
+		r = _mm_rcp_ss(r);
+
+		return r.m128_f32[0];
+	#else
+		return Maths::Sqrt(X * X + Y * Y + Z * Z);
+	#endif
 }
 //----------------------------------------------------------------------------------------------
 inline float Vector3::LengthSquared(void) const {
@@ -183,7 +196,7 @@ inline float Vector3::LengthSquared(void) const {
 }
 //----------------------------------------------------------------------------------------------
 FORCEINLINE void Vector3::Normalize(void) {
-	*this = Vector3::Normalize(*this);
+	Vector3::Normalize(*this, *this);
 }
 //----------------------------------------------------------------------------------------------
 FORCEINLINE float Vector3::Dot(const Vector3 &p_vector) const {
@@ -215,7 +228,7 @@ inline void Vector3::Add(const Vector3 &p_vector1, const Vector3 &p_vector2, Vec
 //----------------------------------------------------------------------------------------------
 inline void Vector3::Subtract(const Vector3 &p_vector1, const Vector3 &p_vector2, Vector3 &p_out)
 {
-	#if defined(SSE_ENABLED)
+	#if (defined(SSE_ENABLED))
 		__m128 v1, v2, v3;
 		v1 = _mm_load_ps(p_vector1.Element);
 		v2 = _mm_load_ps(p_vector2.Element);
@@ -230,9 +243,16 @@ inline void Vector3::Subtract(const Vector3 &p_vector1, const Vector3 &p_vector2
 //----------------------------------------------------------------------------------------------
 FORCEINLINE float Vector3::Dot(const Vector3 &p_vector1, const Vector3 &p_vector2)
 {
-	return p_vector1.X * p_vector2.X + 
-		p_vector1.Y * p_vector2.Y + 
-		p_vector1.Z * p_vector2.Z;
+	#if (defined(SSE_ENABLED))
+		__m128 a = _mm_load_ps(p_vector1.Element);
+		__m128 b = _mm_load_ps(p_vector2.Element);
+		__m128 r = _mm_dp_ps(a, b, 0x71);
+		return r.m128_f32[0];
+	#else
+		return p_vector1.X * p_vector2.X + 
+			p_vector1.Y * p_vector2.Y + 
+			p_vector1.Z * p_vector2.Z;
+	#endif
 }
 //----------------------------------------------------------------------------------------------
 FORCEINLINE float Vector3::AbsDot(const Vector3 &p_vector1, const Vector3 &p_vector2)
@@ -262,29 +282,82 @@ inline float Vector3::TripleProduct(const Vector3 &p_vector1, const Vector3 &p_v
 //----------------------------------------------------------------------------------------------
 inline void Vector3::Inverse(void) 
 {
-	X = 1.0f / X;
-	Y = 1.0f / Y;
-	Z = 1.0f / Z;
+	#if (defined(SSE_ENABLED))
+		__m128 a = _mm_load_ps(this->Element);
+		__m128 r = _mm_rcp_ps(a);
+		_mm_store_ps(this->Element, r);
+
+		//__m128 a = _mm_load_ps(__vector_sse_one);
+		//__m128 b = _mm_load_ps(this->Element);
+		//__m128 r = _mm_div_ps(a, b);
+		//_mm_store_ps(this->Element, r);
+	#else
+		X = 1.0f / X;
+		Y = 1.0f / Y;
+		Z = 1.0f / Z;
+	#endif
 }
 //----------------------------------------------------------------------------------------------
 inline Vector3 Vector3::Inverse(const Vector3 &p_vector) 
 {
-	return Vector3(1.0f/p_vector.X, 1.0f/p_vector.Y, 1.0f/p_vector.Z);
+	#if (defined(SSE_ENABLED))
+		__m128 a = _mm_load_ps(p_vector.Element);
+		__m128 r = _mm_rcp_ps(a);
+
+		//__m128 a = _mm_load_ps(__vector_sse_one);
+		//__m128 b = _mm_load_ps(p_vector.Element);
+		//__m128 r = _mm_div_ps(a, b);
+
+		return Vector3(r.m128_f32[0], r.m128_f32[1], r.m128_f32[2]);
+	#else
+		return Vector3(1.0f/p_vector.X, 1.0f/p_vector.Y, 1.0f/p_vector.Z);
+	#endif
 }
 //----------------------------------------------------------------------------------------------
 inline void Vector3::Inverse(const Vector3 &p_vector, Vector3 &p_out) 
 {
-	p_out.X = 1.0f / p_vector.X;
-	p_out.Y = 1.0f / p_vector.Y;
-	p_out.Z = 1.0f / p_vector.Z;
+	#if (defined(SSE_ENABLED))
+		__m128 a = _mm_load_ps(p_vector.Element);
+		__m128 r = _mm_rcp_ps(a);
+		_mm_store_ps(p_out.Element, r);
+
+		//__m128 a = _mm_load_ps(__vector_sse_one);
+		//__m128 b = _mm_load_ps(p_vector.Element);
+		//__m128 r = _mm_div_ps(a, b);
+
+		//_mm_store_ps(p_out.Element, r);
+	#else
+		p_out.X = 1.0f / p_vector.X;
+		p_out.Y = 1.0f / p_vector.Y;
+		p_out.Z = 1.0f / p_vector.Z;
+	#endif
 }
 //----------------------------------------------------------------------------------------------
-FORCEINLINE Vector3 Vector3::Normalize(const Vector3 &p_vector) {
+FORCEINLINE Vector3 Vector3::Normalize(const Vector3 &p_vector) 
+{
+/*
+	float x = (p_vector.X*p_vector.X) + (p_vector.Y*p_vector.Y) + (p_vector.Z*p_vector.Z);
+	float xhalf = 0.5f*x;
+	int i = *(int*)&x;
+	i = 0x5f3759df - (i>>1);
+	x = *(float*)&i; 
+	x *= 1.5f - xhalf*x*x;
+	return Vector3(p_vector.X*x, p_vector.Y*x, p_vector.Z*x);
+*/
 	return p_vector / p_vector.Length();
 }
 //----------------------------------------------------------------------------------------------
 FORCEINLINE void Vector3::Normalize(const Vector3 &p_vector, Vector3 &p_out)
 {
+/*
+	float x = (p_vector.X*p_vector.X) + (p_vector.Y*p_vector.Y) + (p_vector.Z*p_vector.Z);
+	float xhalf = 0.5f*x;
+	int i = *(int*)&x;
+	i = 0x5f3759df - (i>>1);
+	x = *(float*)&i; 
+	x *= 1.5f - xhalf*x*x;
+	p_out.Set(p_vector.X*x, p_vector.Y*x, p_vector.Z*x);
+*/	
 	float length = p_vector.Length();
 	p_out.Set(p_vector.X / length, p_vector.Y / length, p_vector.Z / length);
 }
@@ -299,33 +372,77 @@ inline float Vector3::Distance(const Vector3& p_point1, const Vector3& p_point2)
 //----------------------------------------------------------------------------------------------
 inline void Vector3::Max(const Vector3 &p_vector1, const Vector3 &p_vector2, Vector3 &p_out)
 {
-	p_out.X = Maths::Max(p_vector1.X, p_vector2.X);	
-	p_out.Y = Maths::Max(p_vector1.Y, p_vector2.Y);	
-	p_out.Z = Maths::Max(p_vector1.Z, p_vector2.Z);	
+	#if (defined(SSE_ENABLED))
+		__m128 a = _mm_load_ps(p_vector1.Element);
+		__m128 b = _mm_load_ps(p_vector2.Element);
+		__m128 r = _mm_max_ps(a, b);
+
+		_mm_store_ps(p_out.Element, r);
+	#else
+		p_out.X = Maths::Max(p_vector1.X, p_vector2.X);	
+		p_out.Y = Maths::Max(p_vector1.Y, p_vector2.Y);	
+		p_out.Z = Maths::Max(p_vector1.Z, p_vector2.Z);	
+	#endif
 }
 //----------------------------------------------------------------------------------------------
 inline void Vector3::Min(const Vector3 &p_vector1, const Vector3 &p_vector2, Vector3 &p_out)
 {
-	p_out.X = Maths::Min(p_vector1.X, p_vector2.X);	
-	p_out.Y = Maths::Min(p_vector1.Y, p_vector2.Y);	
-	p_out.Z = Maths::Min(p_vector1.Z, p_vector2.Z);	
+	#if (defined(SSE_ENABLED))
+		__m128 a = _mm_load_ps(p_vector1.Element);
+		__m128 b = _mm_load_ps(p_vector2.Element);
+		__m128 r = _mm_min_ps(a, b);
+
+		_mm_store_ps(p_out.Element, r);
+	#else
+		p_out.X = Maths::Min(p_vector1.X, p_vector2.X);	
+		p_out.Y = Maths::Min(p_vector1.Y, p_vector2.Y);	
+		p_out.Z = Maths::Min(p_vector1.Z, p_vector2.Z);	
+	#endif
 }
 //----------------------------------------------------------------------------------------------
 inline Vector3 Vector3::Max(const Vector3 &p_vector1, const Vector3 &p_vector2) 
 {
-	return Vector3(Maths::Max(p_vector1.X, p_vector2.X),
-		Maths::Max(p_vector1.Y, p_vector2.Y),
-		Maths::Max(p_vector1.Z, p_vector2.Z));
+	#if (defined(SSE_ENABLED))
+		__m128 a = _mm_load_ps(p_vector1.Element);
+		__m128 b = _mm_load_ps(p_vector2.Element);
+		__m128 r = _mm_max_ps(a, b);
+
+		return Vector3(r.m128_f32[0], r.m128_f32[1], r.m128_f32[2]);
+	#else
+		return Vector3(Maths::Max(p_vector1.X, p_vector2.X),
+			Maths::Max(p_vector1.Y, p_vector2.Y),
+			Maths::Max(p_vector1.Z, p_vector2.Z));
+	#endif
 }
 //----------------------------------------------------------------------------------------------
 inline Vector3 Vector3::Min(const Vector3 &p_vector1, const Vector3 &p_vector2) 
 {
-	return Vector3(Maths::Min(p_vector1.X, p_vector2.X),
-		Maths::Min(p_vector1.Y, p_vector2.Y),
-		Maths::Min(p_vector1.Z, p_vector2.Z));
+	#if (defined(SSE_ENABLED))
+		__m128 a = _mm_load_ps(p_vector1.Element);
+		__m128 b = _mm_load_ps(p_vector2.Element);
+		__m128 r = _mm_min_ps(a, b);
+
+		return Vector3(r.m128_f32[0], r.m128_f32[1], r.m128_f32[2]);
+	#else
+		return Vector3(Maths::Min(p_vector1.X, p_vector2.X),
+			Maths::Min(p_vector1.Y, p_vector2.Y),
+			Maths::Min(p_vector1.Z, p_vector2.Z));
+	#endif
 }
 //----------------------------------------------------------------------------------------------
 inline void Vector3::Reflect(const Vector3 &p_vector, const Vector3 &p_normal, Vector3 &p_out)
 {
-	Vector3::Subtract(p_vector, (2.0f * Vector3::Dot(p_vector, p_normal)) * p_normal, p_out);
+	#if (defined(SSE_ENABLED))
+		__m128 a = _mm_load_ps(p_vector.Element);
+		__m128 b = _mm_load_ps(p_normal.Element);
+		__m128 r = _mm_dp_ps(a, b, 0x71);
+		__m128 c = _mm_load_ps(__vector_sse_two);
+		r = _mm_mul_ps(r, c);
+		r = _mm_mul_ps(r, b);
+		r = _mm_sub_ps(a, r);
+
+		_mm_store_ps(p_out.Element, r);
+	#else
+		Vector3::Subtract(p_vector, (2.0f * Vector3::Dot(p_vector, p_normal)) * p_normal, p_out);
+	#endif
 }

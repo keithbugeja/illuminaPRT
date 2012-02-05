@@ -10,6 +10,17 @@
 // Move factories to CorePlugins.dll
 // Finish scene loaders
 //----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+namespace Illumina
+{
+	namespace Core
+	{
+		const int Major = 0;
+		const int Minor = 5;
+		const int Build = 0;
+	}
+}
+//----------------------------------------------------------------------------------------------
 #include <omp.h>
 
 #include <boost/program_options.hpp>
@@ -37,33 +48,56 @@
 #include "Staging/Acceleration.h"
 
 using namespace Illumina::Core;
+//----------------------------------------------------------------------------------------------
 
 //#define TEST_SCHEDULER
 
+//----------------------------------------------------------------------------------------------
+
 #if (!defined(TEST_SCHEDULER))
 
-#include <omp.h>
-
+//----------------------------------------------------------------------------------------------
 void Message(const std::string& p_strMessage, bool p_bVerbose)
 {
 	if (p_bVerbose) std::cout << p_strMessage << std::endl;
 }
-
 //----------------------------------------------------------------------------------------------
 void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 {
-	//----------------------------------------------------------------------------------------------
-	// Set number of OMP Threads
-	//----------------------------------------------------------------------------------------------
-	//std::cout << "Initialising OMP thread count : [Threads = " << p_nOMPThreads << "]" << std::endl;
-	//omp_set_num_threads(p_nOMPThreads);
+	// Some tests
+
+	Vector3 v(5,2,1);
+	float r;
+
+	double s = Platform::GetTime();
+	for (int j = 0; j < 10000000; j++)
+	{
+		v.Inverse();
+	}
+	double e = Platform::GetTime();
+	std::cout << "1: " << Platform::ToSeconds(e-s) << "s " << v.ToString() << std::endl;
+
+	s = Platform::GetTime();
+	for (int j = 0; j < 10000000; j++)
+	{
+		r = v.Dot(v);
+	}
+	e = Platform::GetTime();
+	std::cout << "2: " << Platform::ToSeconds(e-s) << "s " << r << std::endl;
+
+	s = Platform::GetTime();
+	for (int j = 0; j < 10000000; j++)
+	{
+		v.Normalize();
+	}
+	e = Platform::GetTime();
+	std::cout << "3: " << Platform::ToSeconds(e-s) << "s " << v.ToString() << std::endl;
 
 	//----------------------------------------------------------------------------------------------
 	// Engine Kernel
 	//----------------------------------------------------------------------------------------------
 	Message("\nInitialising EngineKernel...", p_bVerbose);
 	EngineKernel engineKernel;
-	// Initialise factories -- note, factories should be moved to plug-ins a dynamically loaded
 
 	//----------------------------------------------------------------------------------------------
 	// Sampler
@@ -167,9 +201,12 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		exit(-1);
 	}
 
+	//----------------------------------------------------------------------------------------------
 	// Alias required components
+	//----------------------------------------------------------------------------------------------
 	IIntegrator *pIntegrator = environment.GetIntegrator();
 	IRenderer *pRenderer = environment.GetRenderer();
+	ICamera *pCamera = environment.GetCamera();
 	ISpace *pSpace = environment.GetSpace();
 
 	// Initialise integrator and renderer
@@ -179,11 +216,11 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	// Initialisation complete
 	Message("Initialisation complete. Rendering in progress...", p_bVerbose);
 
+	//----------------------------------------------------------------------------------------------
 	// Initialise timing
+	//----------------------------------------------------------------------------------------------
 	float fTotalFramesPerSecond = 0.f;
-
-	ICamera *pCamera = environment.GetCamera();
-	float alpha = Maths::Pi;
+	double start, elapsed = 0;
 
 	// Cornell
 	//Vector3 lookFrom(70, 0, 70),
@@ -193,16 +230,21 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	//Vector3 lookFrom(-19, 1, -19),
 	//	lookAt(0, 8, 0);
 
-	double highResolutionTimerMultipler = ((double)boost::chrono::high_resolution_clock::period::num) / boost::chrono::high_resolution_clock::period::den;
-	double elapsed = 0;
 
 	// Sponza
 	//Vector3 lookFrom(800, 100, 200),
 	//	lookAt(0, 200, 100);
+
+	float alpha = Maths::Pi;
+
+	//----------------------------------------------------------------------------------------------
+	// Render loop
+	//----------------------------------------------------------------------------------------------
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
-		double start = Platform::GetTime();
-		//boost::chrono::high_resolution_clock::time_point start = boost::chrono::high_resolution_clock::now();
+		pIntegrator->Prepare(environment.GetScene());
+
+		start = Platform::GetTime();
 
 		//alpha += Maths::PiTwo / 256;
 		
@@ -216,12 +258,9 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		// Render frame
 		pRenderer->Render();
 
-		double end = Platform::GetTime();
-		//boost::chrono::high_resolution_clock::time_point end = boost::chrono::high_resolution_clock::now();
-
 		// Compute frames per second
-		elapsed = Platform::ToSeconds(end - start);
-		fTotalFramesPerSecond += (float)(1.0f / elapsed);
+		elapsed = Platform::ToSeconds(Platform::GetTime() - start);
+		fTotalFramesPerSecond += (float)(1.f/elapsed);
 		
 		if (p_bVerbose)
 		{
@@ -234,14 +273,10 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	pRenderer->Shutdown();
 	pIntegrator->Shutdown();
 }
-
-#define Major 0
-#define Minor 5
-#define Build 0
-
+//----------------------------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-	std::cout << "Illumina Renderer : Version " << Major << "." << Minor << "." << Build << " http://www.illuminaprt.codeplex.com " << std::endl;
+	std::cout << "Illumina Renderer : Version " << Illumina::Core::Major << "." << Illumina::Core::Minor << "." << Illumina::Core::Build << " http://www.illuminaprt.codeplex.com " << std::endl;
 	std::cout << "Copyright (C) 2010-2011 Keith Bugeja" << std::endl << std::endl;
 
 	// default options
@@ -335,18 +370,18 @@ int main(int argc, char** argv)
 	// Exit
 	return 1;
 }
-
+//----------------------------------------------------------------------------------------------
 #else
+//----------------------------------------------------------------------------------------------
 void MessageOut(const std::string& p_strMessage, bool p_bVerbose)
 {
 	if (p_bVerbose) std::cout << p_strMessage << std::endl;
 }
+//----------------------------------------------------------------------------------------------
+
 #include "scheduling.h"
 
-#define Major 0
-#define Minor 5
-#define Build 0
-
+//----------------------------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
 	std::cout << "Illumina Renderer Service : Version " << Major << "." << Minor << "." << Build << " http://www.illuminaprt.codeplex.com " << std::endl;

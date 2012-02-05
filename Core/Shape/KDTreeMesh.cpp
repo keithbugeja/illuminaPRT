@@ -131,7 +131,7 @@ bool KDTreeMesh::Compile(void)
 	// Update Stats
 	m_statistics.m_triangleCount = objectCount;
 
-	std::cout << "Mesh contains: " << triangleList.Size() << " Triangles" << std::endl;
+	// std::cout << "Mesh contains: " << triangleList.Size() << " Triangles" << std::endl;
 
 	return true;
 }
@@ -196,12 +196,14 @@ bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray)
 	while(!traverseStack.empty())
 	{
 		// Get next element
-		KDTreeStackElement nodeElement(traverseStack.top());
-		traverseStack.pop();
+		const KDTreeStackElement &nodeElement = 
+			traverseStack.top();
 
 		pNode = nodeElement.pNode;
 		tOut = nodeElement.Max;
 		tIn = nodeElement.Min;
+
+		traverseStack.pop();
 
 		while (pNode->Type == Internal)
 		{
@@ -277,12 +279,14 @@ bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, Differenti
 	while(!traverseStack.empty())
 	{
 		// Get next element
-		KDTreeStackElement nodeElement(traverseStack.top());
-		traverseStack.pop();
+		const KDTreeStackElement &nodeElement = 
+			traverseStack.top();
 
 		pNode = nodeElement.pNode;
 		tOut = nodeElement.Max;
 		tIn = nodeElement.Min;
+
+		traverseStack.pop();
 
 		while (pNode->Type == Internal)
 		{

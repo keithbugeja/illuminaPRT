@@ -209,9 +209,9 @@ template<class T> void Safe_Delete(T*& p)
 // Include SSE headers
 #include <mmintrin.h>
 #include <xmmintrin.h>
-#include <emmintrin.h>	// includes <xmmintrin.h>
+#include <emmintrin.h>
 
-#define SSE_ENABLED
+// #define SSE_ENABLED
 
 // turn those verbose intrinsics into something readable.
 #define loadps(mem)			_mm_load_ps((const float * const)(mem))

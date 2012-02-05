@@ -23,6 +23,8 @@ namespace Illumina
 
 			Spectrum Power;
 
+			bool Occluded;
+
 			VirtualPointLight() { }
 
 			VirtualPointLight(const VirtualPointLight &p_vpl)
