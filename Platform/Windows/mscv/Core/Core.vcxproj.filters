@@ -291,7 +291,7 @@
     <ClCompile Include="..\..\..\..\Core\Renderer\MultipassRenderer.cpp">
       <Filter>Header Files\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\Core\External\Compression\minilzo.c">
+    <ClCompile Include="..\..\..\..\Core\External\Compression\lz4.c">
       <Filter>Header Files\External\Compression</Filter>
     </ClCompile>
   </ItemGroup>
@@ -707,13 +707,10 @@
     <ClInclude Include="..\..\..\..\Core\Renderer\MultipassRenderer.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\External\Compression\lzoconf.h">
+    <ClInclude Include="..\..\..\..\Core\External\Compression\Compression.h">
       <Filter>Header Files\External\Compression</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\External\Compression\lzodefs.h">
-      <Filter>Header Files\External\Compression</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Core\External\Compression\minilzo.h">
+    <ClInclude Include="..\..\..\..\Core\External\Compression\lz4.h">
       <Filter>Header Files\External\Compression</Filter>
     </ClInclude>
   </ItemGroup>

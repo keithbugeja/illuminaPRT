@@ -30,7 +30,7 @@ long long int Platform::GetCycles(void)
 		register long long tsc asm("eax");
 		asm volatile (".byte 15, 49" : : : "eax", "edx");
 		return tsc;
-	else
+	#else
 		return 0;
 	#endif
 }

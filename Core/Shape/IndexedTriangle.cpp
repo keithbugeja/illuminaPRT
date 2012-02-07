@@ -98,8 +98,8 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 
 	det = DOT(edge1, pvec);
 	
-	//if (det > -EPSILON && det < EPSILON)
-	//	return false;
+	if (det > -EPSILON && det < EPSILON)
+		return false;
 
 	inv_det = 1.0 / det;
 
@@ -194,7 +194,7 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 //----------------------------------------------------------------------------------------------
 bool IndexedTriangle::Intersects(const Ray &p_ray)
 {	
-	/**/
+	/**//**/
 	float te1xte2[3], 
 		edge2[3], 
 		interm[3];
@@ -215,11 +215,11 @@ bool IndexedTriangle::Intersects(const Ray &p_ray)
 	CROSS(interm, p_ray.Direction.Element, edge2);
 	
 	const float uoverd = DOT( interm, te2) * -rcp;
-	//if ( uoverd < 0.0f || uoverd > 1.f)
-		//return false;
+	if ( uoverd < 0.0f || uoverd > 1.f)
+		return false;
 
 	const float voverd = DOT( interm, te1) * rcp;
-	if (( uoverd < 0.0f || uoverd > 1.f) || ( voverd > 1.f || uoverd + voverd > 1.0f || voverd < 0.0f ))
+	if ( voverd > 1.f || uoverd + voverd > 1.0f || voverd < 0.0f )
 		return false;
 
 	return true;
@@ -244,8 +244,8 @@ bool IndexedTriangle::Intersects(const Ray &p_ray)
 
 	det = DOT(edge1, pvec);
 	
-	//if (det > -EPSILON && det < EPSILON)
-		//return false;
+	if (det > -EPSILON && det < EPSILON)
+		return false;
 
 	inv_det = 1.0 / det;
 

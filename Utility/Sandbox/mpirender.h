@@ -14,6 +14,8 @@
 #include "boost/mpi.hpp"
 namespace mpi = boost::mpi;
 
+#include "../../Core/External/Compression/Compression.h"
+
 #include "../../Core/Scene/Environment.h"
 #include "../../Core/Renderer/Renderer.h"
 #include "../../Core/Geometry/Vector2.h"
@@ -31,7 +33,12 @@ namespace mpi = boost::mpi;
 
 #include "taskpipeline.h"
 
-// #define TEST_SCHEDULER_COMM 1
+//----------------------------------------------------------------------------------------------
+#define SCHEDULER_DATA_RENDER 1
+// #define SCHEDULER_DATA_COMPRESSION 1
+#define SCHEDULER_DATA_TRANSFER 1
+#define SCHEDULER_DATA_IO 1
+#define SCHEDULER_DATA_IO_FREQUENCY 10
 
 //----------------------------------------------------------------------------------------------
 namespace Illumina 
@@ -53,7 +60,7 @@ namespace Illumina
 			MPITile(int p_nId, int p_nWidth, int p_nHeight)
 			{ 
 				m_nSerializationBufferSize = p_nWidth * p_nHeight * sizeof(RGBPixel) + sizeof(int);
-				m_pSerializationBuffer = new char[m_nSerializationBufferSize];
+				m_pSerializationBuffer = new char[m_nSerializationBufferSize + 1024];
 				m_pImageData = new Image(p_nWidth, p_nHeight, (RGBPixel*)(m_pSerializationBuffer + sizeof(int)));
 			}
 
@@ -81,15 +88,14 @@ namespace Illumina
 			int m_nSampleCount;
 
 			Environment *m_environment;
-			
-			IDevice *m_pDevice;
 			IIntegrator *m_pIntegrator;
+			IRenderer *m_pRenderer;
+			IDevice *m_pDevice;
 			IFilter *m_pFilter;
 			Scene *m_pScene;
 
-
 		public:
-			MPIRender(Environment *p_environment, int p_nSampleCount = 1, int p_nTileWidth = 8, int p_nTileHeight = 8)
+			MPIRender(Environment *p_environment, int p_nSampleCount = 1, int p_nTileWidth = 16, int p_nTileHeight = 16)
 				: m_environment(p_environment)
 				, m_nTileWidth(p_nTileWidth)
 				, m_nTileHeight(p_nTileHeight)
@@ -98,8 +104,9 @@ namespace Illumina
 
 			bool Initialise(void)
 			{
-				m_pDevice = m_environment->GetDevice();
 				m_pIntegrator = m_environment->GetIntegrator();
+				m_pRenderer = m_environment->GetRenderer();
+				m_pDevice = m_environment->GetDevice();
 				m_pScene = m_environment->GetScene();
 				m_pFilter = m_environment->GetFilter();
 
@@ -113,8 +120,9 @@ namespace Illumina
 
 			bool RenderCoordinator(ITaskPipeline::CoordinatorTask *p_coordinator)
 			{
-				std::string filename = boost::str(boost::format("Output/result_%d.ppm") % p_coordinator->task->GetRank());
+				static int iofrequency = SCHEDULER_DATA_IO_FREQUENCY;
 
+				std::string filename = boost::str(boost::format("Output/result_%d.ppm") % p_coordinator->task->GetRank());
 				((ImageDevice*)m_pDevice)->SetFilename(filename);
 
 				int deviceWidth = m_pDevice->GetWidth(),
@@ -126,25 +134,24 @@ namespace Illumina
 
 				int tileId = -1;
 
-				// Create tile for use within communicator
-				MPITile tile(0, m_nTileWidth, m_nTileHeight);
+				// Create tile for use within communication
+				MPITile tile(0, m_nTileWidth, m_nTileHeight),
+					compressedTile(0, m_nTileWidth, m_nTileHeight);
 
 				// Coordinator
+				/*
 				std::map<int, time_t> lastJobSent;
 				std::map<int, time_t> jobTime;
 				std::map<int, int> jobsCompleted;
-
-				//--------------------------------------------------
-				// Timings
-				//--------------------------------------------------
-				boost::timer renderTimer;
-				renderTimer.restart();
-				time_t startTime = time(NULL);
+				*/
 
 				//--------------------------------------------------
 				// Prepare device for rendering
 				//--------------------------------------------------
-				// m_pDevice->BeginFrame();
+				#if (defined(SCHEDULER_DATA_IO))
+					if (iofrequency == SCHEDULER_DATA_IO_FREQUENCY)
+						m_pDevice->BeginFrame();
+				#endif
 
 				//--------------------------------------------------
 				// Prepare integrator for rending frame
@@ -157,8 +164,7 @@ namespace Illumina
 				std::vector<int> m_taskQueue;
 
 				// generate tiles for rendering
-				for (int taskId = 0; taskId < tilesPerScreen; ++taskId)
-				{
+				for (int taskId = 0; taskId < tilesPerScreen; ++taskId) {
 					m_taskQueue.push_back(taskId);
 				}
 
@@ -166,39 +172,62 @@ namespace Illumina
 				// Distribute initial workload to workers
 				//--------------------------------------------------
 				// std::cout << "[" << p_coordinator->task->GetRank() << "] Distributing initial workload to " << p_coordinator->ready.Size() << " workers..." << std::endl;
+				int waiting = 0;
 
 				if (p_coordinator->ready.Size() > 0)
 				{
-
 					for (std::vector<Task*>::iterator taskIterator = p_coordinator->ready.TaskList.begin();
 						 taskIterator != p_coordinator->ready.TaskList.end(); ++taskIterator)
 					{
+						if (m_taskQueue.size() == 0)
+							break;
+
 						int rank = (*taskIterator)->GetRank();
 
-						// Send a new task, if available
-						if (m_taskQueue.size() > 0)
-						{
-							lastJobSent[rank] = time(NULL);
-							jobsCompleted[rank] = 0;
-							jobTime[rank] = 0;
+						tileId = m_taskQueue.back(); m_taskQueue.pop_back();
+						TaskCommunicator::Send(&tileId, sizeof(int), rank, WI_TASKID); 
+						
+						waiting++;
 
-							// std::cout<<"Send task " << tileId << " to rank " << rank << std::endl;
-							tileId = m_taskQueue.back(); m_taskQueue.pop_back();
-							TaskCommunicator::Send(&tileId, sizeof(int), rank, WI_TASKID); 
-						}
+						/*
+						lastJobSent[rank] = time(NULL);
+						jobsCompleted[rank] = 0;
+						jobTime[rank] = 0;
+						*/
 					}
 
 					//--------------------------------------------------
 					// Start request-response communication with 
 					// worker processors
 					//--------------------------------------------------
-					int waiting = p_coordinator->ready.Size();
 					while(waiting > 0)
 					{
 						//--------------------------------------------------
 						// Receive request
 						//--------------------------------------------------
-						MPI_Status status; TaskCommunicator::Receive(tile.GetSerializationBuffer(), tile.GetSerializationBufferSize(), MPI_ANY_SOURCE, WI_RESULT, &status);
+						MPI_Status status;
+
+						#if (defined(SCHEDULER_DATA_TRANSFER))
+							#if (defined(SCHEDULER_DATA_COMPRESSION))
+								// Receive variable sized data
+								TaskCommunicator::Probe(MPI_ANY_SOURCE, WI_RESULT, &status);
+								
+								if (TaskCommunicator::GetSize(&status) < tile.GetSerializationBufferSize())
+								{
+									TaskCommunicator::Receive(compressedTile.GetSerializationBuffer(), TaskCommunicator::GetSize(&status), status.MPI_SOURCE, WI_RESULT, &status);
+
+									// Decompress data
+									Compressor::Decompress(compressedTile.GetSerializationBuffer(), tile.GetSerializationBufferSize(), tile.GetSerializationBuffer());								
+								}
+								else
+									TaskCommunicator::Receive(tile.GetSerializationBuffer(), tile.GetSerializationBufferSize(), MPI_ANY_SOURCE, WI_RESULT, &status);
+								
+							#else
+								TaskCommunicator::Receive(tile.GetSerializationBuffer(), tile.GetSerializationBufferSize(), MPI_ANY_SOURCE, WI_RESULT, &status);
+							#endif
+						#else
+							TaskCommunicator::Receive(tile.GetSerializationBuffer(), sizeof(int), MPI_ANY_SOURCE, WI_RESULT, &status);
+						#endif
 
 						//--------------------------------------------------
 						// Worker is sending in result
@@ -208,9 +237,11 @@ namespace Illumina
 						// Send a new task, if available
 						if (m_taskQueue.size() > 0)
 						{
+							/*
 							jobTime[status.MPI_SOURCE] = jobTime[status.MPI_SOURCE] + (time(NULL) - lastJobSent[status.MPI_SOURCE]);
 							jobsCompleted[status.MPI_SOURCE] = jobsCompleted[status.MPI_SOURCE] + 1;
 							lastJobSent[status.MPI_SOURCE] = time(NULL);
+							*/
 
 							tileId = m_taskQueue.back(); m_taskQueue.pop_back();
 							TaskCommunicator::Send(&tileId, sizeof(int), status.MPI_SOURCE, WI_TASKID);
@@ -219,10 +250,8 @@ namespace Illumina
 						{
 							tileId = -1; waiting--;
 							TaskCommunicator::Send(&tileId, sizeof(int), status.MPI_SOURCE, WI_TASKID);
-							// std::cout << "Workers waiting : " << waiting << std::endl;
 						}
 
-					#if (!defined(TEST_SCHEDULER_COMM))
 						// Aggregate result to buffer
 						int startTileX = tile.GetId() % tilesPerRow,
 							startTileY = tile.GetId() / tilesPerRow,
@@ -239,20 +268,19 @@ namespace Illumina
 								m_pDevice->Set(deviceWidth - startPixelX - x - 1, deviceHeight - startPixelY - y - 1, L);
 							}
 						}
-					#endif
 					}
 				}
-				/*
-				else
-				{
-					std::cout << "[" << p_coordinator->task->GetRank() << "] Rendering empty frame : not enough workers available." << std::endl;
-				}
-				*/
 
 				//--------------------------------------------------
 				// Frame completed
 				//--------------------------------------------------
-				// m_pDevice->EndFrame();
+				#if (defined(SCHEDULER_DATA_IO))
+					if (iofrequency == SCHEDULER_DATA_IO_FREQUENCY)
+						m_pDevice->EndFrame();
+
+					if (++iofrequency > SCHEDULER_DATA_IO_FREQUENCY)
+						iofrequency = 0;
+				#endif
 
 				/*
 				std::cout << "-------------------------------------------------------------------------" << std::endl;
@@ -287,7 +315,8 @@ namespace Illumina
 				int tileId = -1;
 
 				// Create tile for use within communicator
-				MPITile tile(0, m_nTileWidth, m_nTileHeight);
+				MPITile tile(0, m_nTileWidth, m_nTileHeight),
+					compressedTile(0, m_nTileWidth, m_nTileHeight);
 
 				//--------------------------------------------------
 				// Prepare structures for use in rendering
@@ -302,20 +331,14 @@ namespace Illumina
 					//--------------------------------------------------
 					// std::cout << "Worker [" << p_worker->GetRank() << "] waiting for task... " << std::endl;
 					TaskCommunicator::Receive(&tileId, sizeof(int), p_worker->GetCoordinatorRank(), WI_TASKID);
+					// std::cout << "Worker [" << p_worker->GetRank() << "] has received tile [" << tileId << "] ... " << std::endl;
 
 					//--------------------------------------------------
 					// If termination signal, stop
 					//--------------------------------------------------
-					if (tileId == -1) 
-					{
-						// std::cout << "Worker [" << p_worker->GetRank() << "] terminating ... " << std::endl;
-						break;
-					}
-					else
-					{
-						// std::cout << "Worker [" << p_worker->GetRank() << "] has received tile [" << tileId << "] ... " << std::endl;
+					if (tileId == -1) break;
 
-					#if (!defined(TEST_SCHEDULER_COMM))
+					#if (defined(SCHEDULER_DATA_RENDER))
 						//--------------------------------------------------
 						// We have task id - render
 						//--------------------------------------------------
@@ -324,9 +347,10 @@ namespace Illumina
 							startPixelX = startTileX * m_nTileWidth,
 							startPixelY = startTileY * m_nTileHeight;
 		
-						IntegratorContext context;
+						m_pRenderer->RenderToAuxiliary(startPixelX, startPixelY, m_nTileWidth, m_nTileHeight, (Spectrum*)tile.GetImageData()->GetImageBuffer());
 
-						// std::cout << "Tile region : [" << startPixelX << ", " << startPixelY << "] - [" << startPixelX + m_nTileWidth << ", " << startPixelY + m_nTileHeight << "]" << std::endl;
+						/*
+						IntegratorContext context;
 
 						for (int y = 0; y < m_nTileHeight; y++)
 						{
@@ -361,15 +385,31 @@ namespace Illumina
 								tile.GetImageData()->Set(x, y, RGBPixel(Li[0], Li[1], Li[2]));
 							}
 						} 
+						*/
 					#endif
-						//--------------------------------------------------
-						// Send back result
-						//--------------------------------------------------
-						// std::cout << "Worker [" << p_worker->GetRank() << "] sending tile [" << tileId << "] ... " << std::endl;
 
-						tile.SetId(tileId);
-						TaskCommunicator::Send(tile.GetSerializationBuffer(), tile.GetSerializationBufferSize(), p_worker->GetCoordinatorRank(), WI_RESULT);
-					}
+					//--------------------------------------------------
+					// Send back result
+					//--------------------------------------------------
+					// std::cout << "Worker [" << p_worker->GetRank() << "] sending tile [" << tileId << "] ... " << std::endl;
+
+					tile.SetId(tileId);
+					
+					#if (defined(SCHEDULER_DATA_TRANSFER))
+						#if (defined(SCHEDULER_DATA_COMPRESSION))
+							int compressedSize = Compressor::Compress(tile.GetSerializationBuffer(), tile.GetSerializationBufferSize(), compressedTile.GetSerializationBuffer());
+
+							if (compressedSize < tile.GetSerializationBufferSize())
+								TaskCommunicator::Send(compressedTile.GetSerializationBuffer(), compressedSize, p_worker->GetCoordinatorRank(), WI_RESULT);
+							else
+								TaskCommunicator::Send(tile.GetSerializationBuffer(), tile.GetSerializationBufferSize(), p_worker->GetCoordinatorRank(), WI_RESULT);
+
+						#else
+							TaskCommunicator::Send(tile.GetSerializationBuffer(), tile.GetSerializationBufferSize(), p_worker->GetCoordinatorRank(), WI_RESULT);
+						#endif
+					#else
+						TaskCommunicator::Send(tile.GetSerializationBuffer(), sizeof(int), p_worker->GetCoordinatorRank(), WI_RESULT);
+					#endif
 				}
 
 				delete[] pSampleBuffer;
