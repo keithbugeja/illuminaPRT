@@ -79,6 +79,12 @@
     <Filter Include="Header Files\Tonemapper">
       <UniqueIdentifier>{10341f70-3c5d-4a25-84d8-d43b2b2bbaa6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\External">
+      <UniqueIdentifier>{4e9ea7ae-4b94-4ac0-8c4a-1a1db33e62bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\External\Compression">
+      <UniqueIdentifier>{8a2c9e45-65b4-4216-bf52-def1f55063ab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Core\Camera\Camera.cpp">
@@ -284,6 +290,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\Core\Renderer\MultipassRenderer.cpp">
       <Filter>Header Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\External\Compression\minilzo.c">
+      <Filter>Header Files\External\Compression</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -697,6 +706,15 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Renderer\MultipassRenderer.h">
       <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\External\Compression\lzoconf.h">
+      <Filter>Header Files\External\Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\External\Compression\lzodefs.h">
+      <Filter>Header Files\External\Compression</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\External\Compression\minilzo.h">
+      <Filter>Header Files\External\Compression</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
