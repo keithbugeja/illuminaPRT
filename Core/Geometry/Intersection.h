@@ -26,7 +26,7 @@ namespace Illumina
 		public:
 			DifferentialSurface Surface;
 			Transformation WorldTransform;
-			Spectrum Direct, Indirect, Reflectance;
+			Spectrum Final, Direct, Indirect, Reflectance;
 			Ray EyeRay;
 			bool Valid;
 

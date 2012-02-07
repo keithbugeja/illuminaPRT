@@ -511,22 +511,14 @@ namespace Illumina
 
 				for(bool terminate = false; !terminate; ) 
 				{
-					// std::cout << "[" << p_worker->GetRank() << "] :: Worker online waiting for coordinator message." << std::endl;
-
 					// Worker action is synchronous
 					workerCommunicator.ReceiveFromCoordinator(&msg);
-
-					// std::cout << "[" << p_worker->GetRank() << "] :: Worker received coordinator message with Id = [" << msg.Id << "]" << std::endl;
 
 					switch(msg.Id)
 					{
 						case MT_Synchronise:
 						{
-							// std::cout << "[" << p_worker->GetRank() << "] :: Worker starting execution of pipeline." << std::endl;
-
 							ExecuteWorker(p_worker);
-
-							// std::cout << "[" << p_worker->GetRank() << "] :: Worker completed execution of pipeline." << std::endl;
 							break;
 						}
 

@@ -22,6 +22,8 @@ namespace Illumina
 }
 //----------------------------------------------------------------------------------------------
 #include <omp.h>
+#include <iostream>
+#include <fstream>
 
 #include <boost/program_options.hpp>
 #include <boost/chrono.hpp>
@@ -31,6 +33,8 @@ namespace Illumina
 // Illumina Environment
 #include "System/EngineKernel.h"
 #include "Scene/Environment.h"
+
+#include "External/Compression/Compression.h"
 
 // Factories
 #include "Camera/CameraFactories.h"
@@ -50,7 +54,7 @@ namespace Illumina
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 
-//#define TEST_SCHEDULER
+// #define TEST_SCHEDULER
 
 //----------------------------------------------------------------------------------------------
 
@@ -64,8 +68,30 @@ void Message(const std::string& p_strMessage, bool p_bVerbose)
 //----------------------------------------------------------------------------------------------
 void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 {
-	// Some tests
+	/*
+	std::ifstream f;
+	std::ofstream o;
 
+	char *b = new char[768*1024];
+	char *ob = new char[768*1024];
+
+	f.open("Z:\\sponza_disc.ppm", std::ios::binary);
+	f.read(b, 768*1024);
+	f.close();
+
+	int csize = Compression::Compress(b, 6*1024, ob);
+	memset(b, 0, 6*1024);
+	Compression::Decompress(ob, 6*1024, b);
+	std::cout << "Size : " << ((float)csize) << std::endl;
+	o.open("Z:\\sponza_disc2.ppm", std::ios::binary);
+	o.write(b, 768 * 1024);
+	o.close();
+
+	return;
+	*/
+
+	// Some tests
+	/*
 	Vector3 v(5,2,1);
 	float r;
 
@@ -92,6 +118,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	}
 	e = Platform::GetTime();
 	std::cout << "3: " << Platform::ToSeconds(e-s) << "s " << v.ToString() << std::endl;
+	*/
 
 	//----------------------------------------------------------------------------------------------
 	// Engine Kernel
@@ -240,6 +267,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	//----------------------------------------------------------------------------------------------
 	// Render loop
 	//----------------------------------------------------------------------------------------------
+	Spectrum *c = new Spectrum[1024*1024];
+	
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
 		pIntegrator->Prepare(environment.GetScene());
@@ -256,7 +285,15 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		pSpace->Update();
 	 
 		// Render frame
-		pRenderer->Render();
+		//pRenderer->Render();
+		pRenderer->GetDevice()->BeginFrame();
+		for (int y = 0; y < pRenderer->GetDevice()->GetHeight() / 16; y++)
+		for (int x = 0; x < pRenderer->GetDevice()->GetWidth() / 16; x++)
+		{
+			pRenderer->RenderToAuxiliary(x * 16, y * 16, 16, 16, c);
+		}
+
+		pRenderer->GetDevice()->EndFrame();
 
 		// Compute frames per second
 		elapsed = Platform::ToSeconds(Platform::GetTime() - start);

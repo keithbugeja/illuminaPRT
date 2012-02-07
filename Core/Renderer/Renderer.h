@@ -39,6 +39,7 @@ namespace Illumina
 			virtual bool Shutdown(void) { return false; }
 
 			virtual void Render(void) = 0;
+			virtual void RenderToAuxiliary(int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight, Spectrum *p_colourBuffer) = 0;
 
 			void SetIntegrator(IIntegrator *p_pIntegrator);
 			IIntegrator* GetIntegrator(void) const;

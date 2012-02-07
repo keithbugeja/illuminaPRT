@@ -28,6 +28,7 @@ namespace Illumina
 			BasicRenderer(Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, int p_nSampleCount = 1);
 
 			void Render(void);
+			void RenderToAuxiliary(int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight, Spectrum *p_colourBuffer) { throw new Exception ("Method not implemented!"); }
 		};
 	}
 }

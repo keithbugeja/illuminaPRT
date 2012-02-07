@@ -65,8 +65,9 @@ namespace Illumina
 				// Renderer
 				//----------------------------------------------------------------------------------------------
 				m_engineKernel->GetRendererManager()->RegisterFactory("Basic", new BasicRendererFactory());
+				m_engineKernel->GetRendererManager()->RegisterFactory("Multipass", new MultipassRendererFactory());
 				m_engineKernel->GetRendererManager()->RegisterFactory("Multithreaded", new MultithreadedRendererFactory());
-				m_engineKernel->GetRendererManager()->RegisterFactory("Distributed", new DistributedRendererFactory());
+				m_engineKernel->GetRendererManager()->RegisterFactory("Distributed", new DistributedRendererFactory());	
 
 				//----------------------------------------------------------------------------------------------
 				// Device
@@ -118,8 +119,8 @@ namespace Illumina
 				// MPIRender
 				//----------------------------------------------------------------------------------------------
 				int spp = 1, 
-					tileWidth = 8, 
-					tileHeight = 8;
+					tileWidth = 16, 
+					tileHeight = 16;
 
 				if (p_argumentMap.ContainsArgument("spp"))
 					p_argumentMap.GetArgument("spp", spp);
@@ -201,10 +202,12 @@ namespace Illumina
 					delete m_engineKernel->GetRendererManager()->RequestFactory("Basic");
 					delete m_engineKernel->GetRendererManager()->RequestFactory("Multithreaded");
 					delete m_engineKernel->GetRendererManager()->RequestFactory("Distributed");
+					delete m_engineKernel->GetRendererManager()->RequestFactory("Multipass");
 
 					m_engineKernel->GetRendererManager()->UnregisterFactory("Basic");
 					m_engineKernel->GetRendererManager()->UnregisterFactory("Multithreaded");
 					m_engineKernel->GetRendererManager()->UnregisterFactory("Distributed");
+					m_engineKernel->GetRendererManager()->UnregisterFactory("Multipass");
 
 					//----------------------------------------------------------------------------------------------
 					// Device
