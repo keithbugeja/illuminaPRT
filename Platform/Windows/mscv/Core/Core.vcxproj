@@ -132,6 +132,7 @@
     <ClCompile Include="..\..\..\..\Core\Camera\ThinLensCamera.cpp" />
     <ClCompile Include="..\..\..\..\Core\Device\ImageDevice.cpp" />
     <ClCompile Include="..\..\..\..\Core\Exception\Exception.cpp" />
+    <ClCompile Include="..\..\..\..\Core\External\Compression\minilzo.c" />
     <ClCompile Include="..\..\..\..\Core\Filter\BoxFilter.cpp" />
     <ClCompile Include="..\..\..\..\Core\Filter\TentFilter.cpp" />
     <ClCompile Include="..\..\..\..\Core\Geometry\Basis.cpp" />
@@ -205,6 +206,9 @@
     <ClInclude Include="..\..\..\..\Core\Device\DeviceFactories.h" />
     <ClInclude Include="..\..\..\..\Core\Device\ImageDevice.h" />
     <ClInclude Include="..\..\..\..\Core\Exception\Exception.h" />
+    <ClInclude Include="..\..\..\..\Core\External\Compression\lzoconf.h" />
+    <ClInclude Include="..\..\..\..\Core\External\Compression\lzodefs.h" />
+    <ClInclude Include="..\..\..\..\Core\External\Compression\minilzo.h" />
     <ClInclude Include="..\..\..\..\Core\Filter\BoxFilter.h" />
     <ClInclude Include="..\..\..\..\Core\Filter\Filter.h" />
     <ClInclude Include="..\..\..\..\Core\Filter\FilterFactories.h" />
