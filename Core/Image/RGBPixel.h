@@ -15,6 +15,20 @@ namespace Illumina
 {
 	namespace Core
 	{
+		class RGBBytePixel
+		{
+			public:
+			union 
+			{
+				unsigned char Element[3];
+				struct { unsigned char R, G, B; };
+			};
+
+			RGBBytePixel() { }
+			RGBBytePixel(unsigned char p_red, unsigned char p_green, unsigned char p_blue) 
+				: R(p_red), G(p_green), B(p_blue) { }
+		};
+
 		class RGBPixel
 		{
 		public:

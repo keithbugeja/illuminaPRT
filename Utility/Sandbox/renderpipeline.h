@@ -350,6 +350,17 @@ namespace Illumina
 
 						break;
 					}
+
+					case MT_Stream:
+					{
+						std::cout << "[" << p_coordinator.group.GetCoordinatorRank() << "] :: Coordinator received [STREAM]." << std::endl;
+
+						StreamMessage *msg = (StreamMessage*)&p_message;
+						
+						m_mpirender->EnableStream(msg->GetPort());
+
+						break;
+					}
 				}
 			}
 

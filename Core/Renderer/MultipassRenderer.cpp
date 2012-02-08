@@ -186,13 +186,17 @@ void MultipassRenderer::ComputeIntersectionPass(Intersection *p_pGeometryBuffer,
 
 	for (int y = p_nTileY; y < endTileY; ++y)
 	{
-		for (int x = p_nTileX; x < endTileX; ++x)
-		{
-			const int index = x + y * m_nWidth;
-			pIntersection = p_pGeometryBuffer + index;
+		const int line = y * m_nWidth;
 
-			context.SurfacePosition.Set(x + 0.5f, y + 0.5f);
-			context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
+		context.SurfacePosition.Y = y + 0.5f;
+		context.NormalisedPosition.Y = context.SurfacePosition.Y * rcpHeight;
+
+		for (int x = p_nTileX; x < endTileX; x++)
+		{
+			pIntersection = p_pGeometryBuffer + line + x;
+			
+			context.SurfacePosition.X = x + 0.5f;
+			context.NormalisedPosition.X = context.SurfacePosition.X * rcpWidth;
 
 			m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.5f, 0.5f, pIntersection->EyeRay);
 			pIntersection->Valid = m_pScene->Intersects(pIntersection->EyeRay, *pIntersection);
@@ -221,20 +225,31 @@ void MultipassRenderer::ComputeShadingPass(Intersection *p_pGeometryBuffer, int 
 	float rcpWidth = 1.f / m_nWidth,
 		rcpHeight = 1.f / m_nHeight;
 
-	for (int y = p_nTileY; y < endTileY; ++y)
+	for (int y = p_nTileY; y < endTileY; y++)
 	{
-		for (int x = p_nTileX; x < endTileX; ++x)
+		const int line = y * m_nWidth;
+
+		//context.SurfacePosition.Y = y * 4;
+		//context.NormalisedPosition.Y = context.SurfacePosition.Y * rcpHeight;
+
+		for (int x = p_nTileX; x < endTileX; x++)
 		{
-			const int index = x + y * m_nWidth;
-			pIntersection = p_pGeometryBuffer + index;
+			pIntersection = p_pGeometryBuffer + line + x;
 
-			context.SurfacePosition.Set(x + 0.5f, y + 0.5f);
-			context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
+			context.SurfacePosition.X = x * 2;
+			context.SurfacePosition.Y = y * 2;
+			Le = m_pIntegrator->Radiance(&context, m_pScene, *pIntersection);
 
-			//m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.5f, 0.5f, pIntersection->EyeRay);
-			//pIntersection->Valid = m_pScene->Intersects(pIntersection->EyeRay, *pIntersection);
-			m_pIntegrator->Radiance(&context, m_pScene, *pIntersection);
-			//ComputeDirectPass(&context, m_pScene, *pIntersection);
+			context.SurfacePosition.X++;
+			Le += m_pIntegrator->Radiance(&context, m_pScene, *pIntersection);
+
+			context.SurfacePosition.Y++;
+			Le += m_pIntegrator->Radiance(&context, m_pScene, *pIntersection);
+
+			context.SurfacePosition.X--;
+			Le += m_pIntegrator->Radiance(&context, m_pScene, *pIntersection);
+
+			pIntersection->Indirect = Le / 4;
 		}
 	}
 
@@ -273,7 +288,7 @@ void MultipassRenderer::ComputeShadingPass(Intersection *p_pGeometryBuffer, int 
 						(Vector3::Dot(normal, p_pGeometryBuffer[index].Surface.ShadingBasisWS.W) > m_fDBCos)
 					)
 					{
-						Le += p_pGeometryBuffer[index].Indirect; 
+						Le += p_pGeometryBuffer[index].Indirect * Vector3::Dot(normal, p_pGeometryBuffer[index].Surface.ShadingBasisWS.W); 
 						contrib++;						
 					}
 				}

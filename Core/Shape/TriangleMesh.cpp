@@ -144,7 +144,8 @@ Vector3 ITriangleMesh::SamplePoint(float p_u, float p_v, Vector3 &p_normal)
 {
 	// TODO: Use CDF (pdf ~ area) to determine which face to use.
 		
-	int triangleToSample = (int)(TriangleList.Size() * m_random.NextFloat());
+	//int triangleToSample = (int)(TriangleList.Size() * m_random.NextFloat());
+	int triangleToSample = (int)(TriangleList.Size() * (1 - p_u));
 	return TriangleList[triangleToSample].SamplePoint(p_u, p_v, p_normal);
 }
 //----------------------------------------------------------------------------------------------

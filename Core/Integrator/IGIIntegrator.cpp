@@ -173,6 +173,9 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 
 	Vector2 sample;
 
+	static PrecomputationSampler<2048, 10619863, 3331333> s;
+	s.Reset();
+
 	float pdf, samplesUsed;
 
 	std::vector<VirtualPointLight> &pointLightSet =
@@ -194,7 +197,7 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 				// Sample direct lighting
 				p_intersection.Direct = SampleAllLights(p_pScene, p_intersection, 
 					p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, 
-					wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+					wOut, &s, p_intersection.GetLight(), m_nShadowSampleCount);
 
 				for (Irradiance = 0.f, samplesUsed = 1, pointLightIterator = pointLightSet.begin(); 
 					 pointLightIterator != pointLightSet.end(); ++pointLightIterator)
@@ -217,7 +220,7 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 						// Ignore if such is the case.
 						if (pointLightQuery.IsOccluded()) 
 						{ 
-							// pointLight.Occluded = true; 
+							//pointLight.Occluded = true; 
 							continue; 
 						}
 					
