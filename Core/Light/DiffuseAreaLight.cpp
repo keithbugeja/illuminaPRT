@@ -110,11 +110,10 @@ Vector3 DiffuseAreaLight::SamplePoint(const Vector3 &p_viewPoint, float p_u, flo
 	}
 	else
 	{
-		//surfacePoint = m_pShape->SamplePoint(p_viewPoint, p_u, p_v, surfaceNormal);
-		surfacePoint = m_pShape->GetBoundingVolume()->GetCentre();
-		surfaceNormal = (p_viewPoint - surfacePoint);
+		surfacePoint = m_pShape->SamplePoint(p_viewPoint, p_u, p_v, surfaceNormal);
+		//surfacePoint = m_pShape->GetBoundingVolume()->GetCentre();
+		//surfaceNormal = (p_viewPoint - surfacePoint);
 		surfaceNormal.Normalize();
-		
 
 		p_pdf = m_pShape->GetPdf(surfacePoint);
 	}
@@ -144,8 +143,7 @@ Vector3 DiffuseAreaLight::SamplePoint(float p_u, float p_v, Vector3 &p_lightSurf
 	else
 	{
 		surfacePoint = m_pShape->SamplePoint(p_u, p_v, surfaceNormal);
-		surfacePoint = m_pShape->GetBoundingVolume()->GetCentre();
-
+		// surfacePoint = m_pShape->GetBoundingVolume()->GetCentre();
 		p_pdf = m_pShape->GetPdf(surfacePoint);
 	}
 

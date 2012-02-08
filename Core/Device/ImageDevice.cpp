@@ -107,3 +107,45 @@ float ImageDevice::HDRToLDR(float p_fValue)
 	return (float)(p_fValue / (p_fValue + 1));
 }
 //----------------------------------------------------------------------------------------------
+void ImageDevice::WriteToBuffer(RGBBytePixel *p_buffer)
+{
+	RGBPixel Lw(0), Ld;
+
+	for (int y = 0; y < m_pImage->GetHeight(); y++)
+	{
+		for (int x = 0; x < m_pImage->GetWidth(); x++)
+		{
+			RGBPixel pixel = m_pImage->Get(x,y);
+
+			Lw.R += Maths::Log(pixel.R + Maths::Epsilon);
+			Lw.G += Maths::Log(pixel.G + Maths::Epsilon);
+			Lw.B += Maths::Log(pixel.B + Maths::Epsilon);
+		}
+	}
+
+	Lw.R = Maths::Exp(1 / (m_pImage->GetWidth() * m_pImage->GetHeight()) * Lw.R);
+	Lw.G = Maths::Exp(1 / (m_pImage->GetWidth() * m_pImage->GetHeight()) * Lw.G);
+	Lw.B = Maths::Exp(1 / (m_pImage->GetWidth() * m_pImage->GetHeight()) * Lw.B);
+
+	for (int y = 0; y < m_pImage->GetHeight(); y++)
+	{
+		for (int x = 0; x < m_pImage->GetWidth(); x++)
+		{
+			Ld = m_pImage->Get(x,y);
+
+			Ld.R = HDRToLDR(Ld.R * (0.18f / Lw.R));
+			Ld.G = HDRToLDR(Ld.G * (0.18f / Lw.G));
+			Ld.B = HDRToLDR(Ld.B * (0.18f / Lw.B));
+			
+			//Ld.R = HDRToLDR(Ld.R);
+			//Ld.G = HDRToLDR(Ld.G);
+			//Ld.B = HDRToLDR(Ld.B);
+			
+			p_buffer->R = Ld.R * 255;
+			p_buffer->G = Ld.G * 255;
+			p_buffer->B = Ld.B * 255;
+
+			p_buffer++;
+		}
+	}
+}

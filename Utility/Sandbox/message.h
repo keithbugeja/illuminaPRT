@@ -26,6 +26,7 @@ namespace Illumina
 			MM_ChannelWorkerDynamic_1,
 			MM_ChannelPipelineStatic,
 			MM_ChannelPipelineDynamic,
+			MM_ChannelCoordinatorBase = 0x0500,
 			MM_ChannelUserBase = 0x1000
 		};
 
@@ -40,6 +41,7 @@ namespace Illumina
 			MT_Acknowledge	= 0x07,
 			MT_Direction	= 0x08,
 			MT_Position		= 0x09,
+			MT_Stream		= 0x0A,
 			MT_Count
 		};
 
@@ -135,6 +137,25 @@ namespace Illumina
 			const std::string ToString(void) const
 			{
 				return "Message.Completed"; 
+			}
+		};
+
+		// StreamMessage
+		struct StreamMessage
+			: public Message
+		{
+			StreamMessage(int p_port)
+			{
+				Id = MT_Stream;
+				SetMessage(p_port);
+			}
+
+			void SetMessage(int p_port) { Value[0] = p_port; }
+			int GetPort(void) const { return Value[0]; }
+
+			const std::string ToString(void) const
+			{
+				return "Message.Stream"; 
 			}
 		};
 

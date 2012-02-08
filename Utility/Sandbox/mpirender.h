@@ -82,6 +82,11 @@ namespace Illumina
 		class MPIRender
 		{
 		protected:
+			bool m_bStreamEnabled;
+			int m_nStreamPort;
+			int m_nPixelBufferSize;
+			RGBBytePixel *m_pPixelBuffer;
+
 			int m_nTileWidth,
 				m_nTileHeight;
 
@@ -110,12 +115,23 @@ namespace Illumina
 				m_pScene = m_environment->GetScene();
 				m_pFilter = m_environment->GetFilter();
 
+				m_bStreamEnabled = false;
+
 				return true;
 			}
 
 			bool Shutdown(void)
 			{
 				return true;
+			}
+
+			void EnableStream(int p_nPort)
+			{
+				m_bStreamEnabled = true;
+				m_nStreamPort = p_nPort;
+
+				m_nPixelBufferSize = m_pDevice->GetWidth() * m_pDevice->GetHeight();
+				m_pPixelBuffer = new RGBBytePixel[m_nPixelBufferSize];
 			}
 
 			bool RenderCoordinator(ITaskPipeline::CoordinatorTask *p_coordinator)
@@ -299,6 +315,15 @@ namespace Illumina
 
 				std::cout << "-------------------------------------------------------------------------" << std::endl;
 				*/
+
+				if (m_bStreamEnabled)
+				{
+					std::cout << "Sending image data..." << std::endl;
+					ImageDevice *pImageDevice = (ImageDevice*)m_pDevice;
+					pImageDevice->WriteToBuffer(m_pPixelBuffer);
+					TaskCommunicator::Send(m_pPixelBuffer, 512 * 512 * 3, 0, m_nStreamPort);
+					std::cout << "Sent image data..." << std::endl;
+				}
 
 				return true;
 			}

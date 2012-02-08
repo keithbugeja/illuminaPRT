@@ -44,6 +44,7 @@ struct ClientSessionInfo
 {
 	bool Admin;
 	bool StreamActive;
+	int  StreamPort;
 
 	boost::thread *StreamThread;
 
@@ -63,6 +64,7 @@ enum ClientMessageType
 	CMT_Disconnect,
 	CMT_Request,
 	CMT_Release,
+	CMT_Stream,
 	CMT_Input
 };
 
@@ -101,6 +103,17 @@ struct InputMessage
 	InputMessage(ClientSessionInfo *p_session, ClientInputType p_input)
 		: IClientMessage(CMT_Input, p_session)
 		, Input(p_input)
+	{ }
+};
+
+struct StreamPEMessage
+	: IClientMessage
+{
+	int Port;
+
+	StreamPEMessage(ClientSessionInfo *p_session, int p_port)
+		: IClientMessage(CMT_Stream, p_session)
+		, Port(p_port)
 	{ }
 };
 
@@ -260,14 +273,20 @@ void ClientStreamSession(socket_ptr p_socket, ClientSessionInfo *p_session)
 
 	unsigned char *transferBuffer = new unsigned char[size];
 
-	std::string resultImage = 
-		boost::str(boost::format("Output/result_%d.ppm") 
-		% p_session->Group->GetCoordinatorRank());
+	//std::string resultImage = 
+	//	boost::str(boost::format("Output/result_%d.ppm") 
+	//	% p_session->Group->GetCoordinatorRank());
+
+	MPI_Status status;
 
 	while(p_session->StreamActive)
 	{
 		try 
 		{
+			std::cout << "Waiting for image stream..." << std::endl;
+			TaskCommunicator::Receive(transferBuffer, size, p_session->Group->GetCoordinatorRank(), p_session->StreamPort, &status);
+			std::cout << "Image stream OK" << std::endl;
+			/*
 			// std::cout << "Load image [" << resultImage << "]" << std::endl;
 
 			Illumina::Core::Image *buffer = image.Load(resultImage);
@@ -294,19 +313,22 @@ void ClientStreamSession(socket_ptr p_socket, ClientSessionInfo *p_session)
 			delete buffer;
 
 			// std::cout << "Sending image to [" << p_socket->remote_endpoint().address().to_string() << "]." << std::endl;
-			
+			*/
+			/*
 			for (int chunk = 0; chunk < size; chunk += biteSize)
 			{
 				// std::cout << ".";
 				boost::asio::write(*p_socket, boost::asio::buffer((void*)(transferBuffer + chunk), biteSize)); 
 			}
-				
-			std::cout << "Image [" << resultImage << "] sent to [" << p_socket->remote_endpoint().address().to_string() << "]." << std::endl;
+			*/
+			/**/
+
+			// std::cout << "Image [" << resultImage << "] sent to [" << p_socket->remote_endpoint().address().to_string() << "]." << std::endl;
 		}
 		catch(boost::system::system_error e)
 		{ }
 
-		boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+		// boost::this_thread::sleep(boost::posix_time::milliseconds(500));
 	}
 
 	std::cout << "Closing image stream for session [" << p_session->IP << ":" << p_session->Id << "]." << std::endl;
@@ -326,8 +348,15 @@ void ClientStream(boost::asio::io_service &p_ios, ClientSessionInfo *p_clientSes
 	socket_ptr clientSocket(new tcp::socket(p_ios));
     boost::asio::connect(*clientSocket, iterator);
 
+	p_clientSessionInfo->StreamPort = MM_ChannelCoordinatorBase + p_clientSessionInfo->Group->GetCoordinatorRank();
 	p_clientSessionInfo->StreamActive = true;
 	p_clientSessionInfo->StreamThread = new boost::thread(boost::bind(ClientStreamSession, clientSocket, p_clientSessionInfo));
+
+	StreamPEMessage *message = new StreamPEMessage(p_clientSessionInfo, p_clientSessionInfo->StreamPort);
+
+	g_clientMessageQueueLock.Lock();
+	g_clientMessageQueue.push(message);
+	g_clientMessageQueueLock.Unlock();
 
 	std::cout << "[" << p_clientSessionInfo->IP << ":" << p_clientSessionInfo->Id << "] :: Initialised image streaming..." << std::endl;
 }
@@ -746,24 +775,21 @@ void Master(bool p_bVerbose)
 
 								DirectionMessage directionMessage(inputMessage->Input);
 								masterCommunicator.Send(&directionMessage, session->Group->GetCoordinatorRank());
-							}
-
-							/*
-							case CCMT_Direction:
-							{
-								std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master popped [CLIENT_DIRECTION] from message queue" << std::endl;
-
-								DirectionClientMessage *cstMessage = (DirectionClientMessage*)message;
-								TaskGroup *taskGroup = g_clientIPTaskGroupMap[cstMessage->ClientIP];
-
-								std::cout << "[" << masterTask->GetWorkerRank() << "] :: Master sent [DIRECTION] to coordinator [" << 
-									taskGroup->GetCoordinatorRank() << "]." << std::endl;
-
-								DirectionMessage directionMessage(cstMessage->Direction);
-								masterCommunicator.Send(&directionMessage, taskGroup->GetCoordinatorRank());
+								
 								break;
 							}
-							*/
+
+							case CMT_Stream:
+							{
+								ClientSessionInfo *session = message->SessionInfo;
+								StreamPEMessage *streamMessage = (StreamPEMessage*)message;
+
+								std::cout << "[" << masterTask->GetRank() << "] :: Master popped [CLIENT_STREAM] from message queue" << std::endl;
+								
+								StreamMessage strmMessage(streamMessage->Port);
+								masterCommunicator.Send(&strmMessage, session->Group->GetCoordinatorRank());
+								break;
+							}
 
 							default:
 								break;
