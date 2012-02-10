@@ -44,6 +44,10 @@ int ImageDevice::GetHeight(void) const {
 	return m_pImage->GetHeight(); 
 }
 //----------------------------------------------------------------------------------------------
+IDevice::AccessType ImageDevice::GetAccessType(void) const {
+	return IDevice::ReadWrite;
+}
+//----------------------------------------------------------------------------------------------
 void ImageDevice::BeginFrame(void) { }
 //----------------------------------------------------------------------------------------------
 void ImageDevice::EndFrame(void) {
@@ -59,6 +63,51 @@ void ImageDevice::Set(int p_nX, int p_nY, const Spectrum &p_spectrum)
 //----------------------------------------------------------------------------------------------
 void ImageDevice::Set(float p_fX, float p_fY, const Spectrum &p_spectrum) {
 	Set((int)p_fX, (int)p_fY, p_spectrum); 
+}
+//----------------------------------------------------------------------------------------------
+void ImageDevice::Get(int p_nX, int p_nY, Spectrum &p_spectrum) const
+{
+	const RGBPixel pixel = m_pImage->Get(p_nX, p_nY);
+	p_spectrum.Set(pixel.R, pixel.G, pixel.B);
+}
+//----------------------------------------------------------------------------------------------
+void ImageDevice::Get(float p_fX, float p_fY, Spectrum &p_spectrum) const
+{
+	// TODO: Provide option to enable bilinear interpolation
+	const RGBPixel pixel = m_pImage->Get((int)p_fX, (int)p_fY);
+	p_spectrum.Set(pixel.R, pixel.G, pixel.B);
+}
+//----------------------------------------------------------------------------------------------
+Spectrum ImageDevice::Get(int p_nX, int p_nY) const
+{
+	const RGBPixel pixel = m_pImage->Get(p_nX, p_nY);
+	return Spectrum(pixel.R, pixel.G, pixel.B);
+}
+//----------------------------------------------------------------------------------------------
+Spectrum ImageDevice::Get(float p_fX, float p_fY) const
+{
+	const RGBPixel pixel = m_pImage->Get((int)p_fX, (int)p_fY);
+	return Spectrum(pixel.R, pixel.G, pixel.B);
+}
+//----------------------------------------------------------------------------------------------
+std::string ImageDevice::GetFilename(void) const {
+	return m_strFilename;
+}
+//----------------------------------------------------------------------------------------------
+void ImageDevice::SetFilename(const std::string &p_strFilename) {
+	m_strFilename = p_strFilename;
+}
+//----------------------------------------------------------------------------------------------
+IImageIO *ImageDevice::GetImageWriter(void) const {
+	return m_pImageIO;
+}
+//----------------------------------------------------------------------------------------------
+void ImageDevice::SetImageWriter(IImageIO *p_pImageIO) {
+	m_pImageIO = p_pImageIO;
+}
+//----------------------------------------------------------------------------------------------
+Image *ImageDevice::GetImage(void) const {
+	return m_pImage;
 }
 //----------------------------------------------------------------------------------------------
 // TODO:

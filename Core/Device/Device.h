@@ -21,6 +21,14 @@ namespace Illumina
 		class IDevice
 			: public Object
 		{
+		public:
+			enum AccessType
+			{
+				Read,
+				Write,
+				ReadWrite
+			};
+
 		protected:
 			IDevice(const std::string &p_strName) : Object(p_strName) { }
 			IDevice(void) { }
@@ -28,12 +36,20 @@ namespace Illumina
 		public:
 			virtual int GetWidth(void) const = 0;
 			virtual int GetHeight(void) const = 0;
+			
+			virtual AccessType GetAccessType(void) const = 0;
 
 			virtual void BeginFrame(void) = 0;
 			virtual void EndFrame(void) = 0;
 
 			virtual void Set(int p_nX, int p_nY, const Spectrum &p_spectrum) = 0;
 			virtual void Set(float p_fX, float p_fY, const Spectrum &p_spectrum) = 0;
+
+			virtual void Get(int p_nX, int p_nY, Spectrum &p_spectrum) const = 0;
+			virtual void Get(float p_fX, float p_fY, Spectrum &p_spectrum) const = 0;
+
+			virtual Spectrum Get(int p_nX, int p_nY) const = 0;
+			virtual Spectrum Get(float p_fX, float p_fY) const = 0;
 
 			std::string ToString(void) const { return "IDevice"; }
 		};

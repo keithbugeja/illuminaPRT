@@ -46,6 +46,9 @@ namespace Illumina
 			RGBPixel Get(int p_x, int p_y);
 
 			void GammaCorrect(float p_fGamma);
+			
+			void ToneMap(void);
+			void ToneMap(Image *p_pImage) const;
 
 			float* GetImageBuffer(void) const;
 		};

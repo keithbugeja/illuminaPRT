@@ -48,6 +48,61 @@ namespace Illumina
 		#define WI_TASKID (MM_ChannelUserBase + 0x0001)
 		#define WI_RESULT (MM_ChannelUserBase + 0x0002)
 
+		struct MPITileElement
+		{
+			Spectrum Direct, 
+				Indirect,
+				Reflectivity;
+
+			Vector3 Depth,
+				Normal;
+		};
+
+		class MPITile
+		{
+		protected:
+			char  *m_pSerializationBuffer;
+			int    m_nSerializationBufferSize;
+			
+			MPITileElement *m_pTileElement;
+
+			int m_nWidth, 
+				m_nHeight;
+			
+		public:
+			MPITile(int p_nId, int p_nWidth, int p_nHeight)
+			{ 
+				m_nSerializationBufferSize = p_nWidth * p_nHeight * sizeof(MPITileElement) + sizeof(int);
+				m_pSerializationBuffer = new char[m_nSerializationBufferSize + 8192];
+				m_pTileElement = (MPITileElement*)m_pSerializationBuffer + sizeof(int);
+
+				m_nWidth = p_nWidth;
+				m_nHeight = p_nHeight;
+
+				SetId(p_nId);
+			}
+
+			~MPITile(void)
+			{
+				delete[] m_pSerializationBuffer;
+			}
+
+			inline int GetId(void) { return *(int*)m_pSerializationBuffer; }
+			inline void SetId(int p_nId) { *((int*)m_pSerializationBuffer) = p_nId; }
+
+			inline char* GetSerializationBuffer(void) const { return m_pSerializationBuffer; }
+			inline int GetSerializationBufferSize(void) const { return m_nSerializationBufferSize; }
+
+			inline GetElement(int p_nX, int p_nY) 
+			{
+				return m_pTileElement[p_nY * m_nWidth + p_nX];
+			}
+
+			// inline Image* GetImageData(void) { return m_pImageData; }
+		};
+
+
+		/*
 		class MPITile
 		{
 		protected:
@@ -78,6 +133,7 @@ namespace Illumina
 
 			inline Image* GetImageData(void) { return m_pImageData; }
 		};
+		*/
 
 		class MPIRender
 		{
@@ -372,7 +428,16 @@ namespace Illumina
 							startPixelX = startTileX * m_nTileWidth,
 							startPixelY = startTileY * m_nTileHeight;
 		
-						m_pRenderer->RenderToAuxiliary(startPixelX, startPixelY, m_nTileWidth, m_nTileHeight, (Spectrum*)tile.GetImageData()->GetImageBuffer());
+						//m_pRenderer->RenderToAuxiliary(startPixelX, startPixelY, m_nTileWidth, m_nTileHeight, (Spectrum*)tile.GetImageData()->GetImageBuffer());
+						m_pRenderer->RenderRegion(startPixelX, startPixelY, m_nTileWidth, m_nTileHeight);
+
+						for (int y = 0; y < m_nTileHeight; y++)
+						{
+							for (int x = 0; x < m_nTileWidth; x++)
+							{
+								MPITileElement *pTile = tile.GetElement(x, y);
+							}
+						}
 
 						/*
 						IntegratorContext context;

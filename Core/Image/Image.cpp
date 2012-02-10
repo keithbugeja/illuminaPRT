@@ -68,3 +68,44 @@ void Image::GammaCorrect(float p_fGamma)
 	}
 }
 //----------------------------------------------------------------------------------------------
+void Image::ToneMap(void)
+{
+	ToneMap(this);
+}
+//----------------------------------------------------------------------------------------------
+void Image::ToneMap(Image *p_pImage) const
+{
+	RGBPixel Lw(0), Ld, 
+		*pSource = m_bitmap;
+
+	int nArea = 
+		m_nHeight * m_nWidth;
+
+	for (int index = 0; index < nArea; ++index, ++pSource)
+	{
+		Lw.R += Maths::Log(pSource->R + Maths::Epsilon);
+		Lw.R += Maths::Log(pSource->G + Maths::Epsilon);
+		Lw.R += Maths::Log(pSource->B + Maths::Epsilon);
+	}
+
+	float fAreaInv = 
+		1.f / ((float)nArea);
+
+	Lw.R = Maths::Exp(fAreaInv * Lw.R);
+	Lw.G = Maths::Exp(fAreaInv * Lw.G);
+	Lw.B = Maths::Exp(fAreaInv * Lw.B);
+
+	pSource = p_pImage->m_bitmap;
+
+	for (int index = 0; index < nArea; ++index, ++pSource)
+	{
+		pSource->R *= 0.18f / Lw.R;
+		pSource->R /= pSource->R + 1;
+
+		pSource->G *= 0.18f / Lw.G;
+		pSource->G /= pSource->G + 1;
+
+		pSource->B *= 0.18f / Lw.B;
+		pSource->B /= pSource->B + 1;
+	}
+}

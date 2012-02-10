@@ -35,6 +35,7 @@ namespace Illumina
 #include "Scene/Environment.h"
 
 #include "External/Compression/Compression.h"
+#include "../../Core/Scene/GeometricPrimitive.h"
 
 // Factories
 #include "Camera/CameraFactories.h"
@@ -274,23 +275,30 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		pIntegrator->Prepare(environment.GetScene());
 
 		start = Platform::GetTime();
-
-		//alpha += Maths::PiTwo / 256;
 		
 		//pCamera->MoveTo(lookFrom);
 		//pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
 		//pCamera->LookAt(lookAt);
-	 
+		Matrix3x3 r;
+		alpha += Maths::PiTwo / 32;
+		r.MakeRotation(Vector3::UnitYPos, alpha);
+		((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetScaling(Vector3::Ones * 20.0f);
+		((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetRotation(r);
+
 		// Update space
 		pSpace->Update();
 	 
 		// Render frame
 		//pRenderer->Render();
 		pRenderer->GetDevice()->BeginFrame();
-		for (int y = 0; y < pRenderer->GetDevice()->GetHeight() / 16; y++)
-		for (int x = 0; x < pRenderer->GetDevice()->GetWidth() / 16; x++)
+
+		//#pragma omp parallel for num_threads(4)
+		for (int y = 0; y < pRenderer->GetDevice()->GetHeight() / 40; y++)
 		{
-			pRenderer->RenderToAuxiliary(x * 16, y * 16, 16, 16, c);
+			for (int x = 0; x < pRenderer->GetDevice()->GetWidth() / 40; x++)
+			{
+				pRenderer->RenderRegion(x * 40, y * 40, 40, 40);
+			}
 		}
 
 		pRenderer->GetDevice()->EndFrame();
