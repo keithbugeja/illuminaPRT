@@ -51,12 +51,15 @@ namespace Illumina
 			bool Shutdown(void);
 
 			void Render(void);
+			void RenderRegion(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight);
 			void RenderToAuxiliary(int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight, Spectrum *p_colourBuffer);
 		
 		protected:
+			void ComputeCombinedPass(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight);
+			void ComputeSeparatePasses(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight);
+
 			void ComputeIntersectionPass(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight);
 			void ComputeShadingPass(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight);
-			void ComputeCombinedPass(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight);
 			void ComputeDirectPass(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_intersection); 
 		};
 	}

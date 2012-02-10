@@ -10,6 +10,11 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
+void JitterSampler::Reset(void)
+{
+	m_random.Reset();
+}
+//----------------------------------------------------------------------------------------------
 void JitterSampler::Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount)
 {
 	int sqrtSampleCount = (int)Maths::Sqrt((float)p_nSampleCount);
@@ -47,8 +52,11 @@ std::string JitterSampler::ToString(void) const
 }
 //----------------------------------------------------------------------------------------------
 
-
 //----------------------------------------------------------------------------------------------
+void MultijitterSampler::Reset(void)
+{
+	m_random.Reset();
+}//----------------------------------------------------------------------------------------------
 void MultijitterSampler::Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount)
 {
 	int sqrtSampleCount = (int)Maths::Sqrt((float)p_nSampleCount);

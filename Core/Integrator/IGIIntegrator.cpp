@@ -149,6 +149,7 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 bool IGIIntegrator::Prepare(Scene *p_pScene)
 {
 	VirtualPointLightSet.clear();
+	p_pScene->GetSampler()->Reset();
 
 	for (int pointLightSet = m_nTileArea; pointLightSet != 0; --pointLightSet)
 	{
@@ -173,8 +174,8 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 
 	Vector2 sample;
 
-	static PrecomputationSampler<2048, 10619863, 3331333> s;
-	s.Reset();
+	//static PrecomputationSampler<2048, 10619863, 3331333> s;
+	//s.Reset();
 
 	float pdf, samplesUsed;
 
@@ -197,7 +198,7 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 				// Sample direct lighting
 				p_intersection.Direct = SampleAllLights(p_pScene, p_intersection, 
 					p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, 
-					wOut, &s, p_intersection.GetLight(), m_nShadowSampleCount);
+					wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
 
 				for (Irradiance = 0.f, samplesUsed = 1, pointLightIterator = pointLightSet.begin(); 
 					 pointLightIterator != pointLightSet.end(); ++pointLightIterator)
@@ -280,15 +281,7 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 	VisibilityQuery visibilityQuery(p_pScene),
 		vplQuery(p_pScene);
 
-	Spectrum pathThroughput(1.0f), 
-		L(0.0f),
-		E(0.0f);
-
 	IMaterial *pMaterial = NULL;
-
-	bool specularBounce = false;
-
-	BxDF::Type bxdfType;
 
 	Vector3 wIn, wOut,
 		wInLocal, wOutLocal; 
@@ -307,193 +300,122 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 	
 	std::vector<VirtualPointLight> &vpll = VirtualPointLightSet[setId];
 		
-	//for (int rayDepth = 0; rayDepth < m_nMaxRayDepth; rayDepth++)
-	for (int rayDepth = 0; rayDepth < 1; rayDepth++)
+	Spectrum Li = 0.f, 
+		Ld = 0.f,
+		E = 0.f;
+
+	//----------------------------------------------------------------------------------------------
+	// No intersection
+	//----------------------------------------------------------------------------------------------
+	if(!p_pScene->Intersects(ray, p_intersection))
 	{
-		//----------------------------------------------------------------------------------------------
-		// No intersection
-		//----------------------------------------------------------------------------------------------
-		if(!p_pScene->Intersects(ray, p_intersection))
+		for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
+			Ld += p_pScene->LightList[lightIndex]->Radiance(-ray);
+	}
+	else
+	{
+		if (p_intersection.HasMaterial()) 
 		{
-			if (rayDepth == 0 || specularBounce) 
+			// Get material for intersection primitive
+			pMaterial = p_intersection.GetMaterial();
+
+			//----------------------------------------------------------------------------------------------
+			// Sample lights for specular / first bounce
+			//----------------------------------------------------------------------------------------------
+			wOut = -Vector3::Normalize(ray.Direction);
+
+			// Add emitted light : only on first bounce or specular to avoid double counting
+			if (p_intersection.IsEmissive())
 			{
-				for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
-					L += pathThroughput * p_pScene->LightList[lightIndex]->Radiance(-ray);
+				Ld += p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
 			}
-
-			break;
-		}
-		
-		//----------------------------------------------------------------------------------------------
-		// Primitive has no material assigned - terminate
-		//----------------------------------------------------------------------------------------------
-		if (!p_intersection.HasMaterial()) 
-			break;
-		
-		// Get material for intersection primitive
-		pMaterial = p_intersection.GetMaterial();
-
-		//----------------------------------------------------------------------------------------------
-		// Sample lights for specular / first bounce
-		//----------------------------------------------------------------------------------------------
-		wOut = -Vector3::Normalize(ray.Direction);
-
-		// Add emitted light : only on first bounce or specular to avoid double counting
-		if (p_intersection.IsEmissive())
-		{
-			if (rayDepth == 0 || specularBounce)
+			else
 			{
-				// Add contribution from luminaire
-				// -- Captures highlight on specular materials
-				// -- Transmits light through dielectrics
-				// -- Renders light primitive for first bounce intersections
-				L += pathThroughput * p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
+				//----------------------------------------------------------------------------------------------
+				// Sample lights for direct lighting
+				// -- If the currently intersected primitive is a luminaire, do not sample it 
+				//----------------------------------------------------------------------------------------------
+				Ld += SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
 
-				if (rayDepth == 0) break;
+				p_intersection.Reflectance = pMaterial->Rho(wOut, p_intersection.Surface);
+
+				if (m_nIndirectSampleCount == 0)
+				{
+					std::vector<VirtualPointLight>::iterator vplIterator;
+			
+					for (vplIterator = vpll.begin(); vplIterator != vpll.end(); ++vplIterator)
+					{
+						const VirtualPointLight &vpl = *vplIterator;
+
+						Vector3 distance = p_intersection.Surface.PointWS - vpl.Context.Surface.PointWS;
+						float d2 = distance.LengthSquared();
+
+						wIn = Vector3::Normalize(vpl.Context.Surface.PointWS - p_intersection.Surface.PointWS);
+						Spectrum f = IIntegrator::F(p_pScene, p_intersection, wOut, wIn);;
+			
+						if (f.IsBlack()) 
+							continue;
+			
+						float cosX = Maths::Max(0, Vector3::Dot(wIn, p_intersection.Surface.ShadingBasisWS.W));
+						float cosY = Maths::Max(0, Vector3::Dot(-wIn, vpl.Context.Surface.ShadingBasisWS.W));
+						float G = Maths::Min((cosX * cosY) / d2, 0.01f);
+
+						Spectrum Llight = f * G * vpl.Power;
+			
+						vplQuery.SetSegment(p_intersection.Surface.PointWS, 1e-1f, vpl.Context.Surface.PointWS, 1e-1f);
+
+						if (!vplQuery.IsOccluded())
+							E += Llight;
+					}
+
+					Li = E / vpll.size();
+				}
+				else
+				{
+					int stride = Maths::Max(1, vpll.size() / m_nIndirectSampleCount),
+						contributions = 0;
+
+					for (int vplIndex = 0; vplIndex < vpll.size(); vplIndex += stride)
+					{
+						contributions++;
+
+						int sampledVPLIndex = (rand() % stride) + vplIndex;
+			
+						if (sampledVPLIndex >= vpll.size())
+							break;
+
+						const VirtualPointLight &vpl = vpll[sampledVPLIndex];
+
+						Vector3 distance = p_intersection.Surface.PointWS - vpl.Context.Surface.PointWS;
+						float d2 = distance.LengthSquared();
+
+						wIn = Vector3::Normalize(vpl.Context.Surface.PointWS - p_intersection.Surface.PointWS);
+						Spectrum f = IIntegrator::F(p_pScene, p_intersection, wOut, wIn);;
+			
+						if (f.IsBlack()) 
+							continue;
+			
+						float cosX = Maths::Max(0, Vector3::Dot(wIn, p_intersection.Surface.ShadingBasisWS.W));
+						float cosY = Maths::Max(0, Vector3::Dot(-wIn, vpl.Context.Surface.ShadingBasisWS.W));
+						float G = Maths::Min((cosX * cosY) / d2, 0.01f);
+
+						Spectrum Llight = f * G * vpl.Power;
+
+						vplQuery.SetSegment(p_intersection.Surface.PointWS, 1e-1f, vpl.Context.Surface.PointWS, 1e-1f);
+
+						if (!vplQuery.IsOccluded())
+							E += Llight;
+					}
+
+					Li = E / contributions;					
+				}
 			}
 		}
-
-		//----------------------------------------------------------------------------------------------
-		// Sample lights for direct lighting
-		// -- If the currently intersected primitive is a luminaire, do not sample it 
-		//----------------------------------------------------------------------------------------------
-		if (!specularBounce)
-			L += pathThroughput * SampleAllLights(p_pScene, p_intersection, p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
-
-		E = 0;
-
-		if (m_nIndirectSampleCount == 0)
-		{
-			std::vector<VirtualPointLight>::iterator vplIterator;
-			
-			for (vplIterator = vpll.begin(); vplIterator != vpll.end(); ++vplIterator)
-			{
-				const VirtualPointLight &vpl = *vplIterator;
-
-				Vector3 distance = p_intersection.Surface.PointWS - vpl.Context.Surface.PointWS;
-				float d2 = distance.LengthSquared();
-
-				wIn = Vector3::Normalize(vpl.Context.Surface.PointWS - p_intersection.Surface.PointWS);
-				Spectrum f = IIntegrator::F(p_pScene, p_intersection, wOut, wIn);;
-			
-				if (f.IsBlack()) 
-					continue;
-			
-				float cosX = Maths::Max(0, Vector3::Dot(wIn, p_intersection.Surface.ShadingBasisWS.W));
-				float cosY = Maths::Max(0, Vector3::Dot(-wIn, vpl.Context.Surface.ShadingBasisWS.W));
-				float G = Maths::Min((cosX * cosY) / d2, 0.01f);
-
-				Spectrum Llight = f * G * vpl.Power;
-			
-				vplQuery.SetSegment(p_intersection.Surface.PointWS, 1e-1f, vpl.Context.Surface.PointWS, 1e-1f);
-
-				if (!vplQuery.IsOccluded())
-					E += Llight;
-			}
-
-			L += E / vpll.size();
-		}
-		else
-		{
-			int stride = Maths::Max(1, vpll.size() / m_nIndirectSampleCount),
-				contributions = 0;
-
-			for (int vplIndex = 0; vplIndex < vpll.size(); vplIndex += stride)
-			{
-				contributions++;
-
-				int sampledVPLIndex = (rand() % stride) + vplIndex;
-			
-				if (sampledVPLIndex >= vpll.size())
-					break;
-
-				const VirtualPointLight &vpl = vpll[sampledVPLIndex];
-
-
-				Vector3 distance = p_intersection.Surface.PointWS - vpl.Context.Surface.PointWS;
-				float d2 = distance.LengthSquared();
-
-				wIn = Vector3::Normalize(vpl.Context.Surface.PointWS - p_intersection.Surface.PointWS);
-				Spectrum f = IIntegrator::F(p_pScene, p_intersection, wOut, wIn);;
-			
-				if (f.IsBlack()) 
-					continue;
-			
-				float cosX = Maths::Max(0, Vector3::Dot(wIn, p_intersection.Surface.ShadingBasisWS.W));
-				float cosY = Maths::Max(0, Vector3::Dot(-wIn, vpl.Context.Surface.ShadingBasisWS.W));
-				float G = Maths::Min((cosX * cosY) / d2, 0.01f);
-
-				Spectrum Llight = f * G * vpl.Power;
-
-				vplQuery.SetSegment(p_intersection.Surface.PointWS, 1e-1f, vpl.Context.Surface.PointWS, 1e-1f);
-
-				if (!vplQuery.IsOccluded())
-					E += Llight;
-			}
-
-			L += E / contributions;
-		}
-
-		//----------------------------------------------------------------------------------------------
-		// Sample bsdf for next direction
-		//----------------------------------------------------------------------------------------------
-		// Generate random samples
-		sample = p_pScene->GetSampler()->Get2DSample();
-
-		// Convert to surface coordinate system where (0,0,1) represents surface normal
-		// Note: 
-		// -- All Material/BSDF/BxDF operations are carried out in surface coordinates
-		// -- All inputs must be in surface coordinates
-		// -- All outputs are in surface coordinates
-
-		BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, wOutLocal);
-
-		// Sample new direction in wIn (remember we're tracing backwards)
-		// -- wIn returns the sampled direction
-		// -- pdf returns the reflectivity function's pdf at the sampled point
-		// -- bxdfType returns the type of BxDF sampled
-		Spectrum f = pMaterial->SampleF(p_intersection.Surface, wOutLocal, wInLocal, sample.U, sample.V, &pdf, BxDF::All_Combined, &bxdfType);
-
-		// If the reflectivity or pdf are zero, terminate path
-		if (f.IsBlack() || pdf == 0.0f) break;
-
-		// Record if bounce is a specular bounce
-		specularBounce = ((int)(bxdfType & BxDF::Specular)) != 0;
-
-		// Convert back to world coordinates
-		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, wInLocal, wIn);
-
-		//----------------------------------------------------------------------------------------------
-		// Adjust path for new bounce
-		// -- ray is moved by a small epsilon in sampled direction
-		// -- ray origin is set to point of intersection
-		//----------------------------------------------------------------------------------------------
-		ray.Set(p_intersection.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, 0.f, Maths::Maximum);
-
-		//ray.Min = 0.f;
-		//ray.Max = Maths::Maximum;
-		//ray.Origin = p_intersection.Surface.PointWS + wIn * m_fReflectEpsilon;
-		//ray.Direction = wIn;
-		//Vector3::Inverse(ray.Direction, ray.DirectionInverseCache);
-		
-		// Update path contribution at current stage
-		pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
-
-		//----------------------------------------------------------------------------------------------
-		// Use Russian roulette to possibly terminate path
-		//----------------------------------------------------------------------------------------------
-		if (rayDepth > 3)
-		{
-			float continueProbability = Maths::Min(0.5f, 0.33f * (pathThroughput[0] + pathThroughput[1] + pathThroughput[2]));
-
-			if (p_pScene->GetSampler()->Get1DSample() > continueProbability)
-				break;
-			pathThroughput /= continueProbability;
-		}
-
-		return L;
 	}
 
-	return L;
+	p_intersection.Indirect = Li;
+	p_intersection.Direct = Ld;
+
+	return Li + Ld;
 }
 //----------------------------------------------------------------------------------------------

@@ -23,6 +23,8 @@ namespace Illumina
 			JitterSampler(const std::string &p_strName) : ISampler(p_strName) { }
 			JitterSampler(void) { }
 
+			void Reset(void);
+
 			void Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount);
 			void Get1DSamples(float *p_pSamples, int p_nSampleCount);
 
@@ -41,6 +43,8 @@ namespace Illumina
 		public:
 			MultijitterSampler(const std::string &p_strName) : ISampler(p_strName) { }
 			MultijitterSampler(void) { }
+
+			void Reset(void);
 
 			void Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount);
 			void Get1DSamples(float *p_pSamples, int p_nSampleCount);

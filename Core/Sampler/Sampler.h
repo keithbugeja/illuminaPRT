@@ -26,6 +26,8 @@ namespace Illumina
 			ISampler(void) { }
 
 		public:
+			virtual void Reset(void) = 0;
+
 			virtual void Get2DSamples(Vector2* p_pSamples, int p_nSampleCount) = 0;
 			virtual void Get1DSamples(float* p_pSamples, int p_nSampleCount) = 0;
 			

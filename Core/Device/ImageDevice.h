@@ -8,6 +8,7 @@
 
 #include "Device/Device.h"
 
+//----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
@@ -26,8 +27,13 @@ namespace Illumina
 			ImageDevice(int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit = false);
 			~ImageDevice(void);
 
+			//----------------------------------------------------------------------------------------------
+			// Interface implementation methods
+			//----------------------------------------------------------------------------------------------
 			int GetWidth(void) const;
 			int GetHeight(void) const;
+			
+			IDevice::AccessType GetAccessType(void) const;
 
 			void BeginFrame(void);
 			void EndFrame(void);
@@ -35,15 +41,32 @@ namespace Illumina
 			void Set(int p_nX, int p_nY, const Spectrum &p_spectrum);
 			void Set(float p_fX, float p_fY, const Spectrum &p_spectrum);
 
-			// --> TEMPORARY --- until EGPGV paper is sorted out!
-			std::string GetFilename(void) const { return m_strFilename; }
-			void SetFilename(const std::string &p_fname) { m_strFilename = p_fname; }
-			void WriteToBuffer(RGBBytePixel *p_buffer);
-			// --> TEMPORARY --- until EGPGV paper is sorted out!
+			void Get(int p_nX, int p_nY, Spectrum &p_spectrum) const;
+			void Get(float p_fX, float p_fY, Spectrum &p_spectrum) const;
+
+			Spectrum Get(int p_nX, int p_nY) const;
+			Spectrum Get(float p_fX, float p_fY) const;
+
+			//----------------------------------------------------------------------------------------------
+			// Type-specific methods
+			//----------------------------------------------------------------------------------------------
+		public:
+			std::string GetFilename(void) const;
+			void SetFilename(const std::string &p_strFilename);
+
+			IImageIO *GetImageWriter(void) const;
+			void SetImageWriter(IImageIO *p_pImageIO);
+
+			Image *GetImage(void) const;
 
 		protected:
 			void ToneMap(void);
 			float HDRToLDR(float p_fValue);
+
+		public:
+			// --> TEMPORARY --- until EGPGV paper is sorted out!
+			void WriteToBuffer(RGBBytePixel *p_buffer);
+			// --> TEMPORARY --- until EGPGV paper is sorted out!
 		};
 	}
 }
