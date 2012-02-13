@@ -46,9 +46,9 @@ namespace Illumina
 
 			virtual bool Prepare(Scene *p_pScene = NULL) { return true; }
 
-			virtual Spectrum Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection) = 0;
-			virtual Spectrum Radiance(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_pIntersection) = 0;
-
+			virtual Spectrum Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext = NULL) = 0;
+			virtual Spectrum Radiance(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_intersection, RadianceContext *p_pRadianceContext = NULL) = 0;
+			
 			static Spectrum EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, IMaterial *p_pMaterial, 
 				const Intersection &p_intersection, const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wOut, 
 				Vector3 &p_wIn, float p_u, float p_v);

@@ -304,6 +304,7 @@
     <ClInclude Include="..\..\..\..\Core\Staging\Aggregate.h" />
     <ClInclude Include="..\..\..\..\Core\Staging\WavefrontLoader.h" />
     <ClInclude Include="..\..\..\..\Core\System\ArgumentMap.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Buffer.h" />
     <ClInclude Include="..\..\..\..\Core\System\Dummy.h" />
     <ClInclude Include="..\..\..\..\Core\System\DummyManager.h" />
     <ClInclude Include="..\..\..\..\Core\System\EngineKernel.h" />

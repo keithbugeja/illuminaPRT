@@ -94,6 +94,13 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, Intersection &p_intersectio
 				// Update intersection point in world space
 				p_intersection.Surface.PointWS = p_ray.PointAlongRay(p_intersection.Surface.Distance);
 			
+				// Update ray information both in world and surface space
+				p_intersection.Surface.RayOriginWS = p_ray.Origin;
+				p_intersection.Surface.RayDirectionWS = p_ray.Direction;
+
+				p_intersection.Surface.RayOrigin = invRay.Origin;
+				p_intersection.Surface.RayDirection = invRay.Direction;
+
 				// Update primitive world transform
 				p_intersection.WorldTransform = WorldTransform;
 
@@ -130,7 +137,14 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, Intersection &p_intersectio
 
 				// Update intersection point in world space
 				p_intersection.Surface.PointWS = p_ray.PointAlongRay(p_intersection.Surface.Distance);
-			
+
+				// Update ray information both in world and surface space
+				p_intersection.Surface.RayOrigin = 
+					p_intersection.Surface.RayOriginWS = p_ray.Origin;
+
+				p_intersection.Surface.RayDirection = 
+					p_intersection.Surface.RayDirectionWS = p_ray.Direction;
+
 				// Update primitive world transform
 				p_intersection.WorldTransform = WorldTransform;
 

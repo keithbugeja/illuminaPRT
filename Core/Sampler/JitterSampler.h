@@ -76,7 +76,8 @@ namespace Illumina
 			{
 				for (int index = 0; index < TSequenceSize; ++index)
 				{
-					m_pSampleList[index].Set(VanDerCorput(index, p_nSeed1), Sobol2(index, p_nSeed2));
+					m_pSampleList[index].Set(m_random.NextFloat(), m_random.NextFloat());
+					//m_pSampleList[index].Set(VanDerCorput(index, p_nSeed1), Sobol2(index, p_nSeed2));
 				}
 
 				m_nSampleIndex = 0;

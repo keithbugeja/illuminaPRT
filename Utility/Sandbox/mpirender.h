@@ -48,42 +48,25 @@ namespace Illumina
 		#define WI_TASKID (MM_ChannelUserBase + 0x0001)
 		#define WI_RESULT (MM_ChannelUserBase + 0x0002)
 
-		struct MPITileElement
-		{
-			Spectrum Direct, 
-				Indirect,
-				Reflectivity;
-
-			Vector3 Depth,
-				Normal;
-		};
-
 		class MPITile
 		{
 		protected:
 			char  *m_pSerializationBuffer;
 			int    m_nSerializationBufferSize;
-			
-			MPITileElement *m_pTileElement;
 
-			int m_nWidth, 
-				m_nHeight;
-			
+			RadianceBuffer *m_pImageData;
+
 		public:
 			MPITile(int p_nId, int p_nWidth, int p_nHeight)
 			{ 
-				m_nSerializationBufferSize = p_nWidth * p_nHeight * sizeof(MPITileElement) + sizeof(int);
-				m_pSerializationBuffer = new char[m_nSerializationBufferSize + 8192];
-				m_pTileElement = (MPITileElement*)m_pSerializationBuffer + sizeof(int);
-
-				m_nWidth = p_nWidth;
-				m_nHeight = p_nHeight;
-
-				SetId(p_nId);
+				m_nSerializationBufferSize = p_nWidth * p_nHeight * sizeof(RadianceContext) + sizeof(int);
+				m_pSerializationBuffer = new char[m_nSerializationBufferSize + 1024];
+				m_pImageData = new RadianceBuffer(p_nWidth, p_nHeight, (RadianceContext*)(m_pSerializationBuffer + sizeof(int)));
 			}
 
 			~MPITile(void)
 			{
+				delete m_pImageData;
 				delete[] m_pSerializationBuffer;
 			}
 
@@ -93,14 +76,8 @@ namespace Illumina
 			inline char* GetSerializationBuffer(void) const { return m_pSerializationBuffer; }
 			inline int GetSerializationBufferSize(void) const { return m_nSerializationBufferSize; }
 
-			inline GetElement(int p_nX, int p_nY) 
-			{
-				return m_pTileElement[p_nY * m_nWidth + p_nX];
-			}
-
-			// inline Image* GetImageData(void) { return m_pImageData; }
+			inline RadianceBuffer* GetImageData(void) { return m_pImageData; }
 		};
-
 
 		/*
 		class MPITile
@@ -143,10 +120,14 @@ namespace Illumina
 			int m_nPixelBufferSize;
 			RGBBytePixel *m_pPixelBuffer;
 
+			int m_nPostProcessing;
+
 			int m_nTileWidth,
 				m_nTileHeight;
 
 			int m_nSampleCount;
+
+			RadianceBuffer *m_pRadianceBuffer;
 
 			Environment *m_environment;
 			IIntegrator *m_pIntegrator;
@@ -156,11 +137,12 @@ namespace Illumina
 			Scene *m_pScene;
 
 		public:
-			MPIRender(Environment *p_environment, int p_nSampleCount = 1, int p_nTileWidth = 16, int p_nTileHeight = 16)
+			MPIRender(Environment *p_environment, int p_nPostProcessing = 0, int p_nSampleCount = 1, int p_nTileWidth = 16, int p_nTileHeight = 16)
 				: m_environment(p_environment)
 				, m_nTileWidth(p_nTileWidth)
 				, m_nTileHeight(p_nTileHeight)
 				, m_nSampleCount(p_nSampleCount)
+				, m_nPostProcessing(p_nPostProcessing)
 			{ }
 
 			bool Initialise(void)
@@ -173,11 +155,17 @@ namespace Illumina
 
 				m_bStreamEnabled = false;
 
+				if (m_nPostProcessing)
+					m_pRadianceBuffer = new RadianceBuffer(m_pDevice->GetWidth(), m_pDevice->GetHeight());
+
 				return true;
 			}
 
 			bool Shutdown(void)
 			{
+				if (m_nPostProcessing)
+					delete m_pRadianceBuffer;
+
 				return true;
 			}
 
@@ -330,14 +318,22 @@ namespace Illumina
 							startPixelX = startTileX * m_nTileWidth,
 							startPixelY = startTileY * m_nTileHeight;
 
-						for (int y = 0; y < m_nTileHeight; y++)
+						if (m_nPostProcessing)
 						{
-							for (int x = 0; x < m_nTileWidth; x++)
-							{
-								const RGBPixel &pixel = tile.GetImageData()->Get(x,y);
-								Spectrum L(pixel.R, pixel.G, pixel.B);
-
-								m_pDevice->Set(deviceWidth - startPixelX - x - 1, deviceHeight - startPixelY - y - 1, L);
+							for (int y = 0; y < m_nTileHeight; y++) {
+								for (int x = 0; x < m_nTileWidth; x++) {
+									m_pRadianceBuffer->Set(startPixelX + x, startPixelY + y, 
+										tile.GetImageData()->Get(x, y));
+								}
+							}
+						}
+						else
+						{
+							for (int y = 0; y < m_nTileHeight; y++) {
+								for (int x = 0; x < m_nTileWidth; x++) {
+									m_pDevice->Set(deviceWidth - startPixelX - x - 1, deviceHeight - startPixelY - y - 1, 
+										tile.GetImageData()->Get(x, y).Final);
+								}
 							}
 						}
 					}
@@ -346,6 +342,12 @@ namespace Illumina
 				//--------------------------------------------------
 				// Frame completed
 				//--------------------------------------------------
+				if (m_nPostProcessing) {
+					double start = Platform::GetTime();
+					m_pRenderer->PostProcess(m_pRadianceBuffer);
+					std::cout << "Post proc : " << Platform::ToSeconds(Platform::GetTime() - start) << "s" << std::endl;
+				}
+
 				#if (defined(SCHEDULER_DATA_IO))
 					if (iofrequency == SCHEDULER_DATA_IO_FREQUENCY)
 						m_pDevice->EndFrame();
@@ -377,7 +379,7 @@ namespace Illumina
 					std::cout << "Sending image data..." << std::endl;
 					ImageDevice *pImageDevice = (ImageDevice*)m_pDevice;
 					pImageDevice->WriteToBuffer(m_pPixelBuffer);
-					TaskCommunicator::Send(m_pPixelBuffer, 512 * 512 * 3, 0, m_nStreamPort);
+					TaskCommunicator::Send(m_pPixelBuffer, 640 * 400 * 3, 0, m_nStreamPort);
 					std::cout << "Sent image data..." << std::endl;
 				}
 
@@ -402,9 +404,6 @@ namespace Illumina
 				//--------------------------------------------------
 				// Prepare structures for use in rendering
 				//--------------------------------------------------
-				Intersection intersection;
-				Vector2 *pSampleBuffer = new Vector2[m_nSampleCount];
-
 				while (true)
 				{
 					//--------------------------------------------------
@@ -428,54 +427,11 @@ namespace Illumina
 							startPixelX = startTileX * m_nTileWidth,
 							startPixelY = startTileY * m_nTileHeight;
 		
-						//m_pRenderer->RenderToAuxiliary(startPixelX, startPixelY, m_nTileWidth, m_nTileHeight, (Spectrum*)tile.GetImageData()->GetImageBuffer());
-						m_pRenderer->RenderRegion(startPixelX, startPixelY, m_nTileWidth, m_nTileHeight);
+						m_pRenderer->RenderRegion(startPixelX, startPixelY, m_nTileWidth, m_nTileHeight, tile.GetImageData(), 0, 0);
 
-						for (int y = 0; y < m_nTileHeight; y++)
-						{
-							for (int x = 0; x < m_nTileWidth; x++)
-							{
-								MPITileElement *pTile = tile.GetElement(x, y);
-							}
-						}
+						if (m_nPostProcessing)
+							m_pRenderer->PostProcessRegion(tile.GetImageData());
 
-						/*
-						IntegratorContext context;
-
-						for (int y = 0; y < m_nTileHeight; y++)
-						{
-							for (int x = 0; x < m_nTileWidth; x++)
-							{
-								// Prepare ray samples
-								m_pScene->GetSampler()->Get2DSamples(pSampleBuffer, m_nSampleCount);
-								(*m_pFilter)(pSampleBuffer, m_nSampleCount);
-
-								// Radiance
-								Spectrum Li = 0;
-
-								for (int sample = 0; sample < m_nSampleCount; sample++)
-								{
-									context.SampleIndex = sample;
-									context.SurfacePosition.Set(startPixelX + x + pSampleBuffer[sample].U, startPixelY + y + pSampleBuffer[sample].V);
-									context.NormalisedPosition.Set(context.SurfacePosition.X / deviceWidth, context.SurfacePosition.Y / deviceHeight);
-
-									context.SurfacePosition.Set(x, y);
-
-									Ray ray = m_pScene->GetCamera()->GetRay(
-										context.NormalisedPosition.X,
-										context.NormalisedPosition.Y,
-										//(startPixelX + x + pSampleBuffer[sample].U) / deviceWidth, 
-										//(startPixelY + y + pSampleBuffer[sample].V) / deviceHeight, 
-										pSampleBuffer[sample].U, pSampleBuffer[sample].V);
-																		
-									Li += m_pIntegrator->Radiance(&context, m_pScene, ray, intersection);
-								}
-
-								Li = Li / m_nSampleCount;
-								tile.GetImageData()->Set(x, y, RGBPixel(Li[0], Li[1], Li[2]));
-							}
-						} 
-						*/
 					#endif
 
 					//--------------------------------------------------
@@ -501,8 +457,6 @@ namespace Illumina
 						TaskCommunicator::Send(tile.GetSerializationBuffer(), sizeof(int), p_worker->GetCoordinatorRank(), WI_RESULT);
 					#endif
 				}
-
-				delete[] pSampleBuffer;
 
 				return true;
 			}

@@ -38,14 +38,88 @@ bool WhittedIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 //----------------------------------------------------------------------------------------------
 bool WhittedIntegrator::Shutdown(void)
 {
-	//std::cout << "Path Tracing Integrator :: Shutdown()" << std::endl;
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection)
+Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext)
 {
-	return Radiance(p_pContext, p_pScene, p_ray, p_intersection, 0);
+	// Compute intersection step
+	if (!p_pScene->Intersects(Ray(p_ray), p_intersection))
+	{
+		p_intersection.Surface.RayOriginWS = p_ray.Origin;
+		p_intersection.Surface.RayDirectionWS = p_ray.Direction;
+	}
+
+	return Radiance(p_pContext, p_pScene, p_intersection, p_pRadianceContext);
 }
+//----------------------------------------------------------------------------------------------
+Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_intersection, RadianceContext *p_pRadianceContext)
+{
+	p_pScene->GetSampler()->Reset();
+
+	//----------------------------------------------------------------------------------------------
+	// Avoid having to perform multiple checks for a NULL radiance context
+	//----------------------------------------------------------------------------------------------
+	RadianceContext radianceContext;
+
+	if (p_pRadianceContext == NULL)
+		p_pRadianceContext = &radianceContext;
+	
+	// Initialise context
+	p_pRadianceContext->Indirect = 
+		p_pRadianceContext->Direct = 
+		p_pRadianceContext->Albedo = 0.f;
+
+	// Construct ray from intersection details
+	Ray ray(p_intersection.Surface.RayOriginWS, 
+		p_intersection.Surface.RayDirectionWS); 
+
+	// No intersection
+	if (!p_intersection.IsValid())
+	{
+		for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
+			p_pRadianceContext->Direct += p_pScene->LightList[lightIndex]->Radiance(-ray);
+
+		return p_pRadianceContext->Final = p_pRadianceContext->Direct;
+	}
+
+	//----------------------------------------------------------------------------------------------
+	// Set spatial information to radiance context
+	//----------------------------------------------------------------------------------------------
+	p_pRadianceContext->SetSpatialContext(&p_intersection);
+
+	//----------------------------------------------------------------------------------------------
+	// Primitive has no material assigned - terminate
+	//----------------------------------------------------------------------------------------------
+	if (!p_intersection.HasMaterial()) 
+		p_pRadianceContext->Direct;
+		
+	IMaterial *pMaterial = p_intersection.GetMaterial();
+
+	//----------------------------------------------------------------------------------------------
+	// Sample lights for specular / first bounce
+	//----------------------------------------------------------------------------------------------
+	Vector3 wOut = -Vector3::Normalize(ray.Direction);
+
+	// Set albedo for first hit
+	p_pRadianceContext->Albedo = pMaterial->Rho(wOut, p_intersection.Surface);
+
+	// If an emissive material has been encountered, add contribution and terminate path
+	if (p_intersection.IsEmissive())
+	{
+		p_pRadianceContext->Final = p_pRadianceContext->Direct = 
+			p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, 
+								p_intersection.Surface.GeometryBasisWS.W, wOut); 
+				
+		return p_pRadianceContext->Final;
+	}
+
+	p_pRadianceContext->Direct += SampleAllLights(p_pScene, p_intersection, 
+				p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, 
+				p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+
+	return p_pRadianceContext->Final = p_pRadianceContext->Direct;
+}	
 //----------------------------------------------------------------------------------------------
 Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, int p_nRayDepth)
 {
@@ -69,24 +143,6 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 
 		IMaterial *pMaterial = p_intersection.GetMaterial();
 
-		//if (p_intersection.IsEmissive())
-			//return Spectrum(10,10,0);
-
-		//if (p_intersection.IsEmissive() && (p_nRayDepth == 0 || pMaterial->HasBxDFType(BxDF::Specular))) 
-		//	return Spectrum(1,0,1);
-		//return p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
-
-		//Spectrum r;
-		//r[0] = 0.5f * (1.0f + p_intersection.Surface.ShadingNormal[0]); 
-		//r[1] = 0.5f * (1.0f + p_intersection.Surface.ShadingNormal[1]); 
-		//r[2] = 0.5f * (1.0f + p_intersection.Surface.ShadingNormal[2]); 
-
-		//return r;
-		////return r * 10;
-		//float cosT = Vector3::Dot(p_intersection.Surface.GeometryNormal, Vector3::UnitYNeg);	
-		//cosT = p_intersection.Surface.Distance;
-		//return cosT * 10.0f;
-
 		// Diffuse next
 		if (!pMaterial->HasBxDFType(BxDF::Specular))
 		{
@@ -108,7 +164,6 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 					BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, bsdfOut);
 					BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wIn, bsdfIn);
 
-					//Ld += Ls * Maths::Max(0, Vector3::Dot(wIn, p_intersection.Surface.GeometryBasisWS.W)) * pMaterial->F(p_intersection.Surface, bsdfOut, bsdfIn);
 					Ld += Ls * Maths::Max(0, Vector3::Dot(wIn, p_intersection.Surface.ShadingBasisWS.W)) * pMaterial->F(p_intersection.Surface, bsdfOut, bsdfIn);
 				}
 			}
@@ -188,7 +243,6 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 				Lt = f * Radiance(p_pContext, p_pScene, ray, intersection, p_nRayDepth + 1);
 			}
 		}
-	/**/
 		
 		return Ld + Ls + Lt;
 	}

@@ -38,7 +38,7 @@ namespace Illumina
 				m_fDBDist;
 
 		protected:
-			Intersection *m_pGeometryBuffer;
+			RadianceBuffer *m_pRadianceBuffer;
 
 		public:
 			MultipassRenderer(const std::string &p_strName, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, int p_nSampleCount = 1, bool p_bCombined = true, int p_nDBSize = 3, float p_fDBDist = 10.f, float p_fDBCos = 0.75f);
@@ -52,15 +52,16 @@ namespace Illumina
 
 			void Render(void);
 			void RenderRegion(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight);
-			void RenderToAuxiliary(int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight, Spectrum *p_colourBuffer);
-		
-		protected:
-			void ComputeCombinedPass(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight);
-			void ComputeSeparatePasses(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight);
 
-			void ComputeIntersectionPass(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight);
-			void ComputeShadingPass(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight);
-			void ComputeDirectPass(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_intersection); 
+			virtual void Render(RadianceBuffer *p_pRadianceBuffer, int p_nBufferLeft = 0, int nBufferTop = 0);
+			virtual void RenderRegion(int p_nLeft, int p_nTop, int p_nWidth, int p_nHeight, RadianceBuffer *p_pRadianceBuffer, int p_nBufferLeft = 0, int nBufferTop = 0);
+			
+			void PostProcess(RadianceBuffer *p_pRadianceBuffer);
+			void PostProcessRegion(RadianceBuffer *p_pRadianceBuffer);
+
+		protected:
+			void RenderRegionToBuffer(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, RadianceBuffer *p_pRadianceBuffer, int p_nBufferX, int p_nBufferY);
+			void WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, RadianceBuffer *p_pRadianceBuffer, int p_nDeviceX, int p_nDeviceY);
 		};
 	}
 }

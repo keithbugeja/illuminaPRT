@@ -76,16 +76,25 @@ bool MultipassRenderer::Initialise(void)
 	m_nWidth = m_pDevice->GetWidth();
 	m_nHeight = m_pDevice->GetHeight();
 
-	m_pGeometryBuffer = new Intersection[m_nWidth * m_nHeight];
+	m_pRadianceBuffer = new RadianceBuffer(m_nWidth, m_nHeight);
 
 	return true;
 }
 //----------------------------------------------------------------------------------------------
 bool MultipassRenderer::Shutdown(void)
 {
-	delete[] m_pGeometryBuffer;
+	delete m_pRadianceBuffer;
 
 	return true;
+}
+//----------------------------------------------------------------------------------------------
+void MultipassRenderer::RenderRegion(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, 
+	RadianceBuffer *p_pRadianceBuffer, int p_nBufferX, int p_nBufferY)
+{
+	BOOST_ASSERT(m_pScene != NULL && m_pIntegrator != NULL && m_pFilter != NULL && 
+		m_pScene->GetCamera() != NULL && m_pScene->GetSpace() != NULL && m_pScene->GetSampler() != NULL);
+
+	RenderRegionToBuffer(p_nRegionX, p_nRegionY, p_nRegionWidth, p_nRegionHeight, p_pRadianceBuffer, p_nBufferX, p_nBufferY);
 }
 //----------------------------------------------------------------------------------------------
 void MultipassRenderer::RenderRegion(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight)
@@ -93,432 +102,19 @@ void MultipassRenderer::RenderRegion(int p_nRegionX, int p_nRegionY, int p_nRegi
 	BOOST_ASSERT(m_pScene != NULL && m_pIntegrator != NULL && m_pFilter != NULL && 
 		m_pScene->GetCamera() != NULL && m_pScene->GetSpace() != NULL && m_pScene->GetSampler() != NULL);
 
-	ComputeCombinedPass(m_pGeometryBuffer, p_nRegionX, p_nRegionY, p_nRegionWidth, p_nRegionHeight);
-}
+	RenderRegionToBuffer(p_nRegionX, p_nRegionY, p_nRegionWidth, p_nRegionHeight, m_pRadianceBuffer, p_nRegionX, p_nRegionY);
+	WriteRadianceBufferToDevice(p_nRegionX, p_nRegionY, p_nRegionWidth, p_nRegionHeight, m_pRadianceBuffer, p_nRegionX, p_nRegionY);
+}  
 //----------------------------------------------------------------------------------------------
-void MultipassRenderer::ComputeDirectPass(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_intersection)
-{
-	IMaterial *pMaterial = NULL;
-
-	Vector3 wIn, wOut,
-		wInLocal, wOutLocal; 
-
-	if (p_intersection.Valid)
-	{
-		if (p_intersection.HasMaterial()) 
-		{
-			// Get material for intersection primitive
-			pMaterial = p_intersection.GetMaterial();
-
-			wOut = -Vector3::Normalize(p_intersection.EyeRay.Direction);
-
-			if (!p_intersection.IsEmissive())
-			{
-				// Sample direct lighting
-				p_intersection.Direct = IIntegrator::SampleAllLights(p_pScene, p_intersection, 
-					p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, 
-					wOut, p_pScene->GetSampler(), p_intersection.GetLight(), 1);
-
-				p_intersection.Reflectance = pMaterial->Rho(wOut, p_intersection.Surface);
-				p_intersection.Indirect = 0;
-			}
-			else
-			{
-				p_intersection.Direct = p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
-				p_intersection.Indirect = 0.f;
-			}
-		}
-	}
-	else
-	{
-		for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
-			p_intersection.Direct = p_pScene->LightList[lightIndex]->Radiance(-p_intersection.EyeRay);
-	}
-}
-//----------------------------------------------------------------------------------------------
-void MultipassRenderer::ComputeCombinedPass(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight)
-{
-	// double start = Platform::GetTime();
-
-	Intersection *pIntersection;
-	IntegratorContext context;
-
-	// No supersampling
-	context.SampleIndex = 0;
-
-	// Compute tile bounds
-	int endTileX = p_nTileX + p_nTileWidth;
-	int endTileY = p_nTileY + p_nTileHeight;
-		
-	// Compute dimension reciprocals for normalisation
-	float rcpWidth = 1.f / m_nWidth,
-		rcpHeight = 1.f / m_nHeight;
-
-	for (int y = p_nTileY; y < endTileY; ++y)
-	{
-		const int line = y * m_nWidth;
-
-		for (int x = p_nTileX; x < endTileX; ++x)
-		{
-			m_pScene->GetSampler()->Reset();
-
-			pIntersection = p_pGeometryBuffer + line + x;
-			pIntersection->Final = 0.f;
-
-			for (int sampleIndex = 0; sampleIndex < m_nSampleCount; sampleIndex++)
-			{
-				Vector2 sample = m_pScene->GetSampler()->Get2DSample();
-
-				context.SurfacePosition.Set(x + sample.X, y + sample.Y);
-				context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
-
-				m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.5f * rcpWidth, 0.5f * rcpHeight, pIntersection->EyeRay);
-				pIntersection->Final += m_pIntegrator->Radiance(&context, m_pScene, pIntersection->EyeRay, *pIntersection);
-			}
-
-			// m_pDevice->Set(m_nWidth - (x + 1), m_nHeight - (y + 1), pIntersection->Final / m_nSampleCount);
-		}
-	}
-
-	// double end = Platform::GetTime();
-	// std::cout << "Intersection pass : " << Platform::ToSeconds(end - start) << "s" << std::endl;
-
-	Spectrum Le;
-
-	for (int y = p_nTileY; y < endTileY; ++y)
-	{
-		for (int x = p_nTileX; x < endTileX; ++x)
-		{
-			const int indexSrc = x + y * m_nWidth;
-			const Vector3 &normal = p_pGeometryBuffer[indexSrc].Surface.ShadingBasisWS.W;
-			const Vector3 &depth = p_pGeometryBuffer[indexSrc].Surface.PointWS;
-
-			float contrib = 1;
-			Le = 0.f;
-
-			//float contrib = 1; 
-			//Le = p_pGeometryBuffer[indexSrc].Indirect;
-
-			for (int dy = Maths::Max(y - m_nDBSize, p_nTileY); dy < Maths::Min(y + m_nDBSize, endTileY); dy++)
-			{
-				for (int dx = Maths::Max(x - m_nDBSize, p_nTileX); dx < Maths::Min(x + m_nDBSize, endTileX); dx++)
-				{
-					const int index = dx + dy * m_nWidth;
-
-					//if (p_pGeometryBuffer[index].Valid)
-					{
-						if ((Vector3::DistanceSquared(depth, p_pGeometryBuffer[index].Surface.PointWS) < m_fDBDist) &&
-							(Vector3::Dot(normal, p_pGeometryBuffer[index].Surface.ShadingBasisWS.W) > m_fDBCos))
-						{
-							Le += p_pGeometryBuffer[index].Indirect;// * Vector3::Dot(normal, p_pGeometryBuffer[index].Surface.ShadingBasisWS.W); 
-							contrib++;						
-						}
-					}
-				}
-			}
-
-			//for (int dy = -m_nDBSize; dy <= m_nDBSize; dy++)
-			//{
-			//	for (int dx = -m_nDBSize; dx <= m_nDBSize; dx++)
-			//	{
-			//		// Central contribution already accumulated
-			//		if (dx == 0 && dy == 0) continue;
-			//		
-			//		// Get index of contributor
-			//		int xd = Maths::Min(Maths::Max(x + dx, p_nTileX), endTileX);
-			//		int yd = Maths::Min(Maths::Max(y + dy, p_nTileY), endTileY);
-			//		
-			//		const int index = xd + yd * m_nWidth;
-			//		//const int index = (x + dx) + (y + dy) * m_nWidth;
-
-			//		// If a valid intersection, compute
-			//		if (!p_pGeometryBuffer[index].Valid) continue;
-
-			//		if (
-			//			(Vector3::DistanceSquared(depth, p_pGeometryBuffer[index].Surface.PointWS) < m_fDBDist) &&
-			//			(Vector3::Dot(normal, p_pGeometryBuffer[index].Surface.ShadingBasisWS.W) > m_fDBCos)
-			//		)
-			//		{
-			//			Le += p_pGeometryBuffer[index].Indirect;// * Vector3::Dot(normal, p_pGeometryBuffer[index].Surface.ShadingBasisWS.W); 
-			//			contrib++;						
-			//		}
-			//	}
-			//}
-
-			p_pGeometryBuffer[indexSrc].Final = p_pGeometryBuffer[indexSrc].Direct + 
-				(Le * p_pGeometryBuffer[indexSrc].Reflectance) / contrib;
-			
-			// p_pGeometryBuffer[indexSrc].Final = (Le * p_pGeometryBuffer[indexSrc].Reflectance) / contrib;
-			m_pDevice->Set(m_nWidth - (x + 1), m_nHeight - (y + 1), p_pGeometryBuffer[indexSrc].Final);
-		}
-	}
-}
-//----------------------------------------------------------------------------------------------
-void MultipassRenderer::ComputeSeparatePasses(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight)
-{
-	// double start = Platform::GetTime();
-
-	Intersection *pIntersection;
-	IntegratorContext context;
-
-	// No supersampling
-	context.SampleIndex = 0;
-
-	// Compute tile bounds
-	int endTileX = p_nTileX + p_nTileWidth;
-	int endTileY = p_nTileY + p_nTileHeight;
-		
-	// Compute dimension reciprocals for normalisation
-	float rcpWidth = 1.f / m_nWidth,
-		rcpHeight = 1.f / m_nHeight;
-
-	for (int y = p_nTileY; y < endTileY; ++y)
-	{
-		const int line = y * m_nWidth;
-
-		for (int x = p_nTileX; x < endTileX; ++x)
-		{
-			pIntersection = p_pGeometryBuffer + line + x;
-
-			context.SurfacePosition.Set(x + 0.5f, y + 0.5f);
-			context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
-
-			m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.5f * rcpWidth, 0.5f * rcpHeight, pIntersection->EyeRay);
-			pIntersection->Valid = m_pScene->Intersects(pIntersection->EyeRay, *pIntersection);
-			m_pDevice->Set(m_nWidth - (x + 1), m_nHeight - (y + 1), pIntersection->Final / m_nSampleCount);
-		}
-	}
-
-	// double end = Platform::GetTime();
-	// std::cout << "Intersection pass : " << Platform::ToSeconds(end - start) << "s" << std::endl;
-}
-//----------------------------------------------------------------------------------------------
-void MultipassRenderer::ComputeIntersectionPass(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight)
-{
-	// double start = Platform::GetTime();
-	
-	/*
-	Intersection *pIntersection;
-	IntegratorContext context;
-
-	// No supersampling
-	context.SampleIndex = 0;
-
-	// Compute tile bounds
-	int endTileX = p_nTileX + p_nTileWidth;
-	int endTileY = p_nTileY + p_nTileHeight;
-		
-	// Compute dimension reciprocals for normalisation
-	float rcpWidth = 1.f / m_nWidth,
-		rcpHeight = 1.f / m_nHeight;
-
-	for (int y = p_nTileY; y < endTileY; ++y)
-	{
-		const int line = y * m_nWidth;
-
-		context.SurfacePosition.Y = y + 0.5f;
-		context.NormalisedPosition.Y = context.SurfacePosition.Y * rcpHeight;
-
-		for (int x = p_nTileX; x < endTileX; x++)
-		{
-			pIntersection = p_pGeometryBuffer + line + x;
-			
-			context.SurfacePosition.X = x + 0.5f;
-			context.NormalisedPosition.X = context.SurfacePosition.X * rcpWidth;
-
-			m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.5f, 0.5f, pIntersection->EyeRay);
-			pIntersection->Valid = m_pScene->Intersects(pIntersection->EyeRay, *pIntersection);
-		}
-	}
-	*/
-	// double end = Platform::GetTime();
-	// std::cout << "Intersection pass : " << Platform::ToSeconds(end - start) << "s" << std::endl;
-}
-//----------------------------------------------------------------------------------------------
-void MultipassRenderer::ComputeShadingPass(Intersection *p_pGeometryBuffer, int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight)
-{
-	// Start shading
-	// double start = Platform::GetTime();
-
-	Intersection *pIntersection;
-	IntegratorContext context;
-	Spectrum Li(0), Le(0);
-			
-	// No supersampling
-	context.SampleIndex = 0;
-
-	int endTileX = p_nTileX + p_nTileWidth;
-	int endTileY = p_nTileY + p_nTileHeight;
-
-	float rcpWidth = 1.f / m_nWidth,
-		rcpHeight = 1.f / m_nHeight;
-
-	for (int y = p_nTileY; y < endTileY; y++)
-	{
-		const int line = y * m_nWidth;
-
-		for (int x = p_nTileX; x < endTileX; x++)
-		{
-			pIntersection = p_pGeometryBuffer + line + x;
-
-			/* 
-			context.SurfacePosition.X = x + 0.5f;
-			context.SurfacePosition.Y = y + 0.5f;
-
-			context.NormalisedPosition.X = x * rcpWidth;
-			context.NormalisedPosition.Y = y * rcpHeight;
-			
-			m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.f, 0.f, pIntersection->EyeRay);
-			pIntersection->Valid = m_pScene->Intersects(pIntersection->EyeRay, *pIntersection);
-			m_pIntegrator->Radiance(&context, m_pScene, *pIntersection);
-
-			// m_pDevice->Set(m_nWidth - (x + 1), m_nHeight - (y + 1), pIntersection->Indirect);
-			/* */
-
-			/**/
-			m_pScene->GetSampler()->Reset();
-
-			context.SurfacePosition.X = x * 2;
-			context.SurfacePosition.Y = y * 2;
-
-			context.NormalisedPosition.X = x * rcpWidth;
-			context.NormalisedPosition.Y = y * rcpHeight;
-			
-			m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.25f * rcpWidth, 0.25f * rcpHeight, pIntersection->EyeRay);
-			pIntersection->Valid = m_pScene->Intersects(pIntersection->EyeRay, *pIntersection);
-			m_pIntegrator->Radiance(&context, m_pScene, *pIntersection);
-			
-			Li = pIntersection->Direct;
-			Le = pIntersection->Indirect;
-			
-			context.SurfacePosition.X = x * 2 + 1;
-			context.SurfacePosition.Y = y * 2;
-			
-			m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.75f * rcpWidth, 0.25f * rcpHeight, pIntersection->EyeRay);
-			pIntersection->Valid = m_pScene->Intersects(pIntersection->EyeRay, *pIntersection);
-			m_pIntegrator->Radiance(&context, m_pScene, *pIntersection);
-
-			Li += pIntersection->Direct;
-			Le += pIntersection->Indirect;
-
-			context.SurfacePosition.X = x * 2;
-			context.SurfacePosition.Y = y * 2 + 1;
-			
-			m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.25f * rcpWidth, 0.75f * rcpHeight, pIntersection->EyeRay);
-			pIntersection->Valid = m_pScene->Intersects(pIntersection->EyeRay, *pIntersection);
-			m_pIntegrator->Radiance(&context, m_pScene, *pIntersection);
-
-			Li += pIntersection->Direct;
-			Le += pIntersection->Indirect;
-
-			context.SurfacePosition.X = x * 2 + 1;
-			context.SurfacePosition.Y = y * 2 + 1;
-			
-			m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.75f * rcpWidth, 0.75f * rcpHeight, pIntersection->EyeRay);
-			pIntersection->Valid = m_pScene->Intersects(pIntersection->EyeRay, *pIntersection);
-			m_pIntegrator->Radiance(&context, m_pScene, *pIntersection);
-
-			Li += pIntersection->Direct;
-			Le += pIntersection->Indirect;
-
-			pIntersection->Direct = Li * 0.25;
-			pIntersection->Indirect = Le * 0.25;
-
-			// m_pDevice->Set(m_nWidth - (x + 1), m_nHeight - (y + 1), (Le) * 0.25f);
-			/* */
-		}
-	}
-
-	// double end = Platform::GetTime();
-	// std::cout << "Shading pass : " << Platform::ToSeconds(end - start) << "s" << std::endl;
-	
-	// Start post-processing
-	// start = Platform::GetTime();
-
-	for (int y = p_nTileY + m_nDBSize; y < endTileY - m_nDBSize; ++y)
-	{
-		for (int x = p_nTileX + m_nDBSize; x < endTileX - m_nDBSize; ++x)
-		{
-			const int indexSrc = x + y * m_nWidth;
-			const Vector3 &normal = p_pGeometryBuffer[indexSrc].Surface.ShadingBasisWS.W;
-			const Vector3 &depth = p_pGeometryBuffer[indexSrc].Surface.PointWS;
-
-			float contrib = 1; 
-			Le = p_pGeometryBuffer[indexSrc].Indirect;
-
-			for (int dy = -m_nDBSize; dy <= m_nDBSize; dy++)
-			{
-				for (int dx = -m_nDBSize; dx <= m_nDBSize; dx++)
-				{
-					// Central contribution already accumulated
-					if (dx == 0 && dy == 0) continue;
-					
-					// Get index of contributor
-					const int index = (x + dx) + (y + dy) * m_nWidth;
-
-					// If a valid intersection, compute
-					if (!p_pGeometryBuffer[index].Valid) continue;
-
-					if (
-						(Vector3::DistanceSquared(depth, p_pGeometryBuffer[index].Surface.PointWS) < m_fDBDist) &&
-						(Vector3::Dot(normal, p_pGeometryBuffer[index].Surface.ShadingBasisWS.W) > m_fDBCos)
-					)
-					{
-						Le += p_pGeometryBuffer[index].Indirect;// * Vector3::Dot(normal, p_pGeometryBuffer[index].Surface.ShadingBasisWS.W); 
-						contrib++;						
-					}
-				}
-			}
-
-			p_pGeometryBuffer[indexSrc].Final = p_pGeometryBuffer[indexSrc].Direct + 
-				(Le * p_pGeometryBuffer[indexSrc].Reflectance) / contrib;
-
-			m_pDevice->Set(m_nWidth - (x + 1), m_nHeight - (y + 1), p_pGeometryBuffer[indexSrc].Final);
-		}
-	}
-
-	// end = Platform::GetTime();
-	// std::cout << "Discontinuity pass : " << Platform::ToSeconds(end - start) << "s" << std::endl;
-}
-//----------------------------------------------------------------------------------------------
-void MultipassRenderer::RenderToAuxiliary(int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight, Spectrum *p_colourBuffer)
+void MultipassRenderer::Render(RadianceBuffer *p_pRadianceBuffer, int p_nBufferX, int p_nBufferY)
 {
 	BOOST_ASSERT(m_pScene != NULL && m_pIntegrator != NULL && m_pFilter != NULL && 
 		m_pScene->GetCamera() != NULL && m_pScene->GetSpace() != NULL && m_pScene->GetSampler() != NULL);
 
-	int x = p_nTileX - m_nDBSize;
-	if (x < 0) x = 0;
+	int height = m_pDevice->GetHeight(),
+		width = m_pDevice->GetWidth();
 
-	int width = p_nTileWidth + m_nDBSize + m_nDBSize;
-	if (width + x > m_nWidth)
-		width = m_nWidth - x;
-	
-	int y = p_nTileY - m_nDBSize;	
-	if (y < 0) y = 0;
-
-	int height = p_nTileHeight + m_nDBSize + m_nDBSize;	
-	if (height + y > m_nHeight)
-		height = m_nHeight - y;
-
-	if (m_bUseCombinedPass)
-	{
-		ComputeCombinedPass(m_pGeometryBuffer, x, y, width, height);
-	}
-	else
-	{
-		//ComputeCombinedPass(m_pGeometryBuffer, x, y, width, height);
-		ComputeIntersectionPass(m_pGeometryBuffer, x, y, width, height);
-		ComputeShadingPass(m_pGeometryBuffer, x, y, width, height);
-	}
-
-	// Copy colour data into colour buffer
-	for (int y = p_nTileY; y < p_nTileY + p_nTileHeight; y++)
-	{
-		for (int x = p_nTileX; x < p_nTileX + p_nTileWidth; x++)
-		{
-			*(p_colourBuffer++) = m_pGeometryBuffer[x + y * m_nWidth].Final;
-		}
-	}
+	RenderRegionToBuffer(0, 0, width, height, p_pRadianceBuffer, p_nBufferX, p_nBufferY);
 }
 //----------------------------------------------------------------------------------------------
 void MultipassRenderer::Render(void)
@@ -537,16 +133,236 @@ void MultipassRenderer::Render(void)
 
 	if (!updateIO) m_pDevice->BeginFrame();
 	
-	if (m_bUseCombinedPass)
-	{
-		ComputeCombinedPass(m_pGeometryBuffer, 0, 0, width, height);
-	}
-	else
-	{
-		ComputeIntersectionPass(m_pGeometryBuffer, 0, 0, width, height);
-		ComputeShadingPass(m_pGeometryBuffer, 0, 0, width, height);
-	}
+	RenderRegionToBuffer(0, 0, width, height, m_pRadianceBuffer, 0, 0);
+	WriteRadianceBufferToDevice(0, 0, width, height, m_pRadianceBuffer, 0, 0);
 
 	if(!updateIO) { m_pDevice->EndFrame(); }
 }
 //----------------------------------------------------------------------------------------------
+void MultipassRenderer::RenderRegionToBuffer(int p_nRegionX, int p_nRegionY, 
+	int p_nRegionWidth, int p_nRegionHeight, RadianceBuffer *p_pRadianceBuffer, 
+	int p_nBufferX, int p_nBufferY)
+{
+	// If no radiance buffer is specified, use in-built one
+	BOOST_ASSERT(p_pRadianceBuffer != NULL);
+
+	RadianceContext *pRadianceContext,
+		accumulator;
+
+	Intersection intersection;
+	IntegratorContext context;
+
+	// Compute tile bounds
+	int regionXEnd = p_nRegionX + p_nRegionWidth,
+		regionYEnd = p_nRegionY + p_nRegionHeight;
+
+	// Compute dimension reciprocals for normalisation
+	float rcpWidth = 1.f / m_nWidth,
+		rcpHeight = 1.f / m_nHeight,
+		rcpSampleCount = 1.f / m_nSampleCount;
+
+	// Handle supersampling independently
+	if (m_nSampleCount > 1)
+	{
+		// Get sample stream
+		Vector2 *pSampleBuffer = new Vector2[m_nSampleCount];
+
+		// Render tile
+		for (int srcY = p_nRegionY, dstY = p_nBufferY; srcY < regionYEnd; ++srcY, ++dstY)
+		{
+			for (int srcX = p_nRegionX, dstX = p_nBufferX; srcX < regionXEnd; ++srcX, ++dstX)
+			{
+				// Reset sampler
+				// m_pScene->GetSampler()->Reset();
+
+				// Get radiance context
+				pRadianceContext = &(p_pRadianceBuffer->Get(dstX, dstY));
+
+				// Reset accumulator
+				accumulator.Final = 
+					accumulator.Indirect =
+					accumulator.Direct = 
+					accumulator.Albedo = 0.f;
+
+				// Get samples and filter them
+				m_pScene->GetSampler()->Get2DSamples(pSampleBuffer, m_nSampleCount);
+				(*m_pFilter)(pSampleBuffer, m_nSampleCount);
+
+				// Set context (used in IGI interleaved sampling)
+				context.SurfacePosition.Set(srcX, srcY);
+				context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
+
+				// Super sample
+				for (context.SampleIndex = 0; context.SampleIndex < m_nSampleCount; context.SampleIndex++)
+				{
+					// Fetch a ray from camera (should use ray differentials to speed this up)
+					m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 
+						pSampleBuffer[context.SampleIndex].U * rcpWidth, pSampleBuffer[context.SampleIndex].V * rcpHeight, pRadianceContext->ViewRay);
+				
+					// Get radiance
+					accumulator.Final += m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
+
+					// Accumulate components
+					accumulator.Direct += pRadianceContext->Direct;
+					accumulator.Indirect += pRadianceContext->Indirect;
+					accumulator.Albedo += pRadianceContext->Albedo;
+				}
+
+				// Set final values
+				pRadianceContext->Final = accumulator.Final * rcpSampleCount;
+				pRadianceContext->Direct = accumulator.Direct * rcpSampleCount;
+				pRadianceContext->Indirect = accumulator.Indirect * rcpSampleCount;
+				pRadianceContext->Albedo = accumulator.Albedo * rcpSampleCount;
+			}
+		}
+
+		delete[] pSampleBuffer;
+	}
+	else
+	{
+		// No supersampling
+		context.SampleIndex = 0;
+
+		// Render tile
+		for (int srcY = p_nRegionY, dstY = p_nBufferY; srcY < regionYEnd; ++srcY, ++dstY)
+		{
+			for (int srcX = p_nRegionX, dstX = p_nBufferX; srcX < regionXEnd; ++srcX, ++dstX)
+			{
+				// Reset sampler
+				// m_pScene->GetSampler()->Reset();
+
+				// Get radiance context
+				pRadianceContext = &(p_pRadianceBuffer->Get(dstX, dstY));
+
+				// Set integrator context
+				context.SurfacePosition.Set(srcX, srcY);
+				context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
+
+				// Get ray from camera
+				m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.5f * rcpWidth, 0.5f * rcpHeight, pRadianceContext->ViewRay);
+				
+				// Get radiance
+				pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
+			}
+		}
+	}
+}
+//----------------------------------------------------------------------------------------------
+void MultipassRenderer::WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, RadianceBuffer *p_pRadianceBuffer, int p_nDeviceX, int p_nDeviceY)
+{
+	RadianceContext *pRadianceContext;
+
+	//----------------------------------------------------------------------------------------------
+	for (int srcY = p_nRegionY, dstY = p_nDeviceY; srcY < p_pRadianceBuffer->GetHeight(); ++srcY, ++dstY)
+	{
+		for (int srcX = p_nRegionX, dstX = p_nDeviceX; srcX < p_pRadianceBuffer->GetWidth(); ++srcX, ++dstX)
+		{
+			m_pDevice->Set(m_nWidth - (dstX + 1), m_nHeight - (dstY + 1), p_pRadianceBuffer->Get(srcX, srcY).Final);
+		}
+	}
+}
+//----------------------------------------------------------------------------------------------
+void MultipassRenderer::PostProcess(RadianceBuffer *p_pRadianceBuffer)
+{
+	RadianceContext *pRadianceContext = p_pRadianceBuffer->GetBuffer();
+
+	//----------------------------------------------------------------------------------------------
+	for (int y = 0; y < m_nHeight; ++y)
+	{
+		const int ys = Maths::Max(y - m_nDBSize, 0);
+		const int ye = Maths::Min(y + m_nDBSize, m_nHeight);
+
+		for (int x = 0; x < m_nWidth; ++x)
+		{
+			if (!pRadianceContext->Flag)
+			{
+				const int xs = Maths::Max(x - m_nDBSize, 0);
+				const int xe = Maths::Min(x + m_nDBSize, m_nWidth);
+
+				Spectrum Li = 0.f;
+				int irradianceSamples = 1;
+
+				for (int dy = ys; dy < ye; dy++)
+				{
+					RadianceContext *pInnerContext = &(p_pRadianceBuffer->Get(xs, dy));
+
+					for (int dx = xs; dx < xe; dx++)
+					{
+						if (
+							//(Vector3::DistanceSquared(pRadianceContext->Position, pInnerContext->Position) < m_fDBDist) &&
+							(Vector3::Dot(pRadianceContext->Normal, pInnerContext->Normal) > m_fDBCos))
+						{
+							Li += pInnerContext->Indirect;
+							irradianceSamples++;
+						}
+
+						pInnerContext++;
+					}
+				}
+			
+				pRadianceContext->Final = pRadianceContext->Direct + (Li * pRadianceContext->Albedo) / irradianceSamples;
+			}
+			else
+			{
+				pRadianceContext->Final = pRadianceContext->Direct + pRadianceContext->Final * pRadianceContext->Albedo;
+			}
+
+			// Set value in device
+			m_pDevice->Set(m_nWidth - (x + 1), m_nHeight - (y + 1), pRadianceContext->Final);
+
+			// Move to next context element
+			pRadianceContext++;
+		}
+	}
+}
+//----------------------------------------------------------------------------------------------
+void MultipassRenderer::PostProcessRegion(RadianceBuffer *p_pRadianceBuffer)
+{
+	RadianceContext *pContext = p_pRadianceBuffer->GetBuffer();
+
+	int nHeight = p_pRadianceBuffer->GetHeight();
+	int nWidth = p_pRadianceBuffer->GetWidth();
+
+	for (int index = 0; index < p_pRadianceBuffer->GetArea(); ++index, ++pContext)
+		pContext->Flag = 0;
+
+	//----------------------------------------------------------------------------------------------
+	for (int y = m_nDBSize; y < nHeight - m_nDBSize; ++y)
+	{
+		const int ys = y - m_nDBSize;
+		const int ye = y + m_nDBSize;
+
+		for (int x = m_nDBSize; x < nWidth - m_nDBSize; ++x)
+		{
+			Spectrum Li = 0.f;
+			int irradianceSamples = 1.f;
+
+			const int xs = x - m_nDBSize;
+			const int xe = x + m_nDBSize;
+
+			pContext = &(p_pRadianceBuffer->Get(x, y));
+
+			for (int dy = ys; dy < ye; dy++)
+			{
+				RadianceContext *pInnerContext = &(p_pRadianceBuffer->Get(xs, dy));
+
+				for (int dx = xs; dx < xe; dx++)
+				{
+					if (
+					   //(Vector3::DistanceSquared(pRadianceContext->Position, pInnerContext->Position) < m_fDBDist) &&
+						(Vector3::Dot(pContext->Normal, pInnerContext->Normal) > m_fDBCos))
+					{
+						Li += pInnerContext->Indirect;
+						irradianceSamples++;
+					}
+
+					pInnerContext++;
+				}
+			}
+			
+			// Compute final colour
+			pContext->Final = Li / irradianceSamples;
+			pContext->Flag = 1;
+		}
+	}
+}

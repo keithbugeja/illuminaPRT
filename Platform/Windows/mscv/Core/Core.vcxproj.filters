@@ -713,6 +713,9 @@
     <ClInclude Include="..\..\..\..\Core\External\Compression\lz4.h">
       <Filter>Header Files\External\Compression</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\System\Buffer.h">
+      <Filter>Header Files\System</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">
