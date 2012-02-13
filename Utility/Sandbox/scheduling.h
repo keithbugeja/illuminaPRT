@@ -264,18 +264,12 @@ void ClientInput(ClientSessionInfo *p_session, std::vector<std::string>& p_comma
 
 void ClientStreamSession(socket_ptr p_socket, ClientSessionInfo *p_session)
 {
-	Illumina::Core::ImagePPM image;
-
-	int width = 512, height = 512, channels = 3,
+	int width = 640, height = 400, channels = 3,
 		size = width * height * channels;
 
-	int biteSize = 4 * 1024;
+	int biteSize = 10 * 1024;
 
 	unsigned char *transferBuffer = new unsigned char[size];
-
-	//std::string resultImage = 
-	//	boost::str(boost::format("Output/result_%d.ppm") 
-	//	% p_session->Group->GetCoordinatorRank());
 
 	MPI_Status status;
 
@@ -283,52 +277,15 @@ void ClientStreamSession(socket_ptr p_socket, ClientSessionInfo *p_session)
 	{
 		try 
 		{
-			std::cout << "Waiting for image stream..." << std::endl;
+			// Receive from coordinator
 			TaskCommunicator::Receive(transferBuffer, size, p_session->Group->GetCoordinatorRank(), p_session->StreamPort, &status);
-			std::cout << "Image stream OK" << std::endl;
-			/*
-			// std::cout << "Load image [" << resultImage << "]" << std::endl;
 
-			Illumina::Core::Image *buffer = image.Load(resultImage);
-
-			// std::cout << "Convert image [" << resultImage << "]" << std::endl;
-
-			// If we couldn't load image, try again next iteration
-			if (buffer == NULL)
-				continue;
-
-			float *imageBuffer = buffer->GetImageBuffer();
-			unsigned char *dstBuffer = transferBuffer;
-
-			for (int index = 0; index < 512 * 512; index++)
-			{
-				dstBuffer[2] = (unsigned char)(256 * (imageBuffer[0]));
-				dstBuffer[1] = (unsigned char)(256 * (imageBuffer[1]));
-				dstBuffer[0] = (unsigned char)(256 * (imageBuffer[2]));
-
-				dstBuffer += 3;
-				imageBuffer += 3;
-			}
-
-			delete buffer;
-
-			// std::cout << "Sending image to [" << p_socket->remote_endpoint().address().to_string() << "]." << std::endl;
-			*/
-			/*
-			for (int chunk = 0; chunk < size; chunk += biteSize)
-			{
-				// std::cout << ".";
+			// Send to client
+			for (int chunk = 0; chunk < size; chunk += biteSize) {
 				boost::asio::write(*p_socket, boost::asio::buffer((void*)(transferBuffer + chunk), biteSize)); 
 			}
-			*/
-			/**/
-
-			// std::cout << "Image [" << resultImage << "] sent to [" << p_socket->remote_endpoint().address().to_string() << "]." << std::endl;
 		}
-		catch(boost::system::system_error e)
-		{ }
-
-		// boost::this_thread::sleep(boost::posix_time::milliseconds(500));
+		catch(boost::system::system_error e) { }
 	}
 
 	std::cout << "Closing image stream for session [" << p_session->IP << ":" << p_session->Id << "]." << std::endl;
@@ -988,14 +945,18 @@ void Idle(bool p_bVerbose)
 void RunAsServer(int argc, char **argv, bool p_bVerbose)
 {
 	// Initialise MPI
-	MPI_Init(&argc, &argv);
-	
+	int provided;
+
+	MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+
 	// Get Process Rank
 	int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 	// We need to detect whether this is running as load balancer, coordinator or worker
 	if (rank == 0)
+	{
 		Master(p_bVerbose);
+	}
 	else 
 		Idle(p_bVerbose);
 

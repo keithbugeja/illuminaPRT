@@ -209,7 +209,8 @@ template<class T> void Safe_Delete(T*& p)
 // Include SSE headers
 #include <mmintrin.h>
 #include <xmmintrin.h>
-#include <emmintrin.h>
+#include <emmintrin.h> // SSE2
+#include <pmmintrin.h> // SSE3
 
 // #define SSE_ENABLED
 

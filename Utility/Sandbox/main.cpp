@@ -263,33 +263,41 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	//Vector3 lookFrom(800, 100, 200),
 	//	lookAt(0, 200, 100);
 
-	float alpha = Maths::Pi;
-
 	//----------------------------------------------------------------------------------------------
 	// Render loop
 	//----------------------------------------------------------------------------------------------
-	Spectrum *c = new Spectrum[1024*1024];
+	RadianceBuffer *pRadianceBuffer = new RadianceBuffer(
+		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight());
+
+	float alpha = Maths::Pi;
+	Matrix3x3 rotation;
 	
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
-		pIntegrator->Prepare(environment.GetScene());
+		// Animate scene
+		alpha += Maths::PiTwo / 32.f;
+		
+		rotation.MakeRotation(Vector3::UnitYPos, alpha);
+		/**//*
+		((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetScaling(Vector3::Ones * 20.0f);
+		((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetRotation(rotation);
+		/**/
 
+		// Start timer
 		start = Platform::GetTime();
+
+		// Prepare integrator
+		pIntegrator->Prepare(environment.GetScene());
 		
 		//pCamera->MoveTo(lookFrom);
 		//pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
 		//pCamera->LookAt(lookAt);
-		Matrix3x3 r;
-		alpha += Maths::PiTwo / 32;
-		r.MakeRotation(Vector3::UnitYPos, alpha);
-		((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetScaling(Vector3::Ones * 20.0f);
-		((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetRotation(r);
 
 		// Update space
 		pSpace->Update();
 	 
 		// Render frame
-		//pRenderer->Render();
+		// Notify device that frame has started
 		pRenderer->GetDevice()->BeginFrame();
 
 		//#pragma omp parallel for num_threads(4)
@@ -297,10 +305,16 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		{
 			for (int x = 0; x < pRenderer->GetDevice()->GetWidth() / 40; x++)
 			{
-				pRenderer->RenderRegion(x * 40, y * 40, 40, 40);
+				pRenderer->RenderRegion(x * 40, y * 40, 40, 40, pRadianceBuffer, x * 40, y * 40);
 			}
 		}
 
+		// Post-process frame
+		double pp = Platform::GetTime();
+		pRenderer->PostProcess(pRadianceBuffer);
+		std::cout << "PP Time : " << Platform::ToSeconds(Platform::GetTime() - pp) << "s " << std::endl;
+
+		// End device update for frame
 		pRenderer->GetDevice()->EndFrame();
 
 		// Compute frames per second

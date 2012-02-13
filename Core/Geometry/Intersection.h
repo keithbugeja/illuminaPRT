@@ -11,6 +11,7 @@
 #include "Spectrum/Spectrum.h"
 #include "Geometry/Transform.h"
 #include "Shape/DifferentialSurface.h"
+#include "System/Buffer.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
@@ -26,9 +27,6 @@ namespace Illumina
 		public:
 			DifferentialSurface Surface;
 			Transformation WorldTransform;
-			Spectrum Final, Direct, Indirect, Reflectance;
-			Ray EyeRay;
-			bool Valid;
 
 		public:
 			Intersection(void);
@@ -36,6 +34,7 @@ namespace Illumina
 
 			void Reset(void);
 
+			bool IsValid(void) const;
 			bool IsEmissive(void) const;
 			bool HasMaterial(void) const;
 
@@ -49,6 +48,45 @@ namespace Illumina
 			void SetLight(ILight* p_pLight);
 
 			const Intersection& operator=(const Intersection &p_intersection);
+		};
+
+		class RadianceContext
+		{
+		public:
+			Spectrum Final;
+			Spectrum Direct;
+			Spectrum Indirect;
+			Spectrum Albedo;
+
+			Vector3 Normal;
+			Vector3 Position;
+
+			Ray ViewRay;
+
+			char Flag;
+
+		public:
+			inline void SetSpatialContext(Intersection *p_pIntersection)
+			{
+				ViewRay.Set(p_pIntersection->Surface.RayOriginWS, 
+					p_pIntersection->Surface.RayDirectionWS);
+
+				Normal = p_pIntersection->Surface.ShadingBasisWS.W;
+				Position = p_pIntersection->Surface.PointWS;
+			}
+		};
+
+		class RadianceBuffer
+			: public Buffer2D<RadianceContext>
+		{ 
+		public:
+			RadianceBuffer(int p_nWidth, int p_nHeight)
+				: Buffer2D<RadianceContext>::Buffer2D(p_nWidth, p_nHeight)
+			{ }
+
+			RadianceBuffer(int p_nWidth, int p_nHeight, RadianceContext *p_pBuffer)
+				: Buffer2D<RadianceContext>::Buffer2D(p_nWidth, p_nHeight, p_pBuffer)
+			{ }
 		};
 	}
 }

@@ -40,6 +40,7 @@ namespace Illumina
 				m_engineKernel->GetSamplerManager()->RegisterFactory("Random", new RandomSamplerFactory());
 				m_engineKernel->GetSamplerManager()->RegisterFactory("Jitter", new JitterSamplerFactory());
 				m_engineKernel->GetSamplerManager()->RegisterFactory("Multijitter", new MultijitterSamplerFactory());
+				m_engineKernel->GetSamplerManager()->RegisterFactory("Precomputation", new PrecomputationSamplerFactory());
 
 				//----------------------------------------------------------------------------------------------
 				// Filter
@@ -119,8 +120,9 @@ namespace Illumina
 				// MPIRender
 				//----------------------------------------------------------------------------------------------
 				int spp = 1, 
-					tileWidth = 16, 
-					tileHeight = 16;
+					postprocessing = 0,
+					tileWidth = 40, 
+					tileHeight = 40;
 
 				if (p_argumentMap.ContainsArgument("spp"))
 					p_argumentMap.GetArgument("spp", spp);
@@ -131,7 +133,10 @@ namespace Illumina
 				if (p_argumentMap.ContainsArgument("th"))
 					p_argumentMap.GetArgument("th", tileHeight);
 
-				m_mpirender = new MPIRender(m_environment, spp, tileWidth, tileHeight);
+				if (p_argumentMap.ContainsArgument("pp"))
+					p_argumentMap.GetArgument("pp", postprocessing);
+
+				m_mpirender = new MPIRender(m_environment, postprocessing, spp, tileWidth, tileHeight);
 
 				return true;
 			}
@@ -161,10 +166,12 @@ namespace Illumina
 					delete m_engineKernel->GetSamplerManager()->RequestFactory("Random");
 					delete m_engineKernel->GetSamplerManager()->RequestFactory("Jitter");
 					delete m_engineKernel->GetSamplerManager()->RequestFactory("Multijitter");
+					delete m_engineKernel->GetSamplerManager()->RequestFactory("Precomputation");
 
 					m_engineKernel->GetSamplerManager()->UnregisterFactory("Random");
 					m_engineKernel->GetSamplerManager()->UnregisterFactory("Jitter");
 					m_engineKernel->GetSamplerManager()->UnregisterFactory("Multijitter");
+					m_engineKernel->GetSamplerManager()->UnregisterFactory("Precomputation");
 
 					//----------------------------------------------------------------------------------------------
 					// Filter
@@ -407,11 +414,14 @@ namespace Illumina
 
 			bool ExecuteCoordinator(CoordinatorTask &p_coordinator)
 			{
-				ICamera *pCamera = m_environment->GetCamera();
-				ISpace *pSpace = m_environment->GetSpace();
+				//ICamera *pCamera = m_environment->GetCamera();
+				//ISpace *pSpace = m_environment->GetSpace();
+				//IIntegrator *pIntegrator = m_environment->GetIntegrator();
+
+				// pIntegrator->Prepare(m_environment->GetScene());
 
 				// Update space
-				pSpace->Update();
+				// pSpace->Update();
 	 
 				m_mpirender->RenderCoordinator(&p_coordinator);
 
@@ -422,6 +432,9 @@ namespace Illumina
 			{
 				ICamera *pCamera = m_environment->GetCamera();
 				ISpace *pSpace = m_environment->GetSpace();
+				IIntegrator *pIntegrator = m_environment->GetIntegrator();
+
+				pIntegrator->Prepare(m_environment->GetScene());
 
 				// Update space
 				pSpace->Update();

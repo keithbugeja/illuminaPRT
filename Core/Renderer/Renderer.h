@@ -41,7 +41,8 @@ namespace Illumina
 			virtual void Render(void) = 0;
 			virtual void RenderRegion(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight) { };
 
-			virtual void RenderToAuxiliary(int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight, Spectrum *p_colourBuffer) = 0;
+			virtual void Render(RadianceBuffer *p_pRadianceBuffer, int p_nBufferLeft = 0, int nBufferTop = 0) { }
+			virtual void RenderRegion(int p_nLeft, int p_nTop, int p_nWidth, int p_nHeight, RadianceBuffer *p_pRadianceBuffer, int p_nBufferLeft = 0, int nBufferTop = 0) { }
 
 			void SetIntegrator(IIntegrator *p_pIntegrator);
 			IIntegrator* GetIntegrator(void) const;
@@ -56,6 +57,11 @@ namespace Illumina
 			Scene* GetScene(void) const;
 
 			std::string ToString(void) const { return "IRenderer"; }
+
+			// -- > Temporary
+			virtual void PostProcess(RadianceBuffer *p_pRadianceBuffer) { }
+			virtual void PostProcessRegion(RadianceBuffer *p_pRadianceBuffer) { }
+			// -- > Temporary
 		};
 
 		//----------------------------------------------------------------------------------------------

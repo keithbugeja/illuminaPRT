@@ -30,6 +30,8 @@ namespace Illumina
 		class ISpace;
 		class ITriangleMesh;
 
+		class RadianceContext;
+		class RadianceBuffer;
 		class Intersection;
 		class DifferentialSurface;
 		class VisibilityQuery;

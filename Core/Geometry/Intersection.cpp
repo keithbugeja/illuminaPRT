@@ -46,6 +46,10 @@ void Intersection::Reset(void)
 	WorldTransform.Reset();
 }
 //----------------------------------------------------------------------------------------------
+bool Intersection::IsValid(void) const {
+	return m_pPrimitive != NULL;
+}
+//----------------------------------------------------------------------------------------------
 bool Intersection::IsEmissive(void) const {
 	return m_pLight != NULL;
 }

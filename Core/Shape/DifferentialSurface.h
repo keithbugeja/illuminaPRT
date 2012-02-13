@@ -37,8 +37,11 @@ namespace Illumina
 
 			/* Surface point expressed as P = O + tD, where t = Distance */
 			float	Distance;
-			Vector3 RayOrigin,
+			Vector3 RayOrigin,				
 				RayDirection;
+
+			Vector3 RayOriginWS,
+				RayDirectionWS;
 
 		public:
 			DifferentialSurface(void) : Distance(Maths::Maximum) { }
@@ -53,6 +56,8 @@ namespace Illumina
 				, Distance(p_surface.Distance)
 				, RayOrigin(p_surface.RayOrigin)
 				, RayDirection(p_surface.RayDirection)
+				, RayOriginWS(p_surface.RayDirectionWS)
+				, RayDirectionWS(p_surface.RayDirectionWS)
 			{ }
 
 			inline void Reset(void) {
@@ -79,6 +84,8 @@ namespace Illumina
 				Distance = p_surface.Distance;
 				RayOrigin = p_surface.RayOrigin;
 				RayDirection = p_surface.RayDirection;
+				RayOriginWS = p_surface.RayOriginWS;
+				RayDirectionWS = p_surface.RayDirectionWS;
 
 				return *this;
 			}
