@@ -269,7 +269,11 @@ void ClientStreamSession(socket_ptr p_socket, ClientSessionInfo *p_session)
 
 	int biteSize = 10 * 1024;
 
-	unsigned char *transferBuffer = new unsigned char[size];
+	char *transferBuffer = new char[size],
+		*receiveBuffer = new char[size];
+
+	char *imageBuffer, 
+		*compressionBuffer;
 
 	MPI_Status status;
 
@@ -277,8 +281,28 @@ void ClientStreamSession(socket_ptr p_socket, ClientSessionInfo *p_session)
 	{
 		try 
 		{
+			compressionBuffer = receiveBuffer;
+			imageBuffer = transferBuffer;
+
+			for (int chunk = 0; chunk < size; chunk += biteSize) 
+			{
+				TaskCommunicator::Probe(p_session->Group->GetCoordinatorRank(), p_session->StreamPort, &status);
+
+				// Compressed?
+				if (TaskCommunicator::GetSize(&status) < biteSize)
+				{
+					TaskCommunicator::Receive(compressionBuffer, TaskCommunicator::GetSize(&status), p_session->Group->GetCoordinatorRank(), p_session->StreamPort);
+					Compressor::Decompress(compressionBuffer, biteSize, imageBuffer);
+				}
+				else
+					TaskCommunicator::Receive(imageBuffer, biteSize, p_session->Group->GetCoordinatorRank(), p_session->StreamPort);
+
+				compressionBuffer+=biteSize;
+				imageBuffer+=biteSize;
+			}
+
 			// Receive from coordinator
-			TaskCommunicator::Receive(transferBuffer, size, p_session->Group->GetCoordinatorRank(), p_session->StreamPort, &status);
+			// TaskCommunicator::Receive(transferBuffer, size, p_session->Group->GetCoordinatorRank(), p_session->StreamPort, &status);
 
 			// Send to client
 			for (int chunk = 0; chunk < size; chunk += biteSize) {

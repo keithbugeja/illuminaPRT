@@ -93,7 +93,7 @@ namespace Illumina
 					indirectrays = 16;
 
 				float reflectEpsilon = 1e-4f,
-					gTermMax = 0.01f;
+					gTermMax = 1e-3f;
 
 				std::string strId;
 

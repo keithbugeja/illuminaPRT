@@ -301,6 +301,7 @@ void MultipassRenderer::PostProcess(RadianceBuffer *p_pRadianceBuffer)
 				}
 			
 				pRadianceContext->Final = pRadianceContext->Direct + (Li * pRadianceContext->Albedo) / irradianceSamples;
+				// pRadianceContext->Final = pRadianceContext->Direct + pRadianceContext->Indirect;
 			}
 			else
 			{

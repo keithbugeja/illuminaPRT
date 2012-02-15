@@ -35,7 +35,7 @@ namespace mpi = boost::mpi;
 
 //----------------------------------------------------------------------------------------------
 #define SCHEDULER_DATA_RENDER 1
-// #define SCHEDULER_DATA_COMPRESSION 1
+#define SCHEDULER_DATA_COMPRESSION 1
 #define SCHEDULER_DATA_TRANSFER 1
 #define SCHEDULER_DATA_IO 1
 #define SCHEDULER_DATA_IO_FREQUENCY 10
@@ -60,7 +60,7 @@ namespace Illumina
 			MPITile(int p_nId, int p_nWidth, int p_nHeight)
 			{ 
 				m_nSerializationBufferSize = p_nWidth * p_nHeight * sizeof(RadianceContext) + sizeof(int);
-				m_pSerializationBuffer = new char[m_nSerializationBufferSize + 1024];
+				m_pSerializationBuffer = new char[m_nSerializationBufferSize + 8192];
 				m_pImageData = new RadianceBuffer(p_nWidth, p_nHeight, (RadianceContext*)(m_pSerializationBuffer + sizeof(int)));
 			}
 
@@ -118,7 +118,8 @@ namespace Illumina
 			bool m_bStreamEnabled;
 			int m_nStreamPort;
 			int m_nPixelBufferSize;
-			RGBBytePixel *m_pPixelBuffer;
+			RGBBytePixel *m_pPixelBuffer,
+				*m_pCompressedPixelBuffer;
 
 			int m_nPostProcessing;
 
@@ -176,6 +177,7 @@ namespace Illumina
 
 				m_nPixelBufferSize = m_pDevice->GetWidth() * m_pDevice->GetHeight();
 				m_pPixelBuffer = new RGBBytePixel[m_nPixelBufferSize];
+				m_pCompressedPixelBuffer =  new RGBBytePixel[m_nPixelBufferSize * 2];
 			}
 
 			bool RenderCoordinator(ITaskPipeline::CoordinatorTask *p_coordinator)
@@ -233,6 +235,8 @@ namespace Illumina
 				//--------------------------------------------------
 				// std::cout << "[" << p_coordinator->task->GetRank() << "] Distributing initial workload to " << p_coordinator->ready.Size() << " workers..." << std::endl;
 				int waiting = 0;
+				int receivedSize = 0, 
+					actualSize = 0;
 
 				if (p_coordinator->ready.Size() > 0)
 				{
@@ -271,17 +275,23 @@ namespace Illumina
 							#if (defined(SCHEDULER_DATA_COMPRESSION))
 								// Receive variable sized data
 								TaskCommunicator::Probe(MPI_ANY_SOURCE, WI_RESULT, &status);
-								
+
 								if (TaskCommunicator::GetSize(&status) < tile.GetSerializationBufferSize())
 								{
+									receivedSize += TaskCommunicator::GetSize(&status);
 									TaskCommunicator::Receive(compressedTile.GetSerializationBuffer(), TaskCommunicator::GetSize(&status), status.MPI_SOURCE, WI_RESULT, &status);
 
 									// Decompress data
 									Compressor::Decompress(compressedTile.GetSerializationBuffer(), tile.GetSerializationBufferSize(), tile.GetSerializationBuffer());								
 								}
 								else
+								{
+									receivedSize += tile.GetSerializationBufferSize();
 									TaskCommunicator::Receive(tile.GetSerializationBuffer(), tile.GetSerializationBufferSize(), MPI_ANY_SOURCE, WI_RESULT, &status);
+								}
 								
+								actualSize += tile.GetSerializationBufferSize();
+
 							#else
 								TaskCommunicator::Receive(tile.GetSerializationBuffer(), tile.GetSerializationBufferSize(), MPI_ANY_SOURCE, WI_RESULT, &status);
 							#endif
@@ -342,10 +352,13 @@ namespace Illumina
 				//--------------------------------------------------
 				// Frame completed
 				//--------------------------------------------------
-				if (m_nPostProcessing) {
+				std::cout << "[" << p_coordinator->task->GetRank() << "] Image data received : " << receivedSize << " of " << actualSize << " bytes" << std::endl;
+
+				if (m_nPostProcessing) 
+				{
 					double start = Platform::GetTime();
 					m_pRenderer->PostProcess(m_pRadianceBuffer);
-					std::cout << "Post proc : " << Platform::ToSeconds(Platform::GetTime() - start) << "s" << std::endl;
+					std::cout << "[" << p_coordinator->task->GetRank() << "] Post processing : " << Platform::ToSeconds(Platform::GetTime() - start) << "s" << std::endl;
 				}
 
 				#if (defined(SCHEDULER_DATA_IO))
@@ -376,11 +389,33 @@ namespace Illumina
 
 				if (m_bStreamEnabled)
 				{
-					std::cout << "Sending image data..." << std::endl;
+					std::cout << "[" << p_coordinator->task->GetRank() << "] Starting image transfer..." << std::endl;
+					
 					ImageDevice *pImageDevice = (ImageDevice*)m_pDevice;
 					pImageDevice->WriteToBuffer(m_pPixelBuffer);
-					TaskCommunicator::Send(m_pPixelBuffer, 640 * 400 * 3, 0, m_nStreamPort);
-					std::cout << "Sent image data..." << std::endl;
+
+					int biteSize = 1024 * 10;
+					char *imageBuffer = (char*)m_pPixelBuffer,
+						*compressedBuffer = (char*)m_pCompressedPixelBuffer;
+
+					for (int chunk = 0; chunk < m_nPixelBufferSize * sizeof(RGBBytePixel); chunk+=biteSize)
+					{
+						int compressedSize = Compressor::Compress(imageBuffer, biteSize, compressedBuffer);
+						
+						if (compressedSize < biteSize)
+							TaskCommunicator::Send(compressedBuffer, compressedSize, 0, m_nStreamPort);
+						else
+							TaskCommunicator::Send(imageBuffer, biteSize, 0, m_nStreamPort);
+
+						imageBuffer += biteSize;
+						compressedBuffer += biteSize;						
+					}
+
+					//int compressionSize = Compressor::Compress((char*)m_pPixelBuffer, bufferSize, m_pCompressedPixelBuffer);
+					//if (compressionSize >= bufferSize)
+					
+					// TaskCommunicator::Send(m_pPixelBuffer, 640 * 400 * 3, 0, m_nStreamPort);
+					std::cout << "[" << p_coordinator->task->GetRank() << "] Image transfer complete..." << std::endl;
 				}
 
 				return true;

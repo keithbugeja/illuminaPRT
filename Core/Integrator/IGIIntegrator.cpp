@@ -89,6 +89,8 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 			p_pScene, pSample2D[0].U, pSample2D[0].V, 
 			pSample2D[1].U, pSample2D[1].V, lightRay, pdf);
 
+		// std::cout << "Lightray : " << lightRay.Direction.ToString() << std::endl;
+
 		// If pdf or radiance are zero, choose a new path
 		if (pdf == 0.0f || alpha.IsBlack())
 			continue;
