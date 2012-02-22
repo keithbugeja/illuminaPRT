@@ -50,7 +50,8 @@ namespace Illumina
 			void Look(const Vector3 &p_direction, const Vector3 &p_up);
 			void LookAt(const Vector3 &p_target);
 
-			Vector3 GetObserver(void) const { return m_centre; }
+			Vector3 GetObserver(void) const;
+			OrthonormalBasis GetFrame(void) const;
 
 		public:
 			virtual void GetRay(float p_fPixelX, float p_fPixelY, float p_fXi1, float p_fXi2, Ray &p_ray) const = 0;

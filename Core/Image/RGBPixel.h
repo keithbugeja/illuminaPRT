@@ -15,133 +15,140 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class RGBBytePixel
-		{
-			public:
-			union 
-			{
-				unsigned char Element[3];
-				struct { unsigned char R, G, B; };
-			};
-
-			RGBBytePixel() { }
-			RGBBytePixel(unsigned char p_red, unsigned char p_green, unsigned char p_blue) 
-				: R(p_red), G(p_green), B(p_blue) { }
-		};
-
-		class RGBPixel
+		//----------------------------------------------------------------------------------------------
+		// templated RGBPixel
+		//----------------------------------------------------------------------------------------------
+		template <typename TComponentType, int TMin, int TMax> 
+		class TRGBPixel
 		{
 		public:
-			static const RGBPixel White;
-			static const RGBPixel Black;
-			static const RGBPixel Red;
-			static const RGBPixel Green;
-			static const RGBPixel Blue;
+			static const TRGBPixel<TComponentType, TMin, TMax> White;
+			static const TRGBPixel<TComponentType, TMin, TMax> Black;
+			static const TRGBPixel<TComponentType, TMin, TMax> Red;
+			static const TRGBPixel<TComponentType, TMin, TMax> Green;
+			static const TRGBPixel<TComponentType, TMin, TMax> Blue;
 
 			union
 			{
-				float Element[3];
-				struct { float R, G, B; };
+				TComponentType Element[3];
+				struct { TComponentType R, G, B; };
 			};
 
 		public:
-			RGBPixel() { }
+			//----------------------------------------------------------------------------------------------
+			// Constructors
+			//----------------------------------------------------------------------------------------------
+			TRGBPixel(void) { }
 
-			RGBPixel(float p_fValue)
-				: R(p_fValue), G(p_fValue), B(p_fValue) { }
+			TRGBPixel(TComponentType p_value)
+				: R(p_value), G(p_value), B(p_value) { }
 
-			RGBPixel(float p_fRed, float p_fGreen, float p_fBlue)
-				: R(p_fRed), G(p_fGreen), B(p_fBlue) { }
+			TRGBPixel(TComponentType p_red, TComponentType p_green, TComponentType p_blue)
+				: R(p_red), G(p_green), B(p_blue) { }
 
-			RGBPixel(const RGBPixel &p_rgb)
+			TRGBPixel(const TRGBPixel<TComponentType, TMin, TMax> &p_rgb)
 				: R(p_rgb.R), G(p_rgb.G), B(p_rgb.B) { }
 
-			float operator[](int p_nIndex) const { return Element[p_nIndex]; }
-			float& operator[](int p_nIndex) { return Element[p_nIndex]; }
+			//----------------------------------------------------------------------------------------------
+			// Index operators
+			//----------------------------------------------------------------------------------------------
+			TComponentType operator[](int p_nIndex) const { return Element[p_nIndex]; }
+			TComponentType& operator[](int p_nIndex) { return Element[p_nIndex]; }
 
-			inline RGBPixel& operator=(const RGBPixel &p_rgb)
+			//----------------------------------------------------------------------------------------------
+			// Arithmetic operators
+			//----------------------------------------------------------------------------------------------
+			inline TRGBPixel<TComponentType, TMin, TMax>& operator=(const TRGBPixel<TComponentType, TMin, TMax> &p_rgb)
 			{
 				R = p_rgb.R; G = p_rgb.G; B = p_rgb.B;
 				return *this;
 			}
 
-			inline RGBPixel& operator+=(const RGBPixel &p_rgb) {
+			inline TRGBPixel<TComponentType, TMin, TMax>& operator+=(const TRGBPixel<TComponentType, TMin, TMax> &p_rgb) {
 				return *this = *this + p_rgb;
 			}
 
-			inline RGBPixel& operator-=(const RGBPixel &p_rgb) {
+			inline TRGBPixel<TComponentType, TMin, TMax>& operator-=(const TRGBPixel<TComponentType, TMin, TMax> &p_rgb) {
 				return *this = *this - p_rgb;
 			}
 			
-			inline RGBPixel& operator*=(const RGBPixel &p_rgb) {
+			inline TRGBPixel<TComponentType, TMin, TMax>& operator*=(const TRGBPixel<TComponentType, TMin, TMax> &p_rgb) {
 				return *this = *this * p_rgb;
 			}
 
-			inline RGBPixel& operator/=(const RGBPixel &p_rgb) {
+			inline TRGBPixel<TComponentType, TMin, TMax>& operator/=(const TRGBPixel<TComponentType, TMin, TMax> &p_rgb) {
 				return *this = *this / p_rgb;
 			}
 			
-			inline RGBPixel& operator*=(float p_fScale) {
-				return *this = *this * p_fScale;
+			inline TRGBPixel<TComponentType, TMin, TMax> operator/(const TRGBPixel<TComponentType, TMin, TMax> &p_rgb) const {
+				BOOST_ASSERT(p_rgb.R > 0 && p_rgb.G > 0 && p_rgb.B > 0);
+				return TRGBPixel<TComponentType, TMin, TMax>(R / p_rgb.R, G / p_rgb.G, B / p_rgb.B);
 			}
 
-			inline RGBPixel& operator/=(float p_fScale) {
-				return *this = *this / p_fScale;
+			inline TRGBPixel<TComponentType, TMin, TMax> operator*(const TRGBPixel<TComponentType, TMin, TMax> &p_rgb) const {
+				return TRGBPixel<TComponentType, TMin, TMax>(R * p_rgb.R, G * p_rgb.G, B * p_rgb.B);
 			}
 
-			inline RGBPixel operator*(float p_fScale) const {
-				return RGBPixel(R * p_fScale, G * p_fScale, B * p_fScale);
+			inline TRGBPixel<TComponentType, TMin, TMax> operator+(const TRGBPixel<TComponentType, TMin, TMax> &p_rgb) const {
+				return TRGBPixel<TComponentType, TMin, TMax>(R + p_rgb.R, G + p_rgb.G, B + p_rgb.B);
+			}
+
+			inline TRGBPixel<TComponentType, TMin, TMax> operator-(const TRGBPixel<TComponentType, TMin, TMax> &p_rgb) const {
+				return TRGBPixel<TComponentType, TMin, TMax>(R - p_rgb.R, G - p_rgb.G, B - p_rgb.B);
+			}
+
+			void Set(TComponentType p_red, TComponentType p_green, TComponentType p_blue) {
+				R = p_red; G = p_green; B = p_blue;
+			}
+
+			inline TRGBPixel<TComponentType, TMin, TMax>& operator*=(TComponentType p_scale) {
+				return *this = *this * p_scale;
+			}
+
+			inline TRGBPixel<TComponentType, TMin, TMax>& operator/=(TComponentType p_scale) {
+				return *this = *this / p_scale;
+			}
+
+			inline TRGBPixel<TComponentType, TMin, TMax> operator*(TComponentType p_scale) const {
+				return TRGBPixel<TComponentType, TMin, TMax>(R * p_scale, G * p_scale, B * p_scale);
 			}
 			
-			inline RGBPixel operator/(float p_fScale) const 
+			inline TRGBPixel<TComponentType, TMin, TMax> operator/(TComponentType p_scale) const 
 			{
-				BOOST_ASSERT(p_fScale > 0);
-				return *this * (1.0f / p_fScale);
+				BOOST_ASSERT(p_scale > 0);
+				return TRGBPixel<TComponentType, TMin, TMax>(R / p_scale, G / p_scale, B / p_scale);
 			}
 
-			inline RGBPixel operator/(const RGBPixel &p_rgb) const
+			// Clamp
+			void Clamp(TComponentType p_min = TMin, TComponentType p_max = TMax)
 			{
-				BOOST_ASSERT(p_rgb.R > 0 && p_rgb.G > 0 && p_rgb.B > 0);
-				return RGBPixel(R / p_rgb.R, G / p_rgb.G, B / p_rgb.B);
+				if (R < p_min) R = p_min;
+				else if (R > p_max) R = p_max;
+
+				if (G < p_min) G = p_min;
+				else if (G > p_max) G = p_max;
+
+				if (B < p_min) B = p_min;
+				else if (B > p_max) B = p_max;
 			}
 
-			inline RGBPixel operator*(const RGBPixel &p_rgb) const {
-				return RGBPixel(R * p_rgb.R, G * p_rgb.G, B * p_rgb.B);
-			}
-
-			inline RGBPixel operator+(const RGBPixel &p_rgb) const {
-				return RGBPixel(R + p_rgb.R, G + p_rgb.G, B + p_rgb.B);
-			}
-
-			inline RGBPixel operator-(const RGBPixel &p_rgb) const {
-				return RGBPixel(R - p_rgb.R, G - p_rgb.G, B - p_rgb.B);
-			}
-
-			void Set(float p_fRed, float p_fGreen, float p_fBlue) {
-				R = p_fRed; G = p_fGreen; B = p_fBlue;
-			}
-
-			void Normalize()
+			TComponentType Luminance(void) const 
 			{
-				float length = R * R + G * G + B * B;
+				return (unsigned char)(0.2126 * (double)R + 0.7152 * (double)G + 0.0722 * (double)B);
+			}
+
+			virtual void Normalize(void) 
+			{
+				double length = R * R + G * G + B * B;
 				
-				if (length > 0.0f)
+				if (length > 0.0)
 				{
-					length = Maths::Sqrt(length);
-					R /= length; G /= length; B /= length;
+					length = ((TComponentType)TMax) / Maths::Sqrt(length);
+					
+					R = (TComponentType)(length * R); 
+					G = (TComponentType)(length * G); 
+					B = (TComponentType)(length * B); 
 				}
-			}
-
-			void Clamp(float p_fMin = 0.0f, float p_fMax = 1.0f)
-			{
-				if (R < p_fMin) R = p_fMin;
-				else if (R > p_fMax) R = p_fMax;
-
-				if (G < p_fMin) G = p_fMin;
-				else if (G > p_fMax) G = p_fMax;
-
-				if (B < p_fMin) B = p_fMin;
-				else if (B > p_fMax) B = p_fMax;
 			}
 
 			std::string ToString(void)
@@ -152,8 +159,43 @@ namespace Illumina
 			}
 		};
 
-		inline RGBPixel operator*(float p_fScale, const RGBPixel &p_colour) {
-			return RGBPixel(p_colour.R * p_fScale, p_colour.G * p_fScale, p_colour.B * p_fScale);
+		template <typename TComponentType, int TMin, int TMax>
+		inline TRGBPixel<TComponentType, TMin, TMax> operator*(TComponentType p_scale, const TRGBPixel<TComponentType, TMin, TMax> &p_colour) {
+			return TRGBPixel<TComponentType, TMin, TMax>(p_colour.R * p_scale, p_colour.G * p_scale, p_colour.B * p_scale); 
 		}
+		
+		template <class TComponent, int TMin, int TMax> TRGBPixel<TComponent, TMin, TMax> const TRGBPixel<TComponent, TMin, TMax>::White;
+		template <class TComponent, int TMin, int TMax> TRGBPixel<TComponent, TMin, TMax> const TRGBPixel<TComponent, TMin, TMax>::Black;
+		template <class TComponent, int TMin, int TMax> TRGBPixel<TComponent, TMin, TMax> const TRGBPixel<TComponent, TMin, TMax>::Red;
+		template <class TComponent, int TMin, int TMax> TRGBPixel<TComponent, TMin, TMax> const TRGBPixel<TComponent, TMin, TMax>::Green;
+		template <class TComponent, int TMin, int TMax> TRGBPixel<TComponent, TMin, TMax> const TRGBPixel<TComponent, TMin, TMax>::Blue;
+
+		//----------------------------------------------------------------------------------------------
+		// RGBPixel, 1 byte per colour channel (0 - 255)
+		//----------------------------------------------------------------------------------------------
+		typedef TRGBPixel<unsigned char, 0, 255> RGBPixel1I;
+		
+		const RGBPixel1I RGBPixel1I::White = RGBPixel1I(255);
+		const RGBPixel1I RGBPixel1I::Black = RGBPixel1I(0);
+		const RGBPixel1I RGBPixel1I::Red = RGBPixel1I(255, 0, 0);
+		const RGBPixel1I RGBPixel1I::Green = RGBPixel1I(0, 255, 0);
+		const RGBPixel1I RGBPixel1I::Blue = RGBPixel1I(0, 0, 255);
+
+		//----------------------------------------------------------------------------------------------
+		// RGBPixel, 4 bytes per colour channel (0.f - 1.0f)
+		//----------------------------------------------------------------------------------------------
+		typedef TRGBPixel<float, 0.f, 1.f> RGBPixel4F;
+
+		const RGBPixel4F RGBPixel4F::White = RGBPixel4F(1.f);
+		const RGBPixel4F RGBPixel4F::Black = RGBPixel4F(0.f);
+		const RGBPixel4F RGBPixel4F::Red = RGBPixel4F(1.f, 0.f, 0.f);
+		const RGBPixel4F RGBPixel4F::Green = RGBPixel4F(0.f, 1.f, 0.f);
+		const RGBPixel4F RGBPixel4F::Blue = RGBPixel4F(0.f, 0.f, 1.f);
+
+		//----------------------------------------------------------------------------------------------
+		// Common aliases
+		//----------------------------------------------------------------------------------------------
+		typedef RGBPixel1I RGBBytePixel;
+		typedef RGBPixel4F RGBPixel;
 	} 
 }

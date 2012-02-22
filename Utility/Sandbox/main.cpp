@@ -55,12 +55,11 @@ namespace Illumina
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 
-#define TEST_SCHEDULER
+// #define TEST_SCHEDULER
+#define TEST_TILERENDER
 
 //----------------------------------------------------------------------------------------------
-
 #if (!defined(TEST_SCHEDULER))
-
 //----------------------------------------------------------------------------------------------
 void Message(const std::string& p_strMessage, bool p_bVerbose)
 {
@@ -69,57 +68,16 @@ void Message(const std::string& p_strMessage, bool p_bVerbose)
 //----------------------------------------------------------------------------------------------
 void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 {
-	/*
-	std::ifstream f;
-	std::ofstream o;
+	// Test shit
+	RGBPixel1I c_white, c_result;
 
-	char *b = new char[768*1024];
-	char *ob = new char[768*1024];
+	c_white.R = c_white.G = c_white.B = 255;
+	c_result = c_white;
+	c_white = c_result + c_white;
 
-	f.open("Z:\\sponza_disc.ppm", std::ios::binary);
-	f.read(b, 768*1024);
-	f.close();
+	//c_result = (TRGBPixel<unsigned char>)c_white + c_white;
 
-	int csize = Compression::Compress(b, 6*1024, ob);
-	memset(b, 0, 6*1024);
-	Compression::Decompress(ob, 6*1024, b);
-	std::cout << "Size : " << ((float)csize) << std::endl;
-	o.open("Z:\\sponza_disc2.ppm", std::ios::binary);
-	o.write(b, 768 * 1024);
-	o.close();
-
-	return;
-	*/
-
-	// Some tests
-	/*
-	Vector3 v(5,2,1);
-	float r;
-
-	double s = Platform::GetTime();
-	for (int j = 0; j < 10000000; j++)
-	{
-		v.Inverse();
-	}
-	double e = Platform::GetTime();
-	std::cout << "1: " << Platform::ToSeconds(e-s) << "s " << v.ToString() << std::endl;
-
-	s = Platform::GetTime();
-	for (int j = 0; j < 10000000; j++)
-	{
-		r = v.Dot(v);
-	}
-	e = Platform::GetTime();
-	std::cout << "2: " << Platform::ToSeconds(e-s) << "s " << r << std::endl;
-
-	s = Platform::GetTime();
-	for (int j = 0; j < 10000000; j++)
-	{
-		v.Normalize();
-	}
-	e = Platform::GetTime();
-	std::cout << "3: " << Platform::ToSeconds(e-s) << "s " << v.ToString() << std::endl;
-	*/
+	std::cout << "Colour : " << c_white.ToString() << ", " << c_result.ToString() << std::endl;
 
 	//----------------------------------------------------------------------------------------------
 	// Engine Kernel
@@ -250,19 +208,6 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	float fTotalFramesPerSecond = 0.f;
 	double start, elapsed = 0;
 
-	// Cornell
-	//Vector3 lookFrom(70, 0, 70),
-	//	lookAt(0, 0, 0);
-	
-	// Kiti
-	//Vector3 lookFrom(-19, 1, -19),
-	//	lookAt(0, 8, 0);
-
-
-	// Sponza
-	//Vector3 lookFrom(800, 100, 200),
-	//	lookAt(0, 200, 100);
-
 	//----------------------------------------------------------------------------------------------
 	// Render loop
 	//----------------------------------------------------------------------------------------------
@@ -274,59 +219,69 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
-		// Animate scene
-		alpha += Maths::PiTwo / 32.f;
+		#if (defined(TEST_TILERENDER))
+			// Animate scene
+			alpha += Maths::PiTwo / 32.f;
 		
-		rotation.MakeRotation(Vector3::UnitYPos, alpha);
-		/**//*
-		((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetScaling(Vector3::Ones * 20.0f);
-		((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetRotation(rotation);
-		/**/
+			rotation.MakeRotation(Vector3::UnitYPos, alpha);
 
-		// Start timer
-		start = Platform::GetTime();
+			/**//*
+			((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetScaling(Vector3::Ones * 20.0f);
+			((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetRotation(rotation);
+			/**/
 
-		// Prepare integrator
-		pIntegrator->Prepare(environment.GetScene());
+			// Start timer
+			start = Platform::GetTime();
+
+			// Prepare integrator
+			pIntegrator->Prepare(environment.GetScene());
 		
-		//pCamera->MoveTo(lookFrom);
-		//pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
-		//pCamera->LookAt(lookAt);
+			//pCamera->MoveTo(lookFrom);
+			//pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
+			//pCamera->LookAt(lookAt);
 
-		// Update space
-		pSpace->Update();
+			// Update space
+			pSpace->Update();
 	 
-		// Render frame
-		// Notify device that frame has started
-		pRenderer->GetDevice()->BeginFrame();
+			// Render frame
+			// Notify device that frame has started
+			pRenderer->GetDevice()->BeginFrame();
 
-		//#pragma omp parallel for num_threads(4)
-		for (int y = 0; y < pRenderer->GetDevice()->GetHeight() / 40; y++)
-		{
-			for (int x = 0; x < pRenderer->GetDevice()->GetWidth() / 40; x++)
+			//#pragma omp parallel for num_threads(4)
+			for (int y = 0; y < pRenderer->GetDevice()->GetHeight() / 40; y++)
 			{
-				pRenderer->RenderRegion(x * 40, y * 40, 40, 40, pRadianceBuffer, x * 40, y * 40);
+				for (int x = 0; x < pRenderer->GetDevice()->GetWidth() / 40; x++)
+				{
+					pRenderer->RenderRegion(x * 40, y * 40, 40, 40, pRadianceBuffer, x * 40, y * 40);
+				}
 			}
-		}
 
-		// Post-process frame
-		double pp = Platform::GetTime();
-		pRenderer->PostProcess(pRadianceBuffer);
-		std::cout << "PP Time : " << Platform::ToSeconds(Platform::GetTime() - pp) << "s " << std::endl;
+			// Post-process frame
+			double pp = Platform::GetTime();
+			pRenderer->PostProcess(pRadianceBuffer);
+			std::cout << "PP Time : " << Platform::ToSeconds(Platform::GetTime() - pp) << "s " << std::endl;
 
-		// End device update for frame
-		pRenderer->GetDevice()->EndFrame();
+			// End device update for frame
+			pRenderer->GetDevice()->EndFrame();
 
-		// Compute frames per second
-		elapsed = Platform::ToSeconds(Platform::GetTime() - start);
-		fTotalFramesPerSecond += (float)(1.f/elapsed);
+			// Compute frames per second
+			elapsed = Platform::ToSeconds(Platform::GetTime() - start);
+			fTotalFramesPerSecond += (float)(1.f/elapsed);
 		
-		if (p_bVerbose)
-		{
-			std::cout << std::endl;
-			std::cout << "-- Frame Render Time : [" << elapsed << "s]" << std::endl;
-			std::cout << "-- Frames per second : [" << fTotalFramesPerSecond / (nFrame + 1)<< "]" << std::endl;
-		}
+			if (p_bVerbose)
+			{
+				std::cout << std::endl;
+				std::cout << "-- Frame Render Time : [" << elapsed << "s]" << std::endl;
+				std::cout << "-- Frames per second : [" << fTotalFramesPerSecond / (nFrame + 1)<< "]" << std::endl;
+			}
+
+		#else
+			// Update space acceleration structure
+			pSpace->Update();
+
+			// Render image
+			pRenderer->Render();
+		#endif
 	}
 
 	pRenderer->Shutdown();
@@ -336,7 +291,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 int main(int argc, char** argv)
 {
 	std::cout << "Illumina Renderer : Version " << Illumina::Core::Major << "." << Illumina::Core::Minor << "." << Illumina::Core::Build << " http://www.illuminaprt.codeplex.com " << std::endl;
-	std::cout << "Copyright (C) 2010-2011 Keith Bugeja" << std::endl << std::endl;
+	std::cout << "Copyright (C) 2010-2012 Keith Bugeja" << std::endl << std::endl;
 
 	// default options
 	int nIterations = 1;
