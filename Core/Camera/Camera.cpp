@@ -65,3 +65,10 @@ void ICamera::LookAt(const Vector3 &p_target) {
 	Look(Vector3::Normalize(p_target - m_centre), Vector3::UnitYPos);
 }
 //----------------------------------------------------------------------------------------------
+Vector3 ICamera::GetObserver(void) const { 
+	return m_centre; 
+}
+//----------------------------------------------------------------------------------------------
+OrthonormalBasis ICamera::GetFrame(void) const {
+	return m_uvw;
+}
