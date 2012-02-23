@@ -15,15 +15,21 @@ boost::shared_ptr<ITriangleMesh> BasicMesh::CreateInstance(void) {
 //----------------------------------------------------------------------------------------------
 bool BasicMesh::Intersects(const Ray &p_ray, DifferentialSurface &p_surface)
 {
+	DifferentialSurface surface;
+
 	bool bIntersect = false;
 	Ray ray(p_ray);
 
 	for (int idx = 0, count = (int)ITriangleMesh::TriangleList.Size(); idx < count; idx++)
 	{
-		if (ITriangleMesh::TriangleList[idx].Intersects(ray, p_surface))
+		if (ITriangleMesh::TriangleList[idx].Intersects(ray, surface))
 		{
-			ray.Max = p_surface.Distance;
-			bIntersect = true;
+			if (ray.Max > p_surface.Distance)
+			{
+				ray.Max = surface.Distance;
+				p_surface = surface;
+				bIntersect = true;
+			}
 		}
 	}
 

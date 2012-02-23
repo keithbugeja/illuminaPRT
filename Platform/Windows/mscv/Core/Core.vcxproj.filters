@@ -716,6 +716,9 @@
     <ClInclude Include="..\..\..\..\Core\System\Buffer.h">
       <Filter>Header Files\System</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Image\Surface.h">
+      <Filter>Header Files\Image</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">
@@ -743,6 +746,9 @@
       <Filter>Header Files\Geometry</Filter>
     </None>
     <None Include="..\..\..\..\Core\Image\Image.inl">
+      <Filter>Header Files\Image</Filter>
+    </None>
+    <None Include="..\..\..\..\Core\Image\Surface.inl">
       <Filter>Header Files\Image</Filter>
     </None>
   </ItemGroup>

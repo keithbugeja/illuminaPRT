@@ -54,7 +54,7 @@ namespace Illumina
 				Image* pImage = new Image(width, height);
 				Image &image = *pImage;
 
-				for (int i = 0; i < image.GetLength(); i++)
+				for (int i = 0; i < image.GetArea(); i++)
 				{
 					image[i].R = (unsigned char)imageFile.get();
 					image[i].G = (unsigned char)imageFile.get();
@@ -86,7 +86,7 @@ namespace Illumina
 				// Dump header
 				imageFile << header.str();
 
-				for (int i = 0; i < p_image.GetLength(); i++)
+				for (int i = 0; i < p_image.GetArea(); i++)
 				{
 					imageFile.put((unsigned char)Maths::Min(255, 256 * p_image[i].R));
 					imageFile.put((unsigned char)Maths::Min(255, 256 * p_image[i].G));

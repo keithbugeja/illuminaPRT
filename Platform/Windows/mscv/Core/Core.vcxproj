@@ -229,6 +229,7 @@
     <ClInclude Include="..\..\..\..\Core\Image\ImagePFM.h" />
     <ClInclude Include="..\..\..\..\Core\Image\ImagePPM.h" />
     <ClInclude Include="..\..\..\..\Core\Image\RGBPixel.h" />
+    <ClInclude Include="..\..\..\..\Core\Image\Surface.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\IGIIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\Integrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\IntegratorFactories.h" />
@@ -346,6 +347,7 @@
     <None Include="..\..\..\..\Core\Geometry\Ray.inl" />
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl" />
     <None Include="..\..\..\..\Core\Image\Image.inl" />
+    <None Include="..\..\..\..\Core\Image\Surface.inl" />
     <None Include="..\..\..\..\Core\Object\Object.inl" />
     <None Include="..\..\..\..\Core\System\FactoryManager.inl" />
     <None Include="..\..\..\..\Core\Threading\Spinlock.inl" />

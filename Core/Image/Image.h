@@ -9,7 +9,7 @@
 #pragma once
 
 #include "System/IlluminaPRT.h"
-#include "Image/RGBPixel.h"
+#include "Image/Surface.h"
 
 //----------------------------------------------------------------------------------------------
 namespace Illumina 
@@ -17,33 +17,12 @@ namespace Illumina
 	namespace Core
 	{
 		class Image
+			: public RGBSurface
 		{
-		protected:
-			int m_nWidth,
-				m_nHeight;
-
-			bool m_bIsOwner;
-
-			RGBPixel *m_bitmap;
-
-		protected:
-			inline int IndexOf(int p_x, int p_y);
-
 		public:
-			inline int GetWidth(void) const;
-			inline int GetHeight(void) const;
-			inline int GetLength(void) const;
-			
-			inline RGBPixel operator[](int p_nIndex) const;
-			inline RGBPixel& operator[](int p_nIndex);
-
 			Image(int p_nWidth, int p_nHeight);
 			Image(int p_nWidth, int p_nHeight, const RGBPixel &p_rgb);
 			Image(int p_nWidth, int p_nHeight, RGBPixel *p_pRGBBuffer);
-			~Image(void);
-
-			void Set(int p_x, int p_y, const RGBPixel &p_colour);
-			RGBPixel Get(int p_x, int p_y);
 
 			void GammaCorrect(float p_fGamma);
 			

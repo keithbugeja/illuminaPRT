@@ -108,6 +108,7 @@ bool DistributedRenderer::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 void DistributedRenderer::RenderDebug(void)
 {
+	/*
 	int deviceWidth = m_pDevice->GetWidth(),
 		deviceHeight = m_pDevice->GetHeight();
 
@@ -224,6 +225,7 @@ void DistributedRenderer::RenderDebug(void)
 	m_pDevice->EndFrame();
 
 	delete[] pSampleBuffer;
+	*/
 }
 //----------------------------------------------------------------------------------------------
 void DistributedRenderer::Render(void)

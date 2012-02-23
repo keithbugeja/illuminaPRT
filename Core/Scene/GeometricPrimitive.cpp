@@ -16,7 +16,6 @@ using namespace Illumina::Core;
 GeometricPrimitive::GeometricPrimitive(void)
 	: m_pMaterial(NULL)
 	, m_pShape(NULL)
-	
 { }
 //----------------------------------------------------------------------------------------------
 boost::shared_ptr<IBoundingVolume> GeometricPrimitive::GetWorldBounds(void) const 
