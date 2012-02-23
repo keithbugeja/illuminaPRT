@@ -9,52 +9,19 @@
 #include "Image/Image.h"
 
 using namespace Illumina::Core;
+
 //----------------------------------------------------------------------------------------------
 Image::Image(int p_nWidth, int p_nHeight)
-	: m_nWidth(p_nWidth)
-	, m_nHeight(p_nHeight)
-	, m_bIsOwner(true)
-{
-	m_bitmap = new RGBPixel[m_nWidth * m_nHeight];
-				
-	for (int i = 0; i < m_nWidth * m_nHeight; i++)
-		m_bitmap[i].Set(0.0f, 0.0f, 0.0f);
-}
+	: RGBSurface(p_nWidth, p_nHeight)
+{ }
 //----------------------------------------------------------------------------------------------
 Image::Image(int p_nWidth, int p_nHeight, const RGBPixel &p_rgb)
-	: m_nWidth(p_nWidth)
-	, m_nHeight(p_nHeight)
-	, m_bIsOwner(true)
-{
-	m_bitmap = new RGBPixel[m_nWidth * m_nHeight];
-
-	for (int i = 0; i < m_nWidth * m_nHeight; i++)
-		m_bitmap[i] = p_rgb;
-}
+	: RGBSurface(p_nWidth, p_nHeight, p_rgb)
+{ }
 //----------------------------------------------------------------------------------------------
 Image::Image(int p_nWidth, int p_nHeight, RGBPixel *p_pRGBBuffer)
-	: m_nWidth(p_nWidth)
-	, m_nHeight(p_nHeight)
-	, m_bIsOwner(false)
-	, m_bitmap(p_pRGBBuffer)
-{
-	for (int i = 0; i < m_nWidth * m_nHeight; i++)
-		m_bitmap[i].Set(0.0f, 0.0f, 0.0f);
-}
-//----------------------------------------------------------------------------------------------
-Image::~Image(void) 
-{
-	if (m_bIsOwner)
-		delete[] m_bitmap;
-}
-//----------------------------------------------------------------------------------------------
-void Image::Set(int p_x, int p_y, const RGBPixel &p_colour) {
-	m_bitmap[IndexOf(p_x, p_y)] = p_colour;
-} 
-//----------------------------------------------------------------------------------------------
-RGBPixel Image::Get(int p_x, int p_y) {
-	return RGBPixel(m_bitmap[IndexOf(p_x, p_y)]);
-}
+	: RGBSurface(p_nWidth, p_nHeight, p_pRGBBuffer)
+{ }
 //----------------------------------------------------------------------------------------------
 void Image::GammaCorrect(float p_fGamma)
 {
@@ -68,8 +35,7 @@ void Image::GammaCorrect(float p_fGamma)
 	}
 }
 //----------------------------------------------------------------------------------------------
-void Image::ToneMap(void)
-{
+void Image::ToneMap(void) {
 	ToneMap(this);
 }
 //----------------------------------------------------------------------------------------------
@@ -109,3 +75,4 @@ void Image::ToneMap(Image *p_pImage) const
 		pSource->B /= pSource->B + 1;
 	}
 }
+//----------------------------------------------------------------------------------------------

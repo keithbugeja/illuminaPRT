@@ -43,7 +43,6 @@ bool BasicSpace::Intersects(const Ray &p_ray, Intersection &p_intersection) cons
 			ray.Max = intersection.Surface.Distance;
 			p_intersection = intersection;
 			bHit = true;
-			//return true;
 		}
 	}
 
@@ -66,7 +65,6 @@ bool BasicSpace::Intersects(const Ray &p_ray, Intersection &p_intersection, IPri
 			ray.Max = intersection.Surface.Distance;
 			p_intersection = intersection;
 			bHit = true;
-			//return true;
 		}
 	}
 

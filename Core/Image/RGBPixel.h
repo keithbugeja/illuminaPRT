@@ -50,6 +50,13 @@ namespace Illumina
 				: R(p_rgb.R), G(p_rgb.G), B(p_rgb.B) { }
 
 			//----------------------------------------------------------------------------------------------
+			// Misc
+			//----------------------------------------------------------------------------------------------
+			void Clear(void) { 
+				R = G = B = TMin;
+			}
+
+			//----------------------------------------------------------------------------------------------
 			// Index operators
 			//----------------------------------------------------------------------------------------------
 			TComponentType operator[](int p_nIndex) const { return Element[p_nIndex]; }
@@ -154,7 +161,7 @@ namespace Illumina
 			std::string ToString(void)
 			{
 				boost::format formatter;
-				std::string strOut = boost::str(boost::format("[%d %d %d]") % R % G % B);
+				std::string strOut = boost::str(boost::format("[%d %d %d]") % (float)R % (float)G % (float)B);
 				return strOut;
 			}
 		};

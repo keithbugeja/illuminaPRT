@@ -61,7 +61,7 @@ namespace Illumina
 					// Little endian
 					if (scale < 0)
 					{
-						for (int i = 0; i < image.GetLength(); i++)
+						for (int i = 0; i < image.GetArea(); i++)
 						{
 							imageFile.read( (char*)image[i].Element, sizeof(float) * 3);
 						}
@@ -100,7 +100,7 @@ namespace Illumina
 				// Dump header
 				imageFile << header.str();
 
-				for (int i = 0; i < p_image.GetLength(); i++)
+				for (int i = 0; i < p_image.GetArea(); i++)
 				{
 					imageFile.write((char*)p_image[i].Element, sizeof(float) * 3);
 				}
