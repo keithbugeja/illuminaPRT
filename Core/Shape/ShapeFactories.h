@@ -15,6 +15,7 @@
 #include "Shape/Sphere.h"
 #include "Shape/Triangle.h"
 #include "Shape/BasicMesh.h"
+#include "Shape/BVHMesh.h"
 #include "Shape/KDTreeMesh.h"
 #include "Shape/IndexedTriangle.h"
 #include "Shape/VertexFormats.h"
@@ -243,6 +244,49 @@ namespace Illumina
 			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, int p_nMaxDepth, int p_nMaxLeafObjects)
 			{
 				return new KDTreeMesh(p_strId, p_nMaxDepth, p_nMaxLeafObjects);
+			}
+		};
+
+		//----------------------------------------------------------------------------------------------
+		// BVH shape factory
+		// Note	that the factory produces ITriangleMesh objects with vertex format type Vertex and
+		// IndexedTriangle type faces.
+		//----------------------------------------------------------------------------------------------
+		class BVHMeshShapeFactory : public Illumina::Core::Factory<Illumina::Core::IShape>
+		{
+		public:
+			Illumina::Core::IShape *CreateInstance(void)
+			{
+				return new BVHMesh();
+			}
+
+			Illumina::Core::IShape *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strId;
+				
+				int maxDepth, 
+					maxObjects;
+
+				if (p_argumentMap.GetArgument("MaximumTreeDepth", maxDepth) && 
+					p_argumentMap.GetArgument("MaximumLeafObjects", maxObjects))
+				{
+					if (p_argumentMap.GetArgument("Name", strId))
+						return CreateInstance(strId, maxDepth, maxObjects);
+					
+					return CreateInstance(maxDepth, maxObjects);
+				}
+
+				throw new Exception("Invalid arguments to KDTreeMeshShapeFactory!");
+			}
+
+			Illumina::Core::IShape *CreateInstance(int p_nMaxDepth, int p_nMaxLeafObjects)
+			{
+				return new BVHMesh(p_nMaxDepth, p_nMaxLeafObjects);
+			}
+
+			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, int p_nMaxDepth, int p_nMaxLeafObjects)
+			{
+				return new BVHMesh(p_strId, p_nMaxDepth, p_nMaxLeafObjects);
 			}
 		};
 	}

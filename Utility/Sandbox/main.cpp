@@ -68,17 +68,6 @@ void Message(const std::string& p_strMessage, bool p_bVerbose)
 //----------------------------------------------------------------------------------------------
 void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 {
-	// Test shit
-	RGBPixel1I c_white, c_result;
-
-	c_white.R = c_white.G = c_white.B = 255;
-	c_result = c_white;
-	c_white = c_result + c_white;
-
-	//c_result = (TRGBPixel<unsigned char>)c_white + c_white;
-
-	std::cout << "Colour : " << c_white.ToString() << ", " << c_result.ToString() << std::endl;
-
 	//----------------------------------------------------------------------------------------------
 	// Engine Kernel
 	//----------------------------------------------------------------------------------------------
@@ -152,6 +141,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	//----------------------------------------------------------------------------------------------
 	Message("Registering Shapes...", p_bVerbose);
 	engineKernel.GetShapeManager()->RegisterFactory("KDTreeMesh", new KDTreeMeshShapeFactory());
+	engineKernel.GetShapeManager()->RegisterFactory("BVHMesh", new BVHMeshShapeFactory());
 	engineKernel.GetShapeManager()->RegisterFactory("Quad", new QuadMeshShapeFactory());
 	engineKernel.GetShapeManager()->RegisterFactory("Triangle", new TriangleShapeFactory());
 	engineKernel.GetShapeManager()->RegisterFactory("Sphere", new SphereShapeFactory());
