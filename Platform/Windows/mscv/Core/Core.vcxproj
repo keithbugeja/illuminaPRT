@@ -182,6 +182,7 @@
     <ClCompile Include="..\..\..\..\Core\Scene\Visibility.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\WavefrontSceneLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\BasicMesh.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\BVHMesh.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\IndexedTriangle.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\KDTreeMesh.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Sphere.cpp" />

@@ -20,6 +20,91 @@ namespace Illumina
 {
 	namespace Core
 	{
+		//----------------------------------------------------------------------------------------------
+		// BVH Node
+		//----------------------------------------------------------------------------------------------
+		// Represents a single node in the BVH tree structure. Note that only leaf nodes in the 
+		// structure contain any geometry.
+		//----------------------------------------------------------------------------------------------
+		struct BVHMeshNode
+		{
+			// Node Type
+			ITreeMesh::NodeType Type;
+
+			// Node bounding box
+			AxisAlignedBoundingBox BoundingBox;
+
+			// Partition Axis
+			int Axis;
+
+			// Partition Point
+			float Partition;
+
+			// Only if an internal node
+			BVHMeshNode *m_pChild[2];
+
+			// Only if a leaf
+			List<IndexedTriangle*> TriangleList;
+
+			BVHMeshNode() { m_pChild[0] = m_pChild[1] = NULL; }
+			~BVHMeshNode() { }
+		};
+		
+		//----------------------------------------------------------------------------------------------
+		// BVH-Tree Mesh
+		//----------------------------------------------------------------------------------------------
+		class BVHMesh
+			: public ITreeMesh
+		{
+		protected:
+			using ITriangleMesh::m_fArea;
+			using ITriangleMesh::m_boundingBox;
+			using ITriangleMesh::m_random;
+			using ITreeMesh::m_statistics;
+		
+		public:
+			using ITriangleMesh::TriangleList;
+			using ITriangleMesh::VertexList;
+
+		protected:
+			BVHMeshNode m_rootNode;
+			int m_nMaxLeafObjects;
+			int m_nMaxTreeDepth;
+			float m_fMinNodeWidth;
+
+		protected:
+			BVHMeshNode* RequestNode(void);
+			int ReleaseNode(BVHMeshNode *p_pNode);
+
+		public:
+			BVHMesh(int p_nMaxObjectsPerLeaf = 15, int p_nMaxTreeDepth = 30);
+			BVHMesh(const std::string &p_strName, int p_nMaxObjectsPerLeaf = 15, int p_nMaxTreeDepth = 30);
+
+			~BVHMesh();
+
+			boost::shared_ptr<ITriangleMesh> CreateInstance(void);
+
+			bool Compile(void);
+			bool Intersects(const Ray &p_ray, DifferentialSurface &p_surface);
+			bool Intersects(const Ray &p_ray);
+
+			std::string ToString(void) const;
+
+		protected:
+			bool Intersect(BVHMeshNode *p_pNode, Ray &p_ray);
+			bool Intersect(BVHMeshNode *p_pNode, Ray &p_ray, DifferentialSurface &p_surface);
+
+			void BuildHierarchy(BVHMeshNode *p_pNode, List<IndexedTriangle*> &p_objectList, int p_nAxis, int p_nDepth = 0);
+			void BuildHierarchy_S2(BVHMeshNode *p_pNode, List<IndexedTriangle*> &p_objectList, int p_nAxis, int p_nDepth = 0);
+
+			/*bool Intersect_Stack(BVHMeshNode *p_pNode, Ray &p_ray);
+			bool Intersect_Stack(BVHMeshNode *p_pNode, Ray &p_ray, DifferentialSurface &p_surface);
+
+			bool Intersect_Recursive(BVHMeshNode *p_pNode, Ray &p_ray);
+			bool Intersect_Recursive(BVHMeshNode *p_pNode, Ray &p_ray, DifferentialSurface &p_surface);
+			*/
+		};
+
 		/*
 		// Bounding volume hierarchy node
 		template<class T>

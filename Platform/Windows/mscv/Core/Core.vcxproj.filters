@@ -294,6 +294,9 @@
     <ClCompile Include="..\..\..\..\Core\External\Compression\lz4.c">
       <Filter>Header Files\External\Compression</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Shape\BVHMesh.cpp">
+      <Filter>Header Files\Shape</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
