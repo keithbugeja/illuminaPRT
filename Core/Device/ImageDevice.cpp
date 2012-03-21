@@ -90,6 +90,21 @@ Spectrum ImageDevice::Get(float p_fX, float p_fY) const
 	return Spectrum(pixel.R, pixel.G, pixel.B);
 }
 //----------------------------------------------------------------------------------------------
+void ImageDevice::WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, 
+	RadianceBuffer *p_pRadianceBuffer, int p_nDeviceX, int p_nDeviceY)
+{
+	int width = m_pImage->GetWidth(),
+		height = m_pImage->GetHeight();
+
+	for (int srcY = p_nRegionY, dstY = p_nDeviceY; srcY < p_pRadianceBuffer->GetHeight(); ++srcY, ++dstY)
+	{
+		for (int srcX = p_nRegionX, dstX = p_nDeviceX; srcX < p_pRadianceBuffer->GetWidth(); ++srcX, ++dstX)
+		{
+			this->Set(width - (dstX + 1), height - (dstY + 1), p_pRadianceBuffer->Get(srcX, srcY).Final);
+		}
+	}
+}
+//----------------------------------------------------------------------------------------------
 std::string ImageDevice::GetFilename(void) const {
 	return m_strFilename;
 }

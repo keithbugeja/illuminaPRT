@@ -47,6 +47,9 @@ namespace Illumina
 			Spectrum Get(int p_nX, int p_nY) const;
 			Spectrum Get(float p_fX, float p_fY) const;
 
+			void WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, 
+				RadianceBuffer *p_pRadianceBuffer, int p_nDeviceX, int p_nDeviceY);
+
 			//----------------------------------------------------------------------------------------------
 			// Type-specific methods
 			//----------------------------------------------------------------------------------------------

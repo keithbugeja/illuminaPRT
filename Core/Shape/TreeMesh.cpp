@@ -63,6 +63,31 @@ void ITreeMesh::ComputeBounds(const List<IndexedTriangle*> &p_objectList,
 // Distributes the provided triangle list between two objects depending on a the partitioning
 // specified by the parameters (Axis, Partition).
 //----------------------------------------------------------------------------------------------
+int ITreeMesh::DistributeUnique(const List<IndexedTriangle*> &p_objectList, float p_fPartition,
+	int p_nAxis, List<IndexedTriangle*> &p_outLeftList, List<IndexedTriangle*> &p_outRightList)
+{
+	int count = (int)p_objectList.Size();
+	
+	for (int n = 0; n < count; n++)
+	{
+		float min = p_objectList[n]->GetBoundingVolume()->GetMinExtent(p_nAxis),
+			max = p_objectList[n]->GetBoundingVolume()->GetMaxExtent(p_nAxis),
+			mid = min + (max - min) * 0.5f;
+
+		if (p_fPartition >= mid) p_outLeftList.PushBack(p_objectList[n]);
+		else p_outRightList.PushBack(p_objectList[n]);
+
+		//if (p_fPartition >= min) p_outLeftList.PushBack(p_objectList[n]);
+		//if (p_fPartition <= max) p_outRightList.PushBack(p_objectList[n]);
+	}
+
+	return (int)p_outLeftList.Size();
+}
+
+//----------------------------------------------------------------------------------------------
+// Distributes the provided triangle list between two objects depending on a the partitioning
+// specified by the parameters (Axis, Partition).
+//----------------------------------------------------------------------------------------------
 int ITreeMesh::Distribute(const List<IndexedTriangle*> &p_objectList, float p_fPartition, 
 	int p_nAxis, List<IndexedTriangle*> &p_outLeftList, List<IndexedTriangle*> &p_outRightList)
 {
