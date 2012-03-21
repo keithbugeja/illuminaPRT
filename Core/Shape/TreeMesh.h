@@ -68,6 +68,9 @@ namespace Illumina
 				float p_fMinEpsilon = 0.0f, float p_fMaxEpsilon = 0.0f);
 
 
+			int DistributeUnique(const List<IndexedTriangle*> &p_objectList, float p_fPartition, int p_nAxis, 
+				List<IndexedTriangle*> &p_outLeftList, List<IndexedTriangle*> &p_outRightList);
+
 			int Distribute(const List<IndexedTriangle*> &p_objectList, float p_fPartition, int p_nAxis, 
 				List<IndexedTriangle*> &p_outLeftList, List<IndexedTriangle*> &p_outRightList);
 

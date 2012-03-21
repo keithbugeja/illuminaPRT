@@ -363,6 +363,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 	// Use filename as the default object name
 	boost::filesystem::path geometryPath(p_strFilename);
 	p_context.ObjectName = geometryPath.filename().string();
+	
 	//p_context.Mesh = new KDTreeMesh(p_context.ObjectName);
 	p_context.Mesh = new BVHMesh(p_context.ObjectName);
 

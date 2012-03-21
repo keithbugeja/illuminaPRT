@@ -8,6 +8,7 @@
 
 #include "System/IlluminaPRT.h"
 #include "System/FactoryManager.h"
+#include "Geometry/Intersection.h"
 
 #include "Object/Object.h"
 //----------------------------------------------------------------------------------------------
@@ -50,6 +51,9 @@ namespace Illumina
 
 			virtual Spectrum Get(int p_nX, int p_nY) const = 0;
 			virtual Spectrum Get(float p_fX, float p_fY) const = 0;
+
+			virtual void WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, 
+				RadianceBuffer *p_pRadianceBuffer, int p_nDeviceX, int p_nDeviceY) = 0;
 
 			std::string ToString(void) const { return "IDevice"; }
 		};

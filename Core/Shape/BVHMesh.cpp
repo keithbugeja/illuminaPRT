@@ -253,7 +253,7 @@ void BVHMesh::BuildHierarchy_S2(BVHMeshNode *p_pNode, List<IndexedTriangle*> &p_
 		//leftAABB.SetMaxExtent(p_nAxis, p_pNode->Partition);
 		//rightAABB.SetMinExtent(p_nAxis, p_pNode->Partition);
 
-		Distribute(p_objectList, p_pNode->Partition, p_pNode->Axis, leftList, rightList);
+		DistributeUnique(p_objectList, p_pNode->Partition, p_pNode->Axis, leftList, rightList);
 
 		ComputeBounds(leftList, leftAABB);
 		ComputeBounds(rightList, rightAABB);
