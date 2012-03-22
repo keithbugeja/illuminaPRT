@@ -265,6 +265,7 @@
     <ClInclude Include="..\..\..\..\Core\Renderer\DistributedRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\MultipassRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\MultithreadedRenderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\PostProcess.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\Renderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\RendererFactories.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\JitterSampler.h" />
