@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-#include "Renderer/Renderer.h"
+#include "Renderer/BaseRenderer.h"
 #include "Integrator/Integrator.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
@@ -17,32 +17,35 @@ namespace Illumina
 	namespace Core
 	{
 		class MultipassRenderer 
-			: public IRenderer
+			: public BaseRenderer
 		{
 		protected:			
+			using IRenderer::m_pRadianceBuffer;
 			using IRenderer::m_pIntegrator;
 			using IRenderer::m_pDevice;
 			using IRenderer::m_pFilter;
 			using IRenderer::m_pScene;
 
+			using BaseRenderer::m_nSampleCount;
+
 			bool m_bUseCombinedPass;
 
 			int m_nWidth, 
 				m_nHeight;
-			
-			int m_nSampleCount;
 
 			int m_nDBSize;
 
 			float m_fDBCos,
 				m_fDBDist;
 
-		protected:
-			RadianceBuffer *m_pRadianceBuffer;
-
 		public:
-			MultipassRenderer(const std::string &p_strName, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, int p_nSampleCount = 1, bool p_bCombined = true, int p_nDBSize = 3, float p_fDBDist = 10.f, float p_fDBCos = 0.75f);
-			MultipassRenderer(Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, int p_nSampleCount = 1, bool p_bCombined = true, int p_nDBSize = 3, float p_fDBDist = 10.f, float p_fDBCos = 0.75f);
+			MultipassRenderer(const std::string &p_strName, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, 
+				IFilter *p_pFilter = NULL, RadianceBuffer *p_pRadianceBuffer = NULL, int p_nSampleCount = 1, bool p_bCombined = true, 
+				int p_nDBSize = 3, float p_fDBDist = 10.f, float p_fDBCos = 0.75f);
+
+			MultipassRenderer(Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, 
+				RadianceBuffer *p_pRadianceBuffer = NULL, int p_nSampleCount = 1, bool p_bCombined = true, 
+				int p_nDBSize = 3, float p_fDBDist = 10.f, float p_fDBCos = 0.75f);
 
 			//MultipassRenderer(const std::string &p_strName, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, int p_nSampleCount = 1);
 			//MultipassRenderer(Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, int p_nSampleCount = 1);
@@ -50,12 +53,14 @@ namespace Illumina
 			bool Initialise(void);
 			bool Shutdown(void);
 
+			/*
 			void Render(void);
 			void RenderRegion(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight);
 
 			virtual void Render(RadianceBuffer *p_pRadianceBuffer, int p_nBufferLeft = 0, int nBufferTop = 0);
 			virtual void RenderRegion(int p_nLeft, int p_nTop, int p_nWidth, int p_nHeight, RadianceBuffer *p_pRadianceBuffer, int p_nBufferLeft = 0, int nBufferTop = 0);
-			
+			*/
+
 			void PostProcess(RadianceBuffer *p_pRadianceBuffer);
 			void PostProcessRegion(RadianceBuffer *p_pRadianceBuffer);
 

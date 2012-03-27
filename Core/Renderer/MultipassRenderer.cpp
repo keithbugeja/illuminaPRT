@@ -19,20 +19,18 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-MultipassRenderer::MultipassRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount,
-	bool p_bCombined, int p_nDBSize, float p_fDBDist, float p_fDBCos)
-	: IRenderer(p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
-	, m_nSampleCount(p_nSampleCount)
+MultipassRenderer::MultipassRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, 
+	RadianceBuffer *p_pRadianceBuffer, int p_nSampleCount, bool p_bCombined, int p_nDBSize, float p_fDBDist, float p_fDBCos)
+	: BaseRenderer(p_pScene, p_pIntegrator, p_pDevice, p_pFilter, p_pRadianceBuffer, p_nSampleCount)
 	, m_bUseCombinedPass(p_bCombined)
 	, m_nDBSize(p_nDBSize)
 	, m_fDBDist(p_fDBDist)
 	, m_fDBCos(p_fDBCos)
 { }
 //----------------------------------------------------------------------------------------------
-MultipassRenderer::MultipassRenderer(const std::string &p_strName, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount,
-	bool p_bCombined, int p_nDBSize, float p_fDBDist, float p_fDBCos)
-	: IRenderer(p_strName, p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
-	, m_nSampleCount(p_nSampleCount)
+MultipassRenderer::MultipassRenderer(const std::string &p_strName, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, 
+	IFilter *p_pFilter, RadianceBuffer *p_pRadianceBuffer, int p_nSampleCount, bool p_bCombined, int p_nDBSize, float p_fDBDist, float p_fDBCos)
+	: BaseRenderer(p_strName, p_pScene, p_pIntegrator, p_pDevice, p_pFilter, p_pRadianceBuffer, p_nSampleCount)
 	, m_bUseCombinedPass(p_bCombined)
 	, m_nDBSize(p_nDBSize)
 	, m_fDBDist(p_fDBDist)
@@ -69,6 +67,7 @@ bool MultipassRenderer::Shutdown(void)
 
 	return true;
 }
+/*
 //----------------------------------------------------------------------------------------------
 void MultipassRenderer::RenderRegion(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, 
 	RadianceBuffer *p_pRadianceBuffer, int p_nBufferX, int p_nBufferY)
@@ -229,6 +228,7 @@ void MultipassRenderer::RenderRegionToBuffer(int p_nRegionX, int p_nRegionY,
 		}
 	}
 }
+*/
 //----------------------------------------------------------------------------------------------
 void MultipassRenderer::WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, RadianceBuffer *p_pRadianceBuffer, int p_nDeviceX, int p_nDeviceY)
 {

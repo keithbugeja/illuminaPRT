@@ -166,6 +166,7 @@
     <ClCompile Include="..\..\..\..\Core\Maths\Random.cpp" />
     <ClCompile Include="..\..\..\..\Core\Object\Object.cpp" />
     <ClCompile Include="..\..\..\..\Core\Object\UniqueID.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Renderer\BaseRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\BasicRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\DistributedRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\MultipassRenderer.cpp" />
@@ -261,6 +262,7 @@
     <ClInclude Include="..\..\..\..\Core\Object\Cloneable.h" />
     <ClInclude Include="..\..\..\..\Core\Object\Object.h" />
     <ClInclude Include="..\..\..\..\Core\Object\UniqueID.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\BaseRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\BasicRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\DistributedRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\MultipassRenderer.h" />

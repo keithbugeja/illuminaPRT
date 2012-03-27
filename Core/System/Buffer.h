@@ -73,6 +73,10 @@ namespace Illumina
 				return m_area;
 			}
 
+			inline T* GetP(int p_nX, int p_nY) {
+				return m_buffer + IndexOf(p_nX, p_nY);
+			}
+
 			inline T& Get(int p_nX, int p_nY) {
 				return m_buffer[IndexOf(p_nX, p_nY)];
 			}

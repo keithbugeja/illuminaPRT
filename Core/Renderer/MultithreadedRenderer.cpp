@@ -19,18 +19,17 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-MultithreadedRenderer::MultithreadedRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
-	: IRenderer(p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
-	, m_nSampleCount(p_nSampleCount)
+MultithreadedRenderer::MultithreadedRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, RadianceBuffer *p_pRadianceBuffer, int p_nSampleCount)
+	: BaseRenderer(p_pScene, p_pIntegrator, p_pDevice, p_pFilter, p_pRadianceBuffer, p_nSampleCount)
 { }
 //----------------------------------------------------------------------------------------------
-MultithreadedRenderer::MultithreadedRenderer(const std::string &p_strName, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, int p_nSampleCount)
-	: IRenderer(p_strName, p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
-	, m_nSampleCount(p_nSampleCount)
+MultithreadedRenderer::MultithreadedRenderer(const std::string &p_strName, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, RadianceBuffer *p_pRadianceBuffer, int p_nSampleCount)
+	: BaseRenderer(p_strName, p_pScene, p_pIntegrator, p_pDevice, p_pFilter, p_pRadianceBuffer, p_nSampleCount)
 { }
 //----------------------------------------------------------------------------------------------
 void MultithreadedRenderer::Render(void)
 {
+	/*
 	const int updateRate = 5;
 	static int updateIO = updateRate;
 
@@ -88,5 +87,6 @@ void MultithreadedRenderer::Render(void)
 	}
 
 	if(!updateIO) m_pDevice->EndFrame();
+	*/
 }
 //----------------------------------------------------------------------------------------------

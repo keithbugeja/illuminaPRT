@@ -39,18 +39,22 @@ namespace Illumina
 			virtual bool Initialise(void) { return true; }
 			virtual bool Shutdown(void) { return false; }
 
-			// Render to radiance buffer (full render)
-			// Render to radiance buffer (partial render)
-
-			//virtual void Flush(void) = 0;
-			//virtual void FlushRegion(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight) { };
-
+			// RadianceBuffer dimensions should equal device dimensions
 			virtual void Render(void) = 0;
-			virtual void RenderRegion(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight) { };
+			virtual void Render(RadianceBuffer *p_pRadianceBuffer) = 0;
+			
+			// Render a window-region
+			virtual void RenderRegion(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight) = 0;
+			virtual void RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, int p_nBufferX = 0, int p_nBufferY = 0) = 0;
 
-			virtual void Render(RadianceBuffer *p_pRadianceBuffer, int p_nBufferLeft = 0, int nBufferTop = 0) { }
-			virtual void RenderRegion(int p_nLeft, int p_nTop, int p_nWidth, int p_nHeight, RadianceBuffer *p_pRadianceBuffer, int p_nBufferLeft = 0, int nBufferTop = 0) { }
+			// Support for non-contiguous tile-rendering
+			virtual void RenderTile(RadianceBuffer *p_pRadianceBuffer, int p_nTileIndex, int p_nTileWidth, int p_nTileHeight) = 0;
 
+			// Commit radiance buffer to output device
+			virtual void Commit(void) = 0;
+			virtual void Commit(RadianceBuffer *p_pRadianceBuffer) = 0;
+
+			// Getters / Setters
 			void SetRadianceBuffer(RadianceBuffer *p_pRadianceBuffer);
 			RadianceBuffer *GetRadianceBuffer(void) const;
 
