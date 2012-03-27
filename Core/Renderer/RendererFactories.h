@@ -45,12 +45,12 @@ namespace Illumina
 
 			Illumina::Core::IRenderer *CreateInstance(const std::string &p_strId, int p_nSamples)
 			{
-				return new BasicRenderer(p_strId, NULL, NULL, NULL, NULL, p_nSamples);
+				return new BasicRenderer(p_strId, NULL, NULL, NULL, NULL, NULL, p_nSamples);
 			}
 
 			Illumina::Core::IRenderer *CreateInstance(int p_nSamples)
 			{
-				return new BasicRenderer(NULL, NULL, NULL, NULL, p_nSamples);
+				return new BasicRenderer(NULL, NULL, NULL, NULL, NULL, p_nSamples);
 			}
 		};
 
@@ -92,12 +92,12 @@ namespace Illumina
 
 			Illumina::Core::IRenderer *CreateInstance(const std::string &p_strId, int p_nSamples, bool p_bCombinePasses, int p_nDBSize, float p_fDBDist, float p_fDBCos)
 			{
-				return new MultipassRenderer(p_strId, NULL, NULL, NULL, NULL, p_nSamples, p_bCombinePasses, p_nDBSize, p_fDBDist, p_fDBCos);
+				return new MultipassRenderer(p_strId, NULL, NULL, NULL, NULL, NULL, p_nSamples, p_bCombinePasses, p_nDBSize, p_fDBDist, p_fDBCos);
 			}
 
 			Illumina::Core::IRenderer *CreateInstance(int p_nSamples, bool p_bCombinePasses, int p_nDBSize, float p_fDBDist, float p_fDBCos)
 			{
-				return new MultipassRenderer(NULL, NULL, NULL, NULL, p_nSamples, p_bCombinePasses, p_nDBSize, p_fDBDist, p_fDBCos);
+				return new MultipassRenderer(NULL, NULL, NULL, NULL, NULL, p_nSamples, p_bCombinePasses, p_nDBSize, p_fDBDist, p_fDBCos);
 			}
 		};
 
@@ -126,12 +126,12 @@ namespace Illumina
 
 			Illumina::Core::IRenderer *CreateInstance(const std::string &p_strId, int p_nSamples)
 			{
-				return new MultithreadedRenderer(p_strId, NULL, NULL, NULL, NULL, p_nSamples);
+				return new MultithreadedRenderer(p_strId, NULL, NULL, NULL, NULL, NULL, p_nSamples);
 			}
 
 			Illumina::Core::IRenderer *CreateInstance(int p_nSamples)
 			{
-				return new MultithreadedRenderer(NULL, NULL, NULL, NULL, p_nSamples);
+				return new MultithreadedRenderer(NULL, NULL, NULL, NULL, NULL, p_nSamples);
 			}
 		};
 		
@@ -167,12 +167,12 @@ namespace Illumina
 
 			Illumina::Core::IRenderer *CreateInstance(const std::string &p_strId, int p_nSamples, int p_nTileWidth, int p_nTileHeight)
 			{
-				return new DistributedRenderer(p_strId, NULL, NULL, NULL, NULL, p_nSamples, p_nTileWidth, p_nTileHeight);
+				return new DistributedRenderer(p_strId, NULL, NULL, NULL, NULL, NULL, p_nSamples, p_nTileWidth, p_nTileHeight);
 			}
 
 			Illumina::Core::IRenderer *CreateInstance(int p_nSamples, int p_nTileWidth, int p_nTileHeight)
 			{
-				return new DistributedRenderer(NULL, NULL, NULL, NULL, p_nSamples, p_nTileWidth, p_nTileHeight);
+				return new DistributedRenderer(NULL, NULL, NULL, NULL, NULL, p_nSamples, p_nTileWidth, p_nTileHeight);
 			}
 		};
 	}

@@ -9,7 +9,7 @@
 #include "boost/mpi.hpp"
 namespace mpi = boost::mpi;
 
-#include "Renderer/Renderer.h"
+#include "Renderer/BaseRenderer.h"
 #include "Geometry/Vector2.h"
 #include "Image/Image.h"
 //----------------------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ namespace Illumina
 	namespace Core
 	{
 		class DistributedRenderer 
-			: public IRenderer
+			: public BaseRenderer
 		{
 		protected:			
 			using IRenderer::m_pIntegrator;
@@ -26,10 +26,10 @@ namespace Illumina
 			using IRenderer::m_pFilter;
 			using IRenderer::m_pScene;
 
+			using BaseRenderer::m_nSampleCount;
+
 			int m_nTileWidth,
 				m_nTileHeight;
-
-			int m_nSampleCount;
 
 			// MPI Context information
 			mpi::environment* m_pMPIEnvironment;
@@ -37,17 +37,20 @@ namespace Illumina
 		
 		public:
 			DistributedRenderer(Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, 
-				int p_nSampleCount = 1, int p_nTileWidth = 8, int p_nTileHeight = 8);
+				RadianceBuffer *p_pRadianceBuffer = NULL, int p_nSampleCount = 1, int p_nTileWidth = 8, int p_nTileHeight = 8);
 
 			DistributedRenderer(const std::string &p_strName, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, 
-				int p_nSampleCount = 1, int p_nTileWidth = 8, int p_nTileHeight = 8);
+				RadianceBuffer *p_pRadianceBuffer = NULL, int p_nSampleCount = 1, int p_nTileWidth = 8, int p_nTileHeight = 8);
 
 			bool Initialise(void);
 			bool Shutdown(void);
-
+			
 			void Render(void);
 			void RenderDebug(void);
+			
+			/*
 			void RenderToAuxiliary(int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight, Spectrum *p_colourBuffer) { throw new Exception ("Method not implemented!"); }
+			*/
 		};
 	}
 }

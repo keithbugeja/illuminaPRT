@@ -234,25 +234,33 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			pSpace->Update();
 	 
 			// Render frame
-			// Notify device that frame has started
-			pRenderer->GetDevice()->BeginFrame();
 
 			//#pragma omp parallel for num_threads(4)
 			for (int y = 0; y < pRenderer->GetDevice()->GetHeight() / 40; y++)
 			{
 				for (int x = 0; x < pRenderer->GetDevice()->GetWidth() / 40; x++)
 				{
-					pRenderer->RenderRegion(x * 40, y * 40, 40, 40, pRadianceBuffer, x * 40, y * 40);
+					pRenderer->RenderRegion(pRadianceBuffer, x * 40, y * 40, 40, 40, x * 40, y * 40);
 				}
 			}
 
+			/*
 			// Post-process frame
 			double pp = Platform::GetTime();
 			pRenderer->PostProcess(pRadianceBuffer);
 			std::cout << "PP Time : " << Platform::ToSeconds(Platform::GetTime() - pp) << "s " << std::endl;
+			*/
 
+			// Commit frame
+			pRenderer->Commit(pRadianceBuffer);
+			
+			/*
+			// Notify device that frame has started
+			pRenderer->GetDevice()->BeginFrame();			
+			
 			// End device update for frame
 			pRenderer->GetDevice()->EndFrame();
+			*/
 
 			// Compute frames per second
 			elapsed = Platform::ToSeconds(Platform::GetTime() - start);

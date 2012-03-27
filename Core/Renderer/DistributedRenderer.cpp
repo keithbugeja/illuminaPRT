@@ -9,7 +9,6 @@
 #include <map>
 
 #include "boost/progress.hpp"
-#include "boost/mpi.hpp"
 
 #include "Renderer/DistributedRenderer.h"
 #include "Integrator/Integrator.h"
@@ -63,21 +62,18 @@ namespace Illumina
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-DistributedRenderer::DistributedRenderer(const std::string &p_strName, 
-	Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, 
-	IFilter *p_pFilter, int p_nSampleCount, int p_nTileWidth, int p_nTileHeight)
-	: IRenderer(p_strName, p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
+DistributedRenderer::DistributedRenderer(const std::string &p_strName, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, 
+	IFilter *p_pFilter, RadianceBuffer *p_pRadianceBuffer, int p_nSampleCount, int p_nTileWidth, int p_nTileHeight)
+	: BaseRenderer(p_strName, p_pScene, p_pIntegrator, p_pDevice, p_pFilter, p_pRadianceBuffer, p_nSampleCount)
 	, m_nTileWidth(p_nTileWidth)
 	, m_nTileHeight(p_nTileHeight)
-	, m_nSampleCount(p_nSampleCount)
 { }
 //----------------------------------------------------------------------------------------------
-DistributedRenderer::DistributedRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, 
-	IFilter *p_pFilter, int p_nSampleCount, int p_nTileWidth, int p_nTileHeight)
-	: IRenderer(p_pScene, p_pIntegrator, p_pDevice, p_pFilter)
+DistributedRenderer::DistributedRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, 
+	RadianceBuffer *p_pRadianceBuffer, int p_nSampleCount, int p_nTileWidth, int p_nTileHeight)
+	: BaseRenderer(p_pScene, p_pIntegrator, p_pDevice, p_pFilter, p_pRadianceBuffer, p_nSampleCount)
 	, m_nTileWidth(p_nTileWidth)
 	, m_nTileHeight(p_nTileHeight)
-	, m_nSampleCount(p_nSampleCount)
 { }
 //----------------------------------------------------------------------------------------------
 bool DistributedRenderer::Initialise(void)
@@ -230,6 +226,7 @@ void DistributedRenderer::RenderDebug(void)
 //----------------------------------------------------------------------------------------------
 void DistributedRenderer::Render(void)
 {
+	/*
 	const int WI_RESULT	= 0x0001;
 	const int WI_TASKID = 0x0002;
 
@@ -472,5 +469,6 @@ void DistributedRenderer::Render(void)
 	//std::cout << "Process " << m_pMPICommunicator->rank() << " at end barrier..." << std::endl;
 	m_pMPICommunicator->barrier();
 	//std::cout << "Process " << m_pMPICommunicator->rank() << " past end barrier..." << std::endl;
+	*/
 }
 //----------------------------------------------------------------------------------------------

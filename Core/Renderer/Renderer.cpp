@@ -12,15 +12,19 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-IRenderer::IRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter)
-	: m_pIntegrator(p_pIntegrator) 
+IRenderer::IRenderer(Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, 
+	IFilter *p_pFilter, RadianceBuffer *p_pRadianceBuffer)
+	: m_pRadianceBuffer(p_pRadianceBuffer)
+	, m_pIntegrator(p_pIntegrator) 
 	, m_pDevice(p_pDevice)
 	, m_pFilter(p_pFilter)
 	, m_pScene(p_pScene)
 { }
 //----------------------------------------------------------------------------------------------
-IRenderer::IRenderer(const std::string &p_strName, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter)
+IRenderer::IRenderer(const std::string &p_strName, Scene *p_pScene, IIntegrator *p_pIntegrator, 
+	IDevice *p_pDevice, IFilter *p_pFilter, RadianceBuffer *p_pRadianceBuffer)
 	: Object(p_strName) 
+	, m_pRadianceBuffer(p_pRadianceBuffer)
 	, m_pIntegrator(p_pIntegrator) 
 	, m_pDevice(p_pDevice)
 	, m_pFilter(p_pFilter)
