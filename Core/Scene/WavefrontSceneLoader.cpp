@@ -20,6 +20,7 @@
 #include "Shape/TriangleMesh.h"
 #include "Shape/KDTreeMesh.h"
 #include "Shape/BVHMesh.h"
+#include "Shape/BasicMesh.h"
 
 #include "Material/MaterialGroup.h"
 #include "Material/Mirror.h"
@@ -366,6 +367,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 	
 	//p_context.Mesh = new KDTreeMesh(p_context.ObjectName);
 	p_context.Mesh = new BVHMesh(p_context.ObjectName);
+	//p_context.Mesh = new BasicMesh(p_context.ObjectName);
 
 	// Open wavefront file
 	std::ifstream wavefrontFile;

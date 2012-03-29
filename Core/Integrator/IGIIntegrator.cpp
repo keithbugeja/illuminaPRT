@@ -232,8 +232,8 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 							continue;
 
 						// Test immediately if the point light is occluded
-						// pointLightQuery.SetSegment(p_intersection.Surface.PointWS, 1e-1f, pointLight.Context.Surface.PointWS, 1e-1f);
-						pointLightQuery.SetSegment(p_intersection.Surface.PointWS, 1e-4f, pointLight.Context.Surface.PointWS, 1e-4f);
+						pointLightQuery.SetSegment(p_intersection.Surface.PointWS, 0, pointLight.Context.Surface.PointWS, 0);
+						//pointLightQuery.SetSegment(p_intersection.Surface.PointWS, 1e-4f, pointLight.Context.Surface.PointWS, 1e-4f);
 
 						// Ignore if such is the case.
 						if (pointLightQuery.IsOccluded()) 

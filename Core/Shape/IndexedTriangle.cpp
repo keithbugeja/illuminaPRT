@@ -82,6 +82,8 @@ int IndexedTriangle::GetGroupId(void) const {
 //----------------------------------------------------------------------------------------------
 bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surface)
 {
+	// Note that p_surface is not modified unless there has been an intersection
+
 	/**/
 	double edge1[3], edge2[3], tvec[3], pvec[3], qvec[3];
 	double det, inv_det;

@@ -186,7 +186,7 @@ bool BVHMesh::Intersect(BVHMeshNode *p_pNode, Ray &p_ray, DifferentialSurface &p
 				if (p_pNode->TriangleList[n]->Intersects(p_ray, p_surface))
 				{
 					bIntersect = true;
-					p_ray.Max = Maths::Min(p_ray.Max, p_surface.Distance - Maths::Epsilon);
+					p_ray.Max = Maths::Min(p_ray.Max, p_surface.Distance); // - Maths::Epsilon);
 				}
 			}
 		}
