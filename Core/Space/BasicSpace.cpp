@@ -30,45 +30,37 @@ bool BasicSpace::Update(void) {
 //----------------------------------------------------------------------------------------------
 bool BasicSpace::Intersects(const Ray &p_ray, Intersection &p_intersection) const
 {
-	Intersection intersection;
+	bool bIntersect = false;
 	Ray ray(p_ray);
 
-	bool bHit = false;
-
-	for (int primitiveIdx = 0, count = (int)PrimitiveList.Size(); primitiveIdx < count; primitiveIdx++)
+	for (int index = 0, count = (int)PrimitiveList.Size(); index < count; index++)
 	{
-		if (PrimitiveList[primitiveIdx]->Intersect(ray, intersection) && 
-			ray.Max > intersection.Surface.Distance)
+		if (PrimitiveList[index]->Intersect(ray, p_intersection))
 		{
-			ray.Max = intersection.Surface.Distance;
-			p_intersection = intersection;
-			bHit = true;
+			bIntersect = true;
+			ray.Max = Maths::Min(ray.Max, p_intersection.Surface.Distance);
 		}
 	}
 
-	return bHit;
+	return bIntersect;
 }
 //----------------------------------------------------------------------------------------------
 bool BasicSpace::Intersects(const Ray &p_ray, Intersection &p_intersection, IPrimitive *p_pExclude) const
 {
-	Intersection intersection;
+	bool bIntersect = false;
 	Ray ray(p_ray);
 
-	bool bHit = false;
-
-	for (int primitiveIdx = 0, count = (int)PrimitiveList.Size(); primitiveIdx < count; primitiveIdx++)
+	for (int index = 0, count = (int)PrimitiveList.Size(); index < count; index++)
 	{
-		if (PrimitiveList[primitiveIdx] != p_pExclude &&
-			PrimitiveList[primitiveIdx]->Intersect(ray, p_intersection) && 
-			ray.Max > intersection.Surface.Distance)
+		if (PrimitiveList[index] != p_pExclude && 
+			PrimitiveList[index]->Intersect(ray, p_intersection))
 		{
-			ray.Max = intersection.Surface.Distance;
-			p_intersection = intersection;
-			bHit = true;
+			bIntersect = true;
+			ray.Max = Maths::Min(ray.Max, p_intersection.Surface.Distance);
 		}
 	}
 
-	return bHit;
+	return bIntersect;
 }
 //----------------------------------------------------------------------------------------------
 bool BasicSpace::Intersects(const Ray &p_ray) const

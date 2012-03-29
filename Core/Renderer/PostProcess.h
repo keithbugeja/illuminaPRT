@@ -27,6 +27,8 @@ namespace Illumina
 			virtual bool Initialise(void) { return true; }
 			virtual bool Shutdown(void) { return false; }
 
+			virtual bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput) = 0;
+
 			std::string ToString(void) const { return "IPostProcess"; }
 		};
 

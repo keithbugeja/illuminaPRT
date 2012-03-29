@@ -264,6 +264,7 @@
     <ClInclude Include="..\..\..\..\Core\Object\UniqueID.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\BaseRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\BasicRenderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\DiscontinuityBuffer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\DistributedRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\MultipassRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\MultithreadedRenderer.h" />
