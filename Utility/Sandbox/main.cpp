@@ -48,6 +48,7 @@ namespace Illumina
 #include "Texture/TextureFactories.h"
 #include "Material/MaterialFactories.h"
 #include "Renderer/RendererFactories.h"
+#include "Postproc/PostProcessFactories.h"
 #include "Integrator/IntegratorFactories.h"
 
 #include "Staging/Acceleration.h"
@@ -105,6 +106,12 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	//engineKernel.GetIntegratorManager()->RegisterFactory("Photon", new PhotonIntegratorFactory());
 	engineKernel.GetIntegratorManager()->RegisterFactory("Whitted", new WhittedIntegratorFactory());
 	//engineKernel.GetIntegratorManager()->RegisterFactory("Test", new TestIntegratorFactory());
+		
+	//----------------------------------------------------------------------------------------------
+	// Materials
+	//----------------------------------------------------------------------------------------------
+	Message("Registering Post Processes...", p_bVerbose);
+	engineKernel.GetPostProcessManager()->RegisterFactory("Discontinuity", new DiscontinuityBufferFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Renderer
@@ -204,6 +211,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	RadianceBuffer *pRadianceBuffer = new RadianceBuffer(
 		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight());
 
+	IPostProcess *pPostProcess = engineKernel.GetPostProcessManager()->CreateInstance("Discontinuity", "DPP", "");
+
 	float alpha = Maths::Pi;
 	Matrix3x3 rotation;
 	
@@ -250,6 +259,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			pRenderer->PostProcess(pRadianceBuffer);
 			std::cout << "PP Time : " << Platform::ToSeconds(Platform::GetTime() - pp) << "s " << std::endl;
 			*/
+			pPostProcess->Apply(pRadianceBuffer, pRadianceBuffer);
 
 			// Commit frame
 			pRenderer->Commit(pRadianceBuffer);
