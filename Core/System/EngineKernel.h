@@ -13,6 +13,7 @@
 #include "System/DummyManager.h"
 
 #include "Integrator/Integrator.h"
+#include "Postproc/Postprocess.h"
 #include "Renderer/Renderer.h"
 #include "Material/Material.h"
 #include "Texture/Texture.h"
@@ -40,6 +41,7 @@ namespace Illumina
 			~EngineKernel();
 
 			PlugInManager* GetPlugInManager(void) const;
+			PostProcessManager* GetPostProcessManager(void) const;
 			IntegratorManager* GetIntegratorManager(void) const;
 			RendererManager* GetRendererManager(void) const;
 			MaterialManager* GetMaterialManager(void) const;

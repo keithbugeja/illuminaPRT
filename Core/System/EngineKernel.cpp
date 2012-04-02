@@ -15,6 +15,7 @@ namespace Illumina
 		struct EngineKernelState
 		{
 			PlugInManager* m_pPlugInManager;
+			PostProcessManager *m_pPostProcessManager;
 			IntegratorManager* m_pIntegratorManager;
 			RendererManager* m_pRendererManager;
 			MaterialManager* m_pMaterialManager;
@@ -30,6 +31,7 @@ namespace Illumina
 
 			EngineKernelState(EngineKernel* p_pEngineKernel)
 				: m_pPlugInManager(new PlugInManager(p_pEngineKernel))
+				, m_pPostProcessManager(new PostProcessManager())
 				, m_pIntegratorManager(new IntegratorManager())
 				, m_pRendererManager(new RendererManager())
 				, m_pMaterialManager(new MaterialManager())
@@ -57,6 +59,7 @@ namespace Illumina
 				delete m_pMaterialManager;
 				delete m_pTextureManager;
 				delete m_pIntegratorManager;
+				delete m_pPostProcessManager;
 				delete m_pRendererManager;
 				delete m_pPlugInManager;
 			}
@@ -85,11 +88,16 @@ PlugInManager* EngineKernel::GetPlugInManager(void) const
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
+PostProcessManager* EngineKernel::GetPostProcessManager(void) const
+{
+	return m_pEngineKernelState->m_pPostProcessManager;
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 IntegratorManager* EngineKernel::GetIntegratorManager(void) const
 {
 	return m_pEngineKernelState->m_pIntegratorManager;
 }
-
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 RendererManager* EngineKernel::GetRendererManager(void) const

@@ -22,6 +22,11 @@ namespace Illumina
 			: public Object
 		{
 		protected:
+			IPostProcess(const std::string &p_strName)
+				: Object(p_strName) 
+			{ }
+
+			IPostProcess(void) { }
 
 		public:
 			virtual bool Initialise(void) { return true; }
