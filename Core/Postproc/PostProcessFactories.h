@@ -30,24 +30,30 @@ namespace Illumina
 			// -- KernelSize
 			Illumina::Core::IPostProcess *CreateInstance(ArgumentMap &p_argumentMap)
 			{
-				int kernelSize = 1;
+				int kernelSize = 6;
+				
+				float angle	= 0.75f,
+					distance = 100000.0f;
+
 				p_argumentMap.GetArgument("KernelSize", kernelSize);
+				p_argumentMap.GetArgument("AngleThreshold", angle);
+				p_argumentMap.GetArgument("DistanceThreshold", distance);
 
 				std::string strId;
 				if (p_argumentMap.GetArgument("Id", strId))
-					return CreateInstance(strId, kernelSize);
+					return CreateInstance(strId, kernelSize, angle, distance);
 
-				return CreateInstance(kernelSize);
+				return CreateInstance(kernelSize, angle, distance);
 			}
 
-			Illumina::Core::IPostProcess *CreateInstance(const std::string &p_strId, int p_nKernelSize)
+			Illumina::Core::IPostProcess *CreateInstance(const std::string &p_strId, int p_nKernelSize, float p_fAngle, float p_fDistance)
 			{
-				return new DiscontinuityBuffer(p_strId, p_nKernelSize);
+				return new DiscontinuityBuffer(p_strId, p_nKernelSize, p_fAngle, p_fDistance);
 			}
 
-			Illumina::Core::IPostProcess *CreateInstance(int p_nKernelSize)
+			Illumina::Core::IPostProcess *CreateInstance(int p_nKernelSize, float p_fAngle, float p_fDistance)
 			{
-				return new DiscontinuityBuffer(p_nKernelSize);
+				return new DiscontinuityBuffer(p_nKernelSize, p_fAngle, p_fDistance);
 			}
 		};
 	}
