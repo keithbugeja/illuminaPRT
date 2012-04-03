@@ -21,32 +21,25 @@ namespace Illumina
 		protected:
 			int m_nKernelSize;
 			
-			float m_fAngleCosine,
+			float m_fAngle,
 				m_fDistance;
 
 		public:
-			DiscontinuityBuffer(int p_nKernelSize = 1, float p_fAngle = 0.75f, float p_fDistance = 10.0f)
+			DiscontinuityBuffer(int p_nKernelSize = 5, float p_fAngle = 0.75f, float p_fDistance = 10.0f)
 				: IPostProcess()
 				, m_nKernelSize(p_nKernelSize)
-				, m_fAngleCosine(p_fAngle)
+				, m_fAngle(p_fAngle)
 				, m_fDistance(p_fDistance)
 			{ }
 
-			DiscontinuityBuffer(const std::string &p_strName, int p_nKernelSize = 1, float p_fAngle = 0.75f, float p_fDistance = 10.0f)
+			DiscontinuityBuffer(const std::string &p_strName, int p_nKernelSize = 5, float p_fAngle = 0.75f, float p_fDistance = 10.0f)
 				: IPostProcess(p_strName)
 				, m_nKernelSize(p_nKernelSize)
-				, m_fAngleCosine(p_fAngle)
+				, m_fAngle(p_fAngle)
 				, m_fDistance(p_fDistance)
 			{ }
 
-			bool ApplyToRegion(RadianceBuffer *p_pBuffer, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight)
-			{
-				//bool result = ApplyToRegion(p_pBuffer, tempBuffer, p_nRegionX, p_nRegionY, p_nRegionWidth, p_nRegionHeight);
-				//return result;
-				return true;
-			}
-
-			bool ApplyToRegion(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight)
+			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight)
 			{
 				RadianceContext *pKernelContext,
 					*pNeighbourContext,
@@ -80,11 +73,13 @@ namespace Illumina
 
 							for (int dx = xs; dx < xe; dx++)
 							{
-								if (//(Vector3::DistanceSquared(pRadianceContext->Position, pInnerContext->Position) < m_fDBDist) &&
-									(Vector3::Dot(pKernelContext->Normal, pNeighbourContext->Normal) > m_fAngleCosine))
+								if (Vector3::Dot(pKernelContext->Normal, pNeighbourContext->Normal) > m_fAngle)
 								{
-									Li += pNeighbourContext->Indirect;
-									irradianceSamples++;
+									if (Vector3::DistanceSquared(pKernelContext->Position, pNeighbourContext->Position) < m_fDistance)
+									{										
+										Li += pNeighbourContext->Indirect;
+										irradianceSamples++;
+									}
 								}
 
 								pNeighbourContext++;
@@ -92,7 +87,7 @@ namespace Illumina
 						}
 			
 						// Compute final colour
-						pOutputContext->Final = pKernelContext->Direct + Li / irradianceSamples;
+						pOutputContext->Final = pKernelContext->Direct + (Li * pKernelContext->Albedo) / irradianceSamples;
 						pOutputContext->Flag = 1;
 					}
 				}
@@ -104,7 +99,7 @@ namespace Illumina
 
 			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput)
 			{
-				return ApplyToRegion(p_pInput, p_pOutput, 0, 0, p_pInput->GetWidth(), p_pInput->GetHeight());
+				return Apply(p_pInput, p_pOutput, 0, 0, p_pInput->GetWidth(), p_pInput->GetHeight());
 			}
 
 			std::string ToString(void) const { return "[DiscontinuityBuffer]"; }

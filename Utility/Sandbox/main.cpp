@@ -259,6 +259,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			pRenderer->PostProcess(pRadianceBuffer);
 			std::cout << "PP Time : " << Platform::ToSeconds(Platform::GetTime() - pp) << "s " << std::endl;
 			*/
+			
 			pPostProcess->Apply(pRadianceBuffer, pRadianceBuffer);
 
 			// Commit frame
@@ -282,6 +283,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 				std::cout << "-- Frame Render Time : [" << elapsed << "s]" << std::endl;
 				std::cout << "-- Frames per second : [" << fTotalFramesPerSecond / (nFrame + 1)<< "]" << std::endl;
 			}
+
+			char c; std::cin >> c;
 
 		#else
 			// Update space acceleration structure
