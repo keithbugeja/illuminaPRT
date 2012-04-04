@@ -145,7 +145,7 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, Intersection &p_intersectio
 					p_intersection.Surface.RayDirectionWS = p_ray.Direction;
 
 				// Update primitive world transform
-				p_intersection.WorldTransform = WorldTransform;
+				p_intersection.WorldTransform.Reset(); //= WorldTransform;
 
 				// Update primitive and materials
 				p_intersection.SetPrimitive(this);

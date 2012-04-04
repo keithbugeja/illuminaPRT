@@ -205,7 +205,7 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 
 			// Reset sample - we want exactly the same sequence over and again
 			// p_pScene->GetSampler()->Reset();
-
+			
 			if (!p_intersection.IsEmissive())
 			{
 				// Sample direct lighting
@@ -215,7 +215,8 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 
 				// Set albedo
 				p_pRadianceContext->Albedo = pMaterial->Rho(wOut, p_intersection.Surface);
-
+				
+				/*
 				for (samplesUsed = 1, pointLightIterator = pointLightSet.begin(); 
 					 pointLightIterator != pointLightSet.end(); ++pointLightIterator)
 				{
@@ -248,7 +249,7 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 
 					p_pRadianceContext->Indirect += Lcontrib;
 					samplesUsed++;
-				}
+				} */
 
 				/*
 				float d2 = DistanceSquared(p, vl.p);
@@ -275,7 +276,7 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 					L += Llight;
 				*/
 
-				/*
+				/**/
 				for (samplesUsed = 1, pointLightIterator = pointLightSet.begin(); 
 					 pointLightIterator != pointLightSet.end(); ++pointLightIterator)
 				{
@@ -293,13 +294,13 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 							continue;
 
 						// Test immediately if the point light is occluded
-						pointLightQuery.SetSegment(p_intersection.Surface.PointWS, 0, pointLight.Context.Surface.PointWS, 0);
-						//pointLightQuery.SetSegment(p_intersection.Surface.PointWS, 1e-4f, pointLight.Context.Surface.PointWS, 1e-4f);
+						//pointLightQuery.SetSegment(p_intersection.Surface.PointWS, 0, pointLight.Context.Surface.PointWS, 0);
+						pointLightQuery.SetSegment(p_intersection.Surface.PointWS, 1e-4f, pointLight.Context.Surface.PointWS, 1e-4f);
 
 						// Ignore if such is the case.
 						if (pointLightQuery.IsOccluded()) 
 							continue; 
-											
+
 						// Compute geometry term
 						#if (defined(SSE_ENABLED))
 							__m128 surfacePoint		= _mm_load_ps(p_intersection.Surface.PointWS.Element);
@@ -316,12 +317,12 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 							Vector3::Dot(pointLight.Context.Surface.ShadingBasisWS.W, -wIn) * 
 							Vector3::AbsDot(p_intersection.Surface.ShadingBasisWS.W, wIn) * d2,
 							m_fGTermMax);
-
+						
 						p_pRadianceContext->Indirect += f * pointLight.Contribution * G;
 						samplesUsed++;
 					}
 				}
-				*/
+				/**/
 
 				p_pRadianceContext->Indirect = p_pRadianceContext->Indirect / pointLightSet.size(); //samplesUsed;
 			}
