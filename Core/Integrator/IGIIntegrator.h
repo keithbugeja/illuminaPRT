@@ -17,11 +17,9 @@ namespace Illumina
 		{
 			Intersection Context;
 
-			//Vector3 Normal;
-			//Vector3 Position;
-			Vector3 Direction;
+			Spectrum Contribution;
 
-			Spectrum Power;
+			Vector3 Direction;
 
 			bool Occluded;
 
@@ -30,14 +28,14 @@ namespace Illumina
 			VirtualPointLight(const VirtualPointLight &p_vpl)
 				: Context(p_vpl.Context)
 				, Direction(p_vpl.Direction)
-				, Power(p_vpl.Power)
+				, Contribution(p_vpl.Contribution)
 			{ }
 
 			VirtualPointLight& operator=(const VirtualPointLight &p_vpl)
 			{
 				Context = p_vpl.Context;
 				Direction = p_vpl.Direction;
-				Power = p_vpl.Power;
+				Contribution = p_vpl.Contribution;
 
 				return *this;
 			}

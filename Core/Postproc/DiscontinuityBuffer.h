@@ -45,7 +45,7 @@ namespace Illumina
 					*pNeighbourContext,
 					*pOutputContext;
 
-				Spectrum Li;
+				Spectrum Li, Ld;
 
 				int ys, ye, xs, xe;
 				int irradianceSamples;
@@ -61,8 +61,9 @@ namespace Illumina
 						xs = x - m_nKernelSize;
 						xe = x + m_nKernelSize;
 
-						irradianceSamples = 1;
+						irradianceSamples = 0;
 						Li = 0.f;
+						// Ld = 0.f;
 
 						pKernelContext = p_pInput->GetP(x, y);
 						pOutputContext = p_pOutput->GetP(x, y);
@@ -75,8 +76,9 @@ namespace Illumina
 							{
 								if (Vector3::Dot(pKernelContext->Normal, pNeighbourContext->Normal) > m_fAngle)
 								{
-									if (Vector3::DistanceSquared(pKernelContext->Position, pNeighbourContext->Position) < m_fDistance)
+									// if (Vector3::DistanceSquared(pKernelContext->Position, pNeighbourContext->Position) < m_fDistance)
 									{										
+										// Ld += pNeighbourContext->Direct;
 										Li += pNeighbourContext->Indirect;
 										irradianceSamples++;
 									}
@@ -87,12 +89,12 @@ namespace Illumina
 						}
 			
 						// Compute final colour
-						pOutputContext->Final = pKernelContext->Direct + (Li * pKernelContext->Albedo) / irradianceSamples;
-						pOutputContext->Flag = 1;
+						if (irradianceSamples) {
+							pOutputContext->Final = pKernelContext->Direct + (Li * pKernelContext->Albedo) / irradianceSamples; //((Li + Ld) * pKernelContext->Albedo) / irradianceSamples;
+							pOutputContext->Flag = 1;
+						}
 					}
 				}
-
-				std::cout << "Ready!" << std::endl;
 
 				return true;
 			}
