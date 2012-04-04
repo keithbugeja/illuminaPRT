@@ -262,6 +262,7 @@
     <ClInclude Include="..\..\..\..\Core\Object\Cloneable.h" />
     <ClInclude Include="..\..\..\..\Core\Object\Object.h" />
     <ClInclude Include="..\..\..\..\Core\Object\UniqueID.h" />
+    <ClInclude Include="..\..\..\..\Core\Postproc\AccumulationBuffer.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\DiscontinuityBuffer.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\PostProcess.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\PostProcessFactories.h" />

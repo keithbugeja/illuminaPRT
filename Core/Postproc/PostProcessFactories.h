@@ -11,12 +11,44 @@
 #include <iostream>
 
 #include "Postproc/PostProcess.h"
+#include "Postproc/AccumulationBuffer.h"
 #include "Postproc/DiscontinuityBuffer.h"
 
 namespace Illumina
 {
 	namespace Core
 	{		
+		class AccumulationBufferFactory : public Illumina::Core::Factory<Illumina::Core::IPostProcess>
+		{
+		public:
+			Illumina::Core::IPostProcess *CreateInstance(void)
+			{
+				return new AccumulationBuffer();
+			}
+
+			// Arguments
+			// -- Id
+			Illumina::Core::IPostProcess *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strId;
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId);
+
+				return CreateInstance();
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(const std::string &p_strId)
+			{
+				return new AccumulationBuffer(p_strId);
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(int dummy)
+			{
+				return new AccumulationBuffer();
+			}
+		};
+
+
 		class DiscontinuityBufferFactory : public Illumina::Core::Factory<Illumina::Core::IPostProcess>
 		{
 		public:
@@ -30,7 +62,7 @@ namespace Illumina
 			// -- KernelSize
 			Illumina::Core::IPostProcess *CreateInstance(ArgumentMap &p_argumentMap)
 			{
-				int kernelSize = 6;
+				int kernelSize = 3;
 				
 				float angle	= 0.75f,
 					distance = 100000.0f;

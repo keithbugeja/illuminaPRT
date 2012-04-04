@@ -112,6 +112,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	//----------------------------------------------------------------------------------------------
 	Message("Registering Post Processes...", p_bVerbose);
 	engineKernel.GetPostProcessManager()->RegisterFactory("Discontinuity", new DiscontinuityBufferFactory());
+	engineKernel.GetPostProcessManager()->RegisterFactory("Accumulation", new AccumulationBufferFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Renderer
@@ -203,15 +204,20 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	// Initialise timing
 	//----------------------------------------------------------------------------------------------
 	float fTotalFramesPerSecond = 0.f;
-	double start, elapsed = 0;
+	double start, elapsed = 0, eventStart, eventComplete;
 
 	//----------------------------------------------------------------------------------------------
 	// Render loop
 	//----------------------------------------------------------------------------------------------
 	RadianceBuffer *pRadianceBuffer = new RadianceBuffer(
+		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight()),
+		*pRadianceAccumulationBuffer = new RadianceBuffer(
 		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight());
 
 	IPostProcess *pPostProcess = engineKernel.GetPostProcessManager()->CreateInstance("Discontinuity", "DPP", "");
+	AccumulationBuffer *pAccumulationBuffer = (AccumulationBuffer*)engineKernel.GetPostProcessManager()->CreateInstance("Accumulation", "APP", "");
+	pAccumulationBuffer->SetAccumulationBuffer(pRadianceAccumulationBuffer);
+	pAccumulationBuffer->Reset();
 
 	float alpha = Maths::Pi;
 	Matrix3x3 rotation;
@@ -219,32 +225,47 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
 		#if (defined(TEST_TILERENDER))
-			// Animate scene
-			alpha += Maths::PiTwo / 32.f;
+			//// Animate scene
+			//alpha += Maths::PiTwo / 32.f;
 		
-			rotation.MakeRotation(Vector3::UnitYPos, alpha);
+			//rotation.MakeRotation(Vector3::UnitYPos, alpha);
 
-			/**//*
-			((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetScaling(Vector3::Ones * 20.0f);
-			((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetRotation(rotation);
-			/**/
+			//// ((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetScaling(Vector3::Ones * 20.0f);
+			//// ((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetRotation(rotation);
+
+			////pCamera->MoveTo(lookFrom);
+			////pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
+			////pCamera->LookAt(lookAt);
 
 			// Start timer
 			start = Platform::GetTime();
 
 			// Prepare integrator
 			pIntegrator->Prepare(environment.GetScene());
-		
-			//pCamera->MoveTo(lookFrom);
-			//pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
-			//pCamera->LookAt(lookAt);
+
+			if (p_bVerbose) 
+			{
+				eventComplete = Platform::GetTime();
+				elapsed = Platform::ToSeconds(eventComplete - start); 
+				std::cout << "-- Integrator Preparation Time : [" << elapsed << "s]" << std::endl;
+
+				eventStart = Platform::GetTime();
+			}
 
 			// Update space
 			pSpace->Update();
+
+			if (p_bVerbose) 
+			{
+				eventComplete = Platform::GetTime();
+				elapsed = Platform::ToSeconds(eventComplete - eventStart); 
+				std::cout << "-- Space Update Time : [" << elapsed << "s]" << std::endl;
+				
+				eventStart = Platform::GetTime();
+			}
 	 
 			// Render frame
-
-			//#pragma omp parallel for num_threads(4)
+			#pragma omp parallel for num_threads(3)
 			for (int y = 0; y < pRenderer->GetDevice()->GetHeight() / 40; y++)
 			{
 				for (int x = 0; x < pRenderer->GetDevice()->GetWidth() / 40; x++)
@@ -253,25 +274,30 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 				}
 			}
 
-			/*
+			if (p_bVerbose) 
+			{
+				eventComplete = Platform::GetTime();
+				elapsed = Platform::ToSeconds(eventComplete - eventStart); 
+				std::cout << "-- Radiance Computation Time : [" << elapsed << "s]" << std::endl;
+
+				eventStart = Platform::GetTime();
+			}
+
 			// Post-process frame
-			double pp = Platform::GetTime();
-			pRenderer->PostProcess(pRadianceBuffer);
-			std::cout << "PP Time : " << Platform::ToSeconds(Platform::GetTime() - pp) << "s " << std::endl;
-			*/
-			
 			pPostProcess->Apply(pRadianceBuffer, pRadianceBuffer);
+			pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+
+			if (p_bVerbose) 
+			{
+				eventComplete = Platform::GetTime();
+				elapsed = Platform::ToSeconds(eventComplete - eventStart); 
+				std::cout << "-- Post-processing Time : [" << elapsed << "s]" << std::endl;
+
+				eventStart = Platform::GetTime();
+			}
 
 			// Commit frame
 			pRenderer->Commit(pRadianceBuffer);
-			
-			/*
-			// Notify device that frame has started
-			pRenderer->GetDevice()->BeginFrame();			
-			
-			// End device update for frame
-			pRenderer->GetDevice()->EndFrame();
-			*/
 
 			// Compute frames per second
 			elapsed = Platform::ToSeconds(Platform::GetTime() - start);
@@ -283,9 +309,6 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 				std::cout << "-- Frame Render Time : [" << elapsed << "s]" << std::endl;
 				std::cout << "-- Frames per second : [" << fTotalFramesPerSecond / (nFrame + 1)<< "]" << std::endl;
 			}
-
-			char c; std::cin >> c;
-
 		#else
 			// Update space acceleration structure
 			pSpace->Update();
@@ -294,6 +317,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			pRenderer->Render();
 		#endif
 	}
+
+	char c; std::cin >> c;
 
 	pRenderer->Shutdown();
 	pIntegrator->Shutdown();
