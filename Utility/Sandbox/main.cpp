@@ -247,7 +247,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			{
 				eventComplete = Platform::GetTime();
 				elapsed = Platform::ToSeconds(eventComplete - start); 
-				std::cout << "-- Integrator Preparation Time : [" << elapsed << "s]" << std::endl;
+				std::cout << std::endl << "-- Integrator Preparation Time : [" << elapsed << "s]" << std::endl;
 
 				eventStart = Platform::GetTime();
 			}
@@ -305,7 +305,6 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		
 			if (p_bVerbose)
 			{
-				std::cout << std::endl;
 				std::cout << "-- Frame Render Time : [" << elapsed << "s]" << std::endl;
 				std::cout << "-- Frames per second : [" << fTotalFramesPerSecond / (nFrame + 1)<< "]" << std::endl;
 			}
