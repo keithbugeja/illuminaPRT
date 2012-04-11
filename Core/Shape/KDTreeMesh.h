@@ -3,14 +3,13 @@
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
+//  TODO: 
+//		1. Compress the kd-tree node structure
+//		2. Provide a better node allocation strategy -> contiguous memory?
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-//#include <stack>
 #include <boost/shared_ptr.hpp>
-//#include <boost/unordered_set.hpp>
-//#include <boost/unordered_map.hpp>
-
 #include "Shape/TreeMesh.h"
 
 namespace Illumina 
@@ -87,6 +86,9 @@ namespace Illumina
 			std::string ToString(void) const;
 
 		protected:
+			bool Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray);
+			bool Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray, DifferentialSurface &p_surface);
+
 			bool Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray);
 			bool Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, DifferentialSurface &p_surface);
 

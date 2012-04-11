@@ -26,10 +26,14 @@ namespace Illumina
 			int m_nVertexID[3];
 			int m_nGroupID;
 
+			Vector3 m_edge[2];
+
 			AxisAlignedBoundingBox m_boundingBox;
 
 		public:
-			int GetVertexIndex(int p_nVertex) { return m_nVertexID[p_nVertex]; }
+			inline int GetVertexIndex(int p_nVertex) { return m_nVertexID[p_nVertex]; }
+			inline const Vector3& GetEdge(int p_nEdge) const { return m_edge[p_nEdge]; }
+			inline const float* GetEdgeP(int p_nEdge) const { return m_edge[p_nEdge].Element; }
 
 		public:
 			IndexedTriangle(ITriangleMesh *p_pMesh, int p_nV1, int p_nV2, int p_nV3, int p_nGroupId = -1);

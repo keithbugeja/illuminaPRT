@@ -36,7 +36,7 @@ void DiffuseAreaLight::SetShape(IShape *p_pShape)
 float DiffuseAreaLight::Pdf(const Vector3 &p_point, const Vector3 &p_wIn) 
 {
 	// should get pdf from shape instead!
-	return 1.0f / m_pShape->GetArea();
+	return 1.f / m_pShape->GetArea();
 }
 //----------------------------------------------------------------------------------------------
 Spectrum DiffuseAreaLight::Power(void) 
@@ -58,7 +58,7 @@ Spectrum DiffuseAreaLight::SampleRadiance(const Vector3 &p_surfacePoint, float p
 	surfacePoint = SamplePoint(p_surfacePoint, p_u, p_v, surfaceNormal, p_pdf);
 
 	// Set visibility query for intersection tests
-	p_visibilityQuery.SetSegment(p_surfacePoint, 1e-4f, surfacePoint, 1e-4f);
+	p_visibilityQuery.SetSegment(p_surfacePoint, Ray::Epsilon, surfacePoint, Ray::Epsilon);
 
 	// Get wOut direction => wIn for radiance reading
 	Vector3::Subtract(p_surfacePoint, surfacePoint, p_wIn);
@@ -66,7 +66,7 @@ Spectrum DiffuseAreaLight::SampleRadiance(const Vector3 &p_surfacePoint, float p
 	p_wIn.Normalize();
 
 	// Return radiance + part of geometry term
-	return (m_emit * Maths::Max(0.0f, Vector3::Dot(p_wIn, surfaceNormal))) / (Pdf(surfacePoint, p_wIn) * distanceSquared);
+	return (m_emit * Maths::Max(0.f, Vector3::Dot(p_wIn, surfaceNormal))) / (Pdf(surfacePoint, p_wIn) * distanceSquared);
 }
 //----------------------------------------------------------------------------------------------
 Spectrum DiffuseAreaLight::SampleRadiance(const Scene *p_pScene, float p_u, float p_v, float p_w, float p_x, Ray &p_ray, float &p_pdf)
@@ -74,13 +74,13 @@ Spectrum DiffuseAreaLight::SampleRadiance(const Scene *p_pScene, float p_u, floa
 	Vector3 normal;
 
 	p_ray.Direction = Montecarlo::UniformSampleSphere(p_w, p_x);
-	p_ray.Origin = SamplePoint(p_u, p_v, normal, p_pdf) + p_ray.Direction * 1e-3f; normal = -normal;
+	p_ray.Origin = SamplePoint(p_u, p_v, normal, p_pdf); normal = -normal;
 
-	p_ray.Min = 1e-3f;
+	if (Vector3::Dot(p_ray.Direction, normal) < 0.f) 
+		p_ray.Direction *= -1.f;
+
+	p_ray.Min = Ray::Epsilon;
 	p_ray.Max = Maths::Maximum;
-
-	if (Vector3::Dot(p_ray.Direction, normal) < 0) 
-		p_ray.Direction *= -1.0f;
 
 	Vector3::Inverse(p_ray.Direction, p_ray.DirectionInverseCache);
 
@@ -111,8 +111,6 @@ Vector3 DiffuseAreaLight::SamplePoint(const Vector3 &p_viewPoint, float p_u, flo
 	else
 	{
 		surfacePoint = m_pShape->SamplePoint(p_viewPoint, p_u, p_v, surfaceNormal);
-		//surfacePoint = m_pShape->GetBoundingVolume()->GetCentre();
-		//surfaceNormal = (p_viewPoint - surfacePoint);
 		surfaceNormal.Normalize();
 
 		p_pdf = m_pShape->GetPdf(surfacePoint);

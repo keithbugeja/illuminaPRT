@@ -17,6 +17,9 @@ namespace Illumina
 		class Ray
 		{
 		public:
+			static const float Epsilon;
+
+		public:
 			Vector3 Origin;
 			Vector3 Direction;
 		

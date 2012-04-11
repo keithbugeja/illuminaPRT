@@ -101,7 +101,7 @@ namespace Illumina
 		public:
 			Illumina::Core::ISampler *CreateInstance(void)
 			{
-				return new PrecomputationSampler<1024, 10619863, 3331333>();
+				return new PrecomputationSampler<16384, 10619863, 3331333>();
 			}
 
 			// Arguments
@@ -118,7 +118,7 @@ namespace Illumina
 
 			Illumina::Core::ISampler *CreateInstance(const std::string &p_strId)
 			{
-				return new PrecomputationSampler<8192, 10619863, 3331333>(p_strId);
+				return new PrecomputationSampler<16384, 10619863, 3331333>(p_strId);
 			}
 		};
 	}
