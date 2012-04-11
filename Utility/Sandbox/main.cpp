@@ -284,7 +284,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 
 			// Post-process frame
-			// pPostProcess->Apply(pRadianceBuffer, pRadianceBuffer);
+			pPostProcess->Apply(pRadianceBuffer, pRadianceBuffer);
 			pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 
 			if (p_bVerbose) 

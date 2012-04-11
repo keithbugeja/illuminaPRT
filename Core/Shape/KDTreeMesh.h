@@ -73,8 +73,8 @@ namespace Illumina
 			int ReleaseNode(KDTreeMeshNode *p_pNode);
 
 		public:
-			KDTreeMesh(int p_nMaxObjectsPerLeaf = 15, int p_nMaxTreeDepth = 30);
-			KDTreeMesh(const std::string &p_strName, int p_nMaxObjectsPerLeaf = 15, int p_nMaxTreeDepth = 30);
+			KDTreeMesh(int p_nMaxObjectsPerLeaf = 16, int p_nMaxTreeDepth = 30);
+			KDTreeMesh(const std::string &p_strName, int p_nMaxObjectsPerLeaf = 16, int p_nMaxTreeDepth = 30);
 
 			~KDTreeMesh();
 

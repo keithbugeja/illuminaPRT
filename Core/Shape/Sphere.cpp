@@ -119,7 +119,8 @@ float Sphere::GetArea(void) const
 //----------------------------------------------------------------------------------------------
 float Sphere::GetPdf(const Vector3 &p_point) const
 {
-	return Maths::InvPiTwo * 0.5f;
+	//return Maths::InvPiTwo * 0.5f;
+	return 1.f / GetArea();
 }
 //----------------------------------------------------------------------------------------------
 Vector3 Sphere::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal)

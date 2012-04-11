@@ -103,8 +103,9 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, Intersection &p_intersectio
 				// Update primitive world transform
 				p_intersection.WorldTransform = WorldTransform;
 
-				// Update primitive and materials
+				// Update primitive, materials and lights
 				p_intersection.SetPrimitive(this);
+				p_intersection.SetLight(NULL);
 
 				if (m_pMaterial != NULL && m_pMaterial->IsComposite())
 				{
@@ -147,9 +148,10 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, Intersection &p_intersectio
 				// Update primitive world transform
 				p_intersection.WorldTransform.Reset(); //= WorldTransform;
 
-				// Update primitive and materials
+				// Update primitive, materials and lights
 				p_intersection.SetPrimitive(this);
-				
+				p_intersection.SetLight(NULL);
+
 				if (m_pMaterial != NULL && m_pMaterial->IsComposite())
 				{
 					MaterialGroup *pGroup = (MaterialGroup*)m_pMaterial;
