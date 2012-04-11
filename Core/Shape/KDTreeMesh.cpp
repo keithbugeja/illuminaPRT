@@ -201,14 +201,19 @@ bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray)
 			int axis = pNode->Axis;
 			float tplane = (pNode->Partition - ray.Origin[axis]) * ray.DirectionInverseCache[axis];
 
-			int belowFirst =	0x01 & (
-									(ray.Origin[axis] <  pNode->Partition) ||
-									(ray.Origin[axis] == pNode->Partition && ray.Direction[axis] <= 0)
-								);
+			int belowFirst = (ray.Origin[axis] <  pNode->Partition) || 
+				(ray.Origin[axis] == pNode->Partition && ray.Direction[axis] <= 0);
 
-			KDTreeMeshNode 
-					*firstChild = pNode->m_pChild[belowFirst ^ 1],
-					*secondChild = pNode->m_pChild[belowFirst];
+			KDTreeMeshNode *firstChild, 
+				*secondChild;
+
+			if (belowFirst) {
+				firstChild = pNode->m_pChild[0];
+				secondChild = pNode->m_pChild[1];
+			} else { 
+				firstChild = pNode->m_pChild[1];
+				secondChild = pNode->m_pChild[0];
+			}
 
 			if (tplane > tmax || tplane <= 0)
 				pNode = firstChild;
@@ -249,6 +254,35 @@ bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray)
 
 bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray, DifferentialSurface &p_surface)
 {
+	float in, out;
+
+	if (p_pNode->BoundingBox.Intersects(p_ray, in, out))
+	{
+		if (p_pNode->Type == Internal)
+			return Intersect_New(p_pNode->m_pChild[0], p_ray, p_surface) | Intersect_New(p_pNode->m_pChild[1], p_ray, p_surface);
+
+		// Test geometry at leaf
+		bool bIntersect = false;
+		int count = (int)p_pNode->TriangleList.Size();
+
+		if (count > 0)
+		{
+			for (int n = 0; n < count; n++)
+			{
+				if (p_pNode->TriangleList[n]->Intersects(p_ray, p_surface))
+				{
+					bIntersect = true;
+					p_ray.Max = Maths::Min(p_ray.Max, p_surface.Distance); // - Maths::Epsilon);
+				}
+			}
+		}
+
+		return bIntersect;
+	}
+
+	return false;
+
+	/*
 	float tmin, tmax;
 
 	if (!p_pNode->BoundingBox.Intersects(p_ray, tmin, tmax))
@@ -272,20 +306,25 @@ bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray, Differential
 			int axis = pNode->Axis;
 			float tplane = (pNode->Partition - ray.Origin[axis]) * ray.DirectionInverseCache[axis];
 
-			int belowFirst =	0x01 & (
-									(ray.Origin[axis] <  pNode->Partition) ||
-									(ray.Origin[axis] == pNode->Partition && ray.Direction[axis] <= 0)
-								);
+			int belowFirst = (ray.Origin[axis] <  pNode->Partition) || 
+				(ray.Origin[axis] == pNode->Partition && ray.Direction[axis] <= 0);
 
-			KDTreeMeshNode 
-					*firstChild = pNode->m_pChild[belowFirst ^ 1],
-					*secondChild = pNode->m_pChild[belowFirst];
+			KDTreeMeshNode *firstChild, 
+				*secondChild;
+
+			if (belowFirst) {
+				firstChild = pNode->m_pChild[0];
+				secondChild = pNode->m_pChild[1];
+			} else { 
+				firstChild = pNode->m_pChild[1];
+				secondChild = pNode->m_pChild[0];
+			}
 
 			if (tplane > tmax || tplane <= 0)
 				pNode = firstChild;
 			else if (tplane < tmin)
 				pNode = secondChild;
-			else 
+			else
 			{
 				kdtreeNodeStack[stackIndex].pNode = secondChild;
 				kdtreeNodeStack[stackIndex].Min = tplane;
@@ -319,6 +358,7 @@ bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray, Differential
 	}
 
 	return bIntersect;
+	*/
 }
 
 //----------------------------------------------------------------------------------------------

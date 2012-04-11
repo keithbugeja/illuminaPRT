@@ -277,6 +277,8 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 			p_pRadianceContext->Direct += p_pScene->LightList[lightIndex]->Radiance(ray);
 	}
 
+	p_pRadianceContext->Direct = 0.f;
+
 	p_pRadianceContext->Final = 
 		p_pRadianceContext->Direct + p_pRadianceContext->Indirect;
 
