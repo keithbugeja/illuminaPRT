@@ -265,9 +265,9 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 	 
 			// Render frame
+			#pragma omp parallel for num_threads(3)
 			for (int y = 0; y < pRenderer->GetDevice()->GetHeight() / 40; y++)
 			{
-				#pragma omp parallel for num_threads(4)
 				for (int x = 0; x < pRenderer->GetDevice()->GetWidth() / 40; x++)
 				{
 					pRenderer->RenderRegion(pRadianceBuffer, x * 40, y * 40, 40, 40, x * 40, y * 40);
