@@ -33,15 +33,28 @@ using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 struct WavefrontVertex
 {
+private:
+	static struct Hash 
+	{
+		Int64 Position : 21;
+		Int64 Texture : 21;
+		Int64 Normal : 21;
+	};
+
+public:
 	int Position,
 		Texture,
-		Normal;
+		Normal;	
 
-	std::string GetVertexHash(void)
+	Int64 GetVertexHash(void)
 	{
-		std::stringstream hash;
-		hash << std::hex << Position << ':' << Texture << ':' << Normal << std::dec;
-		return hash.str();
+		Hash hash;
+
+		hash.Position = Position;
+		hash.Normal = Normal;
+		hash.Texture = Texture;
+
+		return *(Int64*)&hash;
 	}
 };
 //----------------------------------------------------------------------------------------------
@@ -78,7 +91,7 @@ struct WavefrontMaterial
 //----------------------------------------------------------------------------------------------
 struct WavefrontContext
 {
-	std::map<std::string, int> VertexMap;
+	std::map<Int64, int> VertexMap;
 
 	std::vector<Vector3> PositionList;
 	std::vector<Vector3> NormalList;
@@ -365,8 +378,8 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 	boost::filesystem::path geometryPath(p_strFilename);
 	p_context.ObjectName = geometryPath.filename().string();
 	
-	//p_context.Mesh = new KDTreeMesh(p_context.ObjectName);
-	p_context.Mesh = new BVHMesh(p_context.ObjectName);
+	p_context.Mesh = new KDTreeMesh(p_context.ObjectName);
+	//p_context.Mesh = new BVHMesh(p_context.ObjectName);
 	//p_context.Mesh = new BasicMesh(p_context.ObjectName);
 
 	// Open wavefront file
@@ -464,7 +477,8 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 				} 
 
 				// Search for vertex in map
-				std::string hash = vertex.GetVertexHash();
+				Int64 hash = vertex.GetVertexHash();
+
 				if (p_context.VertexMap.find(hash) == p_context.VertexMap.end())
 				{
 					Vertex meshVertex;
@@ -511,7 +525,6 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 	}
 	
 	wavefrontFile.close();
-
 	return true;
 }
 //----------------------------------------------------------------------------------------------

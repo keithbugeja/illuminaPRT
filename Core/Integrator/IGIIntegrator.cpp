@@ -98,9 +98,6 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 		// Scale radiance by pdf
 		alpha /= pdf;
 
-		// Adjust ray origin to avoid intersecting light geometry
-		lightRay.Origin += lightRay.Direction * 1e-1f;
-
 		// Start tracing virtual point light path
 		for (intersections = 1; p_pScene->Intersects(lightRay, intersection); ++intersections)
 		{
@@ -135,8 +132,7 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 			alpha *= contribution / continueProbability;
 
 			// Set new ray position and direction
-			lightRay.Set(intersection.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, 0.f, Maths::Maximum);
-			//lightRay.Set(intersection.Surface.PointWS, wIn, m_fReflectEpsilon); 
+			lightRay.Set(intersection.Surface.PointWS, wIn, m_fReflectEpsilon, Maths::Maximum);
 		}
 
 		// Increment light index, and reset if we traversed all scene lights
@@ -216,66 +212,6 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 				// Set albedo
 				p_pRadianceContext->Albedo = pMaterial->Rho(wOut, p_intersection.Surface);
 				
-				/*
-				for (samplesUsed = 1, pointLightIterator = pointLightSet.begin(); 
-					 pointLightIterator != pointLightSet.end(); ++pointLightIterator)
-				{
-					VirtualPointLight &pointLight = *pointLightIterator;
-
-					float d2 = Vector3::DistanceSquared(p_intersection.Surface.PointWS, pointLight.Context.Surface.PointWS);
-					wIn = Vector3::Normalize(pointLight.Context.Surface.PointWS - p_intersection.Surface.PointWS);
-					float G =	Vector3::AbsDot(wIn, p_intersection.Surface.ShadingBasisWS.W) * 
-								Vector3::AbsDot(wIn, pointLight.Context.Surface.ShadingBasisWS.W) / d2;
-					G = Maths::Min(G, m_fGTermMax);
-					Spectrum f = IIntegrator::F(p_pScene, p_intersection, wOut, wIn);
-
-					if (f.IsBlack()) 
-						continue;
-
-					Spectrum Lcontrib = f * pointLight.Contribution * G;
-
-					//if (Llight.y() < rrThreshold) {
-					//	float continueProbability = .1f;
-					//	if (rng.RandomFloat() > continueProbability)
-					//		continue;
-					//	Llight /= continueProbability;
-					//}
-
-					pointLightQuery.SetSegment(p_intersection.Surface.PointWS, wIn, Maths::Sqrt(d2), 1e-3f);
-
-					// Ignore if such is the case.
-					if (pointLightQuery.IsOccluded()) 
-						continue; 
-
-					p_pRadianceContext->Indirect += Lcontrib;
-					samplesUsed++;
-				} */
-
-				/*
-				float d2 = DistanceSquared(p, vl.p);
-				Vector wi = Normalize(vl.p - p);
-				float G = AbsDot(wi, n) * AbsDot(wi, vl.n) / d2;
-				G = min(G, gLimit);
-				Spectrum f = bsdf->f(wo, wi);
-				if (G == 0.f || f.IsBlack()) continue;
-				Spectrum Llight = f * G * vl.pathContrib / nLightPaths;
-				RayDifferential connectRay(p, wi, ray, isect.rayEpsilon,
-										   sqrtf(d2) * (1.f - vl.rayEpsilon));
-				Llight *= renderer->Transmittance(scene, connectRay, NULL, rng, arena);
-
-				// Possibly skip virtual light shadow ray with Russian roulette
-				if (Llight.y() < rrThreshold) {
-					float continueProbability = .1f;
-					if (rng.RandomFloat() > continueProbability)
-						continue;
-					Llight /= continueProbability;
-				}
-
-				// Add contribution from _VirtualLight_ _vl_
-				if (!scene->IntersectP(connectRay))
-					L += Llight;
-				*/
-
 				/**/
 				for (samplesUsed = 1, pointLightIterator = pointLightSet.begin(); 
 					 pointLightIterator != pointLightSet.end(); ++pointLightIterator)
@@ -357,114 +293,5 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 	}
 
 	return Radiance(p_pContext, p_pScene, p_intersection, p_pRadianceContext);
-
-	/*
-	VisibilityQuery pointLightQuery(p_pScene);
-
-	Vector3 wIn;
-	Vector2 sample;
-
-	float pdf;
-
-	// Copy-construct a new ray object to keep original's constness
-	Ray ray(p_ray); 
-
-	// Avoid having to perform multiple checks for a NULL radiance context
-	RadianceContext radianceContext;
-
-	if (p_pRadianceContext == NULL)
-		p_pRadianceContext = &radianceContext;
-	
-	// Initialise context
-	p_pRadianceContext->Indirect = 
-		p_pRadianceContext->Direct = 
-		p_pRadianceContext->Albedo = 0.f;
-
-	std::vector<VirtualPointLight> &pointLightSet =
-		VirtualPointLightSet[(m_nTileWidth > 1) ? (int)p_pContext->SurfacePosition.X % m_nTileWidth + ((int)(p_pContext->SurfacePosition.Y) % m_nTileWidth) * m_nTileWidth : 0];
-	
-	std::vector<VirtualPointLight>::iterator pointLightIterator;
-
-	//----------------------------------------------------------------------------------------------
-	// No intersection
-	//----------------------------------------------------------------------------------------------
-	if(!p_pScene->Intersects(ray, p_intersection))
-	{
-		for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
-			p_pRadianceContext->Direct += p_pScene->LightList[lightIndex]->Radiance(-ray);
-	}
-	else
-	{
-		p_pRadianceContext->SetSpatialContext(&p_intersection);
-
-		if (p_intersection.HasMaterial()) 
-		{
-			// Get material for intersection primitive
-			IMaterial *pMaterial = p_intersection.GetMaterial();
-
-			//----------------------------------------------------------------------------------------------
-			// Sample lights for specular / first bounce
-			//----------------------------------------------------------------------------------------------
-			Vector3 wOut = -Vector3::Normalize(ray.Direction);
-
-			// Add emitted light : only on first bounce or specular to avoid double counting
-			if (!p_intersection.IsEmissive())
-			{
-				//----------------------------------------------------------------------------------------------
-				// Sample lights for direct lighting
-				// -- If the currently intersected primitive is a luminaire, do not sample it 
-				//----------------------------------------------------------------------------------------------
-				p_pRadianceContext->Direct = SampleAllLights(p_pScene, p_intersection, 
-					p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, 
-					p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
-
-				p_pRadianceContext->Albedo = pMaterial->Rho(wOut, p_intersection.Surface);
-
-				//----------------------------------------------------------------------------------------------
-				// Sample indirect from virtual point lights
-				//----------------------------------------------------------------------------------------------
-				for (pointLightIterator = pointLightSet.begin(); pointLightIterator != pointLightSet.end(); ++pointLightIterator)
-				{
-					const VirtualPointLight &pointLight = *pointLightIterator;
-
-					float distanceSquared = Vector3::DistanceSquared(
-						p_intersection.Surface.PointWS, 
-						pointLight.Context.Surface.PointWS);
-				
-					wIn = Vector3::Normalize(pointLight.Context.Surface.PointWS - p_intersection.Surface.PointWS);
-						
-					Spectrum f = IIntegrator::F(p_pScene, p_intersection, wOut, wIn);;
-			
-					if (f.IsBlack()) 
-						continue;
-
-					pointLightQuery.SetSegment(p_intersection.Surface.PointWS, 1e-1f, 
-						pointLight.Context.Surface.PointWS, 1e-1f);
-
-					if (pointLightQuery.IsOccluded())
-						continue;
-
-					float cosX = Maths::Max(0, Vector3::Dot(wIn, p_intersection.Surface.ShadingBasisWS.W));
-					float cosY = Maths::Max(0, Vector3::Dot(-wIn, pointLight.Context.Surface.ShadingBasisWS.W));
-					float G = Maths::Min((cosX * cosY) / distanceSquared, 0.01f);
-
-					p_pRadianceContext->Indirect += f * G * pointLight.Power;
-				}
-
-				p_pRadianceContext->Indirect = p_pRadianceContext->Indirect / pointLightSet.size();
-			}
-			else
-			{
-				p_pRadianceContext->Direct = p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, 
-					p_intersection.Surface.GeometryBasisWS.W, wOut);
-			}
-		}
-	}
-
-	p_pRadianceContext->Final = 
-		p_pRadianceContext->Direct + p_pRadianceContext->Indirect;
-
-	return p_pRadianceContext->Final;
-	*/
 }
 //----------------------------------------------------------------------------------------------

@@ -16,6 +16,8 @@
 using namespace Illumina::Core;
 
 //----------------------------------------------------------------------------------------------
+#define MAX_STACK_NODES	64
+//----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
 	namespace Core
@@ -29,6 +31,8 @@ namespace Illumina
 			float Min;
 			float Max;
 			KDTreeMeshNode *pNode;
+
+			KDTreeStackElement(void) { }
 
 			KDTreeStackElement(KDTreeMeshNode *p_pNode, float p_fMin, float p_fMax)
 				: Min(p_fMin)
@@ -145,8 +149,9 @@ bool KDTreeMesh::Intersects(const Ray &p_ray, DifferentialSurface &p_surface)
 {
 	Ray ray(p_ray);
 
+	return Intersect_New(&m_rootNode, ray, p_surface);
 	//return Intersect_Recursive(&m_rootNode, ray, p_surface);
-	return Intersect_Stack(&m_rootNode, ray, p_surface);
+	//return Intersect_Stack(&m_rootNode, ray, p_surface);
 }
 
 //----------------------------------------------------------------------------------------------
@@ -157,8 +162,9 @@ bool KDTreeMesh::Intersects(const Ray &p_ray)
 {
 	Ray ray(p_ray);
 
+	return Intersect_New(&m_rootNode, ray);
 	//return Intersect_Recursive(&m_rootNode, ray);
-	return Intersect_Stack(&m_rootNode, ray);
+	//return Intersect_Stack(&m_rootNode, ray);
 }
 
 //----------------------------------------------------------------------------------------------
@@ -167,6 +173,152 @@ bool KDTreeMesh::Intersects(const Ray &p_ray)
 std::string KDTreeMesh::ToString(void) const
 {
 	return boost::str(boost::format("\nKDTreeMesh %s") % m_statistics.ToString());
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray)
+{
+	float tmin, tmax;
+
+	if (!p_pNode->BoundingBox.Intersects(p_ray, tmin, tmax))
+		return false;
+
+	KDTreeStackElement kdtreeNodeStack[MAX_STACK_NODES];
+	KDTreeMeshNode *pNode = p_pNode;
+	
+	bool bIntersect = false;
+	int stackIndex = 0;
+
+	Ray ray(p_ray);
+
+	while (pNode != NULL)
+	{
+		if (ray.Max < tmin) 
+			break;
+
+		if (pNode->Type == Internal)
+		{
+			int axis = pNode->Axis;
+			float tplane = (pNode->Partition - ray.Origin[axis]) * ray.DirectionInverseCache[axis];
+
+			int belowFirst =	0x01 & (
+									(ray.Origin[axis] <  pNode->Partition) ||
+									(ray.Origin[axis] == pNode->Partition && ray.Direction[axis] <= 0)
+								);
+
+			KDTreeMeshNode 
+					*firstChild = pNode->m_pChild[belowFirst ^ 1],
+					*secondChild = pNode->m_pChild[belowFirst];
+
+			if (tplane > tmax || tplane <= 0)
+				pNode = firstChild;
+			else if (tplane < tmin)
+				pNode = secondChild;
+			else 
+			{
+				kdtreeNodeStack[stackIndex].pNode = secondChild;
+				kdtreeNodeStack[stackIndex].Min = tplane;
+				kdtreeNodeStack[stackIndex].Max = tmax;
+				++stackIndex;
+				pNode = firstChild;
+				tmax = tplane;
+			}
+		}
+		else 
+		{
+			for (size_t n = 0, count = pNode->TriangleList.Size(); n < count; n++)
+			{
+				if (pNode->TriangleList[n]->Intersects(ray))
+					return true;
+			}
+
+			if (stackIndex > 0) 
+			{
+				--stackIndex;
+				pNode = kdtreeNodeStack[stackIndex].pNode;
+				tmin  = kdtreeNodeStack[stackIndex].Min;
+				tmax  = kdtreeNodeStack[stackIndex].Max;
+			} 
+			else 
+				break;
+		}
+	}
+
+	return false;
+}
+
+bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray, DifferentialSurface &p_surface)
+{
+	float tmin, tmax;
+
+	if (!p_pNode->BoundingBox.Intersects(p_ray, tmin, tmax))
+		return false;
+
+	KDTreeStackElement kdtreeNodeStack[MAX_STACK_NODES];
+	KDTreeMeshNode *pNode = p_pNode;
+	
+	bool bIntersect = false;
+	int stackIndex = 0;
+
+	Ray ray(p_ray);
+
+	while (pNode != NULL)
+	{
+		if (ray.Max < tmin) 
+			break;
+
+		if (pNode->Type == Internal)
+		{
+			int axis = pNode->Axis;
+			float tplane = (pNode->Partition - ray.Origin[axis]) * ray.DirectionInverseCache[axis];
+
+			int belowFirst =	0x01 & (
+									(ray.Origin[axis] <  pNode->Partition) ||
+									(ray.Origin[axis] == pNode->Partition && ray.Direction[axis] <= 0)
+								);
+
+			KDTreeMeshNode 
+					*firstChild = pNode->m_pChild[belowFirst ^ 1],
+					*secondChild = pNode->m_pChild[belowFirst];
+
+			if (tplane > tmax || tplane <= 0)
+				pNode = firstChild;
+			else if (tplane < tmin)
+				pNode = secondChild;
+			else 
+			{
+				kdtreeNodeStack[stackIndex].pNode = secondChild;
+				kdtreeNodeStack[stackIndex].Min = tplane;
+				kdtreeNodeStack[stackIndex].Max = tmax;
+				++stackIndex;
+				pNode = firstChild;
+				tmax = tplane;
+			}
+		}
+		else 
+		{
+			for (size_t n = 0, count = pNode->TriangleList.Size(); n < count; n++)
+			{
+				if (pNode->TriangleList[n]->Intersects(ray, p_surface))
+				{
+					bIntersect = true;
+					ray.Max = Maths::Min(ray.Max, p_surface.Distance);
+				}
+			}
+
+			if (stackIndex > 0) 
+			{
+				--stackIndex;
+				pNode = kdtreeNodeStack[stackIndex].pNode;
+				tmin  = kdtreeNodeStack[stackIndex].Min;
+				tmax  = kdtreeNodeStack[stackIndex].Max;
+			} 
+			else 
+				break;
+		}
+	}
+
+	return bIntersect;
 }
 
 //----------------------------------------------------------------------------------------------
@@ -417,15 +569,33 @@ bool KDTreeMesh::Intersect_Recursive(KDTreeMeshNode *p_pNode, Ray &p_ray, Differ
 			{
 				if (p_pNode->TriangleList[n]->Intersects(p_ray, p_surface))
 				{
-					p_ray.Max = Maths::Min(p_ray.Max, p_surface.Distance);
-
-					if (p_surface.Distance <= out + Maths::Epsilon)
-						bIntersect = true;
+					bIntersect = true;
+					p_ray.Max = Maths::Min(p_ray.Max, p_surface.Distance); // - Maths::Epsilon);
 				}
 			}
 		}
 
 		return bIntersect;
+
+		//// Test geometry at leaf
+		//bool bIntersect = false;
+		//int count = (int)p_pNode->TriangleList.Size();
+
+		//if (count > 0)
+		//{
+		//	for (int n = 0; n < count; n++)
+		//	{
+		//		if (p_pNode->TriangleList[n]->Intersects(p_ray, p_surface))
+		//		{
+		//			p_ray.Max = Maths::Min(p_ray.Max, p_surface.Distance);
+
+		//			if (p_surface.Distance <= out + Maths::Epsilon)
+		//				bIntersect = true;
+		//		}
+		//	}
+		//}
+
+		//return bIntersect;
 	}
 
 	return false;

@@ -40,6 +40,9 @@ IndexedTriangle::IndexedTriangle(ITriangleMesh *p_pMesh,
 	m_nVertexID[2] = p_nV3;
 
 	m_nGroupID = p_nGroupId;
+
+	m_edge[0] = m_pMesh->VertexList[m_nVertexID[1]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position;
+	m_edge[1] = m_pMesh->VertexList[m_nVertexID[2]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position;
 }
 //----------------------------------------------------------------------------------------------
 IndexedTriangle::IndexedTriangle(const IndexedTriangle &p_triangle)
@@ -51,6 +54,9 @@ IndexedTriangle::IndexedTriangle(const IndexedTriangle &p_triangle)
 	m_nVertexID[2] = p_triangle.m_nVertexID[2];
 
 	m_nGroupID = p_triangle.m_nGroupID;
+
+	m_edge[0] = m_pMesh->VertexList[m_nVertexID[1]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position;
+	m_edge[1] = m_pMesh->VertexList[m_nVertexID[2]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position;
 }
 //----------------------------------------------------------------------------------------------
 bool IndexedTriangle::IsBounded(void) const {
@@ -82,44 +88,49 @@ int IndexedTriangle::GetGroupId(void) const {
 //----------------------------------------------------------------------------------------------
 bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surface)
 {
+	//----------------------------------------------------------------------------------------------
 	// Note that p_surface is not modified unless there has been an intersection
+	//----------------------------------------------------------------------------------------------
+	
+	//----------------------------------------------------------------------------------------------
+	// Shirley's 
+	//----------------------------------------------------------------------------------------------
 	float te1xte2[3], 
-	edge2[3], 
-	interm[3];
+		edge2[3], 
+		interm[3];
 
-	float *te1 = (m_pMesh->VertexList[m_nVertexID[1]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position).Element;
-	float *te2 = (m_pMesh->VertexList[m_nVertexID[2]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position).Element;
+	const float *te1 = GetEdgeP(0);
+	const float *te2 = GetEdgeP(1);
 
 	CROSS(te1xte2, te1, te2);
 
 	const float rcp = 1.0f / DOT(te1xte2, p_ray.Direction.Element);
 	SUB(edge2, m_pMesh->VertexList[m_nVertexID[0]].Position, p_ray.Origin.Element);
 
-	const float toverd = DOT(te1xte2, edge2) * rcp;
+	const float t = DOT(te1xte2, edge2) * rcp;
 
-	if (toverd > p_ray.Max - 1e-5 || toverd < 1e-5)
+	if (t > p_ray.Max - 1e-5 || t < 1e-5)
 		return false;
 
 	CROSS(interm, p_ray.Direction.Element, edge2);
 	
-	const float uoverd = DOT( interm, te2) * -rcp;
-	if ( uoverd < 0.0f)
+	const float beta = DOT( interm, te2) * -rcp;
+	if ( beta < 0.0f)
 		return false;
 
-	const float voverd = DOT( interm, te1) * rcp;
-	if ( uoverd + voverd > 1.0f || voverd < 0.0f )
+	const float gamma = DOT( interm, te1) * rcp;
+	if ( beta + gamma > 1.0f || gamma < 0.0f )
 		return false;
 
-	//return true;
-	float t = toverd;
-	float beta = uoverd,
-		gamma = voverd,
-		alpha = 1.f - beta - gamma;
+	const float alpha = 1.f - beta - gamma;
 	
 	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]];
 	const Vertex &v1 = m_pMesh->VertexList[m_nVertexID[1]];
 	const Vertex &v2 = m_pMesh->VertexList[m_nVertexID[2]];
 	
+	//----------------------------------------------------------------------------------------------
+	// Moeller-Trumbore
+	//----------------------------------------------------------------------------------------------
 	/**/ /*
 	double edge1[3], edge2[3], tvec[3], pvec[3], qvec[3];
 	double det, inv_det;
@@ -158,6 +169,9 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 		return false;
 	/**/
 
+	//----------------------------------------------------------------------------------------------
+	// Reference
+	//----------------------------------------------------------------------------------------------
 	/**//*
 	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]];
 	const Vertex &v1 = m_pMesh->VertexList[m_nVertexID[1]];
@@ -203,6 +217,7 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 	if (t < p_ray.Min || t > p_ray.Max)
 		return false;
 	/**/
+	//----------------------------------------------------------------------------------------------
 
 	// Populate differential surface
 	p_surface.SetShape(this);
@@ -232,43 +247,15 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 //----------------------------------------------------------------------------------------------
 bool IndexedTriangle::Intersects(const Ray &p_ray)
 {	
-	/**//*
+	//----------------------------------------------------------------------------------------------
+	// Shirley's
+	//----------------------------------------------------------------------------------------------
 	float te1xte2[3], 
 		edge2[3], 
 		interm[3];
 
-	float *te1 = (m_pMesh->VertexList[m_nVertexID[1]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position).Element;
-	float *te2 = (m_pMesh->VertexList[m_nVertexID[2]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position).Element;
-
-	CROSS(te1xte2, te1, te2);
-
-	const float rcp = 1.0f / DOT(te1xte2, p_ray.Direction.Element);
-	SUB(edge2, m_pMesh->VertexList[m_nVertexID[0]].Position, p_ray.Origin.Element);
-
-	const float toverd = DOT(te1xte2, edge2) * rcp;
-
-	if (toverd > p_ray.Max - EPSILON || toverd < EPSILON)
-		return false;
-
-	CROSS(interm, p_ray.Direction.Element, edge2);
-	
-	const float uoverd = DOT( interm, te2) * -rcp;
-	if ( uoverd < 0.0f || uoverd > 1.f)
-		return false;
-
-	const float voverd = DOT( interm, te1) * rcp;2
-	if ( voverd > 1.f || uoverd + voverd > 1.f || voverd < 0.f )
-		return false;
-
-	return true;
-	/**/
-
-	float te1xte2[3], 
-	edge2[3], 
-	interm[3];
-
-	float *te1 = (m_pMesh->VertexList[m_nVertexID[1]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position).Element;
-	float *te2 = (m_pMesh->VertexList[m_nVertexID[2]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position).Element;
+	const float *te1 = GetEdgeP(0);
+	const float *te2 = GetEdgeP(1);
 
 	CROSS(te1xte2, te1, te2);
 
@@ -292,9 +279,9 @@ bool IndexedTriangle::Intersects(const Ray &p_ray)
 
 	return true;
 
-	/* 
-	 * Muller-Trumbore
-	 */
+	//----------------------------------------------------------------------------------------------
+	// Muller-Trumbore
+	//----------------------------------------------------------------------------------------------
 	/**//*
 	double edge1[3], edge2[3], tvec[3], pvec[3], qvec[3];
 	double det, inv_det;
@@ -335,6 +322,9 @@ bool IndexedTriangle::Intersects(const Ray &p_ray)
 	return true;
 	/**/
 
+	//----------------------------------------------------------------------------------------------
+	// Reference
+	//----------------------------------------------------------------------------------------------
 	/**/ /*
 	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
 		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
@@ -420,6 +410,9 @@ IndexedTriangle& IndexedTriangle::operator=(const IndexedTriangle &p_indexedTria
 	m_nVertexID[0] = p_indexedTriangle.m_nVertexID[0];
 	m_nVertexID[1] = p_indexedTriangle.m_nVertexID[1];
 	m_nVertexID[2] = p_indexedTriangle.m_nVertexID[2];
+
+	m_edge[0] = p_indexedTriangle.m_edge[0];
+	m_edge[1] = p_indexedTriangle.m_edge[1];
 
 	m_pMesh = p_indexedTriangle.m_pMesh;
 	m_boundingBox = p_indexedTriangle.m_boundingBox;
