@@ -254,6 +254,7 @@ bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray)
 
 bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray, DifferentialSurface &p_surface)
 {
+	/*
 	float in, out;
 
 	if (p_pNode->BoundingBox.Intersects(p_ray, in, out))
@@ -281,6 +282,87 @@ bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray, Differential
 	}
 
 	return false;
+	*/
+
+	// Compute initial parametric range of ray inside kd-tree extent
+	float tmin, tmax;
+	if (!p_pNode->BoundingBox.Intersects(p_ray, tmin, tmax))
+	{
+		return false;
+	}
+
+	// Prepare to traverse kd-tree for ray
+	Vector3 invDir(1.f/p_ray.Direction.X, 1.f/p_ray.Direction.Y, 1.f/p_ray.Direction.Z);
+	//Vector3 invDir(p_ray.DirectionInverseCache);
+	Ray ray(p_ray);
+#define MAX_TODO 64
+	KDTreeStackElement todo[MAX_TODO];
+	int todoPos = 0;
+
+	// Traverse kd-tree nodes in order for ray
+	bool hit = false;
+	const KDTreeMeshNode *node = p_pNode;
+	while (node != NULL) {
+		// Bail out if we found a hit closer than the current node
+		if (ray.Max < tmin) break;
+		if (node->Type == Internal) {
+			// Process kd-tree interior node
+
+			// Compute parametric distance along ray to split plane
+			int axis = node->Axis;
+			float tplane = (node->Partition - ray.Origin[axis]) * invDir[axis];
+
+			// Get node children pointers for ray
+			KDTreeMeshNode *firstChild, *secondChild;
+			int belowFirst = (ray.Origin[axis] <  node->Partition) ||
+							 (ray.Origin[axis] == node->Partition && ray.Direction[axis] <= 0);
+			if (belowFirst) {
+				firstChild = node->m_pChild[0];
+				secondChild = node->m_pChild[1];
+			}
+			else {
+				firstChild = node->m_pChild[1];
+				secondChild = node->m_pChild[0];
+			}
+
+			// Advance to next child node, possibly enqueue other child
+			if (tplane > tmax || tplane <= 0)
+				node = firstChild;
+			else if (tplane < tmin)
+				node = secondChild;
+			else {
+				// Enqueue _secondChild_ in todo list
+				todo[todoPos].pNode = secondChild;
+				todo[todoPos].Min = tplane;
+				todo[todoPos].Max = tmax;
+				++todoPos;
+				node = firstChild;
+				tmax = tplane;
+			}
+		}
+		else {
+			for (size_t n = 0, count = node->TriangleList.Size(); n < count; n++)
+			{
+				if (node->TriangleList[n]->Intersects(ray, p_surface))
+				{
+					hit = true;
+					p_ray.Max = ray.Max = Maths::Min(ray.Max, p_surface.Distance);
+				}
+			}
+
+			// Grab next node to process from todo list
+			if (todoPos > 0) {
+				--todoPos;
+				node = todo[todoPos].pNode;
+				tmin = todo[todoPos].Min;
+				tmax = todo[todoPos].Max;
+			}
+			else
+				break;
+		}
+	}
+	
+	return hit;
 
 	/*
 	float tmin, tmax;

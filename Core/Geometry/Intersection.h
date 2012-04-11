@@ -33,6 +33,7 @@ namespace Illumina
 			Intersection(const Intersection &p_intersection);
 
 			void Reset(void);
+			void Prepare(void);
 
 			bool IsValid(void) const;
 			bool IsEmissive(void) const;
