@@ -112,6 +112,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	//----------------------------------------------------------------------------------------------
 	Message("Registering Post Processes...", p_bVerbose);
 	engineKernel.GetPostProcessManager()->RegisterFactory("AutoTone", new AutoToneFactory());
+	engineKernel.GetPostProcessManager()->RegisterFactory("DragoTone", new DragoToneFactory());
 	engineKernel.GetPostProcessManager()->RegisterFactory("Accumulation", new AccumulationBufferFactory());
 	engineKernel.GetPostProcessManager()->RegisterFactory("Discontinuity", new DiscontinuityBufferFactory());
 
@@ -217,6 +218,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 
 	IPostProcess *pDiscontinuityBuffer = engineKernel.GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
 	IPostProcess *pAutoTone = engineKernel.GetPostProcessManager()->CreateInstance("AutoTone", "AutoTone", "");
+	IPostProcess *pDragoTone = engineKernel.GetPostProcessManager()->CreateInstance("DragoTone", "DragoTone", "");
 	
 	AccumulationBuffer *pAccumulationBuffer = (AccumulationBuffer*)engineKernel.GetPostProcessManager()->CreateInstance("Accumulation", "AccumulationBuffer", "");
 	pAccumulationBuffer->SetAccumulationBuffer(pRadianceAccumulationBuffer);
@@ -287,9 +289,10 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 
 			// Post-process frame
-			pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+			// pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 			pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
-			pAutoTone->Apply(pRadianceBuffer, pRadianceBuffer);
+			pDragoTone->Apply(pRadianceBuffer, pRadianceBuffer);
+			// pAutoTone->Apply(pRadianceBuffer, pRadianceBuffer);
 
 			if (p_bVerbose) 
 			{

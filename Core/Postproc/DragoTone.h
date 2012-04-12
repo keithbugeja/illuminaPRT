@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	AutoTone.h
+//	Filename:	DragoTone.h
 //	Author:		Keith Bugeja
 //	Date:		27/03/2012
 //----------------------------------------------------------------------------------------------
@@ -15,7 +15,7 @@ namespace Illumina
 	{
 		//----------------------------------------------------------------------------------------------
 		//----------------------------------------------------------------------------------------------
-		class AutoTone
+		class DragoTone
 			: public IPostProcess
 		{
 		protected:
@@ -23,11 +23,11 @@ namespace Illumina
 			float m_fBias;
 
 		public:
-			AutoTone(void)
+			DragoTone(void)
 				: IPostProcess()
 			{ }
 
-			AutoTone(const std::string &p_strName)
+			DragoTone(const std::string &p_strName)
 				: IPostProcess(p_strName)
 			{ }
 
@@ -36,27 +36,29 @@ namespace Illumina
 
 			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight)
 			{
+				// -- Temp
+				m_fBias = 0.8;
+				m_scaleFactor.Set(95.f, 95.f, 95.f);
+				// -- Temp
+
+				Spectrum scaleFactor = 
+					m_scaleFactor * 0.01f;
+
 				RadianceContext *pInputContext,
 					*pOutputContext;
 
 				Spectrum Lwmax(0.f);
-
-				//----------------------------------------------------------------------------------------------
-				Spectrum low(Maths::Maximum), 
-					high(0.f), range, Lw(0.f);
 
 				for (int y = p_nRegionY; y < p_nRegionHeight; ++y)
 				{
 					for (int x = p_nRegionX; x < p_nRegionWidth; ++x)
 					{
 						pInputContext = p_pInput->GetP(x, y);
-
-						low.Min(low, pInputContext->Final);
-						high.Max(high, pInputContext->Final);
+						Lwmax.Max(Lwmax, pInputContext->Final);
 					}
 				}
 
-				range = high - low;
+				float bias = Maths::Log(m_fBias) / Maths::Log(0.5f);
 
 				for (int y = p_nRegionY; y < p_nRegionHeight; ++y)
 				{
@@ -65,7 +67,11 @@ namespace Illumina
 						pInputContext = p_pInput->GetP(x, y);
 						pOutputContext = p_pOutput->GetP(x, y);
 
-						pOutputContext->Final = (pInputContext->Final - low) / range;
+						float r = scaleFactor[0] / (Maths::LogBase(Lwmax[0] + 1, 10)) * Maths::Log(pInputContext->Final[0] + 1) / Maths::Log(2 + Maths::Pow((pInputContext->Final[0] / Lwmax[0]), bias) * 8);
+						float g = scaleFactor[1] / (Maths::LogBase(Lwmax[1] + 1, 10)) * Maths::Log(pInputContext->Final[1] + 1) / Maths::Log(2 + Maths::Pow((pInputContext->Final[1] / Lwmax[1]), bias) * 8);
+						float b = scaleFactor[2] / (Maths::LogBase(Lwmax[2] + 1, 10)) * Maths::Log(pInputContext->Final[2] + 1) / Maths::Log(2 + Maths::Pow((pInputContext->Final[2] / Lwmax[2]), bias) * 8);
+
+						pOutputContext->Final.Set(r, g, b);
 						pOutputContext->Final.Clamp();
 						pOutputContext->Flag = 1;
 					}

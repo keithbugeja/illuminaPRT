@@ -743,6 +743,9 @@
     <ClInclude Include="..\..\..\..\Core\Postproc\AutoTone.h">
       <Filter>Header Files\Postproc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Postproc\DragoTone.h">
+      <Filter>Header Files\Postproc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">
