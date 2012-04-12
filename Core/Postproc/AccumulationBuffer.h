@@ -89,7 +89,7 @@ namespace Illumina
 				return Apply(p_pInput, p_pOutput, 0, 0, p_pInput->GetWidth(), p_pInput->GetHeight());
 			}
 
-			std::string ToString(void) const { return "[DiscontinuityBuffer]"; }
+			std::string ToString(void) const { return "[AccumulationBuffer]"; }
 		};
 
 		//----------------------------------------------------------------------------------------------

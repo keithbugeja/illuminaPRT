@@ -170,6 +170,20 @@ namespace Illumina
 				else if (m_fSamples[2] > p_fMax) m_fSamples[2] = p_fMax;
 			}
 
+			void Max(const RGBSpectrum &p_spectrum1, const RGBSpectrum &p_spectrum2)
+			{
+				m_fSamples[0] = Maths::Max(p_spectrum1.m_fSamples[0], p_spectrum2.m_fSamples[0]);
+				m_fSamples[1] = Maths::Max(p_spectrum1.m_fSamples[1], p_spectrum2.m_fSamples[1]);
+				m_fSamples[2] = Maths::Max(p_spectrum1.m_fSamples[2], p_spectrum2.m_fSamples[2]);
+			}
+
+			void Min(const RGBSpectrum &p_spectrum1, const RGBSpectrum &p_spectrum2)
+			{
+				m_fSamples[0] = Maths::Min(p_spectrum1.m_fSamples[0], p_spectrum2.m_fSamples[0]);
+				m_fSamples[1] = Maths::Min(p_spectrum1.m_fSamples[1], p_spectrum2.m_fSamples[1]);
+				m_fSamples[2] = Maths::Min(p_spectrum1.m_fSamples[2], p_spectrum2.m_fSamples[2]);
+			}
+
 			std::string ToString(void) const
 			{
 				std::string strOut = boost::str(boost::format("[%d %d %d]") % m_fSamples[0] % m_fSamples[1] % m_fSamples[2]);

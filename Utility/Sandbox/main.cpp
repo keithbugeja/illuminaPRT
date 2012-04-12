@@ -111,8 +111,9 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	// Materials
 	//----------------------------------------------------------------------------------------------
 	Message("Registering Post Processes...", p_bVerbose);
-	engineKernel.GetPostProcessManager()->RegisterFactory("Discontinuity", new DiscontinuityBufferFactory());
+	engineKernel.GetPostProcessManager()->RegisterFactory("AutoTone", new AutoToneFactory());
 	engineKernel.GetPostProcessManager()->RegisterFactory("Accumulation", new AccumulationBufferFactory());
+	engineKernel.GetPostProcessManager()->RegisterFactory("Discontinuity", new DiscontinuityBufferFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Renderer
@@ -214,8 +215,10 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		*pRadianceAccumulationBuffer = new RadianceBuffer(
 		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight());
 
-	IPostProcess *pPostProcess = engineKernel.GetPostProcessManager()->CreateInstance("Discontinuity", "DPP", "");
-	AccumulationBuffer *pAccumulationBuffer = (AccumulationBuffer*)engineKernel.GetPostProcessManager()->CreateInstance("Accumulation", "APP", "");
+	IPostProcess *pDiscontinuityBuffer = engineKernel.GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
+	IPostProcess *pAutoTone = engineKernel.GetPostProcessManager()->CreateInstance("AutoTone", "AutoTone", "");
+	
+	AccumulationBuffer *pAccumulationBuffer = (AccumulationBuffer*)engineKernel.GetPostProcessManager()->CreateInstance("Accumulation", "AccumulationBuffer", "");
 	pAccumulationBuffer->SetAccumulationBuffer(pRadianceAccumulationBuffer);
 	pAccumulationBuffer->Reset();
 
@@ -284,8 +287,9 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 
 			// Post-process frame
-			pPostProcess->Apply(pRadianceBuffer, pRadianceBuffer);
+			pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 			pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+			pAutoTone->Apply(pRadianceBuffer, pRadianceBuffer);
 
 			if (p_bVerbose) 
 			{
