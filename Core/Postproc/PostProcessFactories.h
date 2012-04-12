@@ -12,6 +12,7 @@
 
 #include "Postproc/PostProcess.h"
 #include "Postproc/AutoTone.h"
+#include "Postproc/DragoTone.h"
 #include "Postproc/AccumulationBuffer.h"
 #include "Postproc/DiscontinuityBuffer.h"
 
@@ -80,6 +81,35 @@ namespace Illumina
 			}
 		};
 
+		class DragoToneFactory : public Illumina::Core::Factory<Illumina::Core::IPostProcess>
+		{
+		public:
+			Illumina::Core::IPostProcess *CreateInstance(void)
+			{
+				return new DragoTone();
+			}
+
+			// Arguments
+			// -- Id
+			Illumina::Core::IPostProcess *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strId;
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId);
+
+				return CreateInstance();
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(const std::string &p_strId)
+			{
+				return new DragoTone(p_strId);
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(int dummy)
+			{
+				return new DragoTone();
+			}
+		};
 
 		class DiscontinuityBufferFactory : public Illumina::Core::Factory<Illumina::Core::IPostProcess>
 		{
