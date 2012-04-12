@@ -38,7 +38,7 @@ Spectrum InfiniteAreaLight::Power(void) {
 //----------------------------------------------------------------------------------------------
 Spectrum InfiniteAreaLight::Radiance(const Vector3 &p_direction)
 {
-	Spectrum radiance(1);
+	Spectrum radiance(1.f);
 	
 	if (m_pTexture != NULL)
 	{
@@ -51,7 +51,8 @@ Spectrum InfiniteAreaLight::Radiance(const Vector3 &p_direction)
 		radiance.Set(value.R, value.G, value.B);
 	}
 
-	return radiance * m_intensity;
+	//return radiance * m_intensity;
+	return radiance;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum InfiniteAreaLight::Radiance(const Ray &p_ray)
@@ -72,30 +73,21 @@ Spectrum InfiniteAreaLight::SampleRadiance(const Vector3 &p_surfacePoint, float 
 Spectrum InfiniteAreaLight::SampleRadiance(const Vector3 &p_surfacePoint, const Vector3 &p_surfaceNormal, float p_u, float p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)
 {
 	OrthonormalBasis basis; basis.InitFromW(p_surfaceNormal);
-	p_wIn = Montecarlo::UniformSampleCone(p_u, p_v, 1e-3f, basis);
-	p_visibilityQuery.SetSegment(p_surfacePoint, p_wIn, Maths::Maximum, 1e-4f);
+	p_wIn = Montecarlo::UniformSampleCone(p_u, p_v, Ray::Epsilon, basis);
+	p_visibilityQuery.SetSegment(p_surfacePoint, p_wIn, Maths::Maximum, Ray::Epsilon);
 	p_wIn = -p_wIn;
 	
 	p_pdf = 0.5f / Maths::PiTwo;
 	
-	return Radiance(p_wIn);
+	return Radiance(p_wIn) * m_intensity;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum InfiniteAreaLight::SampleRadiance(const Scene *p_pScene, float p_u, float p_v, float p_w, float p_x, Ray &p_ray, float &p_pdf)
 {
-	p_pdf = 0.5f / Maths::PiTwo;
+	p_pdf = 0.25f / Maths::Pi; 
+	p_ray.Set(p_ray.Direction * -1E+38f, -Montecarlo::UniformSampleSphere(p_u, p_v), Ray::Epsilon, Maths::Maximum);
 
-	p_ray.Set(p_ray.Direction * -1E+38f, 
-		-Montecarlo::UniformSampleSphere(p_u, p_v), 
-		1E-03, Maths::Maximum);
-
-	//p_ray.Direction = -Montecarlo::UniformSampleSphere(p_u, p_v);
-	//p_ray.Origin = p_ray.Direction * -1e+38f;
-	//p_ray.Min = 1e-03;
-	//p_ray.Max = Maths::Maximum;
-	//Vector3::Inverse(p_ray.Direction, p_ray.DirectionInverseCache);
-
-	return Radiance(p_ray.Direction);
+	return Radiance(p_ray.Direction) * m_intensity;
 }
 //----------------------------------------------------------------------------------------------
 Vector3 InfiniteAreaLight::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf)

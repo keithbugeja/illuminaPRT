@@ -61,15 +61,6 @@ namespace Illumina
 			void SetImageWriter(IImageIO *p_pImageIO);
 
 			Image *GetImage(void) const;
-
-		protected:
-			void ToneMap(void);
-			float HDRToLDR(float p_fValue);
-
-		public:
-			// --> TEMPORARY --- until EGPGV paper is sorted out!
-			void WriteToBuffer(RGBBytePixel *p_buffer);
-			// --> TEMPORARY --- until EGPGV paper is sorted out!
 		};
 	}
 }
