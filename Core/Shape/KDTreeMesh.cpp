@@ -163,8 +163,8 @@ bool KDTreeMesh::Intersects(const Ray &p_ray)
 	Ray ray(p_ray);
 
 	return Intersect_New(&m_rootNode, ray);
-	//return Intersect_Recursive(&m_rootNode, ray);
-	//return Intersect_Stack(&m_rootNode, ray);
+	// return Intersect_Recursive(&m_rootNode, ray);
+	// return Intersect_Stack(&m_rootNode, ray);
 }
 
 //----------------------------------------------------------------------------------------------
@@ -186,8 +186,8 @@ bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray)
 	}
 
 	// Prepare to traverse kd-tree for ray
-	Vector3 invDir(1.f/p_ray.Direction.X, 1.f/p_ray.Direction.Y, 1.f/p_ray.Direction.Z);
-	//Vector3 invDir(p_ray.DirectionInverseCache);
+	//Vector3 invDir(1.f/p_ray.Direction.X, 1.f/p_ray.Direction.Y, 1.f/p_ray.Direction.Z);
+	Vector3 invDir(p_ray.DirectionInverseCache);
 	Ray ray(p_ray);
 #define MAX_TODO 64
 	KDTreeStackElement todo[MAX_TODO];
@@ -370,8 +370,8 @@ bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray, Differential
 	}
 
 	// Prepare to traverse kd-tree for ray
-	Vector3 invDir(1.f/p_ray.Direction.X, 1.f/p_ray.Direction.Y, 1.f/p_ray.Direction.Z);
-	//Vector3 invDir(p_ray.DirectionInverseCache);
+	//Vector3 invDir(1.f/p_ray.Direction.X, 1.f/p_ray.Direction.Y, 1.f/p_ray.Direction.Z);
+	Vector3 invDir(p_ray.DirectionInverseCache);
 	Ray ray(p_ray);
 #define MAX_TODO 64
 	KDTreeStackElement todo[MAX_TODO];
@@ -393,7 +393,7 @@ bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray, Differential
 			// Get node children pointers for ray
 			KDTreeMeshNode *firstChild, *secondChild;
 			int belowFirst = (ray.Origin[axis] <  node->Partition) ||
-							 (ray.Origin[axis] == node->Partition && ray.Direction[axis] <= 0);
+							 (ray.Origin[axis] == node->Partition && ray.Direction[axis] <= 0.f);
 			if (belowFirst) {
 				firstChild = node->m_pChild[0];
 				secondChild = node->m_pChild[1];

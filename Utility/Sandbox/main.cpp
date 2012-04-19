@@ -227,6 +227,30 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	float alpha = Maths::Pi;
 	Matrix3x3 rotation;
 	
+	struct regioninfo_t 
+	{
+		double lastActual;
+		double lastPredicted;
+		double nextTime;
+		double frameBudget;
+	};
+	
+	const int regionX = pRenderer->GetDevice()->GetWidth() / 40;
+	const int regionY = pRenderer->GetDevice()->GetHeight() / 40;
+	const int regions = regionX * regionY;
+
+	float totalBudget = 0.5f;
+	float requiredBudget = 0.f;
+	std::vector<regioninfo_t> reg(regions);
+	
+	for (int j = 0; j < regions; j++)
+	{
+		reg[j].lastActual = 0;
+		reg[j].lastPredicted = 0;
+		reg[j].nextTime = 0;
+		reg[j].frameBudget = 0;
+	}
+
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
 		#if (defined(TEST_TILERENDER))
@@ -271,12 +295,25 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	 
 			// Render frame
 			#pragma omp parallel for num_threads(3)
-			for (int y = 0; y < pRenderer->GetDevice()->GetHeight() / 40; y++)
+			for (int y = 0; y < regionY; y++)
 			{
-				for (int x = 0; x < pRenderer->GetDevice()->GetWidth() / 40; x++)
+				for (int x = 0; x < regionX; x++)
 				{
+					double regionStart = Platform::GetTime();
 					pRenderer->RenderRegion(pRadianceBuffer, x * 40, y * 40, 40, 40, x * 40, y * 40);
+					double regionEnd = Platform::GetTime();
+
+					double lastActual = Platform::ToSeconds(regionEnd - regionStart);
+					reg[x + y * regionX].lastActual = lastActual;
+					reg[x + y * regionX].nextTime = reg[x + y * regionX].lastPredicted * 0.5 + lastActual * 0.5;
+					reg[x + y * regionX].lastPredicted = reg[x + y * regionX].nextTime;
 				}
+			}
+
+			requiredBudget = 0.f;
+			for (int j = 0; j < regions; j++)
+			{
+				requiredBudget += reg[j].nextTime;
 			}
 
 			if (p_bVerbose) 
@@ -314,6 +351,12 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			{
 				std::cout << "-- Frame Render Time : [" << elapsed << "s]" << std::endl;
 				std::cout << "-- Frames per second : [" << fTotalFramesPerSecond / (nFrame + 1)<< "]" << std::endl;
+
+				for (int j = 0; j < regions; j++)
+				{
+					reg[j].frameBudget = reg[j].nextTime / requiredBudget;
+					std::cout << "[Region " << j << "] : B:[" << reg[j].frameBudget << "], T:[" << reg[j].lastActual << "s], P:[" << reg[j].lastPredicted << "s], N:[" << reg[j].nextTime << "]" << std::endl;  
+				}
 			}
 		#else
 			// Update space acceleration structure
