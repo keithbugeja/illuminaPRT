@@ -192,16 +192,18 @@ Spectrum PathIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 
 		// Convert back to world coordinates
 		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, wInLocal, wIn);
-
+		
 		//----------------------------------------------------------------------------------------------
 		// Adjust path for new bounce
 		// -- ray is moved by a small epsilon in sampled direction
 		// -- ray origin is set to point of intersection
 		//----------------------------------------------------------------------------------------------
-		ray.Set(p_intersection.Surface.PointWS, wIn, m_fReflectEpsilon, Maths::Maximum);
+		ray.Set(p_intersection.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, m_fReflectEpsilon, Maths::Maximum);
+		// ray.Set(p_intersection.Surface.PointWS, wIn, m_fReflectEpsilon, Maths::Maximum);
 		
 		// Update path contribution at current stage
-		pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
+		pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.ShadingBasisWS.W) / pdf;
+		//pathThroughput *= f * Vector3::AbsDot(wIn, p_intersection.Surface.GeometryBasisWS.W) / pdf;
 
 		//----------------------------------------------------------------------------------------------
 		// Use Russian roulette to possibly terminate path
