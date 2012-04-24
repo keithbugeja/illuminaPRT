@@ -326,7 +326,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 
 			// Post-process frame
-			// pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+			pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 			pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 			pDragoTone->Apply(pRadianceBuffer, pRadianceBuffer);
 			// pAutoTone->Apply(pRadianceBuffer, pRadianceBuffer);
@@ -355,7 +355,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 				for (int j = 0; j < regions; j++)
 				{
 					reg[j].frameBudget = reg[j].nextTime / requiredBudget;
-					std::cout << "[Region " << j << "] : B:[" << reg[j].frameBudget << "], T:[" << reg[j].lastActual << "s], P:[" << reg[j].lastPredicted << "s], N:[" << reg[j].nextTime << "]" << std::endl;  
+					// std::cout << "[Region " << j << "] : B:[" << reg[j].frameBudget << "], T:[" << reg[j].lastActual << "s], P:[" << reg[j].lastPredicted << "s], N:[" << reg[j].nextTime << "]" << std::endl;  
 				}
 			}
 		#else

@@ -300,6 +300,9 @@
     <ClCompile Include="..\..\..\..\Core\Renderer\BaseRenderer.cpp">
       <Filter>Header Files\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Renderer\TimeConstrainedRenderer.cpp">
+      <Filter>Header Files\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -745,6 +748,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Postproc\DragoTone.h">
       <Filter>Header Files\Postproc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Renderer\TimeConstrainedRenderer.h">
+      <Filter>Header Files\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
