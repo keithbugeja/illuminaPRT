@@ -76,11 +76,66 @@ namespace Illumina
 			{
 				for (int index = 0; index < TSequenceSize; ++index)
 				{
-					m_pSampleList[index].Set(m_random.NextFloat(), m_random.NextFloat());
+					//m_pSampleList[index].Set(VanDerCorput(index), Halton(index, 3));
+					m_pSampleList[index].Set(Halton(index, 2), Halton(index, 3));
+					//std::cout << m_pSampleList[index].ToString() << std::endl;
+					//m_pSampleList[index].Set(m_random.NextFloat(), m_random.NextFloat());
 					//m_pSampleList[index].Set(VanDerCorput(index, p_nSeed1), Sobol2(index, p_nSeed2));
 				}
 
 				m_nSampleIndex = 0;
+			}
+			//----------------------------------------------------------------------------------------------
+			float Halton(unsigned int index, unsigned int base)
+			{
+				float result = 0;
+				float f = 1.0 / base;
+				int i = index;
+				while (i > 0) 
+				{
+					result = result + f * (i % base);
+					i = Maths::Floor(i / base);
+					f = f / base;
+				}
+
+				return result;
+			}
+			//----------------------------------------------------------------------------------------------
+			float VanDerCorput(unsigned int n)
+			{
+				// 0000 -> 0000
+				// 0001 -> 1000
+				// 0010 -> 0100
+				// 0011 -> 1100
+				// 0100 -> 0010
+				// 0101 -> 1010
+				// 0110 -> 0110
+				// 0111 -> 1110
+				// 1000 -> 0001
+				// 1001 -> 1001
+				// 1010 -> 0101
+				// 1011 -> 1101
+				// 1100 -> 0011
+				// 1101 -> 1011
+				// 1110 -> 0111
+				// 1111 -> 1111
+
+				const unsigned int nibble[] = { 0x0, 0x8, 0x4, 0xC, 
+												0x2, 0xA, 0x6, 0xE, 
+												0x1, 0x9, 0x5, 0xD, 
+												0x3, 0xB, 0x7, 0xF};
+
+				float num = (float)(
+					(nibble[n & 0xF] << 28) +
+					(nibble[(n >> 4) & 0xF] << 24) +
+					(nibble[(n >> 8) & 0xF] << 20) +
+					(nibble[(n >> 12) & 0xF] << 16) +
+					(nibble[(n >> 16) & 0xF] << 12) +
+					(nibble[(n >> 20) & 0xF] << 8) +
+					(nibble[(n >> 24) & 0xF] << 4) +
+					(nibble[(n >> 28) & 0xF]));
+
+				return num / (float)0x100000000LL;
 			}
 			//----------------------------------------------------------------------------------------------
 			float VanDerCorput(unsigned int n, const unsigned int scramble)
