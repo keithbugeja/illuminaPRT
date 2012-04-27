@@ -6,6 +6,8 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+#include <cstring>
+
 #include "Sampler/Sampler.h"
 #include "Maths/Random.h"
 //----------------------------------------------------------------------------------------------
@@ -31,9 +33,12 @@ namespace Illumina
 			float Get1DSample(void);
 			Vector2 Get2DSample(void);
 
+			void GetSample(Sample *p_pSample);
+
 			std::string ToString(void) const;
 		};
 
+/*
 		class MultijitterSampler
 			: public ISampler
 		{
@@ -52,6 +57,8 @@ namespace Illumina
 			float Get1DSample(void);
 			Vector2 Get2DSample(void);
 
+			void GetSample(Sample *p_pSample);
+
 			std::string ToString(void) const;
 		};
 
@@ -62,7 +69,8 @@ namespace Illumina
 		private:
 			Random m_random;
 
-			Vector2 m_pSampleList[TSequenceSize];
+			//Vector2 m_pSampleList[TSequenceSize];
+			float m_pSampleList[TSequenceSize + 2];
 			int m_nSampleIndex;
 
 		public:
@@ -74,10 +82,25 @@ namespace Illumina
 		protected:
 			void GenerateSamples(int p_nSeed1, int p_nSeed2)
 			{
-				for (int index = 0; index < TSequenceSize; ++index)
+				int seed1 = p_nSeed1,
+					seed2 = p_nSeed2;
+
+				seed1 = 5;
+				seed2 = 7;
+
+				for (int index = 0; index < TSequenceSize + 2;)
 				{
+					//m_pSampleList[index++] = m_random.NextFloat();
+					//m_pSampleList[index++] = m_random.NextFloat();
+					
+					m_pSampleList[index++] = Halton(index, seed1);
+					m_pSampleList[index++] = Halton(index, seed2);
+
+					//m_pSampleList[index++] = VanDerCorput(index, p_nSeed1);
+					//m_pSampleList[index++] = Sobol2(index, p_nSeed2);
+		
 					//m_pSampleList[index].Set(VanDerCorput(index), Halton(index, 3));
-					m_pSampleList[index].Set(Halton(index, 2), Halton(index, 3));
+					//m_pSampleList[index].Set(Halton(index, 2), Halton(index, 3));//Sobol2(index, p_nSeed2));//Halton(index, 3));
 					//std::cout << m_pSampleList[index].ToString() << std::endl;
 					//m_pSampleList[index].Set(m_random.NextFloat(), m_random.NextFloat());
 					//m_pSampleList[index].Set(VanDerCorput(index, p_nSeed1), Sobol2(index, p_nSeed2));
@@ -160,13 +183,37 @@ namespace Illumina
 
 		public:
 			//----------------------------------------------------------------------------------------------
+			void GetSample(Sample *p_pSample)
+			{
+				BOOST_ASSERT(p_pSample->Size() < TSequenceSize);
+
+				float *sequence = p_pSample->GetSequence();
+				int size = p_pSample->Size();
+
+				// Cannot do in a single block copy
+				if (m_nSampleIndex + size >= TSequenceSize)
+				{
+					int leftSize = TSequenceSize - m_nSampleIndex;
+
+					std::memcpy(sequence, m_pSampleList + m_nSampleIndex, leftSize);
+					std::memcpy(sequence + leftSize, m_pSampleList, size - leftSize);
+
+					m_nSampleIndex = size - leftSize;
+				}
+				else
+				{
+					std::memcpy(sequence, m_pSampleList + m_nSampleIndex, size);
+					m_sampleIndex += size;
+				}
+			}
+			//----------------------------------------------------------------------------------------------
 			void Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount)
 			{
 				for (int index = 0; index < p_nSampleCount; index++)
 				{
-					p_pSamples[index].Set(m_pSampleList[m_nSampleIndex].X, m_pSampleList[m_nSampleIndex].Y);
-		
-					if (++m_nSampleIndex >= TSequenceSize)
+					p_pSamples[index].Set(m_pSampleList[m_nSampleIndex++], m_pSampleList[m_nSampleIndex++]);
+
+					if (m_nSampleIndex >= TSequenceSize)
 						m_nSampleIndex = 0;
 				}
 			}
@@ -175,8 +222,8 @@ namespace Illumina
 			{
 				for (int index = 0; index < p_nSampleCount; index++)
 				{
-					p_pSamples[index] = m_pSampleList[m_nSampleIndex].X;
-		
+					p_pSamples[index] = m_pSampleList[m_nSampleIndex];
+
 					if (++m_nSampleIndex >= TSequenceSize)
 						m_nSampleIndex = 0;
 				}
@@ -184,8 +231,8 @@ namespace Illumina
 			//----------------------------------------------------------------------------------------------
 			float Get1DSample(void) 
 			{
-					float result = m_pSampleList[m_nSampleIndex].X;
-		
+					float result = m_pSampleList[m_nSampleIndex];
+
 					if (++m_nSampleIndex >= TSequenceSize)
 						m_nSampleIndex = 0;
 
@@ -194,9 +241,9 @@ namespace Illumina
 			//----------------------------------------------------------------------------------------------
 			Vector2 Get2DSample(void) 
 			{
-					Vector2 result(m_pSampleList[m_nSampleIndex]);
-		
-					if (++m_nSampleIndex >= TSequenceSize)
+					Vector2 result(m_pSampleList[m_nSampleIndex++], m_pSampleList[m_nSampleIndex++]);
+
+					if (m_nSampleIndex >= TSequenceSize)
 						m_nSampleIndex = 0;
 
 					return result;
@@ -208,5 +255,6 @@ namespace Illumina
 			}
 			//----------------------------------------------------------------------------------------------
 		};
+*/
 	} 
 }

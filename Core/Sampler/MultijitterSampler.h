@@ -1,10 +1,12 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	RandomSampler.h
+//	Filename:	JitterSampler.h
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 #pragma once
+
+#include <cstring>
 
 #include "Sampler/Sampler.h"
 #include "Maths/Random.h"
@@ -13,15 +15,15 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class RandomSampler 
+		class MultijitterSampler
 			: public ISampler
 		{
 		private:
 			Random m_random;
 
 		public:
-			RandomSampler(void) { }
-			RandomSampler(const std::string &p_strName) : ISampler(p_strName) { }
+			MultijitterSampler(const std::string &p_strName) : ISampler(p_strName) { }
+			MultijitterSampler(void) { }
 
 			void Reset(void);
 

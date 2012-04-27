@@ -8,7 +8,7 @@
 #pragma once
 
 #include <limits>
-#include <math.h>
+#include <cmath>
 
 #include "System/IlluminaPRT.h"
 
@@ -149,6 +149,16 @@ namespace Illumina
 
 			inline static float Hermite(float t) {
 				return 3*t*t - 2*t*t*t;
+			}
+
+			inline static int Factorial(int p_nValue)
+			{
+				int nSum = 1;
+
+				if (p_nValue > 0)
+					for (int nTerm = 2; nTerm <= p_nValue; nSum *= nTerm, nTerm++);
+		
+				return nSum;
 			}
 
 			template<class type> inline static void Swap(type &p_fValue1, type &p_fValue2)

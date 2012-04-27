@@ -11,13 +11,16 @@
 #include <iostream>
 
 #include "Sampler/Sampler.h"
-#include "Sampler/JitterSampler.h"
 #include "Sampler/RandomSampler.h"
+#include "Sampler/JitterSampler.h"
+#include "Sampler/MultijitterSampler.h"
+#include "Sampler/PrecomputationSampler.h"
 
 namespace Illumina
 {
 	namespace Core
 	{
+		//----------------------------------------------------------------------------------------------
 		class JitterSamplerFactory : public Illumina::Core::Factory<Illumina::Core::ISampler>
 		{
 		public:
@@ -43,7 +46,9 @@ namespace Illumina
 				return new JitterSampler(p_strId);
 			}
 		};
+		//----------------------------------------------------------------------------------------------
 
+		//----------------------------------------------------------------------------------------------
 		class MultijitterSamplerFactory : public Illumina::Core::Factory<Illumina::Core::ISampler>
 		{
 		public:
@@ -69,7 +74,9 @@ namespace Illumina
 				return new MultijitterSampler(p_strId);
 			}
 		};
+		//----------------------------------------------------------------------------------------------
 
+		//----------------------------------------------------------------------------------------------
 		class RandomSamplerFactory : public Illumina::Core::Factory<Illumina::Core::ISampler>
 		{
 		public:
@@ -95,13 +102,15 @@ namespace Illumina
 				return new RandomSampler(p_strId);
 			}
 		};
+		//----------------------------------------------------------------------------------------------
 
-		class PrecomputationSamplerFactory : public Illumina::Core::Factory<Illumina::Core::ISampler>
+		//----------------------------------------------------------------------------------------------
+		class PrecomputedHaltonSamplerFactory : public Illumina::Core::Factory<Illumina::Core::ISampler>
 		{
 		public:
 			Illumina::Core::ISampler *CreateInstance(void)
 			{
-				return new PrecomputationSampler<16384, 10619863, 3331333>();
+				return new PrecomputedHaltonSampler();
 			}
 
 			// Arguments
@@ -118,8 +127,65 @@ namespace Illumina
 
 			Illumina::Core::ISampler *CreateInstance(const std::string &p_strId)
 			{
-				return new PrecomputationSampler<16384, 10619863, 3331333>(p_strId);
+				return new PrecomputedHaltonSampler;
 			}
 		};
+		//----------------------------------------------------------------------------------------------
+		
+		//----------------------------------------------------------------------------------------------
+		class PrecomputedSobolSamplerFactory : public Illumina::Core::Factory<Illumina::Core::ISampler>
+		{
+		public:
+			Illumina::Core::ISampler *CreateInstance(void)
+			{
+				return new PrecomputedSobolSampler();
+			}
+
+			// Arguments
+			// -- Id {String}
+			Illumina::Core::ISampler *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strId;
+
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId);
+
+				return CreateInstance();
+			}
+
+			Illumina::Core::ISampler *CreateInstance(const std::string &p_strId)
+			{
+				return new PrecomputedSobolSampler;
+			}
+		};
+		//----------------------------------------------------------------------------------------------
+
+		//----------------------------------------------------------------------------------------------
+		class PrecomputedRandomSamplerFactory : public Illumina::Core::Factory<Illumina::Core::ISampler>
+		{
+		public:
+			Illumina::Core::ISampler *CreateInstance(void)
+			{
+				return new PrecomputedRandomSampler();
+			}
+
+			// Arguments
+			// -- Id {String}
+			Illumina::Core::ISampler *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strId;
+
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId);
+
+				return CreateInstance();
+			}
+
+			Illumina::Core::ISampler *CreateInstance(const std::string &p_strId)
+			{
+				return new PrecomputedRandomSampler;
+			}
+		};
+		//----------------------------------------------------------------------------------------------
 	}
 }
