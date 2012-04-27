@@ -303,6 +303,15 @@
     <ClCompile Include="..\..\..\..\Core\Renderer\TimeConstrainedRenderer.cpp">
       <Filter>Header Files\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Sampler\SamplerDiagnostics.cpp">
+      <Filter>Header Files\Sampler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Sampler\MultijitterSampler.cpp">
+      <Filter>Header Files\Sampler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Sampler\PrecomputationSampler.cpp">
+      <Filter>Header Files\Sampler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -751,6 +760,18 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Renderer\TimeConstrainedRenderer.h">
       <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Maths\Statistics.h">
+      <Filter>Header Files\Maths</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Sampler\SamplerDiagnostics.h">
+      <Filter>Header Files\Sampler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Sampler\MultijitterSampler.h">
+      <Filter>Header Files\Sampler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Sampler\PrecomputationSampler.h">
+      <Filter>Header Files\Sampler</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

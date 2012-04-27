@@ -174,7 +174,10 @@
     <ClCompile Include="..\..\..\..\Core\Renderer\Renderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\TimeConstrainedRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Sampler\JitterSampler.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Sampler\PrecomputationSampler.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Sampler\MultijitterSampler.cpp" />
     <ClCompile Include="..\..\..\..\Core\Sampler\RandomSampler.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Sampler\SamplerDiagnostics.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\EmissivePrimitive.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\Environment.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\EnvironmentLoader.cpp" />
@@ -260,6 +263,7 @@
     <ClInclude Include="..\..\..\..\Core\Maths\Maths.h" />
     <ClInclude Include="..\..\..\..\Core\Maths\Montecarlo.h" />
     <ClInclude Include="..\..\..\..\Core\Maths\Random.h" />
+    <ClInclude Include="..\..\..\..\Core\Maths\Statistics.h" />
     <ClInclude Include="..\..\..\..\Core\Object\Cloneable.h" />
     <ClInclude Include="..\..\..\..\Core\Object\Object.h" />
     <ClInclude Include="..\..\..\..\Core\Object\UniqueID.h" />
@@ -278,8 +282,11 @@
     <ClInclude Include="..\..\..\..\Core\Renderer\RendererFactories.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\TimeConstrainedRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\JitterSampler.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\PrecomputationSampler.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\MultijitterSampler.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\RandomSampler.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\Sampler.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\SamplerDiagnostics.h" />
     <ClInclude Include="..\..\..\..\Core\Sampler\SamplerFactories.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\EmissivePrimitive.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\Environment.h" />

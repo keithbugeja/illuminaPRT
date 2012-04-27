@@ -52,6 +52,7 @@ namespace Illumina
 #include "Integrator/IntegratorFactories.h"
 
 #include "Staging/Acceleration.h"
+#include "Sampler/SamplerDiagnostics.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -76,13 +77,55 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	EngineKernel engineKernel;
 
 	//----------------------------------------------------------------------------------------------
+	// Perform any required tests
+	//----------------------------------------------------------------------------------------------
+	Message("\nPerforming Tests...", p_bVerbose);
+	
+	SamplerDiagnostics samplerTest;
+	ISampler *pSampler;
+	float result;
+	const int sampleSize = 1e+4; //1e+6;
+
+	pSampler = new RandomSampler();
+	std::cout << "-- Random Sampler --" << std::endl;
+	result = samplerTest.FrequencyTest(pSampler, sampleSize);
+	std::cout << "p-value (E[x] > 0.01) = " << result << std::endl;
+	result = samplerTest.ChiSquareTest(pSampler, sampleSize);
+	std::cout << "chi^2, 9 dof (E[x] < 33.1) = " << result << std::endl;
+	samplerTest.DistributionTest(pSampler, sampleSize, "Z:\\random.ppm");
+	delete pSampler;
+
+	pSampler = new PrecomputedHaltonSampler();
+	std::cout << "-- Precomputed Halton --" << std::endl;
+	result = samplerTest.FrequencyTest(pSampler, sampleSize);
+	std::cout << "p-value (E[x] > 0.01) = " << result << std::endl;
+	result = samplerTest.ChiSquareTest(pSampler, sampleSize);
+	std::cout << "chi^2, 9 dof (E[x] < 33.1) = " << result << std::endl;
+	samplerTest.DistributionTest(pSampler, sampleSize, "Z:\\halton.ppm");
+	delete pSampler;
+
+	pSampler = new PrecomputedSobolSampler();
+	std::cout << "-- Precomputed Sobol --" << std::endl;
+	result = samplerTest.FrequencyTest(pSampler, sampleSize);
+	std::cout << "p-value (E[x] > 0.01) = " << result << std::endl;
+	result = samplerTest.ChiSquareTest(pSampler, sampleSize);
+	std::cout << "chi^2, 9 dof (E[x] < 33.1) = " << result << std::endl;
+	samplerTest.DistributionTest(pSampler, sampleSize, "Z:\\sobol.ppm");
+	delete pSampler;
+
+	//----------------------------------------------------------------------------------------------
+	//----------------------------------------------------------------------------------------------
+
+	//----------------------------------------------------------------------------------------------
 	// Sampler
 	//----------------------------------------------------------------------------------------------
 	Message("Registering Samplers...", p_bVerbose);
 	engineKernel.GetSamplerManager()->RegisterFactory("Random", new RandomSamplerFactory());
 	engineKernel.GetSamplerManager()->RegisterFactory("Jitter", new JitterSamplerFactory());
 	engineKernel.GetSamplerManager()->RegisterFactory("Multijitter", new MultijitterSamplerFactory());
-	engineKernel.GetSamplerManager()->RegisterFactory("Precomputation", new PrecomputationSamplerFactory());
+	engineKernel.GetSamplerManager()->RegisterFactory("PrecomputedRandom", new PrecomputedRandomSamplerFactory());
+	engineKernel.GetSamplerManager()->RegisterFactory("PrecomputedHalton", new PrecomputedHaltonSamplerFactory());
+	engineKernel.GetSamplerManager()->RegisterFactory("PrecomputedSobol", new PrecomputedSobolSamplerFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Filter

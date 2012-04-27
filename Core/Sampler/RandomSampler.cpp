@@ -17,6 +17,11 @@ void RandomSampler::Reset(void)
 	m_random.Reset();
 }
 //----------------------------------------------------------------------------------------------
+void RandomSampler::GetSample(Sample *p_pSample)
+{
+	Get1DSamples(p_pSample->GetSequence(), p_pSample->Size());
+}
+//----------------------------------------------------------------------------------------------
 void RandomSampler::Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount)
 {
 	for (int i = 0; i < p_nSampleCount; i++)

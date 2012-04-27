@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	RandomSampler.h
+//	Filename:	SamplerDiagnostics.h
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
@@ -7,33 +7,20 @@
 #pragma once
 
 #include "Sampler/Sampler.h"
-#include "Maths/Random.h"
+
 //----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
 	namespace Core
 	{
-		class RandomSampler 
-			: public ISampler
+		//----------------------------------------------------------------------------------------------
+		class SamplerDiagnostics
 		{
-		private:
-			Random m_random;
-
 		public:
-			RandomSampler(void) { }
-			RandomSampler(const std::string &p_strName) : ISampler(p_strName) { }
-
-			void Reset(void);
-
-			void Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount);
-			void Get1DSamples(float *p_pSamples, int p_nSampleCount);
-
-			float Get1DSample(void);
-			Vector2 Get2DSample(void);
-
-			void GetSample(Sample *p_pSample);
-
-			std::string ToString(void) const;
+			static float FrequencyTest(ISampler *p_pSampler, int p_nSequenceLength);
+			static float ChiSquareTest(ISampler *p_pSampler, int p_nSequenceLength);
+			static void DistributionTest(ISampler *p_pSampler, int p_nSequenceLength, const std::string &p_strOutput);
 		};
-	} 
+		//----------------------------------------------------------------------------------------------
+	}
 }
