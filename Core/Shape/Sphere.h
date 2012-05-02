@@ -39,9 +39,6 @@ namespace Illumina
 
 			Vector3 SamplePoint(float p_u, float p_v, Vector3 &p_normal);
 			Vector3 SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal);
-
-			Vector3 SamplePoint(float p_u, float p_v, float p_w, float p_x, Vector3 &p_normal) { return SamplePoint(p_u, p_v, p_normal); }
-			Vector3 SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, float p_w, float p_x, Vector3 &p_normal) { return SamplePoint(p_viewPoint, p_u, p_v, p_normal); }
 		};
 	} 
 }

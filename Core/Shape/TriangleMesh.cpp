@@ -142,29 +142,15 @@ float ITriangleMesh::GetPdf(const Vector3 &p_point) const {
 //----------------------------------------------------------------------------------------------
 Vector3 ITriangleMesh::SamplePoint(float p_u, float p_v, Vector3 &p_normal) 
 {
-	return SamplePoint(p_u, p_v, p_u, p_v, p_normal);
+	int triangleToSample = Maths::Min(TriangleList.Size() * m_random.NextFloat(), TriangleList.Size() - 1);
+	return TriangleList[triangleToSample].SamplePoint(p_u, p_v, p_normal);
 }
 //----------------------------------------------------------------------------------------------
 Vector3 ITriangleMesh::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal) 
 {
-	return SamplePoint(p_viewPoint, p_u, p_v, p_u, p_v, p_normal);
-}
-//----------------------------------------------------------------------------------------------
-// Random a;
-Vector3 ITriangleMesh::SamplePoint(float p_u, float p_v, float p_w, float p_x, Vector3 &p_normal) 
-{
-	// p_w = a.NextFloat();
-	// p_x = a.NextFloat();
-	// TODO: Use CDF (pdf ~ area) to determine which face to use.
-	int triangleToSample = Maths::Min(TriangleList.Size() * (p_w + p_x) * 0.5f, TriangleList.Size() - 1);
-	return TriangleList[triangleToSample].SamplePoint(p_u, p_v, p_normal);
-}
-//----------------------------------------------------------------------------------------------
-Vector3 ITriangleMesh::SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, float p_w, float p_x, Vector3 &p_normal) 
-{
 	Vector3 samplePoint;
 
-	samplePoint = SamplePoint(p_u, p_v, p_w, p_x, p_normal);
+	samplePoint = SamplePoint(p_u, p_v, p_normal);
 
 	float cosTheta = Vector3::Dot((samplePoint - p_viewPoint), p_normal);
 
