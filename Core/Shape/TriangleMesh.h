@@ -89,10 +89,6 @@ namespace Illumina
 			Vector3 SamplePoint(float p_u, float p_v, Vector3 &p_normal);
 			Vector3 SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal);
 
-			Vector3 SamplePoint(float p_u, float p_v, float p_w, float p_x, Vector3 &p_normal);
-			Vector3 SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, float p_w, float p_x, Vector3 &p_normal);
-
-
 			// Intersect methods
 			virtual bool Intersects(const Ray &p_ray, DifferentialSurface &p_surface) = 0;
 			virtual bool Intersects(const Ray &p_ray) = 0;
