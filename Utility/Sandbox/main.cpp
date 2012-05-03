@@ -369,7 +369,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 
 			// Post-process frame
-			pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+			// pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 			pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 			pDragoTone->Apply(pRadianceBuffer, pRadianceBuffer);
 			// pAutoTone->Apply(pRadianceBuffer, pRadianceBuffer);
@@ -434,7 +434,7 @@ int main(int argc, char** argv)
 		("verbose", boost::program_options::value<bool>(), "show extended information")
 		("script", boost::program_options::value<std::string>(), "script file to render")
 		("workdir", boost::program_options::value<std::string>(), "working directory")
-		("iterations", boost::program_options::value<int>(), "interations to execute")
+		("iterations", boost::program_options::value<int>(), "iterations to execute")
 		;
 
 	// Declare variable map

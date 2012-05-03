@@ -24,6 +24,8 @@ namespace Illumina
 
 			using BaseRenderer::m_nSampleCount;
 
+			int m_fRenderBudget;
+
 		public:
 			TimeConstrainedRenderer(const std::string &p_strName, Scene *p_pScene = NULL, IIntegrator *p_pIntegrator = NULL, 
 				IDevice *p_pDevice = NULL, IFilter *p_pFilter = NULL, RadianceBuffer *p_pRadianceBuffer = NULL, int p_nSampleCount = 1);
