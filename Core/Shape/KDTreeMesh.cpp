@@ -806,12 +806,13 @@ bool KDTreeMesh::Intersect_Recursive(KDTreeMeshNode *p_pNode, Ray &p_ray, Differ
 //----------------------------------------------------------------------------------------------
 void KDTreeMesh::BuildHierarchy(KDTreeMeshNode *p_pNode, List<IndexedTriangle*> &p_objectList, int p_nAxis, int p_nDepth)
 {
-	ComputeBounds(p_objectList, p_pNode->BoundingBox, 0.0001f, 0.0001f);
-	const Vector3 &size = p_pNode->BoundingBox.GetExtent();
+	ComputeBounds(p_objectList, p_pNode->BoundingBox, 1e-4f, 1e-4f);
+	
+	/*const Vector3 &size = p_pNode->BoundingBox.GetExtent();
 	if (size.X > size.Y) p_nAxis = size.X > size.Z ? 0 : 2;
-	else p_nAxis = size.Y > size.Z ? 1 : 2;
+	else p_nAxis = size.Y > size.Z ? 1 : 2;*/
 
-	BuildHierarchy_S2(p_pNode, p_objectList, p_nAxis, 0);
+	BuildHierarchy_S2(p_pNode, p_objectList, p_pNode->BoundingBox.GetExtent().ArgMaxAbsComponent(), 0);
 }
 
 //----------------------------------------------------------------------------------------------
@@ -857,7 +858,6 @@ void KDTreeMesh::BuildHierarchy_S2(KDTreeMeshNode *p_pNode, List<IndexedTriangle
 		leftAABB.SetMaxExtent(p_nAxis, p_pNode->Partition);
 		rightAABB.SetMinExtent(p_nAxis, p_pNode->Partition);
 
-		//Distribute(p_objectList, leftAABB, rightAABB, leftList, rightList);
 		Distribute(p_objectList, p_pNode->Partition, p_pNode->Axis, leftList, rightList);
 
 		int nAxis = (p_nAxis + 1) % 3,
