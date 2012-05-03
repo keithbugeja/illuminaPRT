@@ -57,6 +57,9 @@ IndexedTriangle::IndexedTriangle(const IndexedTriangle &p_triangle)
 
 	m_edge[0] = m_pMesh->VertexList[m_nVertexID[1]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position;
 	m_edge[1] = m_pMesh->VertexList[m_nVertexID[2]].Position - m_pMesh->VertexList[m_nVertexID[0]].Position;
+
+	if (m_edge[0].LengthSquared() == 0 || m_edge[1].LengthSquared() == 0) 
+		std::cerr << "Warning : Degenerate triangle in mesh!" << std::endl;
 }
 //----------------------------------------------------------------------------------------------
 bool IndexedTriangle::IsBounded(void) const {
@@ -237,10 +240,10 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 	p_surface.ShadingNormal.Normalize();
 	p_surface.GeometryNormal = p_surface.ShadingNormal;
 
-	/* 
+	/* Sanity check */ /*
 	if (p_surface.ShadingNormal.X != p_surface.ShadingNormal.X)
 		std::cerr << "Warning : Indeterminate normal computation!" << std::endl;
-	*/
+	/* */
 
 	return true;
 }
