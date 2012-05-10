@@ -9,6 +9,8 @@
 #include "Image/ImageIO.h"
 #include "Image/ImagePPM.h"
 
+#include "PrecomputationSampler.h"
+
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 float SamplerDiagnostics::FrequencyTest(ISampler *p_pSampler, int p_nSequenceLength)

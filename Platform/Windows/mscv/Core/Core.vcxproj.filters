@@ -773,6 +773,9 @@
     <ClInclude Include="..\..\..\..\Core\Sampler\PrecomputationSampler.h">
       <Filter>Header Files\Sampler</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Postproc\ReconstructionBuffer.h">
+      <Filter>Header Files\Postproc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">

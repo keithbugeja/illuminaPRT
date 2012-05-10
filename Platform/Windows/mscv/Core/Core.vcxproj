@@ -273,6 +273,7 @@
     <ClInclude Include="..\..\..\..\Core\Postproc\DragoTone.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\PostProcess.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\PostProcessFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Postproc\ReconstructionBuffer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\BaseRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\BasicRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\DistributedRenderer.h" />
