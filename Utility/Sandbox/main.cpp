@@ -158,6 +158,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	engineKernel.GetPostProcessManager()->RegisterFactory("DragoTone", new DragoToneFactory());
 	engineKernel.GetPostProcessManager()->RegisterFactory("Accumulation", new AccumulationBufferFactory());
 	engineKernel.GetPostProcessManager()->RegisterFactory("Discontinuity", new DiscontinuityBufferFactory());
+	engineKernel.GetPostProcessManager()->RegisterFactory("Reconstruction", new ReconstructionBufferFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Renderer
@@ -167,6 +168,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	engineKernel.GetRendererManager()->RegisterFactory("Multipass", new MultipassRendererFactory());
 	engineKernel.GetRendererManager()->RegisterFactory("Multithreaded", new MultithreadedRendererFactory());
 	engineKernel.GetRendererManager()->RegisterFactory("Distributed", new DistributedRendererFactory());
+	engineKernel.GetRendererManager()->RegisterFactory("TimeConstrained", new TimeConstrainedRendererFactory());
 
 	//----------------------------------------------------------------------------------------------
 	// Device
@@ -262,6 +264,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	IPostProcess *pDiscontinuityBuffer = engineKernel.GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
 	IPostProcess *pAutoTone = engineKernel.GetPostProcessManager()->CreateInstance("AutoTone", "AutoTone", "");
 	IPostProcess *pDragoTone = engineKernel.GetPostProcessManager()->CreateInstance("DragoTone", "DragoTone", "");
+	IPostProcess *pReconstructionBuffer = engineKernel.GetPostProcessManager()->CreateInstance("Reconstruction", "ReconstructionBuffer", "");
 	
 	AccumulationBuffer *pAccumulationBuffer = (AccumulationBuffer*)engineKernel.GetPostProcessManager()->CreateInstance("Accumulation", "AccumulationBuffer", "");
 	pAccumulationBuffer->SetAccumulationBuffer(pRadianceAccumulationBuffer);
@@ -294,20 +297,28 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		reg[j].frameBudget = 0;
 	}
 
+	pRenderer->SetRenderBudget(0.25f / (regions * 0.3f));
+	Vector3 observer = pCamera->GetObserver();
+
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
 		#if (defined(TEST_TILERENDER))
-			//// Animate scene
-			//alpha += Maths::PiTwo / 32.f;
+			
+			// Animate scene
+			alpha += Maths::PiTwo / 180.f;
 		
-			//rotation.MakeRotation(Vector3::UnitYPos, alpha);
+			rotation.MakeRotation(Vector3::UnitYPos, alpha);
 
-			//// ((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetScaling(Vector3::Ones * 20.0f);
+			////((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetScaling(Vector3::Ones * 20.0f);
 			//// ((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetRotation(rotation);
 
 			////pCamera->MoveTo(lookFrom);
 			////pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
 			////pCamera->LookAt(lookAt);
+			Vector3 observer_ = observer;
+			observer_.Z += Maths::Cos(alpha); // * 100.f;
+			pCamera->MoveTo(observer_);
+			pAccumulationBuffer->Reset();
 
 			// Start timer
 			start = Platform::GetTime();
@@ -370,6 +381,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 
 			// Post-process frame
 			// pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+			pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 			pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 			pDragoTone->Apply(pRadianceBuffer, pRadianceBuffer);
 			// pAutoTone->Apply(pRadianceBuffer, pRadianceBuffer);
@@ -384,7 +396,9 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 
 			// Commit frame
-			pRenderer->Commit(pRadianceBuffer);
+			static int frameId = 9;
+			if (frameId++ % 10 == 0)
+				pRenderer->Commit(pRadianceBuffer);
 
 			// Compute frames per second
 			elapsed = Platform::ToSeconds(Platform::GetTime() - start);

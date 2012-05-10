@@ -37,6 +37,7 @@ namespace Illumina
 				return result;
 			}
 			//----------------------------------------------------------------------------------------------
+			/* 
 			static float VanDerCorput(unsigned int n)
 			{
 				const unsigned int nibble[] = { 0x0, 0x8, 0x4, 0xC, 
@@ -56,26 +57,37 @@ namespace Illumina
 
 				return num / (float)0x100000000LL;
 			}
+			*/
 			//----------------------------------------------------------------------------------------------
-			static float VanDerCorput(unsigned int n, const unsigned int scramble)
+			static double VanDerCorput(unsigned int bits, unsigned int r = 0)
 			{
-				n = (n << 16) | (n >> 16);
-				n = ((n & 0x00ff00ff) << 8) | ((n & 0xff00ff00) >> 8);
-				n = ((n & 0x0f0f0f0f) << 4) | ((n & 0xf0f0f0f0) >> 4);
-				n = ((n & 0x33333333) << 2) | ((n & 0xcccccccc) >> 2);
-				n = ((n & 0x55555555) << 1) | ((n & 0xaaaaaaaa) >> 1);
-				n ^= scramble;
+				bits = (bits << 16) | (bits >> 16);
+				bits = ((bits & 0x00ff00ff) << 8) | ((bits & 0xff00ff00) >> 8);
+				bits = ((bits & 0x0f0f0f0f) << 4) | ((bits & 0xf0f0f0f0) >> 4);
+				bits = ((bits & 0x33333333) << 2) | ((bits & 0xcccccccc) >> 2);
+				bits = ((bits & 0x55555555) << 1) | ((bits & 0xaaaaaaaa) >> 1);
+				bits ^= r;
 
-				return (float)n / (float)0x100000000LL;
+				return (double) bits / (double) 0x100000000L;
+			}
+
+			//----------------------------------------------------------------------------------------------
+			static double Sobol2(unsigned int i, unsigned int r = 0)
+			{
+				for (unsigned int v = 1 << 31; i ; i >>= 1, v ^= v >> 1)
+					if (i & 1) r ^= v;
+			
+				return (double) r / (double) 0x100000000L;
 			}
 			//----------------------------------------------------------------------------------------------
-			static float Sobol2(unsigned int n, unsigned int scramble)
+			static double RI_LP(unsigned int i, unsigned int r = 0)
 			{
-				for (unsigned int v = 1 << 31; n != 0; n >>= 1, v ^= v >> 1)
-					if (n & 0x1) scramble ^= v;
+				for (unsigned int v = 1 << 31; i; i >>= 1, v |= v >> 1)
+					if (i & 1) r ^= v;
 
-				return (float)scramble / (float)0x100000000LL;
+				return (double) r / (double) 0x100000000L;
 			}
+			//----------------------------------------------------------------------------------------------
 		};
 		//----------------------------------------------------------------------------------------------
 
@@ -95,7 +107,7 @@ namespace Illumina
 			: public ISequenceGenerator
 		{
 		private:
-			int m_nSequenceId;
+			unsigned int m_nSequenceId;
 		
 		public:
 			HaltonSequenceGenerator(void) : m_nSequenceId(0) { }
@@ -109,11 +121,13 @@ namespace Illumina
 			: public ISequenceGenerator
 		{
 		private:
-			int m_nSequenceId;
+			unsigned int m_nSequenceId;
 		
 		public:
 			SobolSequenceGenerator(void) : m_nSequenceId(0) { }
-			float operator()(void) { return QuasiRandomSequence::Sobol2(m_nSequenceId++, TSeed); }
+			float operator()(void) { 
+				return (float)QuasiRandomSequence::Sobol2(m_nSequenceId++, TSeed); 
+			}
 		};
 		//----------------------------------------------------------------------------------------------
 
@@ -123,11 +137,13 @@ namespace Illumina
 			: public ISequenceGenerator
 		{
 		private:
-			int m_nSequenceId;
+			unsigned int m_nSequenceId;
 		
 		public:
 			VanDerCorputSequenceGenerator(void) : m_nSequenceId(0) { }
-			float operator()(void) { return QuasiRandomSequence::VanDerCorput(m_nSequenceId++); }
+			float operator()(void) { 
+				return (float)QuasiRandomSequence::VanDerCorput(m_nSequenceId++, TSeed); 
+			}
 		};
 		//----------------------------------------------------------------------------------------------
 
@@ -210,10 +226,6 @@ namespace Illumina
 					p_pSamples->Y = m_pSampleList[m_nSampleIndex++];
 
 					p_pSamples++; m_nSampleIndex &= TSequenceSize;
-					
-					//m_nSampleIndex &= TSequenceSize;
-					//if (m_nSampleIndex >= TSequenceSize)
-						//m_nSampleIndex = 0;
 				}
 			}
 			//----------------------------------------------------------------------------------------------
@@ -223,20 +235,12 @@ namespace Illumina
 				{
 					*p_pSamples++ = m_pSampleList[m_nSampleIndex++];
 					m_nSampleIndex &= TSequenceSize;
-					
-					//if (++m_nSampleIndex >= TSequenceSize)
-						//m_nSampleIndex = 0;
 				}
 			}
 			//----------------------------------------------------------------------------------------------
 			float Get1DSample(void) 
 			{
 					return m_pSampleList[(m_nSampleIndex = (m_nSampleIndex + 1) & TSequenceSize)];
-
-					//float result = m_pSampleList[m_nSampleIndex];
-					//if (++m_nSampleIndex >= TSequenceSize)
-						//m_nSampleIndex = 0;
-					//return result;
 			}
 			//----------------------------------------------------------------------------------------------
 			Vector2 Get2DSample(void) 
@@ -244,11 +248,6 @@ namespace Illumina
 					float *sample = m_pSampleList + m_nSampleIndex;
 					m_nSampleIndex = (m_nSampleIndex + 2) & TSequenceSize;
 					return Vector2(sample[0], sample[1]);
-
-					//Vector2 result(m_pSampleList[m_nSampleIndex++], m_pSampleList[m_nSampleIndex++]);
-					//if (m_nSampleIndex >= TSequenceSize)
-						//m_nSampleIndex = 0;
-					//return result;
 			}
 			//----------------------------------------------------------------------------------------------
 			std::string ToString(void) const
@@ -258,8 +257,8 @@ namespace Illumina
 			//----------------------------------------------------------------------------------------------
 		};
 
-		typedef PrecomputedSampler<0x01FFFF, HaltonSequenceGenerator<7>, HaltonSequenceGenerator<5>> PrecomputedHaltonSampler;
-		typedef PrecomputedSampler<0x01FFFF, SobolSequenceGenerator<3>, VanDerCorputSequenceGenerator<7>> PrecomputedSobolSampler;
-		typedef PrecomputedSampler<0x01FFFF, RandomSequenceGenerator<3331333>, RandomSequenceGenerator<63761>> PrecomputedRandomSampler;
+		typedef PrecomputedSampler<0xFFFF, HaltonSequenceGenerator<7>, HaltonSequenceGenerator<5>> PrecomputedHaltonSampler;
+		typedef PrecomputedSampler<0xFFFF, VanDerCorputSequenceGenerator<0>, SobolSequenceGenerator<0>> PrecomputedSobolSampler;
+		typedef PrecomputedSampler<0xFFFF, RandomSequenceGenerator<3331333>, RandomSequenceGenerator<63761>> PrecomputedRandomSampler;
 	} 
 }

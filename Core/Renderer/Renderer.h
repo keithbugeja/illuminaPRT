@@ -39,6 +39,8 @@ namespace Illumina
 			virtual bool Initialise(void) { return true; }
 			virtual bool Shutdown(void) { return false; }
 
+			virtual void SetRenderBudget(float p_fRenderBudget) { } 
+
 			// RadianceBuffer dimensions should equal device dimensions
 			virtual void Render(void) = 0;
 			virtual void Render(RadianceBuffer *p_pRadianceBuffer) = 0;

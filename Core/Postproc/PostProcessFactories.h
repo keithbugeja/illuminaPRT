@@ -15,6 +15,7 @@
 #include "Postproc/DragoTone.h"
 #include "Postproc/AccumulationBuffer.h"
 #include "Postproc/DiscontinuityBuffer.h"
+#include "Postproc/ReconstructionBuffer.h"
 
 namespace Illumina
 {
@@ -148,6 +149,46 @@ namespace Illumina
 			Illumina::Core::IPostProcess *CreateInstance(int p_nKernelSize, float p_fAngle, float p_fDistance)
 			{
 				return new DiscontinuityBuffer(p_nKernelSize, p_fAngle, p_fDistance);
+			}
+		};
+
+		class ReconstructionBufferFactory : public Illumina::Core::Factory<Illumina::Core::IPostProcess>
+		{
+		public:
+			Illumina::Core::IPostProcess *CreateInstance(void)
+			{
+				return new ReconstructionBuffer();
+			}
+
+			// Arguments
+			// -- Id
+			// -- KernelSize
+			Illumina::Core::IPostProcess *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				int kernelSize = 3;
+				
+				float angle	= 0.75f,
+					distance = 100000.0f;
+
+				p_argumentMap.GetArgument("KernelSize", kernelSize);
+				p_argumentMap.GetArgument("AngleThreshold", angle);
+				p_argumentMap.GetArgument("DistanceThreshold", distance);
+
+				std::string strId;
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId, kernelSize, angle, distance);
+
+				return CreateInstance(kernelSize, angle, distance);
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(const std::string &p_strId, int p_nKernelSize, float p_fAngle, float p_fDistance)
+			{
+				return new ReconstructionBuffer(p_strId, p_nKernelSize, p_fAngle, p_fDistance);
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(int p_nKernelSize, float p_fAngle, float p_fDistance)
+			{
+				return new ReconstructionBuffer(p_nKernelSize, p_fAngle, p_fDistance);
 			}
 		};
 	}

@@ -5,6 +5,15 @@
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 #include "Renderer/TimeConstrainedRenderer.h"
+#include "Integrator/Integrator.h"
+#include "Geometry/Intersection.h"
+#include "Spectrum/Spectrum.h"
+#include "Camera/Camera.h"
+#include "Device/Device.h"
+#include "Scene/Scene.h"
+
+#include "Sampler/Sampler.h"
+#include "Filter/Filter.h"
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -36,9 +45,13 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 		rcpHeight = 1.f / m_pDevice->GetHeight(),
 		rcpSampleCount = 1.f / m_nSampleCount;
 
+	double startTime = Platform::GetTime();
+
 	// Handle supersampling independently
 	if (m_nSampleCount > 1)
 	{
+		/*
+
 		// Get sample stream
 		Vector2 *pSampleBuffer = new Vector2[m_nSampleCount];
 
@@ -86,7 +99,6 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 				pRadianceContext->Indirect = accumulator.Indirect * rcpSampleCount;
 				pRadianceContext->Albedo = accumulator.Albedo * rcpSampleCount;
 				
-				
 				//pRadianceContext->Final.Set(Maths::Abs(pRadianceContext->Normal.Element[0]),
 				//	Maths::Abs(pRadianceContext->Normal.Element[1]), 
 				//	Maths::Abs(pRadianceContext->Normal.Element[2]));
@@ -95,20 +107,87 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 		}
 
 		delete[] pSampleBuffer;
+
+		*/
 	}
 	else
 	{
+		m_ldSampler.Reset();
+
 		Vector2 sample = 
 			m_pScene->GetSampler()->Get2DSample();
 
 		// No supersampling
 		context.SampleIndex = 0;
 
-		// Render tile
-		for (int srcY = p_nRegionY, dstY = p_nBufferY; srcY < regionYEnd; ++srcY, ++dstY)
+		bool done = false;
+
+		int requiredSamples = p_nRegionWidth * p_nRegionHeight;
+		int maxSamples = requiredSamples;
+
+		// Clear flag
+		for (int srcY = p_nRegionY, dstY = p_nBufferY; srcY < regionYEnd && !done; ++srcY, ++dstY)
 		{
 			for (int srcX = p_nRegionX, dstX = p_nBufferX; srcX < regionXEnd; ++srcX, ++dstX)
 			{
+				p_pRadianceBuffer->GetP(dstX, dstY)->Flag = false;
+			}
+		}
+
+		// Rasterise pixels
+		while (requiredSamples-- > 0)
+		{
+			double currentTime = Platform::GetTime();
+				
+			if (Platform::ToSeconds(currentTime - startTime) > m_fRenderBudget)
+			{
+				done = true;
+				break;
+			}
+
+			sample.X = QuasiRandomSequence::VanDerCorput(maxSamples - requiredSamples);
+			sample.Y = QuasiRandomSequence::Sobol2(maxSamples - requiredSamples);
+
+			//Vector2 sample = m_ldSampler.Get2DSample();
+
+			int sampleX = sample.X * p_nRegionWidth,
+				sampleY = sample.Y * p_nRegionHeight;
+
+			int srcX = sampleX + p_nRegionX,
+				srcY = sampleY + p_nRegionY;
+
+			int dstX = sampleX + p_nBufferX,
+				dstY = sampleY + p_nBufferY;
+
+			// Get radiance context
+			pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
+
+			// Set integrator context
+			context.SurfacePosition.Set(srcX, srcY);
+			context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
+
+			// Get ray from camera
+			m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, sample.U * rcpWidth, sample.V * rcpHeight, pRadianceContext->ViewRay);
+				
+			// Get radiance
+			pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
+			pRadianceContext->Flag = true;
+		}
+
+		/*
+		// Render tile
+		for (int srcY = p_nRegionY, dstY = p_nBufferY; srcY < regionYEnd && !done; ++srcY, ++dstY)
+		{
+			for (int srcX = p_nRegionX, dstX = p_nBufferX; srcX < regionXEnd; ++srcX, ++dstX)
+			{
+				double currentTime = Platform::GetTime();
+				
+				if (Platform::ToSeconds(currentTime - startTime) > m_fRenderBudget)
+				{
+					done = true;
+					break;
+				}
+
 				// Get radiance context
 				pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
 
@@ -118,11 +197,11 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 
 				// Get ray from camera
 				m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, sample.U * rcpWidth, sample.V * rcpHeight, pRadianceContext->ViewRay);
-				//m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.5f * rcpWidth, 0.5f * rcpHeight, pRadianceContext->ViewRay);
 				
 				// Get radiance
 				pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
 			}
 		}
+		*/
 	}
-}*/
+}

@@ -4,7 +4,7 @@
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-#include "Renderer/BasicRenderer.h"
+#include "Renderer/BaseRenderer.h"
 #include "Integrator/Integrator.h"
 #include "Geometry/Intersection.h"
 #include "Spectrum/Spectrum.h"

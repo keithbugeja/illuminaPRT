@@ -41,6 +41,119 @@ bool WhittedIntegrator::Shutdown(void)
 	return true;
 }
 //----------------------------------------------------------------------------------------------
+Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_intersection, RadianceContext *p_pRadianceContext)
+{
+	VisibilityQuery visibilityQuery(p_pScene);
+
+	Spectrum pathThroughput(1.f), 
+		L(0.f);
+	
+	IMaterial *pMaterial = NULL;
+	bool specularBounce = false;
+
+	BxDF::Type bxdfType;
+	
+	Vector3 wIn, wOut, 
+		wInLocal, wOutLocal; 
+
+	Vector2 sample;
+
+	float pdf;
+
+	int rayDepth = 0;
+
+	//----------------------------------------------------------------------------------------------
+	// Avoid having to perform multiple checks for a NULL radiance context
+	//----------------------------------------------------------------------------------------------
+	RadianceContext radianceContext;
+
+	if (p_pRadianceContext == NULL)
+		p_pRadianceContext = &radianceContext;
+	
+	// Initialise context
+	p_pRadianceContext->Indirect = 
+		p_pRadianceContext->Direct = 
+		p_pRadianceContext->Albedo = 0.f;
+
+	// Construct ray from intersection details
+	Ray ray(p_intersection.Surface.RayOriginWS, 
+		p_intersection.Surface.RayDirectionWS); 
+
+	//----------------------------------------------------------------------------------------------
+	// If intersection is invalid, return
+	//----------------------------------------------------------------------------------------------
+	if (!p_intersection.IsValid())
+	{
+		for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
+			p_pRadianceContext->Direct += p_pScene->LightList[lightIndex]->Radiance(-ray);
+
+		return p_pRadianceContext->Direct;
+	} 
+
+	//----------------------------------------------------------------------------------------------
+	// Set spatial information to radiance context
+	//----------------------------------------------------------------------------------------------
+	p_pRadianceContext->SetSpatialContext(&p_intersection);
+
+	//----------------------------------------------------------------------------------------------
+	// Primitive has no material assigned - terminate
+	//----------------------------------------------------------------------------------------------
+	if (p_intersection.HasMaterial())
+	{
+		pMaterial = p_intersection.GetMaterial();
+	
+		//----------------------------------------------------------------------------------------------
+		// Sample lights for specular / first bounce
+		//----------------------------------------------------------------------------------------------
+		wOut = -Vector3::Normalize(ray.Direction);
+	
+		//----------------------------------------------------------------------------------------------
+		// Additional logic for first hit
+		//----------------------------------------------------------------------------------------------
+		if (rayDepth == 0) 
+		{
+			// Set albedo for first hit
+			p_pRadianceContext->Albedo = pMaterial->Rho(wOut, p_intersection.Surface);
+
+			// If an emissive material has been encountered, add contribution and terminate path
+			if (p_intersection.IsEmissive())
+			{
+				p_pRadianceContext->Direct = 
+					p_pRadianceContext->Final = 
+					p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut); 
+				
+				return p_pRadianceContext->Final;
+			}
+		}
+
+		//----------------------------------------------------------------------------------------------
+		// Sample lights for direct lighting
+		//----------------------------------------------------------------------------------------------
+		if (pMaterial->HasBxDFType(BxDF::Reflection, false))
+		{
+			p_pRadianceContext->Direct = 
+				SampleAllLights(p_pScene, p_intersection, 
+				p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOut, 
+				p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+		}
+	}
+
+	return p_pRadianceContext->Direct;
+}
+//----------------------------------------------------------------------------------------------
+Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext)
+{
+	// Compute intersection step
+	if (!p_pScene->Intersects(Ray(p_ray), p_intersection))
+	{
+		p_intersection.Surface.RayOriginWS = p_ray.Origin;
+		p_intersection.Surface.RayDirectionWS = p_ray.Direction;
+	}
+
+	return Radiance(p_pContext, p_pScene, p_intersection, p_pRadianceContext);
+}
+//----------------------------------------------------------------------------------------------
+/*
 Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext)
 {
 	// Compute intersection step
@@ -173,7 +286,6 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 			IsSpecularTransmissive = false;
 
 		// Reflection
-		/**/ /**/
 		if (pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Reflection)))
 		{
 			IsSpecularReflective = true;
@@ -207,11 +319,8 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 				Ls = f * Radiance(p_pContext, p_pScene, ray, intersection, p_nRayDepth + 1);
 			}
 		} 
-		/**/
-		//*/
-		/**/
+
 		// Refraction
-	/**/
 		if (pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Transmission)))
 		{
 			IsSpecularTransmissive = true;
@@ -249,4 +358,5 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 
 	return 0.0f;
 }
+*/
 //----------------------------------------------------------------------------------------------
