@@ -297,7 +297,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		reg[j].frameBudget = 0;
 	}
 
-	pRenderer->SetRenderBudget(0.25f / (regions * 0.3f));
+	pRenderer->SetRenderBudget(20.f / ((float)regions * 0.33f));
+	//pRenderer->SetRenderBudget(10.f);
 	Vector3 observer = pCamera->GetObserver();
 
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
@@ -316,9 +317,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			////pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
 			////pCamera->LookAt(lookAt);
 			Vector3 observer_ = observer;
-			observer_.Z += Maths::Cos(alpha); // * 100.f;
-			pCamera->MoveTo(observer_);
-			pAccumulationBuffer->Reset();
+			observer_.Z += Maths::Cos(alpha) * 2.f;
+			// pCamera->MoveTo(observer_);
 
 			// Start timer
 			start = Platform::GetTime();
@@ -365,6 +365,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 
 			requiredBudget = 0.f;
+			
 			for (int j = 0; j < regions; j++)
 			{
 				requiredBudget += reg[j].nextTime;
@@ -380,9 +381,12 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 
 			// Post-process frame
-			// pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 			pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
-			pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+			pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+
+			//pAccumulationBuffer->Reset();
+			//pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+
 			pDragoTone->Apply(pRadianceBuffer, pRadianceBuffer);
 			// pAutoTone->Apply(pRadianceBuffer, pRadianceBuffer);
 
@@ -396,8 +400,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 
 			// Commit frame
-			static int frameId = 9;
-			if (frameId++ % 10 == 0)
+			static int frameId = 4;
+			if (frameId++ % 5 == 0)
 				pRenderer->Commit(pRadianceBuffer);
 
 			// Compute frames per second

@@ -49,7 +49,7 @@ namespace Illumina
 
 				int ys, ye, xs, xe;
 				int irradianceSamples;
-				m_nKernelSize = 5;
+				m_nKernelSize = 7;
 
 				//----------------------------------------------------------------------------------------------
 				for (int y = p_nRegionY + m_nKernelSize; y < p_nRegionHeight - m_nKernelSize; ++y)
@@ -63,13 +63,18 @@ namespace Illumina
 						pOutputContext = p_pOutput->GetP(x, y);
 
 						if (pKernelContext->Flag)
+						{
+							// pKernelContext->Final = pKernelContext->Direct;
 							continue;
+						}
 
 						xs = x - m_nKernelSize;
 						xe = x + m_nKernelSize;
 
 						irradianceSamples = 0;
-						Spectrum Ld = 0.f;
+						Spectrum Ld = 0.f, 
+							Li = 0.f, 
+							albedo = 0.f;
 
 						for (int dy = ys; dy < ye; dy++)
 						{
@@ -81,7 +86,10 @@ namespace Illumina
 								{
 									// if (Vector3::Dot(pKernelContext->Normal, pNeighbourContext->Normal) > m_fAngle)
 									{
-										Ld += pNeighbourContext->Final;
+										Ld += pNeighbourContext->Direct;
+										Li += pNeighbourContext->Indirect;
+										albedo += pNeighbourContext->Albedo;
+
 										irradianceSamples++;
 									}
 								}
@@ -91,10 +99,23 @@ namespace Illumina
 						}
 			
 						// Compute final colour
-						if (irradianceSamples) {
-							pOutputContext->Final = Ld / irradianceSamples;
+						if (irradianceSamples) 
+						{
+							pOutputContext->Direct = Ld / irradianceSamples;
+							pOutputContext->Indirect = Li / irradianceSamples;
+							pOutputContext->Albedo = albedo / irradianceSamples;
+
+							pOutputContext->Final = pOutputContext->Direct + pOutputContext->Indirect * pOutputContext->Albedo;
 							// pOutputContext->Flag = 1;
 						}
+					}
+				}
+				
+				for (int y = p_nRegionY; y < p_nRegionHeight; ++y)
+				{
+					for (int x = p_nRegionX; x < p_nRegionWidth; ++x)
+					{
+						p_pOutput->GetP(x, y)->Flag = false;
 					}
 				}
 
