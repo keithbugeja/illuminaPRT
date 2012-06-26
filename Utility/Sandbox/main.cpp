@@ -84,7 +84,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	SamplerDiagnostics samplerTest;
 	ISampler *pSampler;
 	float result;
-	const int sampleSize = 1e+4; //1e+6;
+	const int sampleSize = 512*512; //1e+6;
 
 	pSampler = new RandomSampler();
 	std::cout << "-- Random Sampler --" << std::endl;
@@ -205,6 +205,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	// Textures
 	//----------------------------------------------------------------------------------------------
 	Message("Registering Textures...", p_bVerbose);
+	engineKernel.GetTextureManager()->RegisterFactory("MMF", new MemoryMappedTextureFactory());
 	engineKernel.GetTextureManager()->RegisterFactory("Image", new ImageTextureFactory());
 	engineKernel.GetTextureManager()->RegisterFactory("Noise", new NoiseTextureFactory());
 	engineKernel.GetTextureManager()->RegisterFactory("Marble", new MarbleTextureFactory());
@@ -281,8 +282,12 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		double frameBudget;
 	};
 	
-	const int regionX = pRenderer->GetDevice()->GetWidth() / 40;
-	const int regionY = pRenderer->GetDevice()->GetHeight() / 40;
+	const int regionWidth = 32;
+	const int regionHeight = 32;
+
+	const int regionX = pRenderer->GetDevice()->GetWidth() / regionWidth;
+	const int regionY = pRenderer->GetDevice()->GetHeight() / regionHeight;
+
 	const int regions = regionX * regionY;
 
 	float totalBudget = 0.5f;
@@ -297,7 +302,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		reg[j].frameBudget = 0;
 	}
 
-	pRenderer->SetRenderBudget(20.f / ((float)regions * 0.33f));
+	pRenderer->SetRenderBudget(1e+20f);
+	//pRenderer->SetRenderBudget(20.f / ((float)regions * 0.33f));
 	//pRenderer->SetRenderBudget(10.f);
 	Vector3 observer = pCamera->GetObserver();
 
@@ -354,7 +360,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 				for (int x = 0; x < regionX; x++)
 				{
 					double regionStart = Platform::GetTime();
-					pRenderer->RenderRegion(pRadianceBuffer, x * 40, y * 40, 40, 40, x * 40, y * 40);
+					pRenderer->RenderRegion(pRadianceBuffer, x * regionWidth, y * regionHeight, regionWidth, regionHeight, x * regionWidth, y * regionHeight);
 					double regionEnd = Platform::GetTime();
 
 					double lastActual = Platform::ToSeconds(regionEnd - regionStart);
@@ -381,11 +387,11 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 
 			// Post-process frame
-			pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+			// pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 			pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 
 			//pAccumulationBuffer->Reset();
-			//pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+			pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 
 			pDragoTone->Apply(pRadianceBuffer, pRadianceBuffer);
 			// pAutoTone->Apply(pRadianceBuffer, pRadianceBuffer);
@@ -401,7 +407,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 
 			// Commit frame
 			static int frameId = 4;
-			if (frameId++ % 5 == 0)
+			// if (frameId++ % 5 == 0)
 				pRenderer->Commit(pRadianceBuffer);
 
 			// Compute frames per second

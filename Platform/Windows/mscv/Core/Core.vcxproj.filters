@@ -776,6 +776,15 @@
     <ClInclude Include="..\..\..\..\Core\Postproc\ReconstructionBuffer.h">
       <Filter>Header Files\Postproc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Sampler\QuasiRandom.h">
+      <Filter>Header Files\Sampler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Image\ImageTGA.h">
+      <Filter>Header Files\Image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Texture\MemoryMappedTexture.h">
+      <Filter>Header Files\Texture</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">

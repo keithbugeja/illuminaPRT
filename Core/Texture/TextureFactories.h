@@ -12,12 +12,14 @@
 
 #include "Image/ImagePPM.h"
 #include "Image/ImagePFM.h"
+#include "Image/ImageTGA.h"
 
 #include "Texture/Texture.h"
 #include "Texture/SimpleTexture.h"
 #include "Texture/NoiseTexture.h"
 #include "Texture/MarbleTexture.h"
 #include "Texture/ImageTexture.h"
+#include "Texture/MemoryMappedTexture.h"
 
 namespace Illumina
 {
@@ -59,8 +61,41 @@ namespace Illumina
 					ImagePFM imagePFM;
 					return new ImageTexture(p_strId, p_strFilename, (IImageIO*)&imagePFM);
 				}
+				else if (p_strFiletype.find("TGA") != std::string::npos)
+				{
+					ImageTGA imageTGA;
+					return new ImageTexture(p_strId, p_strFilename, (IImageIO*)&imageTGA);
+				}
 
 				throw new Exception("Unable to create ImageTexture instance!");
+			}
+		};
+
+		class MemoryMappedTextureFactory : public Illumina::Core::Factory<Illumina::Core::ITexture>
+		{
+		public:
+			Illumina::Core::ITexture *CreateInstance(void)
+			{
+				throw new Exception("Method not supported!");
+			}
+
+			Illumina::Core::ITexture *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strId, 
+					strFilename;
+
+				if (p_argumentMap.GetArgument("Id", strId) && 
+					p_argumentMap.GetArgument("Filename", strFilename))
+				{
+					return CreateInstance(strId, strFilename);
+				}
+
+				throw new Exception("Invalid arguments to MemoryMappedTextureFactory!");
+			}
+
+			Illumina::Core::ITexture *CreateInstance(const std::string &p_strId, const std::string &p_strFilename)
+			{
+				return new MemoryMappedTexture(p_strId, p_strFilename);
 			}
 		};
 

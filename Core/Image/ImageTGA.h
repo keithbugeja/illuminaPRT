@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	ImagePPM.h
+//	Filename:	ImageTGA.h
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
@@ -12,13 +12,12 @@
 #include <sstream>
 
 #include "Image/ImageIO.h"
-#include "Texture/MemoryMappedTexture.h"
 
 namespace Illumina 
 {
 	namespace Core
 	{
-		class ImagePPM 
+		class ImageTGA 
 			: public IImageIO
 		{
 		public:
@@ -32,51 +31,61 @@ namespace Illumina
 				if (!imageFile.is_open())
 				{
 					std::cerr << "ERROR -- Couldn't open file \'" << p_strImageFile << "\'" << std::endl;
-					//exit(-1);
+					exit(-1);
 
-					imageFile.open("C:\\Users\\Keith\\Dropbox\\Development\\HPC\\IlluminaPRT\\Resource\\Model\\quake\\default.ppm", std::ios::binary);
+					// Should create a default image, if file is not found!
 				}
 
-				// Read and parse header
-				char magicNumber[2], whitespace;
-				int	width, height, colours;
-				
-				RGBPixel colour;
-				
-				imageFile.get(magicNumber[0]);
-				imageFile.get(magicNumber[1]);
-				imageFile.get(whitespace);
+				unsigned short width, height;
+				unsigned char depth;
+
+				imageFile.seekg(12, std::ios::beg);
 				imageFile >> std::noskipws >> width;
-				imageFile.get(whitespace);
 				imageFile >> std::noskipws >> height;
-				imageFile.get(whitespace);
-				imageFile >> std::noskipws >> colours;
-				imageFile.get(whitespace);
+				imageFile >> std::noskipws >> depth;
+				imageFile.seekg(18, std::ios::beg);
 
 				// Create image
 				Image* pImage = new Image(width, height);
 				Image &image = *pImage;
 
-				for (int i = 0; i < image.GetArea(); i++)
-				{
-					image[i].R = (unsigned char)imageFile.get();
-					image[i].G = (unsigned char)imageFile.get();
-					image[i].B = (unsigned char)imageFile.get();
+				int mode = depth >> 3;
 
-					image[i]/=255.0f;
+				switch(mode)
+				{
+					case 3:
+					{
+						for (int i = 0; i < image.GetArea(); i++)
+						{
+							image[i].B = (unsigned char)imageFile.get();
+							image[i].G = (unsigned char)imageFile.get();
+							image[i].R = (unsigned char)imageFile.get();
+
+							image[i]/=255.0f;
+						}
+
+						break;
+					}
+
+					case 4:
+					{
+						for (int i = 0; i < image.GetArea(); i++)
+						{
+							image[i].B = (unsigned char)imageFile.get();
+							image[i].G = (unsigned char)imageFile.get();
+							image[i].R = (unsigned char)imageFile.get();
+
+							image[i]/=255.0f;
+
+							imageFile.get();
+						}
+
+						break;
+					}
 				}
 
 				// Close image file
 				imageFile.close();
-
-				/*
-				size_t f = p_strImageFile.find('.');
-				std::string nf = p_strImageFile.substr(0, f) + ".mmf";
-
-				std::cout << "MMF : " << nf << std::endl;
-
-				MemoryMappedTexture::Make(image, nf); 
-				*/
 
 				return pImage;
 			}
