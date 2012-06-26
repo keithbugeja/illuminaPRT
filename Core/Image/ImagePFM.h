@@ -31,7 +31,9 @@ namespace Illumina
 				if (!imageFile.is_open())
 				{
 					std::cerr << "ERROR -- Couldn't open file \'" << p_strImageFile << "\'" << std::endl;
-					exit(-1);
+					//exit(-1);
+
+					imageFile.open("C:\\Users\\Keith\\Dropbox\\Development\\HPC\\IlluminaPRT\\Resource\\Model\\quake\\default.ppm", std::ios::binary);
 				}
 
 				// Read and parse header

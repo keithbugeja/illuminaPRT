@@ -136,6 +136,8 @@ bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int
 			p_pArgumentMap->GetArgument("Id", meshName);
 		
 		m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, context.Mesh);
+
+		//context.Mesh->UpdateNormals();
 	}
 
 	if (context.Materials != NULL)
@@ -305,7 +307,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 
 	// Add Wavefront materials to context material group
 	if (p_context.Materials == NULL)
-		p_context.Materials = new MaterialGroup(materialPath.filename().string() );
+		p_context.Materials = new MaterialGroup(materialPath.filename().string());
 
 	int baseGroupId = p_context.Materials->Size();
 
@@ -329,6 +331,11 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 					<< "Filename=" << (materialPath.parent_path() / material.DiffuseMap).string() << ";"
 					<< "Filetype=PPM;";
 
+				/*
+				pTexture = m_pEngineKernel->GetTextureManager()->CreateInstance("MMF", 
+					material.DiffuseMap, textureArgumentStream.str());
+				*/
+				 
 				pTexture = m_pEngineKernel->GetTextureManager()->CreateInstance("Image", 
 					material.DiffuseMap, textureArgumentStream.str());
 			}

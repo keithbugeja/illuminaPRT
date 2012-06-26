@@ -106,6 +106,9 @@ Spectrum PathIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 		
 		pMaterial = p_intersection.GetMaterial();
 
+		// Kludge for sampling of direct lighting
+		p_intersection.Surface.PointWS += p_intersection.Surface.GeometryBasisWS.W * m_fReflectEpsilon;
+
 		//----------------------------------------------------------------------------------------------
 		// Sample lights for specular / first bounce
 		//----------------------------------------------------------------------------------------------

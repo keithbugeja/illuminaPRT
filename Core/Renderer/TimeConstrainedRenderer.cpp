@@ -112,52 +112,33 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 	}
 	else
 	{
-		m_ldSampler.Reset();
-
-		Vector2 sample = 
-			m_pScene->GetSampler()->Get2DSample();
+		Vector2 sample;
 
 		// No supersampling
 		context.SampleIndex = 0;
 
-		bool done = false;
-
 		int requiredSamples = p_nRegionWidth * p_nRegionHeight;
 		int maxSamples = requiredSamples;
 
-		// Clear flag
-		for (int srcY = p_nRegionY, dstY = p_nBufferY; srcY < regionYEnd && !done; ++srcY, ++dstY)
-		{
-			for (int srcX = p_nRegionX, dstX = p_nBufferX; srcX < regionXEnd; ++srcX, ++dstX)
-			{
-				p_pRadianceBuffer->GetP(dstX, dstY)->Flag = false;
-			}
-		}
-
 		// Rasterise pixels
-		while (requiredSamples-- > 0)
+		for (; requiredSamples > 0; requiredSamples--)
 		{
 			double currentTime = Platform::GetTime();
 				
 			if (Platform::ToSeconds(currentTime - startTime) > m_fRenderBudget)
-			{
-				done = true;
 				break;
-			}
 
-			sample.X = QuasiRandomSequence::VanDerCorput(maxSamples - requiredSamples);
-			sample.Y = QuasiRandomSequence::Sobol2(maxSamples - requiredSamples);
+			sample.X = p_nRegionWidth * QuasiRandomSequence::VanDerCorput(maxSamples - requiredSamples);
+			sample.Y = p_nRegionHeight * QuasiRandomSequence::Sobol2(maxSamples - requiredSamples);
 
-			//Vector2 sample = m_ldSampler.Get2DSample();
+			int srcX = sample.X + p_nRegionX,
+				srcY = sample.Y + p_nRegionY;
 
-			int sampleX = sample.X * p_nRegionWidth,
-				sampleY = sample.Y * p_nRegionHeight;
+			int dstX = sample.X + p_nBufferX,
+				dstY = sample.Y + p_nBufferY;
 
-			int srcX = sampleX + p_nRegionX,
-				srcY = sampleY + p_nRegionY;
-
-			int dstX = sampleX + p_nBufferX,
-				dstY = sampleY + p_nBufferY;
+			// Get sub-pixel position
+			sample = m_pScene->GetSampler()->Get2DSample();
 
 			// Get radiance context
 			pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
@@ -172,6 +153,16 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 			// Get radiance
 			pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
 			pRadianceContext->Flag = true;
+		}
+
+		// Update remaining samples flag to show they were not processed
+		while(requiredSamples-- >= 0)
+		{
+			sample.X = p_nRegionWidth * QuasiRandomSequence::VanDerCorput(maxSamples - requiredSamples) + p_nBufferX;
+			sample.Y = p_nRegionHeight * QuasiRandomSequence::Sobol2(maxSamples - requiredSamples) + p_nBufferY;
+
+			pRadianceContext = p_pRadianceBuffer->GetP(sample.X, sample.Y);
+			pRadianceContext->Flag = false;
 		}
 
 		/*
