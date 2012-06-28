@@ -35,9 +35,6 @@ namespace Illumina
 					Image *pImage = new Image(64, 64);
 					pImage->MakeTestCard();
 					return pImage;
-					
-					//exit(-1);
-					// imageFile.open("C:\\Users\\Keith\\Dropbox\\Development\\HPC\\IlluminaPRT\\Resource\\Model\\quake\\default.ppm", std::ios::binary);
 				}
 
 				// Read and parse header

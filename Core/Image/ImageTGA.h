@@ -26,27 +26,35 @@ namespace Illumina
 				std::ifstream imageFile;
 
 				// Open image file
-				imageFile.open(p_strImageFile.c_str(), std::ios::binary);
+				imageFile.open(p_strImageFile.c_str(), std::ios::in | std::ios::binary);
 
 				if (!imageFile.is_open())
 				{
-					std::cerr << "ERROR -- Couldn't open file \'" << p_strImageFile << "\'" << std::endl;
-					
+					// Output to stderr
+					std::cerr << "ERROR -- Couldn't open file \'" << 
+						p_strImageFile << "\'" << std::endl;
+
+					// Use testcard instead
 					Image *pImage = new Image(64, 64);
 					pImage->MakeTestCard();
 					return pImage;
-					
-					//exit(-1);
-					// imageFile.open("C:\\Users\\Keith\\Dropbox\\Development\\HPC\\IlluminaPRT\\Resource\\Model\\quake\\default.ppm", std::ios::binary);
 				}
 
+				// width, height and depth of image
 				unsigned short width, height;
 				unsigned char depth;
 
+				// Seek block
 				imageFile.seekg(12, std::ios::beg);
-				imageFile >> std::noskipws >> width;
-				imageFile >> std::noskipws >> height;
-				imageFile >> std::noskipws >> depth;
+
+				// Read width, height and depth
+				width = imageFile.get();
+				height = imageFile.get();
+				depth = imageFile.get();
+
+				std::cout << "Image : [" << p_strImageFile << "] is " << width << " x " << height << " x " << depth << std::endl;
+
+				// Seek image data
 				imageFile.seekg(18, std::ios::beg);
 
 				// Create image
@@ -81,7 +89,7 @@ namespace Illumina
 
 							image[i]/=255.0f;
 
-							imageFile.get();
+							char c = imageFile.get();
 						}
 
 						break;
