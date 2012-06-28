@@ -31,9 +31,13 @@ namespace Illumina
 				if (!imageFile.is_open())
 				{
 					std::cerr << "ERROR -- Couldn't open file \'" << p_strImageFile << "\'" << std::endl;
-					exit(-1);
-
-					// Should create a default image, if file is not found!
+					
+					Image *pImage = new Image(64, 64);
+					pImage->MakeTestCard();
+					return pImage;
+					
+					//exit(-1);
+					// imageFile.open("C:\\Users\\Keith\\Dropbox\\Development\\HPC\\IlluminaPRT\\Resource\\Model\\quake\\default.ppm", std::ios::binary);
 				}
 
 				unsigned short width, height;

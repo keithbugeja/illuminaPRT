@@ -24,12 +24,11 @@ namespace Illumina
 			Image(int p_nWidth, int p_nHeight, const RGBPixel &p_rgb);
 			Image(int p_nWidth, int p_nHeight, RGBPixel *p_pRGBBuffer);
 
-			void GammaCorrect(float p_fGamma);
-			
-			void ToneMap(void);
-			void ToneMap(Image *p_pImage) const;
-
 			float* GetImageBuffer(void) const;
+
+			void GammaCorrect(float p_fGamma);
+
+			void MakeTestCard(void);
 		};
 
 		typedef boost::shared_ptr<Image> ImagePtr;
