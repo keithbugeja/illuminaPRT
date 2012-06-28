@@ -13,6 +13,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "Scene/Environment.h"
 #include "Scene/WavefrontSceneLoader.h"
@@ -326,18 +327,30 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 		{
 			if (!m_pEngineKernel->GetTextureManager()->QueryInstance(material.DiffuseMap))
 			{
+				// Set texture factory generic arguments
 				std::stringstream textureArgumentStream;
-				textureArgumentStream << "Id=" << material.DiffuseMap << ";" 
-					<< "Filename=" << (materialPath.parent_path() / material.DiffuseMap).string() << ";"
-					<< "Filetype=PPM;";
 
-				/*
-				pTexture = m_pEngineKernel->GetTextureManager()->CreateInstance("MMF", 
-					material.DiffuseMap, textureArgumentStream.str());
-				*/
-				 
-				pTexture = m_pEngineKernel->GetTextureManager()->CreateInstance("Image", 
-					material.DiffuseMap, textureArgumentStream.str());
+				textureArgumentStream << "Id=" << material.DiffuseMap << ";" 
+					<< "Filename=" << (materialPath.parent_path() / material.DiffuseMap).string() << ";";
+
+				// Query extension of image file
+				std::string extension = boost::to_upper_copy(material.DiffuseMap.substr((material.DiffuseMap.find_last_of(".") + 1)));
+
+				// Are we loading a memory-mapped texture?
+				if (extension.find("MMF") != std::string::npos)
+				{
+					pTexture = m_pEngineKernel->GetTextureManager()->CreateInstance("MappedFile", 
+						material.DiffuseMap, textureArgumentStream.str());
+				}
+				else
+				{
+					textureArgumentStream << "Filetype=" << extension << ";";
+
+					std::cout << "Filetype = " << extension << std::endl;
+
+					pTexture = m_pEngineKernel->GetTextureManager()->CreateInstance("Image", 
+						material.DiffuseMap, textureArgumentStream.str());
+				}				 
 			}
 			else
 			{

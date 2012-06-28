@@ -205,7 +205,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	// Textures
 	//----------------------------------------------------------------------------------------------
 	Message("Registering Textures...", p_bVerbose);
-	engineKernel.GetTextureManager()->RegisterFactory("MMF", new MemoryMappedTextureFactory());
+	engineKernel.GetTextureManager()->RegisterFactory("MappedFile", new MemoryMappedTextureFactory());
 	engineKernel.GetTextureManager()->RegisterFactory("Image", new ImageTextureFactory());
 	engineKernel.GetTextureManager()->RegisterFactory("Noise", new NoiseTextureFactory());
 	engineKernel.GetTextureManager()->RegisterFactory("Marble", new MarbleTextureFactory());
