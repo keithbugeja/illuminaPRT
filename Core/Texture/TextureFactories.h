@@ -39,8 +39,6 @@ namespace Illumina
 					strFilename,
 					strFiletype;
 
-				std::cout << p_argumentMap.ToString() << std::endl;
-
 				if (p_argumentMap.GetArgument("Id", strId) && 
 					p_argumentMap.GetArgument("Filename", strFilename) && 
 					p_argumentMap.GetArgument("Filetype", strFiletype))
@@ -53,8 +51,6 @@ namespace Illumina
 
 			Illumina::Core::ITexture *CreateInstance(const std::string &p_strId, const std::string &p_strFilename, const std::string &p_strFiletype)
 			{
-				std::cout << p_strFiletype << std::endl;
-
 				if (p_strFiletype.find("PPM") != std::string::npos)
 				{
 					ImagePPM imagePPM;

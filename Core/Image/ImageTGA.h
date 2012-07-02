@@ -41,18 +41,20 @@ namespace Illumina
 				}
 
 				// width, height and depth of image
-				unsigned short width, height;
+				unsigned short width, 
+					height;
+
 				unsigned char depth;
 
 				// Seek block
 				imageFile.seekg(12, std::ios::beg);
 
 				// Read width, height and depth
-				width = imageFile.get();
-				height = imageFile.get();
+				imageFile.read((char *)&width, sizeof(unsigned short));
+				imageFile.read((char *)&height, sizeof(unsigned short));
 				depth = imageFile.get();
 
-				std::cout << "Image : [" << p_strImageFile << "] is " << width << " x " << height << " x " << depth << std::endl;
+				// std::cout << "Image : [" << p_strImageFile << "] is " << width << " x " << height << " x " << (int)depth << std::endl;
 
 				// Seek image data
 				imageFile.seekg(18, std::ios::beg);

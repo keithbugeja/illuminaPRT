@@ -24,6 +24,7 @@ namespace Illumina
 		protected:
 			TextureFiltering m_filtering;
 			boost::iostreams::mapped_file  m_imageFile;
+			unsigned char *m_imageDataLDR;
 			float *m_imageData;
 			int m_width, m_height;
 
@@ -32,6 +33,14 @@ namespace Illumina
 			{
 				float *pixel = m_imageData + ((y * m_width + x) * 3);
 				return RGBPixel(pixel[0], pixel[1], pixel[2]);
+			}
+
+			RGBPixel GetPixelLDR(int x, int y) const
+			{
+				float r = 1.f / 255.f;
+
+				unsigned char *pixel = m_imageDataLDR + ((y * m_width + x) * 3);
+				return RGBPixel((float)pixel[0] * r, (float)pixel[1] * r, (float)pixel[2] * r);
 			}
 
 			RGBPixel GetValueNearestNeighbour(const Vector2 &p_uv) const
@@ -51,7 +60,7 @@ namespace Illumina
 				int ix = Maths::Min(width, iu > 0.5f ? Maths::Ceil(iu) : Maths::Floor(iu));
 				int iy = Maths::Min(height, iv > 0.5f ? Maths::Ceil(iv) : Maths::Floor(iv));
 
-				return GetPixel(ix, iy);
+				return GetPixelLDR(ix, iy);
 			}
 
 			RGBPixel GetValueBilinear(const Vector2 &p_uv) const
@@ -97,6 +106,7 @@ namespace Illumina
 				m_height	= imageData[1];
 
 				m_imageData = (float*)(imageData + 2);
+				m_imageDataLDR = (unsigned char*)(imageData + 2);
 			}
 
 		public:
@@ -107,14 +117,41 @@ namespace Illumina
 				// Open image file writer stream
 				imageFile.open(p_strOutputFilename.c_str(), std::ios::binary);
 
-				imageFile.put((int)p_image.GetWidth());
-				imageFile.put((int)p_image.GetHeight());
+				int width = p_image.GetWidth(),
+					height = p_image.GetHeight();
 
-				for (int i = 0; i < p_image.GetArea(); i++)
+				imageFile.write((const char*)&width, sizeof(int));
+				imageFile.write((const char*)&height, sizeof(int));
+
+				for (int i = 0; i < p_image.GetArea(); i++)	{
+					imageFile.write((const char*)(p_image[i].Element), sizeof(float) * 3);
+				}
+				
+				imageFile.close();
+			}
+
+			static void MakeLDR(const Image& p_image, const std::string &p_strOutputFilename)
+			{
+				std::ofstream imageFile;
+
+				// Open image file writer stream
+				imageFile.open(p_strOutputFilename.c_str(), std::ios::binary);
+
+				int width = p_image.GetWidth(),
+					height = p_image.GetHeight();
+
+				imageFile.write((const char*)&width, sizeof(int));
+				imageFile.write((const char*)&height, sizeof(int));
+
+				unsigned char rgb[3];
+
+				for (int i = 0; i < p_image.GetArea(); i++)	
 				{
-					imageFile.put((float)p_image[i].R);
-					imageFile.put((float)p_image[i].G);
-					imageFile.put((float)p_image[i].B);
+					rgb[0] = (unsigned char)(p_image[i].R * 255);
+					rgb[1] = (unsigned char)(p_image[i].G * 255);
+					rgb[2] = (unsigned char)(p_image[i].B * 255);
+
+					imageFile.write((const char*)(rgb), sizeof(unsigned char) * 3);
 				}
 				
 				imageFile.close();
