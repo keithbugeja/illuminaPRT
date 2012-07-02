@@ -388,7 +388,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 
 			// Post-process frame
 			// pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
-			// pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+			pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 
 			//pAccumulationBuffer->Reset();
 			pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);

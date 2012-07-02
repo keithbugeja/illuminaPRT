@@ -70,14 +70,12 @@ namespace Illumina
 				// Close image file
 				imageFile.close();
 
-				/*
-				size_t f = p_strImageFile.find('.');
+				/**/
+				size_t f = p_strImageFile.find_last_of('.');
 				std::string nf = p_strImageFile.substr(0, f) + ".mmf";
-
 				std::cout << "MMF : " << nf << std::endl;
-
-				MemoryMappedTexture::Make(image, nf); 
-				*/
+				MemoryMappedTexture::MakeLDR(image, nf); 
+				/**/
 
 				return pImage;
 			}
