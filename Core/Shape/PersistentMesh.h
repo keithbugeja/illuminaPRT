@@ -19,7 +19,6 @@ namespace Illumina
 {
 	namespace Core
 	{
-		/*
 		struct PersistentIndexedTriangle
 		{
 			int VertexID[3];
@@ -28,6 +27,15 @@ namespace Illumina
 			Vector3 Edge[2];
 		};
 
+		struct PersistentTreeNode
+		{
+			float Partition;
+
+			int Axis : 2;
+			int ItemCount : 30;
+		};
+
+		/*
 		//----------------------------------------------------------------------------------------------
 		// This class is no longer templated.
 		// Format is now fixed at using IndexedTriangles 
