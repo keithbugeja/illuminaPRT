@@ -23,6 +23,7 @@ namespace Illumina
 		{
 		protected:
 			TextureFiltering m_filtering;
+
 			boost::iostreams::mapped_file  m_imageFile;
 			unsigned char *m_imageDataLDR;
 			float *m_imageData;
@@ -109,6 +110,11 @@ namespace Illumina
 				m_imageDataLDR = (unsigned char*)(imageData + 2);
 			}
 
+			void UnmapFile(void)
+			{
+				m_imageFile.close();
+			}
+
 		public:
 			static void Make(const Image& p_image, const std::string &p_strOutputFilename)
 			{
@@ -168,6 +174,11 @@ namespace Illumina
 				: m_filtering(p_filtering)
 			{
 				MapFile(p_strFilename);
+			}
+
+			~MemoryMappedTexture(void)
+			{
+				UnmapFile();
 			}
 
 			RGBPixel GetValue(const Vector2 &p_uv, const Vector3 &p_hitPoint) const

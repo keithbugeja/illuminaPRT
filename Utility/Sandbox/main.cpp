@@ -302,8 +302,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		reg[j].frameBudget = 0;
 	}
 
-	pRenderer->SetRenderBudget(1e+20f);
-	//pRenderer->SetRenderBudget(20.f / ((float)regions * 0.33f));
+	//pRenderer->SetRenderBudget(1e+20f);
+	pRenderer->SetRenderBudget(0.5f / ((float)regions * 0.33f));
 	//pRenderer->SetRenderBudget(10.f);
 	Vector3 observer = pCamera->GetObserver();
 
@@ -311,7 +311,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	{
 		#if (defined(TEST_TILERENDER))
 			
-			// Animate scene
+			// Animate scene 
 			alpha += Maths::PiTwo / 180.f;
 		
 			rotation.MakeRotation(Vector3::UnitYPos, alpha);
@@ -387,8 +387,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 
 			// Post-process frame
-			// pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
-			pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+			//pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+			//pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 
 			//pAccumulationBuffer->Reset();
 			pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
