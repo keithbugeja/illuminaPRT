@@ -307,6 +307,7 @@
     <ClInclude Include="..\..\..\..\Core\Shape\HybridMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\IndexedTriangle.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\KDTreeMesh.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\PersistentMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\Shape.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\ShapeForge.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\ShapeFactories.h" />

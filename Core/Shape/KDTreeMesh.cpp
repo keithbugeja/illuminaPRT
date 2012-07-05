@@ -128,7 +128,9 @@ bool KDTreeMesh::Compile(void)
 	// Compute the minimum dimensions constraint for a node 				
 	// TODO: Should be parameterised!
 	m_fMinNodeWidth = m_rootNode.BoundingBox.GetRadius() / 1000.0f;
-				
+	
+	ImmutableDiskList<Vertex>::Make(&(this->VertexList), "Z:\\LibaVertex.vtx");
+
 	// Build kd-tree hierarchy
 	BuildHierarchy(&m_rootNode, triangleList, 0); 
 

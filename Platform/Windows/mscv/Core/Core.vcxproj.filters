@@ -785,6 +785,9 @@
     <ClInclude Include="..\..\..\..\Core\Texture\MemoryMappedTexture.h">
       <Filter>Header Files\Texture</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\PersistentMesh.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">

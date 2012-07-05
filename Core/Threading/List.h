@@ -6,7 +6,9 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+#include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/shared_ptr.hpp>
+#include <fstream>
 
 #include "System/Platform.h"
 #include "Threading/Spinlock.h"
@@ -16,6 +18,7 @@ namespace Illumina
 {
 	namespace Core
 	{
+
 #define __DEBUG_LIST__
 #if defined(__DEBUG_LIST__)
 		template<class T> 
@@ -98,7 +101,7 @@ namespace Illumina
 
 			void PushBack(const List<T> &p_objList)
 			{
-				// TODO : Optimise this, or it will run like a dog
+				// TODO : Optimise this, or it will run like a dog on a limp
 				for (int nIdx = 0, count = (int)p_objList.Size(); nIdx < count; nIdx++)
 					PushBack(p_objList[nIdx]);
 			}
@@ -237,5 +240,79 @@ namespace Illumina
 		};
 #endif
 
+		template<class T> 
+		class IImmutableList
+		{
+		protected:
+			T *m_list;
+			int m_nSize;
+
+		public:			
+			~IImmutableList(void) 
+			{ }
+
+			inline const T& operator[](size_t p_index) const {
+				return m_list[p_index];
+			}
+
+			inline size_t Size() const {
+				return m_nSize;
+			}
+			
+			inline bool IsEmpty() const {
+				return (m_nSize == 0);
+			}
+			
+			inline const T& At(size_t p_index) const {
+				return m_list[p_index];
+			}
+						
+			inline const T& Front(void) const {
+				return m_list[0];
+			}
+
+			inline const T& Back(void) const {
+				return m_list[m_nSize - 1];
+			}
+		};
+
+		template<class T>
+		class ImmutableDiskList :
+			IImmutableList<T>
+		{
+			using IImmutableList<T>::m_list;
+			using IImmutableList<T>::m_nSize;
+
+		protected:
+			boost::iostreams::mapped_file m_imageFile;			
+
+		public:
+			ImmutableDiskList(const std::string &p_strFilename) 
+			{
+				m_imageFile.open(p_strFilename);
+				m_list = (T*)m_imageFile.const_data();
+			}
+
+			~ImmutableDiskList(void)
+			{
+				m_imageFile.close();
+			}
+
+			static void Make(List<T> *p_pList, const std::string &p_strOutputFilename)
+			{
+				std::ofstream imageFile;
+
+				// Open image file writer stream
+				imageFile.open(p_strOutputFilename.c_str(), std::ios::binary);
+
+				for (int nIdx = 0; nIdx < p_pList->Size(); ++nIdx)
+				{
+					T *pElement = &(p_pList->At(nIdx));
+					imageFile.write((const char*)pElement, sizeof(T));
+				}
+				
+				imageFile.close();				
+			}
+		};
 	}
 }
