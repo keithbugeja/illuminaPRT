@@ -21,6 +21,7 @@ namespace Illumina
 		class IFilter;
 		class ICamera;
 		class IDevice;
+		class IFragment;
 		class IShape;
 		class ILight;
 		class BSDF;
