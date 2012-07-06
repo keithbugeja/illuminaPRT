@@ -21,7 +21,8 @@ namespace Illumina
 		class DifferentialSurface
 		{
 		protected:
-			IShape *m_pShape;
+			IFragment	*m_pFragment;
+			IShape		*m_pShape;
 
 		public:
 			/* Surface info in local space */
@@ -58,6 +59,8 @@ namespace Illumina
 				, RayDirection(p_surface.RayDirection)
 				, RayOriginWS(p_surface.RayDirectionWS)
 				, RayDirectionWS(p_surface.RayDirectionWS)
+				, m_pShape(p_surface.m_pShape)
+				, m_pFragment(p_surface.m_pFragment)
 			{ }
 
 			inline void Reset(void) {
@@ -70,6 +73,22 @@ namespace Illumina
 
 			inline IShape* GetShape(void) const { 
 				return m_pShape; 
+			}
+
+			inline void SetFragment(const IFragment *p_pFragment) {
+				m_pFragment = (IFragment*)p_pFragment;
+			}
+
+			inline IFragment* GetFragment(void) const {
+				return m_pFragment;
+			}
+
+			inline bool HasFragment(void) const {
+				return m_pFragment != NULL;
+			}
+
+			inline bool HasShape(void) const { 
+				return m_pShape != NULL;
 			}
 
 			const DifferentialSurface& operator=(const DifferentialSurface &p_surface)
@@ -86,6 +105,9 @@ namespace Illumina
 				RayDirection = p_surface.RayDirection;
 				RayOriginWS = p_surface.RayOriginWS;
 				RayDirectionWS = p_surface.RayDirectionWS;
+				
+				m_pShape = p_surface.m_pShape;
+				m_pFragment = p_surface.m_pFragment;
 
 				return *this;
 			}

@@ -21,6 +21,7 @@
 #include "Shape/TriangleMesh.h"
 #include "Shape/KDTreeMesh.h"
 #include "Shape/BVHMesh.h"
+#include "Shape/PersistentMesh.h"
 #include "Shape/BasicMesh.h"
 
 #include "Material/MaterialGroup.h"
@@ -136,7 +137,9 @@ bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int
 		if (p_pArgumentMap != NULL) 
 			p_pArgumentMap->GetArgument("Id", meshName);
 		
-		m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, context.Mesh);
+		IShape* pShape = new PersistentMesh(meshName, "Z:\\Object");
+		m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, pShape);
+		//m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, context.Mesh);
 
 		//context.Mesh->UpdateNormals();
 	}
@@ -398,6 +401,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 	boost::filesystem::path geometryPath(p_strFilename);
 	p_context.ObjectName = geometryPath.filename().string();
 	
+	//p_context.Mesh = new PersistentMesh(p_context.ObjectName, "Z:\\Object");
 	p_context.Mesh = new KDTreeMesh(p_context.ObjectName);
 	//p_context.Mesh = new BVHMesh(p_context.ObjectName);
 	//p_context.Mesh = new BasicMesh(p_context.ObjectName);

@@ -19,6 +19,7 @@
 #include "Geometry/Basis.h"
 #include "Geometry/BoundingVolume.h"
 
+#include "Shape/Fragment.h"
 #include "Shape/DifferentialSurface.h"
 
 namespace Illumina 
@@ -30,17 +31,18 @@ namespace Illumina
 		//----------------------------------------------------------------------------------------------
 		class IShape 
 			: public Object
+			, public IFragment
 		{
 		public:
 			IShape(void) : Object() { }
 			IShape(const std::string& p_strName) : Object(p_strName) { }
 
+			bool HasGroup(void) const { return false; }
+			int GetGroupId(void) const { return -1; }
+
 			virtual bool IsBounded(void) const = 0;
 			virtual void ComputeBoundingVolume(void) = 0;
 			virtual IBoundingVolume* GetBoundingVolume(void) const = 0;
-
-			virtual bool HasGroup(void) const { return false; }
-			virtual int GetGroupId(void) const { return -1; }
 
 			virtual bool IsCompilationRequired(void) const { return false; }
 			virtual bool Compile(void) { return false; }

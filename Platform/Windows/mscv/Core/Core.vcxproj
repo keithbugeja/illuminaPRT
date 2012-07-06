@@ -190,6 +190,7 @@
     <ClCompile Include="..\..\..\..\Core\Shape\BVHMesh.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\IndexedTriangle.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\KDTreeMesh.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\PersistentMesh.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Sphere.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\TreeMesh.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Triangle.cpp" />
@@ -304,6 +305,7 @@
     <ClInclude Include="..\..\..\..\Core\Shape\BIHMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\BVHMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\DifferentialSurface.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\Fragment.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\HybridMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\IndexedTriangle.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\KDTreeMesh.h" />

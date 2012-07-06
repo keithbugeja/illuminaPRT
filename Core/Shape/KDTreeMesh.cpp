@@ -134,7 +134,7 @@ bool KDTreeMesh::Compile(void)
 	BuildHierarchy(&m_rootNode, triangleList, 0); 
 
 	{
-		ImmutableDiskList<Vertex>::Make(&(this->VertexList), "Z:\\LibaVertex.vtx");
+		ImmutableDiskList<Vertex>::Make(&(this->VertexList), "Z:\\Object.ver");
 	
 		List<PersistentIndexedTriangle> indexedTriList;
 		int tcount = this->TriangleList.Size();
@@ -155,18 +155,20 @@ bool KDTreeMesh::Compile(void)
 			indexedTriList.PushBack(p);
 		}
 
-		ImmutableDiskList<PersistentIndexedTriangle>::Make(&indexedTriList, "Z:\\LibaTri.tri");
+		ImmutableDiskList<PersistentIndexedTriangle>::Make(&indexedTriList, "Z:\\Object.tri");
 
 		// Traverse tree and build disk-tree
 		std::ofstream ftree;
-		ftree.open("Z:\\LibaTree.tre", std::ios::binary);
+		ftree.open("Z:\\Object.tre", std::ios::binary);
 
 		int lc = 0, lic = 0;
+		int dummy = 0xF0F0F0F0;
 
 		KDTreeMeshNode *kdnode;
 		PersistentTreeNode node;
 
 		std::stack<KDTreeMeshNode*> traversalStack;
+		std::map<KDTreeMeshNode*, int> nodeOffset;
 		traversalStack.push(&m_rootNode);
 
 		while (!traversalStack.empty())
@@ -174,11 +176,15 @@ bool KDTreeMesh::Compile(void)
 			kdnode = traversalStack.top();
 			traversalStack.pop();
 
+			// Save node position
+			nodeOffset[kdnode] = ftree.tellp();
+
 			node.Axis = kdnode->Axis;
 			node.Partition = kdnode->Partition;
 
 			if (kdnode->Type == ITreeMesh::Leaf) 
 			{
+				node.Axis = 0x03;
 				node.ItemCount = kdnode->TriangleList.Size();
 			
 				ftree.write((const char *)&node, sizeof(PersistentTreeNode));
@@ -199,15 +205,37 @@ bool KDTreeMesh::Compile(void)
 				node.ItemCount = 0;
 
 				ftree.write((const char *)&node, sizeof(PersistentTreeNode));
+
+				ftree.write((const char *)&dummy, sizeof(int));
+				ftree.write((const char *)&dummy, sizeof(int));
+			}
+		}
+
+		// Do the second traversal
+		traversalStack.push(&m_rootNode);
+		while(!traversalStack.empty())
+		{
+			kdnode = traversalStack.top();
+			traversalStack.pop();
+
+			if (kdnode->Type == ITreeMesh::Internal) 
+			{	
+				traversalStack.push(kdnode->m_pChild[0]);
+				traversalStack.push(kdnode->m_pChild[1]);
+
+				int pos = nodeOffset[kdnode];
+				int left = nodeOffset[kdnode->m_pChild[0]],
+					right = nodeOffset[kdnode->m_pChild[1]];
+
+				ftree.seekp(pos + sizeof(PersistentTreeNode));
+				ftree.write((const char*)&left, sizeof(int));
+				ftree.write((const char*)&right, sizeof(int));
 			}
 		}
 
 		ftree.close();
 
 		std::cout << "Average triangles per leaf node : " << (float)lic / (float)lc << std::endl;
-
-		// node.Left = m_rootNode.m_pChild[0];
-		// node.Right = m_rootNode.m_pChild[1];
 	}
 
 	// Update Stats

@@ -9,6 +9,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Shape/Shape.h"
+#include "Shape/Fragment.h"
 #include "Shape/VertexFormats.h"
 #include "Shape/IndexedTriangle.h"
 #include "Geometry/BoundingBox.h"
@@ -19,12 +20,18 @@ namespace Illumina
 {
 	namespace Core
 	{
-		struct PersistentIndexedTriangle
+		class PersistentIndexedTriangle
+			: public IFragment
 		{
+		public:
 			int VertexID[3];
 			int GroupID;
 
 			Vector3 Edge[2];
+		
+		public:
+			bool HasGroup(void) const { return true; }
+			int GetGroupId(void) const { return GroupID; }
 		};
 
 		struct PersistentTreeNode
@@ -35,13 +42,9 @@ namespace Illumina
 			int ItemCount : 30;
 		};
 
-		/*
 		//----------------------------------------------------------------------------------------------
-		// This class is no longer templated.
-		// Format is now fixed at using IndexedTriangles 
-		// and Vertex type vertices
 		//----------------------------------------------------------------------------------------------
-		class IPersistentMesh 
+		class PersistentMesh 
 			: public IShape
 		{
 		protected:
@@ -55,15 +58,32 @@ namespace Illumina
 			Random m_random;
 
 			// Triangle and vertex lists
+			PersistentTreeNode *m_pRootNode;
 			PersistentIndexedTriangle *m_pTriangleList;
-			VertexList *m_pVertexList;
+			Vertex *m_pVertexList;
+
+			int m_nTriangleCount,
+				m_nVertexCount;
+
+			// Memory-mapped files
+			boost::iostreams::mapped_file  m_vertexFile;
+			boost::iostreams::mapped_file  m_triangleFile;
+			boost::iostreams::mapped_file  m_treeFile;
+
+		protected:
+			void MapFiles(const std::string &p_strTrunkName);
+			void UnmapFiles(void);
+
+			bool IntersectP(Ray &p_ray);
+			bool IntersectP(Ray &p_ray, DifferentialSurface &p_surface);
+
+			bool IntersectFace(Ray p_ray, PersistentIndexedTriangle* p_pTriangle);
+			bool IntersectFace(Ray p_ray, PersistentIndexedTriangle* p_pTriangle, DifferentialSurface &p_surface);
 
 		public:
-			IPersistentMesh(const std::string &p_strName);
-			IPersistentMesh(void);
-
-			// Methods for instance creation
-			virtual boost::shared_ptr<ITriangleMesh> CreateInstance(void) = 0;
+			PersistentMesh(const std::string &p_strName, const std::string &p_strTrunkName);
+			PersistentMesh(const std::string &p_strTrunkName);
+			~PersistentMesh();
 
 			// Bounding volume
 			bool IsBounded(void) const;
@@ -76,21 +96,6 @@ namespace Illumina
 
 			// Normals
 			bool UpdateNormals(void);
-
-			// Vertex management			
-			size_t AddVertex(const Vertex &p_vertex);
-			void AddVertexList(const Vertex *p_pVertex, int p_nCount);
-			void AddVertexList(const List<Vertex> &p_vertexList);
-
-			// Triangle face management
-			void AddTriangle(const Vertex &p_v1, const Vertex &p_v2, const Vertex &p_v3, int p_nGroupId = -1);
-			void AddTriangleList(const Vertex *p_pVertexList, int p_nTriangleCount, int p_nGroupId = -1);
-			void AddTriangleList(const List<Vertex> &p_vertexList, int p_nGroupId = -1);
-
-			// Indexed triangles
-			void AddIndexedTriangle(int p_v1, int p_v2, int p_v3, int p_nGroupId = -1);
-			void AddIndexedTriangleList(const int *p_pIndexList, int p_nTriangleCount, int p_nGroupId = -1);
-			void AddIndexedTriangleList(const List<int> &p_indexList, int p_nGroupId = -1);
 
 			// Compile method used to prepare complex structures for usage (e.g., BVHs)
 			bool IsCompilationRequired(void) const { return true; }
@@ -106,9 +111,10 @@ namespace Illumina
 			Vector3 SamplePoint(const Vector3 &p_viewPoint, float p_u, float p_v, Vector3 &p_normal);
 
 			// Intersect methods
-			virtual bool Intersects(const Ray &p_ray, DifferentialSurface &p_surface) = 0;
-			virtual bool Intersects(const Ray &p_ray) = 0;
+			bool Intersects(const Ray &p_ray, DifferentialSurface &p_surface);
+			bool Intersects(const Ray &p_ray);
+
+			std::string PersistentMesh::ToString(void) const;
 		};		
-		*/
 	} 
 }
