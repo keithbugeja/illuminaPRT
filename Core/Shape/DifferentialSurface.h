@@ -21,8 +21,8 @@ namespace Illumina
 		class DifferentialSurface
 		{
 		protected:
-			IFragment	*m_pFragment;
-			IShape		*m_pShape;
+			IShape *m_pShape;
+			int m_nGroupId;
 
 		public:
 			/* Surface info in local space */
@@ -59,11 +59,13 @@ namespace Illumina
 				, RayDirection(p_surface.RayDirection)
 				, RayOriginWS(p_surface.RayDirectionWS)
 				, RayDirectionWS(p_surface.RayDirectionWS)
+				, m_nGroupId(p_surface.m_nGroupId)
 				, m_pShape(p_surface.m_pShape)
-				, m_pFragment(p_surface.m_pFragment)
 			{ }
 
-			inline void Reset(void) {
+			inline void Reset(void) 
+			{
+				m_nGroupId = -1;
 				Distance = Maths::Maximum;
 			}
 
@@ -75,20 +77,20 @@ namespace Illumina
 				return m_pShape; 
 			}
 
-			inline void SetFragment(const IFragment *p_pFragment) {
-				m_pFragment = (IFragment*)p_pFragment;
-			}
-
-			inline IFragment* GetFragment(void) const {
-				return m_pFragment;
-			}
-
-			inline bool HasFragment(void) const {
-				return m_pFragment != NULL;
-			}
-
 			inline bool HasShape(void) const { 
 				return m_pShape != NULL;
+			}
+
+			inline void SetGroupId(int p_nGroupId) {
+				m_nGroupId = p_nGroupId;
+			}
+
+			inline int GetGroupId(void) const {
+				return m_nGroupId;
+			}
+
+			inline bool HasGroup(void) const {
+				return m_nGroupId >= 0;
 			}
 
 			const DifferentialSurface& operator=(const DifferentialSurface &p_surface)
@@ -106,8 +108,8 @@ namespace Illumina
 				RayOriginWS = p_surface.RayOriginWS;
 				RayDirectionWS = p_surface.RayDirectionWS;
 				
+				m_nGroupId = p_surface.m_nGroupId;
 				m_pShape = p_surface.m_pShape;
-				m_pFragment = p_surface.m_pFragment;
 
 				return *this;
 			}

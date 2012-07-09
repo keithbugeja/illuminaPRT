@@ -387,7 +387,6 @@ bool PersistentMesh::IntersectFace(Ray p_ray, PersistentIndexedTriangle *p_pTria
 
 	const float rcp = 1.0f / DOT(te1xte2, p_ray.Direction.Element);
 	SUB(edge2, m_pVertexList[p_pTriangle->VertexID[0]].Position, p_ray.Origin.Element);
-	// SUB(edge2, m_pMesh->VertexList[m_nVertexID[0]].Position, p_ray.Origin.Element);
 
 	const float toverd = DOT(te1xte2, edge2) * rcp;
 
@@ -445,7 +444,6 @@ bool PersistentMesh::IntersectFace(Ray p_ray, PersistentIndexedTriangle *p_pTria
 
 		// Populate differential surface
 	p_surface.SetShape(this);
-	p_surface.SetFragment(p_pTriangle);
 	p_surface.Distance = t;
 	p_surface.Point = p_ray.PointAlongRay(t);
 	
@@ -461,6 +459,7 @@ bool PersistentMesh::IntersectFace(Ray p_ray, PersistentIndexedTriangle *p_pTria
 	
 	p_surface.ShadingNormal.Normalize();
 	p_surface.GeometryNormal = p_surface.ShadingNormal;
+	// p_surface.SetGroupId(p_pTriangle->GroupID);
 
 	return true;
 }
