@@ -305,7 +305,6 @@
     <ClInclude Include="..\..\..\..\Core\Shape\BIHMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\BVHMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\DifferentialSurface.h" />
-    <ClInclude Include="..\..\..\..\Core\Shape\Fragment.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\HybridMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\IndexedTriangle.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\KDTreeMesh.h" />

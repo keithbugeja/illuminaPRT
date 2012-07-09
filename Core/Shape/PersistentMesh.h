@@ -9,7 +9,6 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Shape/Shape.h"
-#include "Shape/Fragment.h"
 #include "Shape/VertexFormats.h"
 #include "Shape/IndexedTriangle.h"
 #include "Geometry/BoundingBox.h"
@@ -20,26 +19,20 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class PersistentIndexedTriangle
-			: public IFragment
+		struct PersistentIndexedTriangle
 		{
-		public:
 			int VertexID[3];
 			int GroupID;
 
 			Vector3 Edge[2];
-		
-		public:
-			bool HasGroup(void) const { return true; }
-			int GetGroupId(void) const { return GroupID; }
 		};
 
 		struct PersistentTreeNode
 		{
 			float Partition;
 
-			int Axis : 2;
-			int ItemCount : 30;
+			unsigned int Axis : 2;
+			unsigned int ItemCount : 30;
 		};
 
 		//----------------------------------------------------------------------------------------------
@@ -99,7 +92,7 @@ namespace Illumina
 
 			// Compile method used to prepare complex structures for usage (e.g., BVHs)
 			bool IsCompilationRequired(void) const { return true; }
-			bool Compile(void) { return true; }
+			bool Compile(void) { ComputeBoundingVolume(); ComputeArea(); return true; }
 
 			// Update and rebuild methods for dynamic meshes
 			bool Update(void) { return true; }

@@ -133,6 +133,7 @@ bool KDTreeMesh::Compile(void)
 	// Build kd-tree hierarchy
 	BuildHierarchy(&m_rootNode, triangleList, 0); 
 
+	/*
 	{
 		ImmutableDiskList<Vertex>::Make(&(this->VertexList), "Z:\\Object.ver");
 	
@@ -237,6 +238,7 @@ bool KDTreeMesh::Compile(void)
 
 		std::cout << "Average triangles per leaf node : " << (float)lic / (float)lc << std::endl;
 	}
+	*/
 
 	// Update Stats
 	m_statistics.m_triangleCount = objectCount;
