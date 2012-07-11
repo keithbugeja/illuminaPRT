@@ -444,6 +444,8 @@ bool PersistentMesh::IntersectFace(Ray p_ray, PersistentIndexedTriangle *p_pTria
 
 		// Populate differential surface
 	p_surface.SetShape(this);
+	p_surface.GeometryFragment.SetGroupId(p_pTriangle->GroupID);
+
 	p_surface.Distance = t;
 	p_surface.Point = p_ray.PointAlongRay(t);
 	
@@ -459,7 +461,6 @@ bool PersistentMesh::IntersectFace(Ray p_ray, PersistentIndexedTriangle *p_pTria
 	
 	p_surface.ShadingNormal.Normalize();
 	p_surface.GeometryNormal = p_surface.ShadingNormal;
-	// p_surface.SetGroupId(p_pTriangle->GroupID);
 
 	return true;
 }

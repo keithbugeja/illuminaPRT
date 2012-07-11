@@ -137,9 +137,9 @@ bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int
 		if (p_pArgumentMap != NULL) 
 			p_pArgumentMap->GetArgument("Id", meshName);
 		
-		//IShape* pShape = new PersistentMesh(meshName, "Z:\\Object");
-		//m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, pShape);
-		m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, context.Mesh);
+		IShape* pShape = new PersistentMesh(meshName, "Z:\\Object");
+		m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, pShape);
+		//m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, context.Mesh);
 
 		//context.Mesh->UpdateNormals();
 	}

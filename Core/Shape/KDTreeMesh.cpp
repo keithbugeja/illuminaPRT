@@ -8,6 +8,7 @@
 #include "Shape/PersistentMesh.h"
 
 #include <stack>
+#include <queue>
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
@@ -133,7 +134,7 @@ bool KDTreeMesh::Compile(void)
 	// Build kd-tree hierarchy
 	BuildHierarchy(&m_rootNode, triangleList, 0); 
 
-	/*
+	/**/
 	{
 		ImmutableDiskList<Vertex>::Make(&(this->VertexList), "Z:\\Object.ver");
 	
@@ -168,16 +169,19 @@ bool KDTreeMesh::Compile(void)
 		KDTreeMeshNode *kdnode;
 		PersistentTreeNode node;
 
-		std::stack<KDTreeMeshNode*> traversalStack;
+		std::queue<KDTreeMeshNode*> traversalQueue;
 		std::map<KDTreeMeshNode*, int> nodeOffset;
-		traversalStack.push(&m_rootNode);
+		traversalQueue.push(&m_rootNode);
 
-		while (!traversalStack.empty())
+		while (!traversalQueue.empty())
 		{
-			kdnode = traversalStack.top();
-			traversalStack.pop();
+
+			kdnode = traversalQueue.front();
+			traversalQueue.pop();
 
 			// Save node position
+			int nodeoffset =  ftree.tellp();
+
 			nodeOffset[kdnode] = ftree.tellp();
 
 			node.Axis = kdnode->Axis;
@@ -186,22 +190,31 @@ bool KDTreeMesh::Compile(void)
 			if (kdnode->Type == ITreeMesh::Leaf) 
 			{
 				node.Axis = 0x03;
+				node.Partition = 666.666f;
 				node.ItemCount = kdnode->TriangleList.Size();
 			
 				ftree.write((const char *)&node, sizeof(PersistentTreeNode));
 
 				for (int i = 0; i < node.ItemCount; ++i)
 				{
-					int index = ((int)(kdnode->TriangleList[i] - &(this->TriangleList[0]))) / sizeof(IndexedTriangle);
+					// Should we keep it in terms of INDTRI?
+					IndexedTriangle *shape = kdnode->TriangleList[i];
+					IndexedTriangle *base = &TriangleList[0];
+					Int64 offset = shape - base;
+					int index = (int)(offset & 0xFFFFFFFF);
 					ftree.write((const char *)&index, sizeof(int));
+
+					//std::cout << shape << " : " << offset << ", ";
 				}
+
+				//std::cout << "." << std::endl;
 
 				lc++; lic += node.ItemCount;
 			} 
 			else 
 			{
-				traversalStack.push(kdnode->m_pChild[0]);
-				traversalStack.push(kdnode->m_pChild[1]);
+				traversalQueue.push(kdnode->m_pChild[0]);
+				traversalQueue.push(kdnode->m_pChild[1]);
 				
 				node.ItemCount = 0;
 
@@ -210,23 +223,27 @@ bool KDTreeMesh::Compile(void)
 				ftree.write((const char *)&dummy, sizeof(int));
 				ftree.write((const char *)&dummy, sizeof(int));
 			}
+
+			//std::cout << "Node = " << kdnode << " @ offset = " << nodeoffset << ", axis = " << node.Axis << ", partition = " << node.Partition << ", item count = " << node.ItemCount << std::endl;			
 		}
 
 		// Do the second traversal
-		traversalStack.push(&m_rootNode);
-		while(!traversalStack.empty())
+		traversalQueue.push(&m_rootNode);
+		while(!traversalQueue.empty())
 		{
-			kdnode = traversalStack.top();
-			traversalStack.pop();
+			kdnode = traversalQueue.front();
+			traversalQueue.pop();
 
 			if (kdnode->Type == ITreeMesh::Internal) 
 			{	
-				traversalStack.push(kdnode->m_pChild[0]);
-				traversalStack.push(kdnode->m_pChild[1]);
+				traversalQueue.push(kdnode->m_pChild[0]);
+				traversalQueue.push(kdnode->m_pChild[1]);
 
 				int pos = nodeOffset[kdnode];
 				int left = nodeOffset[kdnode->m_pChild[0]],
 					right = nodeOffset[kdnode->m_pChild[1]];
+
+				//std::cout << "left = " << left << ", right = " << right << std::endl;
 
 				ftree.seekp(pos + sizeof(PersistentTreeNode));
 				ftree.write((const char*)&left, sizeof(int));
@@ -238,7 +255,7 @@ bool KDTreeMesh::Compile(void)
 
 		std::cout << "Average triangles per leaf node : " << (float)lic / (float)lc << std::endl;
 	}
-	*/
+	/**/
 
 	// Update Stats
 	m_statistics.m_triangleCount = objectCount;
