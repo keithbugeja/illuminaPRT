@@ -166,7 +166,10 @@ Spectrum PathIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 				p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
 			}
 		}
-			
+		
+		// p_pRadianceContext->Final.Set(p_intersection.Surface.Distance, p_intersection.Surface.Distance, p_intersection.Surface.Distance);
+		// return p_pRadianceContext->Final;
+
 		//----------------------------------------------------------------------------------------------
 		// Sample bsdf for next direction
 		//----------------------------------------------------------------------------------------------

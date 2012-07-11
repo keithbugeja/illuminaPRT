@@ -17,12 +17,32 @@ namespace Illumina
 {
 	namespace Core
 	{
+		class Fragment
+		{
+		protected:
+			int m_nGroupId;
+
+		public:
+			Fragment(void) : m_nGroupId(-1) { }
+			Fragment(const Fragment& p_fragment) : m_nGroupId(p_fragment.m_nGroupId) { }
+
+			void Reset(void) { m_nGroupId = -1; }
+			bool HasGroup(void) { return m_nGroupId >= 0; }
+			int GetGroupId(void) { return m_nGroupId; }
+			void SetGroupId(int p_nGroupId) { m_nGroupId = p_nGroupId; }
+
+			Fragment& operator=(const Fragment &p_fragment) {
+				m_nGroupId = p_fragment.m_nGroupId;
+
+				return *this;
+			}
+		};
+
 		/* Structure describing a surface point */
 		class DifferentialSurface
 		{
 		protected:
 			IShape *m_pShape;
-			int m_nGroupId;
 
 		public:
 			/* Surface info in local space */
@@ -44,8 +64,10 @@ namespace Illumina
 			Vector3 RayOriginWS,
 				RayDirectionWS;
 
+			Fragment GeometryFragment;
+
 		public:
-			DifferentialSurface(void) : Distance(Maths::Maximum) { }
+			DifferentialSurface(void) : Distance(Maths::Maximum), m_pShape(NULL) { }
 			DifferentialSurface(const DifferentialSurface &p_surface) 
 				: ShadingNormal(p_surface.ShadingNormal)
 				, GeometryNormal(p_surface.GeometryNormal)
@@ -59,14 +81,15 @@ namespace Illumina
 				, RayDirection(p_surface.RayDirection)
 				, RayOriginWS(p_surface.RayDirectionWS)
 				, RayDirectionWS(p_surface.RayDirectionWS)
-				, m_nGroupId(p_surface.m_nGroupId)
+				, GeometryFragment(p_surface.GeometryFragment)
 				, m_pShape(p_surface.m_pShape)
 			{ }
 
 			inline void Reset(void) 
 			{
-				m_nGroupId = -1;
 				Distance = Maths::Maximum;
+				GeometryFragment.Reset();
+				m_pShape = NULL;
 			}
 
 			inline void SetShape(const IShape *p_pShape) { 
@@ -79,18 +102,6 @@ namespace Illumina
 
 			inline bool HasShape(void) const { 
 				return m_pShape != NULL;
-			}
-
-			inline void SetGroupId(int p_nGroupId) {
-				m_nGroupId = p_nGroupId;
-			}
-
-			inline int GetGroupId(void) const {
-				return m_nGroupId;
-			}
-
-			inline bool HasGroup(void) const {
-				return m_nGroupId >= 0;
 			}
 
 			const DifferentialSurface& operator=(const DifferentialSurface &p_surface)
@@ -107,8 +118,8 @@ namespace Illumina
 				RayDirection = p_surface.RayDirection;
 				RayOriginWS = p_surface.RayOriginWS;
 				RayDirectionWS = p_surface.RayDirectionWS;
-				
-				m_nGroupId = p_surface.m_nGroupId;
+				GeometryFragment = p_surface.GeometryFragment;				
+
 				m_pShape = p_surface.m_pShape;
 
 				return *this;
