@@ -79,6 +79,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	//----------------------------------------------------------------------------------------------
 	// Perform any required tests
 	//----------------------------------------------------------------------------------------------
+	/*
 	Message("\nPerforming Tests...", p_bVerbose);
 	
 	SamplerDiagnostics samplerTest;
@@ -112,6 +113,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 	std::cout << "chi^2, 9 dof (E[x] < 33.1) = " << result << std::endl;
 	samplerTest.DistributionTest(pSampler, sampleSize, "Z:\\sobol.ppm");
 	delete pSampler;
+	*/
 
 	//----------------------------------------------------------------------------------------------
 	//----------------------------------------------------------------------------------------------
@@ -354,7 +356,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 	 
 			// Render frame
-			#pragma omp parallel for num_threads(3)
+			#pragma omp parallel for num_threads(6)
 			for (int y = 0; y < regionY; y++)
 			{
 				for (int x = 0; x < regionX; x++)

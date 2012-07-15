@@ -1,7 +1,11 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	WavefrontSceneLoader.cpp
+//	Filename:	ParticleSceneLoader.cpp
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
+//----------------------------------------------------------------------------------------------
+//  Notes:	The Particle Scene loader is still partly based on the WavefrontSceneLoader... the 
+//			material file is identical to .obj support material files (.mtl). Some day I will 
+//			have to encode material files too in some binary format and rewrite this loader.
 //----------------------------------------------------------------------------------------------
 #include <iostream>
 #include <fstream>
@@ -16,13 +20,8 @@
 #include <boost/algorithm/string.hpp>
 
 #include "Scene/Environment.h"
-#include "Scene/WavefrontSceneLoader.h"
-#include "Shape/VertexFormats.h"
-#include "Shape/TriangleMesh.h"
-#include "Shape/KDTreeMesh.h"
-#include "Shape/BVHMesh.h"
+#include "Scene/ParticleSceneLoader.h"
 #include "Shape/PersistentMesh.h"
-#include "Shape/BasicMesh.h"
 
 #include "Material/MaterialGroup.h"
 #include "Material/Mirror.h"
@@ -32,41 +31,9 @@
 #include "Spectrum/Spectrum.h"
 
 using namespace Illumina::Core;
+
 //----------------------------------------------------------------------------------------------
-struct WavefrontVertex
-{
-private:
-	static struct Hash 
-	{
-		Int64 Position : 21;
-		Int64 Texture : 21;
-		Int64 Normal : 21;
-	};
-
-public:
-	int Position,
-		Texture,
-		Normal;	
-
-	Int64 GetVertexHash(void)
-	{
-		Hash hash;
-
-		hash.Position = Position;
-		hash.Normal = Normal;
-		hash.Texture = Texture;
-
-		return *(Int64*)&hash;
-	}
-};
-//----------------------------------------------------------------------------------------------
-struct WavefrontFace
-{
-	int MaterialIndex;
-	WavefrontVertex Vertex[4];
-};
-//----------------------------------------------------------------------------------------------
-struct WavefrontMaterial
+struct ParticleMaterial
 {
 	enum MaterialType
 	{
@@ -91,40 +58,34 @@ struct WavefrontMaterial
 	std::string BumpMap;
 };
 //----------------------------------------------------------------------------------------------
-struct WavefrontContext
+struct ParticleContext
 {
-	std::map<Int64, int> VertexMap;
+	std::vector<ParticleMaterial> MaterialList;
 
-	std::vector<Vector3> PositionList;
-	std::vector<Vector3> NormalList;
-	std::vector<Vector2> UVList;
-
-	std::vector<WavefrontMaterial> MaterialList;
-
-	ITriangleMesh *Mesh;
+	IShape *Mesh;
 	MaterialGroup *Materials;
 
 	std::string ObjectName;
 	int CurrentMaterialId;
 
-	WavefrontContext(void)
+	ParticleContext(void)
 		: Mesh(NULL)
 		, Materials(NULL)
 		, CurrentMaterialId(-1)
 	{ }
 };
 //----------------------------------------------------------------------------------------------
-WavefrontSceneLoader::WavefrontSceneLoader(Environment *p_pEnvironment)
+ParticleSceneLoader::ParticleSceneLoader(Environment *p_pEnvironment)
 	: ISceneLoader(p_pEnvironment)
 { 
 	BOOST_ASSERT(p_pEnvironment != NULL);
 	m_pEngineKernel = p_pEnvironment->GetEngineKernel();
 }
 //----------------------------------------------------------------------------------------------
-bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap)
+bool ParticleSceneLoader::Import(const std::string &p_strFilename, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap)
 {
 	// Provide wavefront scene context for loader
-	WavefrontContext context;
+	ParticleContext context;
 	
 	// Load geometry
 	if (!LoadGeometry(p_strFilename, context))
@@ -137,11 +98,7 @@ bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int
 		if (p_pArgumentMap != NULL) 
 			p_pArgumentMap->GetArgument("Id", meshName);
 		
-		//IShape* pShape = new PersistentMesh(meshName, "Z:\\Object");
-		//m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, pShape);
 		m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, context.Mesh);
-
-		//context.Mesh->UpdateNormals();
 	}
 
 	if (context.Materials != NULL)
@@ -157,12 +114,12 @@ bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-bool WavefrontSceneLoader::Export(const std::string &p_strFilename, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap)
+bool ParticleSceneLoader::Export(const std::string &p_strFilename, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap)
 {
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, WavefrontContext &p_context)
+bool ParticleSceneLoader::LoadMaterials(const std::string &p_strFilename, ParticleContext &p_context)
 {
 	// Get material library filename as a path
 	boost::filesystem::path materialPath(p_strFilename);
@@ -185,7 +142,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 	std::string currentLine;
 	std::vector<std::string> tokenList;
 
-	WavefrontMaterial material;
+	ParticleMaterial material;
 
 	while(std::getline(materialFile, currentLine))
 	{
@@ -205,7 +162,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 				continue;
 			
 			material.Name = tokenList[1];
-			material.Type = WavefrontMaterial::Matte;
+			material.Type = ParticleMaterial::Matte;
 
 			p_context.MaterialList.push_back(material);
 		}
@@ -217,15 +174,15 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 			switch (boost::lexical_cast<int>(tokenList[1]))
 			{
 				case 4:
-					p_context.MaterialList.back().Type = WavefrontMaterial::Glass;
+					p_context.MaterialList.back().Type = ParticleMaterial::Glass;
 					break;
 
 				case 5:
-					p_context.MaterialList.back().Type = WavefrontMaterial::Mirror;
+					p_context.MaterialList.back().Type = ParticleMaterial::Mirror;
 					break;
 
 				default:
-					p_context.MaterialList.back().Type = WavefrontMaterial::Matte;
+					p_context.MaterialList.back().Type = ParticleMaterial::Matte;
 			}
 		}
 		else if (tokenList[0] == "map_Ka") // Ambient map
@@ -320,7 +277,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 		IMaterial *pMaterial = NULL;
 		ITexture *pTexture = NULL;
 
-		const WavefrontMaterial& material = p_context.MaterialList.at(groupId); 
+		const ParticleMaterial& material = p_context.MaterialList.at(groupId); 
 
 		std::stringstream argumentStream;
 		argumentStream << "Id=" << material.Name << ";Shininess=" << material.Shininess << ";Absorption=" << 1.0f 
@@ -363,7 +320,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 
 		switch(material.Type)
 		{
-			case WavefrontMaterial::Matte:
+			case ParticleMaterial::Matte:
 			{
 				argumentStream << "Reflectivity={" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "};";
 				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Matte", material.Name, argumentStream.str());
@@ -371,7 +328,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 				break;
 			}
 
-			case WavefrontMaterial::Mirror:
+			case ParticleMaterial::Mirror:
 			{
 				argumentStream << "Reflectivity={" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "};";
 				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Mirror", material.Name, argumentStream.str());
@@ -379,7 +336,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 				break;
 			}
 
-			case WavefrontMaterial::Glass:
+			case ParticleMaterial::Glass:
 			{
 				argumentStream << "Reflectivity={{" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "},"
 					<< "{" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "}};";
@@ -395,164 +352,23 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, WavefrontContext &p_context)
+bool ParticleSceneLoader::LoadGeometry(const std::string &p_strFilename, ParticleContext &p_context)
 {
 	// Use filename as the default object name
 	boost::filesystem::path geometryPath(p_strFilename);
 	p_context.ObjectName = geometryPath.filename().string();
+
+	// Create Persistent Mesh
+	p_context.Mesh = new PersistentMesh(p_context.ObjectName, p_strFilename);
+
+	// Load materials
+	std::string materialLibraryFilename = p_strFilename + ".mtl";
+	LoadMaterials(materialLibraryFilename, p_context);
 	
-	//p_context.Mesh = new PersistentMesh(p_context.ObjectName, "Z:\\Object");
-	p_context.Mesh = new KDTreeMesh(p_context.ObjectName);
-	//p_context.Mesh = new BVHMesh(p_context.ObjectName);
-	//p_context.Mesh = new BasicMesh(p_context.ObjectName);
-
-	// Open wavefront file
-	std::ifstream wavefrontFile;
-	wavefrontFile.open(p_strFilename.c_str());
-	
-	if (!wavefrontFile.is_open())
-	{
-		std::cerr << "Error : Couldn't open file '" << p_strFilename << "'" << std::endl;
-		exit(-1);
-	}
-	
-	// define some temporary containers
-	Vector2 vector2;
-	Vector3 vector3;
-
-	std::string currentLine;
-
-	std::vector<std::string> tokenList,
-		faceTokenList;
-
-	while(std::getline(wavefrontFile, currentLine))
-	{
-		tokenList.clear();
-
-		// Tokenise line
-		if (Tokenise(currentLine, " \n\r", tokenList) == 0)
-			continue;
-
-		// Trim whitespace at edges
-		for (size_t tokenIndex = 0; tokenIndex < tokenList.size(); ++tokenIndex)
-			boost::trim(tokenList[tokenIndex]);
-
-		if (tokenList[0] == "o") // Object - set geometry to friendly object name
-		{
-			if (tokenList.size() != 2)
-				continue;
-
-			p_context.ObjectName = tokenList[1];
-		}
-		else if (tokenList[0] == "v") // Position
-		{
-			if (tokenList.size() != 4)
-				continue;
-
-			vector3.Set(boost::lexical_cast<float>(tokenList[1]),
-						boost::lexical_cast<float>(tokenList[2]),
-						boost::lexical_cast<float>(tokenList[3]));
-
-				p_context.PositionList.push_back(vector3);
-		}
-		else if (tokenList[0] == "vn") // Normal
-		{
-			if (tokenList.size() != 4)
-				continue;
-
-			vector3.Set(boost::lexical_cast<float>(tokenList[1]),
-						boost::lexical_cast<float>(tokenList[2]),
-						boost::lexical_cast<float>(tokenList[3]));
-
-			p_context.NormalList.push_back(vector3);
-		}
-		else if (tokenList[0] == "vt") // Texture coordinates
-		{
-			if (tokenList.size() < 3)
-				continue;
-
-			vector2.Set(boost::lexical_cast<float>(tokenList[1]),
-						boost::lexical_cast<float>(tokenList[2]));
-
-			p_context.UVList.push_back(vector2);
-		}
-		else if (tokenList[0] == "f") // Face
-		{
-			// Ignore if there aren't enough vertices to form a surface.
-			// We are interested only in tri/quad faces, so ignore higher
-			// order polygons too.
-			if (tokenList.size() < 4 || tokenList.size() > 5)
-				continue;
-
-			WavefrontVertex vertex;
-			int vertexIndex[4];
-
-			for (size_t index = 1; index < tokenList.size(); index++)
-			{
-				Tokenise(tokenList[index], "/", faceTokenList);
-
-				vertex.Position = boost::lexical_cast<int>(faceTokenList[0]);
-
-				if (faceTokenList.size() == 2) {
-					vertex.Normal = boost::lexical_cast<int>(faceTokenList[1]);
-				} else if (faceTokenList.size() == 3) {
-					vertex.Texture = boost::lexical_cast<int>(faceTokenList[1]);
-					vertex.Normal = boost::lexical_cast<int>(faceTokenList[2]);
-				} 
-
-				// Search for vertex in map
-				Int64 hash = vertex.GetVertexHash();
-
-				if (p_context.VertexMap.find(hash) == p_context.VertexMap.end())
-				{
-					Vertex meshVertex;
-
-					meshVertex.Position = p_context.PositionList[vertex.Position - 1];
-					meshVertex.UV = (vertex.Texture == 0) ? Vector2::Zero : p_context.UVList[vertex.Texture - 1];
-					meshVertex.Normal = (vertex.Normal == 0) ? Vector3::Zero : p_context.NormalList[vertex.Normal - 1];
-					
-					p_context.VertexMap[hash] = vertexIndex[index - 1] = 
-						p_context.Mesh->VertexList.Size();
-
-					// Add vertex to mesh
-					p_context.Mesh->AddVertex(meshVertex);
-				}
-				else
-				{
-					vertexIndex[index - 1] = p_context.VertexMap[hash];
-				}
-			}
-			
-			// Add faces to mesh
-			p_context.Mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[1], vertexIndex[2], p_context.CurrentMaterialId);
-			
-			if (tokenList.size() == 5) 
-				p_context.Mesh->AddIndexedTriangle(vertexIndex[0], vertexIndex[2], vertexIndex[3], p_context.CurrentMaterialId);
-		}
-		else if (tokenList[0] == "mtllib")
-		{
-			if (tokenList.size() != 2)
-				continue;
-
-			std::string materialLibraryFilename;
-			materialLibraryFilename = (geometryPath.parent_path() / tokenList[1]).string();
-
-			LoadMaterials(materialLibraryFilename, p_context);
-		}
-		else if (tokenList[0] == "usemtl")
-		{
-			if (tokenList.size() != 2)
-				continue;
-
-			p_context.CurrentMaterialId = p_context.Materials->GetGroupId(tokenList[1]);
-		}
-	}
-	
-	wavefrontFile.close();
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-int WavefrontSceneLoader::Tokenise(std::string &p_strText, char *p_pSeparators, std::vector<std::string> &p_tokenList)
+int ParticleSceneLoader::Tokenise(std::string &p_strText, char *p_pSeparators, std::vector<std::string> &p_tokenList)
 {
 	boost::char_separator<char> separator(p_pSeparators);
 	boost::tokenizer<boost::char_separator<char> > tokens(p_strText, separator);

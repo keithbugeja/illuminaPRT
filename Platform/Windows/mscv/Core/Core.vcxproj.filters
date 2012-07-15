@@ -315,6 +315,9 @@
     <ClCompile Include="..\..\..\..\Core\Shape\PersistentMesh.cpp">
       <Filter>Header Files\Shape</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Scene\ParticleSceneLoader.cpp">
+      <Filter>Header Files\Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -790,6 +793,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Shape\PersistentMesh.h">
       <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Scene\ParticleSceneLoader.h">
+      <Filter>Header Files\Scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
