@@ -14,6 +14,7 @@
 #include "Scene/Scene.h"
 #include "Scene/EnvironmentLoader.h"
 #include "Scene/WavefrontSceneLoader.h"
+#include "Scene/ParticleSceneLoader.h"
 #include "Scene/Environment.h"
 
 #include "Scene/EmissivePrimitive.h"
@@ -604,6 +605,17 @@ bool EnvironmentLoader::ParseShapes(void)
 
 				WavefrontSceneLoader wavefrontLoader(m_pEnvironment);
 				wavefrontLoader.Import(strFilename, 0, &argumentMap);
+
+				pShape = m_pEngineKernel->GetShapeManager()->RequestInstance(strId);
+			}
+			else if (strType == "ParticleModel")
+			{
+				std::string strFilename;
+				argumentMap.GetArgument("Filename", strFilename);
+				boost::trim(strFilename);
+
+				ParticleSceneLoader particleLoader(m_pEnvironment);
+				particleLoader.Import(strFilename, 0, &argumentMap);
 
 				pShape = m_pEngineKernel->GetShapeManager()->RequestInstance(strId);
 			}

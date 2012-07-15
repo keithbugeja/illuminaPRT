@@ -134,6 +134,10 @@ bool KDTreeMesh::Compile(void)
 	// Build kd-tree hierarchy
 	BuildHierarchy(&m_rootNode, triangleList, 0); 
 
+	//----------------------------------------------------------------------------------------------
+	// I should create some export function in persistent meshes (and even change their ridiculous name, at that).
+	// For the time being, I'll leave this here.
+	//----------------------------------------------------------------------------------------------
 	/**/
 	{
 		ImmutableDiskList<Vertex>::Make(&(this->VertexList), "Z:\\Object.ver");
@@ -254,8 +258,10 @@ bool KDTreeMesh::Compile(void)
 		ftree.close();
 
 		std::cout << "Average triangles per leaf node : " << (float)lic / (float)lc << std::endl;
+		int s = std::getchar();
 	}
 	/**/
+	//----------------------------------------------------------------------------------------------
 
 	// Update Stats
 	m_statistics.m_triangleCount = objectCount;

@@ -182,6 +182,7 @@
     <ClCompile Include="..\..\..\..\Core\Scene\Environment.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\EnvironmentLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\GeometricPrimitive.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\ParticleSceneLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\Scene.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\SceneLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\Visibility.cpp" />
@@ -296,6 +297,7 @@
     <ClInclude Include="..\..\..\..\Core\Scene\Environment.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\EnvironmentLoader.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\GeometricPrimitive.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\ParticleSceneLoader.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\Primitive.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\Scene.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\SceneLoader.h" />
