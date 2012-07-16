@@ -70,12 +70,14 @@ namespace Illumina
 				// Close image file
 				imageFile.close();
 
-				/**/
+				// Quick fix to generate .mmf files from .ppm ones.
+				// Should need to enable once for new scenes.
+				/*
 				size_t f = p_strImageFile.find_last_of('.');
 				std::string nf = p_strImageFile.substr(0, f) + ".mmf";
 				std::cout << "MMF : " << nf << std::endl;
 				MemoryMappedTexture::MakeLDR(image, nf); 
-				/**/
+				*/
 
 				return pImage;
 			}
