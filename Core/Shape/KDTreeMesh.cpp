@@ -138,7 +138,7 @@ bool KDTreeMesh::Compile(void)
 	// I should create some export function in persistent meshes (and even change their ridiculous name, at that).
 	// For the time being, I'll leave this here.
 	//----------------------------------------------------------------------------------------------
-	/**/
+	/**//*
 	{
 		ImmutableDiskList<Vertex>::Make(&(this->VertexList), "Z:\\Object.ver");
 	
