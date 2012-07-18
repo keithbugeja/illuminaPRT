@@ -29,226 +29,41 @@ namespace Illumina
 #include <boost/chrono.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/asio.hpp>
-
-// Illumina Environment
-#include "System/EngineKernel.h"
-#include "Scene/Environment.h"
-
-#include "External/Compression/Compression.h"
-#include "../../Core/Scene/GeometricPrimitive.h"
-
-// Factories
-#include "Camera/CameraFactories.h"
-#include "Device/DeviceFactories.h"
-#include "Light/LightFactories.h"
-#include "Space/SpaceFactories.h"
-#include "Shape/ShapeFactories.h"
-#include "Filter/FilterFactories.h"
-#include "Sampler/SamplerFactories.h"
-#include "Texture/TextureFactories.h"
-#include "Material/MaterialFactories.h"
-#include "Renderer/RendererFactories.h"
-#include "Postproc/PostProcessFactories.h"
-#include "Integrator/IntegratorFactories.h"
-
-#include "Staging/Acceleration.h"
-#include "Sampler/SamplerDiagnostics.h"
-
+//----------------------------------------------------------------------------------------------
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-
+// Required in both scheduler and renderer mode
+#include "Environment.h"
+#include "Logger.h"
+//----------------------------------------------------------------------------------------------
 // #define TEST_SCHEDULER
 #define TEST_TILERENDER
-
 //----------------------------------------------------------------------------------------------
 #if (!defined(TEST_SCHEDULER))
-//----------------------------------------------------------------------------------------------
-void Message(const std::string& p_strMessage, bool p_bVerbose)
-{
-	if (p_bVerbose) std::cout << p_strMessage << std::endl;
-}
 //----------------------------------------------------------------------------------------------
 void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 {
 	//----------------------------------------------------------------------------------------------
-	// Engine Kernel
+	// Illumina sandbox environment 
 	//----------------------------------------------------------------------------------------------
-	Message("\nInitialising EngineKernel...", p_bVerbose);
-	EngineKernel engineKernel;
+	SandboxEnvironment sandbox;
 
-	//----------------------------------------------------------------------------------------------
-	// Perform any required tests
-	//----------------------------------------------------------------------------------------------
-	/*
-	Message("\nPerforming Tests...", p_bVerbose);
-	
-	SamplerDiagnostics samplerTest;
-	ISampler *pSampler;
-	float result;
-	const int sampleSize = 512*512; //1e+6;
-
-	pSampler = new RandomSampler();
-	std::cout << "-- Random Sampler --" << std::endl;
-	result = samplerTest.FrequencyTest(pSampler, sampleSize);
-	std::cout << "p-value (E[x] > 0.01) = " << result << std::endl;
-	result = samplerTest.ChiSquareTest(pSampler, sampleSize);
-	std::cout << "chi^2, 9 dof (E[x] < 33.1) = " << result << std::endl;
-	samplerTest.DistributionTest(pSampler, sampleSize, "Z:\\random.ppm");
-	delete pSampler;
-
-	pSampler = new PrecomputedHaltonSampler();
-	std::cout << "-- Precomputed Halton --" << std::endl;
-	result = samplerTest.FrequencyTest(pSampler, sampleSize);
-	std::cout << "p-value (E[x] > 0.01) = " << result << std::endl;
-	result = samplerTest.ChiSquareTest(pSampler, sampleSize);
-	std::cout << "chi^2, 9 dof (E[x] < 33.1) = " << result << std::endl;
-	samplerTest.DistributionTest(pSampler, sampleSize, "Z:\\halton.ppm");
-	delete pSampler;
-
-	pSampler = new PrecomputedSobolSampler();
-	std::cout << "-- Precomputed Sobol --" << std::endl;
-	result = samplerTest.FrequencyTest(pSampler, sampleSize);
-	std::cout << "p-value (E[x] > 0.01) = " << result << std::endl;
-	result = samplerTest.ChiSquareTest(pSampler, sampleSize);
-	std::cout << "chi^2, 9 dof (E[x] < 33.1) = " << result << std::endl;
-	samplerTest.DistributionTest(pSampler, sampleSize, "Z:\\sobol.ppm");
-	delete pSampler;
-	*/
-
-	//----------------------------------------------------------------------------------------------
-	//----------------------------------------------------------------------------------------------
-
-	//----------------------------------------------------------------------------------------------
-	// Sampler
-	//----------------------------------------------------------------------------------------------
-	Message("Registering Samplers...", p_bVerbose);
-	engineKernel.GetSamplerManager()->RegisterFactory("Random", new RandomSamplerFactory());
-	engineKernel.GetSamplerManager()->RegisterFactory("Jitter", new JitterSamplerFactory());
-	engineKernel.GetSamplerManager()->RegisterFactory("Multijitter", new MultijitterSamplerFactory());
-	engineKernel.GetSamplerManager()->RegisterFactory("PrecomputedRandom", new PrecomputedRandomSamplerFactory());
-	engineKernel.GetSamplerManager()->RegisterFactory("PrecomputedHalton", new PrecomputedHaltonSamplerFactory());
-	engineKernel.GetSamplerManager()->RegisterFactory("PrecomputedSobol", new PrecomputedSobolSamplerFactory());
-
-	//----------------------------------------------------------------------------------------------
-	// Filter
-	//----------------------------------------------------------------------------------------------
-	Message("Registering Filters...", p_bVerbose);
-	engineKernel.GetFilterManager()->RegisterFactory("Box", new BoxFilterFactory());
-	engineKernel.GetFilterManager()->RegisterFactory("Tent", new TentFilterFactory());
-
-	//----------------------------------------------------------------------------------------------
-	// Space
-	//----------------------------------------------------------------------------------------------
-	Message("Registering Spaces...", p_bVerbose);
-	engineKernel.GetSpaceManager()->RegisterFactory("Basic", new BasicSpaceFactory());
-
-	//----------------------------------------------------------------------------------------------
-	// Integrator
-	//----------------------------------------------------------------------------------------------
-	Message("Registering Integrators...", p_bVerbose);
-	engineKernel.GetIntegratorManager()->RegisterFactory("PathTracing", new PathIntegratorFactory());
-	engineKernel.GetIntegratorManager()->RegisterFactory("IGI", new IGIIntegratorFactory());
-	//engineKernel.GetIntegratorManager()->RegisterFactory("Photon", new PhotonIntegratorFactory());
-	engineKernel.GetIntegratorManager()->RegisterFactory("Whitted", new WhittedIntegratorFactory());
-	//engineKernel.GetIntegratorManager()->RegisterFactory("Test", new TestIntegratorFactory());
-		
-	//----------------------------------------------------------------------------------------------
-	// Materials
-	//----------------------------------------------------------------------------------------------
-	Message("Registering Post Processes...", p_bVerbose);
-	engineKernel.GetPostProcessManager()->RegisterFactory("AutoTone", new AutoToneFactory());
-	engineKernel.GetPostProcessManager()->RegisterFactory("DragoTone", new DragoToneFactory());
-	engineKernel.GetPostProcessManager()->RegisterFactory("Accumulation", new AccumulationBufferFactory());
-	engineKernel.GetPostProcessManager()->RegisterFactory("Discontinuity", new DiscontinuityBufferFactory());
-	engineKernel.GetPostProcessManager()->RegisterFactory("Reconstruction", new ReconstructionBufferFactory());
-
-	//----------------------------------------------------------------------------------------------
-	// Renderer
-	//----------------------------------------------------------------------------------------------
-	Message("Registering Renderers...", p_bVerbose);
-	engineKernel.GetRendererManager()->RegisterFactory("Basic", new BasicRendererFactory());
-	engineKernel.GetRendererManager()->RegisterFactory("Multipass", new MultipassRendererFactory());
-	engineKernel.GetRendererManager()->RegisterFactory("Multithreaded", new MultithreadedRendererFactory());
-	engineKernel.GetRendererManager()->RegisterFactory("Distributed", new DistributedRendererFactory());
-	engineKernel.GetRendererManager()->RegisterFactory("TimeConstrained", new TimeConstrainedRendererFactory());
-
-	//----------------------------------------------------------------------------------------------
-	// Device
-	//----------------------------------------------------------------------------------------------
-	Message("Registering Devices...", p_bVerbose);
-	engineKernel.GetDeviceManager()->RegisterFactory("Image", new ImageDeviceFactory());
-
-	//----------------------------------------------------------------------------------------------
-	// Cameras
-	//----------------------------------------------------------------------------------------------
-	Message("Registering Cameras...", p_bVerbose);
-	engineKernel.GetCameraManager()->RegisterFactory("Perspective", new PerspectiveCameraFactory());
-	engineKernel.GetCameraManager()->RegisterFactory("ThinLens", new ThinLensCameraFactory());
-
-	//----------------------------------------------------------------------------------------------
-	// Lights
-	//----------------------------------------------------------------------------------------------
-	Message("Registering Lights...", p_bVerbose);
-	engineKernel.GetLightManager()->RegisterFactory("Point", new PointLightFactory());
-	engineKernel.GetLightManager()->RegisterFactory("DiffuseArea", new DiffuseAreaLightFactory());
-	engineKernel.GetLightManager()->RegisterFactory("InfiniteArea", new InfiniteAreaLightFactory());
-
-	//----------------------------------------------------------------------------------------------
-	// Shapes
-	//----------------------------------------------------------------------------------------------
-	Message("Registering Shapes...", p_bVerbose);
-	engineKernel.GetShapeManager()->RegisterFactory("KDTreeMesh", new KDTreeMeshShapeFactory());
-	engineKernel.GetShapeManager()->RegisterFactory("BVHMesh", new BVHMeshShapeFactory());
-	engineKernel.GetShapeManager()->RegisterFactory("Quad", new QuadMeshShapeFactory());
-	engineKernel.GetShapeManager()->RegisterFactory("Triangle", new TriangleShapeFactory());
-	engineKernel.GetShapeManager()->RegisterFactory("Sphere", new SphereShapeFactory());
-
-	//----------------------------------------------------------------------------------------------
-	// Textures
-	//----------------------------------------------------------------------------------------------
-	Message("Registering Textures...", p_bVerbose);
-	engineKernel.GetTextureManager()->RegisterFactory("MappedFile", new MemoryMappedTextureFactory());
-	engineKernel.GetTextureManager()->RegisterFactory("Image", new ImageTextureFactory());
-	engineKernel.GetTextureManager()->RegisterFactory("Noise", new NoiseTextureFactory());
-	engineKernel.GetTextureManager()->RegisterFactory("Marble", new MarbleTextureFactory());
-
-	//----------------------------------------------------------------------------------------------
-	// Materials
-	//----------------------------------------------------------------------------------------------
-	Message("Registering Materials...", p_bVerbose);
-	engineKernel.GetMaterialManager()->RegisterFactory("Matte", new MatteMaterialFactory());
-	engineKernel.GetMaterialManager()->RegisterFactory("Mirror", new MirrorMaterialFactory());
-	engineKernel.GetMaterialManager()->RegisterFactory("Glass", new GlassMaterialFactory());
-	engineKernel.GetMaterialManager()->RegisterFactory("Group", new MaterialGroupFactory());
-	
-	//----------------------------------------------------------------------------------------------
-	// Environment
-	//----------------------------------------------------------------------------------------------
-	Message("Initialising Environment...", p_bVerbose);
-	Environment environment(&engineKernel);
-
-	// Load environment script
-	Message("Loading Environment script...", p_bVerbose);
-	if (!environment.Load(p_strScript))
-	{
-		std::cerr << "Error : Unable to load environment script." << std::endl;
-		exit(-1);
-	}
+	sandbox.Initialise(p_bVerbose);
+	sandbox.LoadScene(p_strScript, p_bVerbose);
 
 	//----------------------------------------------------------------------------------------------
 	// Alias required components
 	//----------------------------------------------------------------------------------------------
-	IIntegrator *pIntegrator = environment.GetIntegrator();
-	IRenderer *pRenderer = environment.GetRenderer();
-	ICamera *pCamera = environment.GetCamera();
-	ISpace *pSpace = environment.GetSpace();
+	IIntegrator *pIntegrator = sandbox.GetEnvironment()->GetIntegrator();
+	IRenderer *pRenderer = sandbox.GetEnvironment()->GetRenderer();
+	ICamera *pCamera = sandbox.GetEnvironment()->GetCamera();
+	ISpace *pSpace = sandbox.GetEnvironment()->GetSpace();
 
-	// Initialise integrator and renderer
-	pIntegrator->Initialise(environment.GetScene(), environment.GetCamera());
-	pRenderer->Initialise();
+	Environment *pEnvironment = sandbox.GetEnvironment();
+	EngineKernel *pEngineKernel = sandbox.GetEngineKernel();
 
 	// Initialisation complete
-	Message("Initialisation complete. Rendering in progress...", p_bVerbose);
+	Logger::Message("Initialisation complete. Rendering in progress...", p_bVerbose);
 
 	//----------------------------------------------------------------------------------------------
 	// Initialise timing
@@ -264,12 +79,12 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		*pRadianceAccumulationBuffer = new RadianceBuffer(
 		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight());
 
-	IPostProcess *pDiscontinuityBuffer = engineKernel.GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
-	IPostProcess *pAutoTone = engineKernel.GetPostProcessManager()->CreateInstance("AutoTone", "AutoTone", "");
-	IPostProcess *pDragoTone = engineKernel.GetPostProcessManager()->CreateInstance("DragoTone", "DragoTone", "");
-	IPostProcess *pReconstructionBuffer = engineKernel.GetPostProcessManager()->CreateInstance("Reconstruction", "ReconstructionBuffer", "");
+	IPostProcess *pDiscontinuityBuffer = pEngineKernel->GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
+	IPostProcess *pAutoTone = pEngineKernel->GetPostProcessManager()->CreateInstance("AutoTone", "AutoTone", "");
+	IPostProcess *pDragoTone = pEngineKernel->GetPostProcessManager()->CreateInstance("DragoTone", "DragoTone", "");
+	IPostProcess *pReconstructionBuffer = pEngineKernel->GetPostProcessManager()->CreateInstance("Reconstruction", "ReconstructionBuffer", "");
 	
-	AccumulationBuffer *pAccumulationBuffer = (AccumulationBuffer*)engineKernel.GetPostProcessManager()->CreateInstance("Accumulation", "AccumulationBuffer", "");
+	AccumulationBuffer *pAccumulationBuffer = (AccumulationBuffer*)pEngineKernel->GetPostProcessManager()->CreateInstance("Accumulation", "AccumulationBuffer", "");
 	pAccumulationBuffer->SetAccumulationBuffer(pRadianceAccumulationBuffer);
 	pAccumulationBuffer->Reset();
 
@@ -332,7 +147,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			start = Platform::GetTime();
 
 			// Prepare integrator
-			pIntegrator->Prepare(environment.GetScene());
+			pIntegrator->Prepare(pEnvironment->GetScene());
 
 			if (p_bVerbose) 
 			{
@@ -436,10 +251,20 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 		#endif
 	}
 
-	char c; std::cin >> c;
-
+	//----------------------------------------------------------------------------------------------
 	pRenderer->Shutdown();
 	pIntegrator->Shutdown();
+	//----------------------------------------------------------------------------------------------
+
+	//----------------------------------------------------------------------------------------------
+	sandbox.Shutdown(p_bVerbose);
+
+	//----------------------------------------------------------------------------------------------
+	if (p_bVerbose)
+	{
+		Logger::Message("Complete :: Press enter to continue", true);
+		int v = std::getchar();
+	}
 }
 //----------------------------------------------------------------------------------------------
 int main(int argc, char** argv)
