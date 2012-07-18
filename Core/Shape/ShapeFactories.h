@@ -17,6 +17,7 @@
 #include "Shape/BasicMesh.h"
 #include "Shape/BVHMesh.h"
 #include "Shape/KDTreeMesh.h"
+#include "Shape/PersistentMesh.h"
 #include "Shape/IndexedTriangle.h"
 #include "Shape/VertexFormats.h"
 #include "Shape/ShapeForge.h"
@@ -287,6 +288,44 @@ namespace Illumina
 			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, int p_nMaxDepth, int p_nMaxLeafObjects)
 			{
 				return new BVHMesh(p_strId, p_nMaxDepth, p_nMaxLeafObjects);
+			}
+		};
+
+		//----------------------------------------------------------------------------------------------
+		// Persistent Mesh factory
+		//----------------------------------------------------------------------------------------------
+		class PersistentMeshShapeFactory : public Illumina::Core::Factory<Illumina::Core::IShape>
+		{
+		public:
+			Illumina::Core::IShape *CreateInstance(void)
+			{
+				throw new Exception("Cannot instantiate Persistent Mesh without trunk name!");
+			}
+
+			Illumina::Core::IShape *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strId,
+					strTrunkName;
+
+				if (p_argumentMap.GetArgument("TrunkName", strTrunkName))
+				{
+					if (p_argumentMap.GetArgument("Name", strId))
+						return CreateInstance(strId, strTrunkName);
+					
+					return CreateInstance(strTrunkName);
+				}
+
+				throw new Exception("Invalid arguments to PersistentMeshShapeFactory!");
+			}
+
+			Illumina::Core::IShape *CreateInstance(const std::string &p_strTrunkName)
+			{
+				return new PersistentMesh(p_strTrunkName);
+			}
+
+			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, const std::string &p_strTrunkName)
+			{
+				return new PersistentMesh(p_strId, p_strTrunkName);
 			}
 		};
 	}

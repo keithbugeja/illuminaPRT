@@ -13,7 +13,7 @@ namespace Illumina
 
 		enum MessageMedium
 		{
-			MM_ChannelAny = MPI_ANY_TAG,
+			MM_ChannelAny = MPI_ANY_TAG, 
 			MM_ChannelGlobal,
 			MM_ChannelBroadcast,
 			MM_ChannelMasterStatic,

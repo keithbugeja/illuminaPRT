@@ -159,6 +159,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Environment.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Logger.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\message.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\mpirender.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\renderpipeline.h" />
