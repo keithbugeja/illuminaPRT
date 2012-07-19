@@ -35,14 +35,186 @@ using namespace Illumina::Core;
 // Required in both scheduler and renderer mode
 #include "Environment.h"
 #include "Logger.h"
+
+extern "C" 
+{
+	#include <libavcodec/avcodec.h>
+	#include <libavformat/avformat.h>
+	#include <libavutil/imgutils.h>
+	#include <libavutil/opt.h>
+}
+
 //----------------------------------------------------------------------------------------------
 // #define TEST_SCHEDULER
 #define TEST_TILERENDER
 //----------------------------------------------------------------------------------------------
 #if (!defined(TEST_SCHEDULER))
 //----------------------------------------------------------------------------------------------
+static void video_encode_example(const char *filename, int codec_id)
+{
+	AVCodec *codec;
+	AVCodecContext *c= NULL;
+	int i, out_size, x, y, outbuf_size;
+	FILE *f;
+	AVFrame *picture;
+	uint8_t *outbuf;
+	int had_output=0;
+
+	printf("Encode video file %s\n", filename);
+
+	/* find the mpeg1 video encoder */
+	codec = avcodec_find_encoder((CodecID)codec_id);
+	
+	if (!codec) 
+	{
+		fprintf(stderr, "codec not found\n");
+		exit(1);
+	}
+
+	c = avcodec_alloc_context3(codec);
+	picture = avcodec_alloc_frame();
+
+	/* put sample parameters */
+	c->bit_rate = 400000;
+	
+	/* resolution must be a multiple of two */
+	c->width = 640;
+	c->height = 480;
+
+	/* frames per second */
+	c->time_base.den = 25; c->time_base.num = 25;
+
+	// c->time_base= (AVRational){1,25};
+	
+	c->gop_size = 10; /* emit one intra frame every ten frames */
+	c->max_b_frames = 25;
+	c->pix_fmt = PIX_FMT_YUV420P;
+
+	if(codec_id == CODEC_ID_H264)
+		av_opt_set (c->priv_data, "preset", "slow", 0);
+
+	/* open it */
+	if (avcodec_open2(c, codec, NULL) < 0) 
+	{
+		fprintf(stderr, "could not open codec\n");
+		exit(1);
+	}
+
+	f = fopen(filename, "wb");
+	if (!f) 
+	{
+		fprintf(stderr, "could not open %s\n", filename);
+		exit(1);
+	}
+
+	/* alloc image and output buffer */
+	outbuf_size = 100000 + 12 * c->width * c->height;
+	outbuf = (uint8_t*)malloc(outbuf_size);
+
+	/* the image can be allocated by any means and av_image_alloc() is
+	 * just the most convenient way if av_malloc() is to be used */
+	av_image_alloc(picture->data, picture->linesize,
+				   c->width, c->height, c->pix_fmt, 1);
+
+	/* encode 1 second of video */
+	for(i=0;i<25 * 25;i++) 
+	{
+		fflush(stdout);
+		/* prepare a dummy image */
+
+		for (y = 0; y < c->height; ++y)
+		{
+			for (x = 0; x < c->width; ++x)
+			{
+				picture->data[0][y * picture->linesize[0] + x] = (x * i) % 256;
+				
+				int x2 = x >> 1, y2 = y >> 1;
+
+				picture->data[1][y2 * picture->linesize[1] + x2] = i * (x + y) % 256;
+				picture->data[2][y2 * picture->linesize[2] + x2] = i * (x + y) % 128;
+			}
+		}
+
+		///* Y */
+		//for(y=0;y<c->height;y++) {
+		//	for(x=0;x<c->width;x++) {
+		//		picture->data[0][y * picture->linesize[0] + x] = x + y + i * 3;
+		//	}
+		//}
+
+		///* Cb and Cr */
+		//for(y=0;y<c->height/2;y++) {
+		//	for(x=0;x<c->width/2;x++) {
+		//		picture->data[1][y * picture->linesize[1] + x] = 128 + y + i * 2;
+		//		picture->data[2][y * picture->linesize[2] + x] = 64 + x + i * 5;
+		//	}
+		//}
+
+		/* encode the image */
+		out_size = avcodec_encode_video(c, outbuf, outbuf_size, picture);
+		had_output |= out_size;
+		printf("encoding frame %3d (size=%5d)\n", i, out_size);
+		fwrite(outbuf, 1, out_size, f);
+	}
+
+	/* get the delayed frames */
+	for(; out_size || !had_output; i++) 
+	{
+		fflush(stdout);
+
+		out_size = avcodec_encode_video(c, outbuf, outbuf_size, NULL);
+		had_output |= out_size;
+		printf("write frame %3d (size=%5d)\n", i, out_size);
+		fwrite(outbuf, 1, out_size, f);
+	}
+
+	/* add sequence end code to have a real mpeg file */
+	outbuf[0] = 0x00;
+	outbuf[1] = 0x00;
+	outbuf[2] = 0x01;
+	outbuf[3] = 0xb7;
+	fwrite(outbuf, 1, 4, f);
+	fclose(f);
+	free(outbuf);
+
+	avcodec_close(c);
+	av_free(c);
+	av_free(picture->data[0]);
+	av_free(picture);
+	printf("\n");
+}
+
+void SaveFrame(AVFrame *pFrame, int width, int height, int iFrame) {
+  FILE *pFile;
+  char szFilename[32];
+  int  y;
+  
+  // Open file
+  sprintf(szFilename, "frame%d.ppm", iFrame);
+  pFile=fopen(szFilename, "wb");
+  if(pFile==NULL)
+	return;
+  
+  // Write header
+  fprintf(pFile, "P6\n%d %d\n255\n", width, height);
+  
+  // Write pixel data
+  for(y=0; y<height; y++)
+	fwrite(pFrame->data[0]+y*pFrame->linesize[0], 1, width*3, pFile);
+  
+  // Close file
+  fclose(pFile);
+}
+
 void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 {
+	av_register_all();
+	video_encode_example("Z:\\test.mpeg", CODEC_ID_H264);
+
+	std::getchar();
+
+	return;
+
 	//----------------------------------------------------------------------------------------------
 	// Illumina sandbox environment 
 	//----------------------------------------------------------------------------------------------
