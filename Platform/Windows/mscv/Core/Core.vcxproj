@@ -65,32 +65,32 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IntDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</IntDir>
-    <IncludePath>$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
-    <LibraryPath>$(MPI_DIR)\lib\i386;$(TBB30_INSTALL_DIR)\lib\tbb\ia32\vc10;$(BOOST_DIR)\lib\x32;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib\i386;$(TBB30_INSTALL_DIR)\lib\tbb\ia32\vc10;$(BOOST_DIR)\lib\x32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IntDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</IntDir>
-    <IncludePath>$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
-    <LibraryPath>$(MPI_DIR)\lib\i386;$(TBB30_INSTALL_DIR)\lib\tbb\ia32\vc10;$(BOOST_DIR)\lib\x32;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib\i386;$(TBB30_INSTALL_DIR)\lib\tbb\ia32\vc10;$(BOOST_DIR)\lib\x32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</IntDir>
-    <IncludePath>$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
-    <LibraryPath>$(MPI_DIR)\lib;$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib;$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</IntDir>
-    <IncludePath>$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
-    <LibraryPath>$(MPI_DIR)\lib;$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib;$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -131,6 +131,7 @@
     <ClCompile Include="..\..\..\..\Core\Camera\PerspectiveCamera.cpp" />
     <ClCompile Include="..\..\..\..\Core\Camera\ThinLensCamera.cpp" />
     <ClCompile Include="..\..\..\..\Core\Device\ImageDevice.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Device\VideoDevice.cpp" />
     <ClCompile Include="..\..\..\..\Core\Exception\Exception.cpp" />
     <ClCompile Include="..\..\..\..\Core\External\Compression\lz4.c" />
     <ClCompile Include="..\..\..\..\Core\Filter\BoxFilter.cpp" />
@@ -213,6 +214,7 @@
     <ClInclude Include="..\..\..\..\Core\Device\Device.h" />
     <ClInclude Include="..\..\..\..\Core\Device\DeviceFactories.h" />
     <ClInclude Include="..\..\..\..\Core\Device\ImageDevice.h" />
+    <ClInclude Include="..\..\..\..\Core\Device\VideoDevice.h" />
     <ClInclude Include="..\..\..\..\Core\Exception\Exception.h" />
     <ClInclude Include="..\..\..\..\Core\External\Compression\Compression.h" />
     <ClInclude Include="..\..\..\..\Core\External\Compression\lz4.h" />

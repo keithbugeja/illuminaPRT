@@ -318,6 +318,9 @@
     <ClCompile Include="..\..\..\..\Core\Scene\ParticleSceneLoader.cpp">
       <Filter>Header Files\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Device\VideoDevice.cpp">
+      <Filter>Header Files\Device</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -796,6 +799,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Scene\ParticleSceneLoader.h">
       <Filter>Header Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Device\VideoDevice.h">
+      <Filter>Header Files\Device</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
