@@ -126,6 +126,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		Logger::Message("Registering Devices...", p_bVerbose);
 		m_engineKernel->GetDeviceManager()->RegisterFactory("Image", new ImageDeviceFactory());
+		m_engineKernel->GetDeviceManager()->RegisterFactory("Video", new VideoDeviceFactory());
 
 		//----------------------------------------------------------------------------------------------
 		// Cameras
@@ -267,7 +268,10 @@ public:
 			//----------------------------------------------------------------------------------------------
 			Logger::Message("Freeing and unregistering Devices...", p_bVerbose);
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Image");
+			delete m_engineKernel->GetDeviceManager()->RequestFactory("Video");
+
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("Image");
+			m_engineKernel->GetDeviceManager()->UnregisterFactory("Video");
 
 			//----------------------------------------------------------------------------------------------
 			// Cameras

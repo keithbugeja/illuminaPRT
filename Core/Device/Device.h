@@ -40,6 +40,9 @@ namespace Illumina
 			
 			virtual AccessType GetAccessType(void) const = 0;
 
+			virtual bool Open(void) = 0;
+			virtual void Close(void) = 0;
+
 			virtual void BeginFrame(void) = 0;
 			virtual void EndFrame(void) = 0;
 

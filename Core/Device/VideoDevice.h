@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	ImageDevice.h
+//	Filename:	VideoDevice.h
 //	Author:		Keith Bugeja
-//	Date:		27/02/2010
+//	Date:		20/07/2012
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 #pragma once
@@ -9,23 +9,55 @@
 #include "Device/Device.h"
 
 //----------------------------------------------------------------------------------------------
+
+struct AVCodec;
+struct AVCodecContext;
+struct AVFrame;
+
+//----------------------------------------------------------------------------------------------
 namespace Illumina
 {
 	namespace Core
 	{
-		class ImageDevice 
+		class VideoDevice 
 			: public IDevice
 		{
+			// FFMpeg stuff
+		protected:
+			AVCodec *m_pCodec;
+			AVCodecContext *m_pCodecContext;
+			AVFrame *m_pPicture;
+
+			int m_nOutputSize,
+				m_nOutputBufferSize,
+				m_nHadOutput;
+
+			uint8_t *m_pOutputBuffer;
+
+			FILE *m_videoFile;
+		
+		public:
+			enum VideoCodec
+			{
+				MPEG1,
+				MPEG2,
+				H264,
+				VP8
+			};
+
 		protected:
 			Image *m_pImage;
-			IImageIO *m_pImageIO;
+
 			std::string m_strFilename;
-			bool m_bKillFilterOnExit;
+			VideoCodec m_videoCodec;
+			int m_nFramesPerSecond;
+
+			bool m_bIsOpen;
 
 		public:
-			ImageDevice(const std::string &p_strName, int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit = false);
-			ImageDevice(int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit = false);
-			~ImageDevice(void);
+			VideoDevice(const std::string &p_strName, int p_nWidth, int p_nHeight, const std::string &p_strFilename, int p_nFramesPerSecond = 25, VideoCodec p_videoCodec = MPEG1); 
+			VideoDevice(int p_nWidth, int p_nHeight, const std::string &p_strFilename, int p_nFramesPerSecond = 25, VideoCodec p_videoCodec = MPEG1); 
+			~VideoDevice(void);
 
 			//----------------------------------------------------------------------------------------------
 			// Interface implementation methods
@@ -60,8 +92,11 @@ namespace Illumina
 			std::string GetFilename(void) const;
 			void SetFilename(const std::string &p_strFilename);
 
-			IImageIO *GetImageWriter(void) const;
-			void SetImageWriter(IImageIO *p_pImageIO);
+			VideoCodec GetCodec(void) const;
+			void SetCodec(VideoCodec p_videoCodec);
+
+			int GetFrameRate(void) const;
+			void SetFrameRate(int p_nFramesPerSecond);
 
 			Image *GetImage(void) const;
 		};
