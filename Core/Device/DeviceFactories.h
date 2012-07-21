@@ -13,12 +13,83 @@
 #include "Device/Device.h"
 #include "Device/ImageDevice.h"
 #include "Device/VideoDevice.h"
+#include "Device/RTPDevice.h"
 #include "Image/ImagePPM.h"
 
 namespace Illumina
 {
 	namespace Core
-	{	
+	{
+		class RTPDeviceFactory : public Illumina::Core::Factory<Illumina::Core::IDevice>
+		{
+		public:
+			Illumina::Core::IDevice *CreateInstance(void)
+			{
+				throw new Exception("Method not supported!");
+			}
+
+			// Arguments
+			// -- Id {String}
+			// -- Width {Integer}
+			// -- Height {Integer}
+			// -- FrameRate {Integer}
+			// -- Port {Integer}
+			// -- Address {String}
+			// -- Format {String}
+			Illumina::Core::IDevice *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				IVideoStream::VideoCodec videoCodec;
+
+				int width = 640,
+					height = 480,
+					frameRate = 25,
+					port = 6666;
+
+				std::string format = "MPEG2",
+					address = "127.0.0.1";
+
+				std::string strId;
+
+				p_argumentMap.GetArgument("Port", port);
+				p_argumentMap.GetArgument("Width", width);
+				p_argumentMap.GetArgument("Height", height);
+				p_argumentMap.GetArgument("Address", address);
+				p_argumentMap.GetArgument("Filetype", format);
+				p_argumentMap.GetArgument("FrameRate", frameRate);
+
+				if (format == "MPEG2")
+					videoCodec = IVideoStream::MPEG2;
+				else if (format == "MPEG4")
+					videoCodec = IVideoStream::MPEG4;
+				else if (format == "H264")
+					videoCodec = IVideoStream::H264;
+				else if (format == "VP8")
+					videoCodec = IVideoStream::VP8;
+				else
+					videoCodec = IVideoStream::MPEG1;
+
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId, width, height, address, port, frameRate, videoCodec);
+
+				return CreateInstance(width, height, address, port, frameRate, videoCodec);
+			}
+
+			Illumina::Core::IDevice *CreateInstance(const std::string &p_strId, 
+				int p_nWidth, int p_nHeight, const std::string &p_strAddress, int p_nPort,
+				int p_nFrameRate, IVideoStream::VideoCodec p_videoCodec)
+			{
+				return new RTPDevice(p_strId, p_nWidth, p_nHeight, p_strAddress, p_nPort, p_nFrameRate, p_videoCodec);
+			}
+
+			Illumina::Core::IDevice *CreateInstance(int p_nWidth, int p_nHeight, const std::string &p_strAddress, 
+				int p_nPort, int p_nFrameRate, IVideoStream::VideoCodec p_videoCodec)
+
+			{
+				return new RTPDevice(p_nWidth, p_nHeight, p_strAddress, p_nPort, p_nFrameRate, p_videoCodec);
+			}
+		};
+
+
 		class VideoDeviceFactory : public Illumina::Core::Factory<Illumina::Core::IDevice>
 		{
 		public:
@@ -36,7 +107,7 @@ namespace Illumina
 			// -- Filename {String}
 			Illumina::Core::IDevice *CreateInstance(ArgumentMap &p_argumentMap)
 			{
-				VideoDevice::VideoCodec videoCodec;
+				IVideoStream::VideoCodec videoCodec;
 
 				int width = 640,
 					height = 480,
@@ -54,13 +125,15 @@ namespace Illumina
 				p_argumentMap.GetArgument("FrameRate", frameRate);
 
 				if (format == "MPEG2")
-					videoCodec = VideoDevice::MPEG2;
+					videoCodec = IVideoStream::MPEG2;
+				else if (format == "MPEG4")
+					videoCodec = IVideoStream::MPEG4;
 				else if (format == "H264")
-					videoCodec = VideoDevice::H264;
+					videoCodec = IVideoStream::H264;
 				else if (format == "VP8")
-					videoCodec = VideoDevice::VP8;
+					videoCodec = IVideoStream::VP8;
 				else
-					videoCodec = VideoDevice::MPEG1;
+					videoCodec = IVideoStream::MPEG1;
 
 				if (p_argumentMap.GetArgument("Id", strId))
 					return CreateInstance(strId, width, height, frameRate, videoCodec, filename);
@@ -69,14 +142,14 @@ namespace Illumina
 			}
 
 			Illumina::Core::IDevice *CreateInstance(const std::string &p_strId, 
-				int p_nWidth, int p_nHeight, int p_nFrameRate, VideoDevice::VideoCodec p_videoCodec, 
+				int p_nWidth, int p_nHeight, int p_nFrameRate, IVideoStream::VideoCodec p_videoCodec, 
 				const std::string &p_strFilename)
 			{
 				return new VideoDevice(p_strId, p_nWidth, p_nHeight, p_strFilename, p_nFrameRate, p_videoCodec);
 			}
 
 			Illumina::Core::IDevice *CreateInstance(int p_nWidth, int p_nHeight, 
-				int p_nFrameRate, VideoDevice::VideoCodec p_videoCodec, const std::string &p_strFilename)
+				int p_nFrameRate, IVideoStream::VideoCodec p_videoCodec, const std::string &p_strFilename)
 			{
 				return new VideoDevice(p_nWidth, p_nHeight, p_strFilename, p_nFrameRate, p_videoCodec);
 			}

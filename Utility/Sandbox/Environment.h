@@ -7,28 +7,29 @@
 #pragma once
 
 // Illumina Environment
-#include "System/EngineKernel.h"
-#include "Scene/Environment.h"
+#include <System/EngineKernel.h>
+#include <Scene/Environment.h>
+#include <Scene/Scene.h>
 
-#include "External/Compression/Compression.h"
-#include "../../Core/Scene/GeometricPrimitive.h"
+#include <External/Compression/Compression.h>
+#include <Scene/GeometricPrimitive.h>
 
 // Factories
-#include "Camera/CameraFactories.h"
-#include "Device/DeviceFactories.h"
-#include "Light/LightFactories.h"
-#include "Space/SpaceFactories.h"
-#include "Shape/ShapeFactories.h"
-#include "Filter/FilterFactories.h"
-#include "Sampler/SamplerFactories.h"
-#include "Texture/TextureFactories.h"
-#include "Material/MaterialFactories.h"
-#include "Renderer/RendererFactories.h"
-#include "Postproc/PostProcessFactories.h"
-#include "Integrator/IntegratorFactories.h"
-
-#include "Staging/Acceleration.h"
-#include "Sampler/SamplerDiagnostics.h"
+#include <Camera/CameraFactories.h>
+#include <Device/DeviceFactories.h>
+#include <Light/LightFactories.h>
+#include <Space/SpaceFactories.h>
+#include <Shape/ShapeFactories.h>
+#include <Filter/FilterFactories.h>
+#include <Sampler/SamplerFactories.h>
+#include <Texture/TextureFactories.h>
+#include <Material/MaterialFactories.h>
+#include <Renderer/RendererFactories.h>
+#include <Postproc/PostProcessFactories.h>
+#include <Integrator/IntegratorFactories.h>
+		 
+#include <Staging/Acceleration.h>
+#include <Sampler/SamplerDiagnostics.h>
 
 //----------------------------------------------------------------------------------------------
 #include "Logger.h"
@@ -127,6 +128,7 @@ public:
 		Logger::Message("Registering Devices...", p_bVerbose);
 		m_engineKernel->GetDeviceManager()->RegisterFactory("Image", new ImageDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("Video", new VideoDeviceFactory());
+		m_engineKernel->GetDeviceManager()->RegisterFactory("RTP", new RTPDeviceFactory());
 
 		//----------------------------------------------------------------------------------------------
 		// Cameras
@@ -269,9 +271,11 @@ public:
 			Logger::Message("Freeing and unregistering Devices...", p_bVerbose);
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Image");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Video");
+			delete m_engineKernel->GetDeviceManager()->RequestFactory("RTP");
 
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("Image");
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("Video");
+			m_engineKernel->GetDeviceManager()->UnregisterFactory("RTP");
 
 			//----------------------------------------------------------------------------------------------
 			// Cameras

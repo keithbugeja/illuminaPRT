@@ -29,6 +29,7 @@ namespace Illumina
 #include <boost/chrono.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/asio.hpp>
+
 //----------------------------------------------------------------------------------------------
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -117,7 +118,7 @@ static void video_stream_example(const std::string& rtp_addr, int rtp_port, int 
 	AVFormatContext *oc = avformat_alloc_context();
 	if (!oc)
 	{
-		fprintf(stderr, "could not allocate output context");
+		fprintf(stderr, "could not allocate format context");
 		exit(1);
 	}
 
@@ -592,9 +593,10 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 
 			// Post-process frame
-			//pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+			// pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 			pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 
+			pEnvironment->GetScene()->GetSampler()->Reset();
 			//pAccumulationBuffer->Reset();
 			//pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 

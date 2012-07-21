@@ -85,6 +85,9 @@
     <Filter Include="Header Files\Postproc">
       <UniqueIdentifier>{69c4dd6e-0ace-4fac-b00e-ca54575440fe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\External\Video">
+      <UniqueIdentifier>{b0c0da1c-185e-4b78-9538-d7d37e6d6c86}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Core\Camera\Camera.cpp">
@@ -320,6 +323,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\Core\Device\VideoDevice.cpp">
       <Filter>Header Files\Device</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Device\RTPDevice.cpp">
+      <Filter>Header Files\Device</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\External\Video\VideoStream.cpp">
+      <Filter>Header Files\External\Video</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -802,6 +811,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Device\VideoDevice.h">
       <Filter>Header Files\Device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Device\RTPDevice.h">
+      <Filter>Header Files\Device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\External\Video\VideoStream.h">
+      <Filter>Header Files\External\Video</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
