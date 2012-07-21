@@ -6,36 +6,48 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+//----------------------------------------------------------------------------------------------
+#include <boost/thread.hpp>
+//----------------------------------------------------------------------------------------------
 #include "Device/Device.h"
 #include "External/Video/VideoStream.h"
 //----------------------------------------------------------------------------------------------
-
 namespace Illumina
 {
 	namespace Core
 	{
-		class VideoDevice 
+		class RTPDevice 
 			: public IDevice
 		{
 		protected:
-			// Output file video stream
-			FileVideoStream m_fileVideoStream;
+			// Output network video stream
+			NetworkVideoStream m_networkVideoStream;
 
-			// Image, storing last render
-			Image *m_pImage;
+			// Image pointers used for double bufferring
+			Image *m_pImage[2],
+				*m_pFrontBuffer,
+				*m_pBackBuffer;
+
+			// Denotes active back buffer
+			int m_nActiveBuffer;
+
+			// Thread for asynchronous streaming
+			boost::thread m_streamingThread;
+			bool m_bIsStreaming;
 
 			// Device properties
 			IVideoStream::VideoCodec m_videoCodec;
 			int m_nFramesPerSecond;
 
-			std::string m_strFilename;
+			std::string m_strAddress;
+			int m_nPort;
 
 			bool m_bIsOpen;
 
 		public:
-			VideoDevice(const std::string &p_strName, int p_nWidth, int p_nHeight, const std::string &p_strFilename, int p_nFramesPerSecond = 25, IVideoStream::VideoCodec p_videoCodec = IVideoStream::MPEG1); 
-			VideoDevice(int p_nWidth, int p_nHeight, const std::string &p_strFilename, int p_nFramesPerSecond = 25, IVideoStream::VideoCodec p_videoCodec = IVideoStream::MPEG1); 
-			~VideoDevice(void);
+			RTPDevice(const std::string &p_strName, int p_nWidth, int p_nHeight, const std::string &p_strAddress, int p_nPort = 6666, int p_nFramesPerSecond = 25, IVideoStream::VideoCodec p_videoCodec = IVideoStream::MPEG1); 
+			RTPDevice(int p_nWidth, int p_nHeight, const std::string &p_strAddress, int p_nPort = 6666, int p_nFramesPerSecond = 25, IVideoStream::VideoCodec p_videoCodec = IVideoStream::MPEG1); 
+			~RTPDevice(void);
 
 			//----------------------------------------------------------------------------------------------
 			// Interface implementation methods
@@ -67,6 +79,9 @@ namespace Illumina
 			// Type-specific methods
 			//----------------------------------------------------------------------------------------------
 		public:
+			bool IsStreaming(void) const;
+			void Stream(void);
+
 			std::string GetFilename(void) const;
 			void SetFilename(const std::string &p_strFilename);
 
@@ -75,6 +90,12 @@ namespace Illumina
 
 			int GetFrameRate(void) const;
 			void SetFrameRate(int p_nFramesPerSecond);
+
+			int GetPort(void) const;
+			void SetPort(int p_nPort);
+
+			std::string GetAddress(void) const;
+			void SetAddress(const std::string &p_strAddress);
 
 			Image *GetImage(void) const;
 		};
