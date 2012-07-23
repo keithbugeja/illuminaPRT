@@ -15,6 +15,7 @@ extern "C"
 	#include <libavutil/imgutils.h>
 	#include <libavutil/opt.h>
 }
+
 //----------------------------------------------------------------------------------------------
 #include "External/Video/VideoStream.h"
 #include "Spectrum/Spectrum.h"
@@ -147,6 +148,12 @@ IVideoStream::StreamType NetworkVideoStream::GetStreamType(void) const {
 //----------------------------------------------------------------------------------------------
 bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPerSecond, int p_nBitRate, VideoCodec p_videoCodec) 
 {
+	std::cout << "Width : " << p_nWidth << ", Height : " << p_nHeight << ", FPS : " << p_nFramesPerSecond << ", rate : " << p_nBitRate << std::endl;
+
+	av_register_all();
+	avcodec_register_all();
+	avformat_network_init();
+
 	// First find video encoder
 	CodecID codecId = (CodecID)GetCodec(p_videoCodec);
 	m_pVideoStreamState->m_pCodec = avcodec_find_encoder(codecId);
@@ -243,7 +250,7 @@ bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 
 	// Write the header
 	avformat_write_header(m_pVideoStreamState->m_pFormatContext, NULL);
-	
+		
 	// Clear had output
 	m_pVideoStreamState->m_nHadOutput = 0;
 	
@@ -256,28 +263,34 @@ void NetworkVideoStream::Stream(Image *p_pImage)
 	IVideoStream::ConvertImageToFrame(p_pImage, (void*)(m_pVideoStreamState->m_pPicture));
 
 	// encode the image
-	m_pVideoStreamState->m_nOutputSize = avcodec_encode_video(m_pVideoStreamState->m_pCodecContext, 
-		m_pVideoStreamState->m_pOutputBuffer, m_pVideoStreamState->m_nOutputBufferSize, m_pVideoStreamState->m_pPicture);
+	m_pVideoStreamState->m_nOutputSize = 
+		avcodec_encode_video(m_pVideoStreamState->m_pCodecContext, 
+							 m_pVideoStreamState->m_pOutputBuffer, 
+							 m_pVideoStreamState->m_nOutputBufferSize, 
+							 m_pVideoStreamState->m_pPicture);
+
 	m_pVideoStreamState->m_nHadOutput |= m_pVideoStreamState->m_nOutputSize;
 
-	// m_pVideoStreamState->m_nFrameNumber++;
+	if (m_pVideoStreamState->m_nOutputSize > 0)
+	{
+		// initalize a packet
+		AVPacket packet;
+		av_init_packet(&packet);
 
-	// initalize a packet
-	AVPacket packet;
-	av_init_packet(&packet);
-	packet.data = m_pVideoStreamState->m_pOutputBuffer;
-	packet.size = m_pVideoStreamState->m_nOutputSize;
-	packet.stream_index = m_pVideoStreamState->m_pStream->index;
+		packet.data = m_pVideoStreamState->m_pOutputBuffer;
+		packet.size = m_pVideoStreamState->m_nOutputSize;
+		packet.stream_index = m_pVideoStreamState->m_pStream->index;
 
-	// send it out
-	av_write_frame(m_pVideoStreamState->m_pFormatContext, &packet);
+		// Write the compressed frame to the media file.
+		av_interleaved_write_frame(m_pVideoStreamState->m_pFormatContext, &packet);
+	}
 }
 //----------------------------------------------------------------------------------------------
 void NetworkVideoStream::Shutdown(void) 
 { 
 	AVPacket packet;
 
-	/* get the delayed frames */
+	// get the delayed frames
 	while(m_pVideoStreamState->m_nOutputSize || !m_pVideoStreamState->m_nHadOutput)
 	{
 		m_pVideoStreamState->m_nOutputSize = avcodec_encode_video(m_pVideoStreamState->m_pCodecContext, 
@@ -299,7 +312,7 @@ void NetworkVideoStream::Shutdown(void)
 	m_pVideoStreamState->m_pOutputBuffer[1] = 0x00;
 	m_pVideoStreamState->m_pOutputBuffer[2] = 0x01;
 	m_pVideoStreamState->m_pOutputBuffer[3] = 0xb7;
-		
+
 	free(m_pVideoStreamState->m_pOutputBuffer);
 
 	av_free(m_pVideoStreamState->m_pStream);
@@ -347,6 +360,9 @@ IVideoStream::StreamType FileVideoStream::GetStreamType(void) const {
 //----------------------------------------------------------------------------------------------
 bool FileVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPerSecond, int p_nBitRate, VideoCodec p_videoCodec) 
 {
+	av_register_all();
+	avformat_network_init();
+
 	// First find video encoder
 	CodecID codecId = (CodecID)GetCodec(p_videoCodec);
 	m_pVideoStreamState->m_pCodec = avcodec_find_encoder(codecId);
