@@ -12,13 +12,13 @@
 #include "Spectrum/Spectrum.h"
 #include "Image/Image.h"
 //----------------------------------------------------------------------------------------------
-struct AVCodec;
-struct AVCodecContext;
-struct AVFormatContext;
-struct AVOutputFormat;
-struct AVStream;
-struct AVPacket;
-struct AVFrame;
+//struct AVCodec;
+//struct AVCodecContext;
+//struct AVFormatContext;
+//struct AVOutputFormat;
+//struct AVStream;
+//struct AVPacket;
+//struct AVFrame;
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {

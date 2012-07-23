@@ -16,7 +16,7 @@ using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 void RTPDeviceStream(RTPDevice *p_pRTPDevice)
 {
-	double frameBudget = 1.f / p_pRTPDevice->GetFrameRate();
+	double frameBudget = 0.05; // 1.f / p_pRTPDevice->GetFrameRate();
 	double nextDeadline = Platform::ToSeconds(Platform::GetTime());
 	
 	while(p_pRTPDevice->IsStreaming())
@@ -25,12 +25,13 @@ void RTPDeviceStream(RTPDevice *p_pRTPDevice)
 		{
 			nextDeadline += frameBudget;
 			p_pRTPDevice->Stream();
+			boost::this_thread::sleep(boost::posix_time::microseconds(5));
 		} 
-		else
-		{
-			double time = nextDeadline - Platform::ToSeconds(Platform::GetTime());
-			boost::this_thread::sleep(boost::posix_time::microseconds((int64_t)(time * 1e+6)));
-		}
+		//else
+		//{
+		//	double time = nextDeadline - Platform::ToSeconds(Platform::GetTime());
+		//	boost::this_thread::sleep(boost::posix_time::microseconds((int64_t)(time * 1e+6)));
+		//}
 	}
 }
 
