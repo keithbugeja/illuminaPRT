@@ -23,12 +23,15 @@ namespace Illumina
 //----------------------------------------------------------------------------------------------
 #include <omp.h>
 #include <iostream>
+#include <sstream>
 #include <fstream>
 
 #include <boost/program_options.hpp>
 #include <boost/chrono.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/asio.hpp>
+
+#include <vlc/vlc.h>
 
 //----------------------------------------------------------------------------------------------
 using namespace Illumina::Core;
@@ -248,29 +251,6 @@ static void video_stream_example(const std::string& rtp_addr, int rtp_port, int 
 	av_free(picture);
 	printf("\n");
 }
-
-void SaveFrame(AVFrame *pFrame, int width, int height, int iFrame) {
-  FILE *pFile;
-  char szFilename[32];
-  int  y;
-  
-  // Open file
-  sprintf(szFilename, "frame%d.ppm", iFrame);
-  pFile=fopen(szFilename, "wb");
-  if(pFile==NULL)
-	return;
-  
-  // Write header
-  fprintf(pFile, "P6\n%d %d\n255\n", width, height);
-  
-  // Write pixel data
-  for(y=0; y<height; y++)
-	fwrite(pFrame->data[0]+y*pFrame->linesize[0], 1, width*3, pFile);
-  
-  // Close file
-  fclose(pFile);
-}
-
 static void video_encode_example(const char *filename, int codec_id)
 {
 	AVCodecContext *c = NULL;
@@ -415,17 +395,221 @@ static void video_encode_example(const char *filename, int codec_id)
 	av_free(picture);
 	printf("\n");
 }
+void SaveFrame(AVFrame *pFrame, int width, int height, int iFrame) {
+  FILE *pFile;
+  char szFilename[32];
+  int  y;
+  
+  // Open file
+  sprintf(szFilename, "frame%d.ppm", iFrame);
+  pFile=fopen(szFilename, "wb");
+  if(pFile==NULL)
+	return;
+  
+  // Write header
+  fprintf(pFile, "P6\n%d %d\n255\n", width, height);
+  
+  // Write pixel data
+  for(y=0; y<height; y++)
+	fwrite(pFrame->data[0]+y*pFrame->linesize[0], 1, width*3, pFile);
+  
+  // Close file
+  fclose(pFile);
+}
+
+char maybuffer[320 * 240 * 3];
+
+int myImemGetCallback (void *data, const char *cookie, int64_t *dts, int64_t *pts, unsigned *flags, size_t * bufferSize, void ** buffer)
+{
+	static unsigned char a = 255;
+	static int64_t e = 0, 
+		f = (int64_t) 1000000.f * (1.f / 50.f);
+	
+	e += f;
+
+	char *mbuffer = maybuffer; // (char*)data;
+	
+	for (int p = 0; p < 320 * 240 * 3; ++p)
+		mbuffer[p] = (a+p) % 255;
+
+	*dts = *pts = e;
+
+	*bufferSize = 320 * 250 * 3;
+	*buffer = mbuffer;
+	a++;
+
+	std::cout << "A: " << a << ", E: " << e << std::endl;
+
+	return 0;
+}
+
+int myImemReleaseCallback (void *data, const char *cookie, size_t bufferSize, void * buffer)
+{
+	return 0;
+}
+
+static void video_vlc_test(void)
+{
+	libvlc_instance_t * inst;
+	libvlc_media_player_t *mp;
+	libvlc_media_t *m;
+ 
+	std::vector<char*> arguments;
+
+	char *args[] = {
+		"--imem-width=320", "--imem-height=240"
+		, "--imem-codec=RGB2", "--imem-cat=2"
+		, "--imem-id=1", "--imem-group=1"
+		, "--verbose=2"
+	};
+
+	std::stringstream get;
+		get << "--imem-get=" << (long long int)myImemGetCallback;
+
+	std::stringstream release;
+		release << "--imem-release=" << (long long int)myImemReleaseCallback;
+
+	arguments.push_back(args[0]);
+	arguments.push_back(args[1]);
+	arguments.push_back(args[2]);
+	arguments.push_back(args[3]);
+	arguments.push_back(args[4]);
+	arguments.push_back(args[5]);
+	// arguments.push_back(args[6]);
+
+	char *pget = new char[get.str().length() + 1];
+	char *prelease = new char[release.str().length() + 1];
+
+	memset(pget, 0, get.str().length() + 1);
+	memset(prelease, 0, release.str().length() + 1);
+
+	strncpy (prelease, (char*)release.str().c_str(), release.str().length());
+	strncpy (pget, (char*)get.str().c_str(), get.str().length());
+
+	arguments.push_back(pget);
+	arguments.push_back(prelease);
+
+	std::cout << "::::::" << get.str() << " : " << release.str() << std::endl;
+	std::cout << "::::::" << myImemGetCallback << " : " << myImemReleaseCallback << std::endl;
+
+	std::stringstream imemArgs;
+
+	/* imemArgs << "imem:// :imem-get=" << myImemGetCallback << " :imem-release=" << myImemReleaseCallback << 
+		" :imem-width=320 :imem-height=240" <<
+		" :imem-codec=RGB2 :imem-cat=2 :imem-id=1 :imem-group=1"; */
+
+	//arguments.push_back((char*)(get.str().c_str()));
+	//arguments.push_back((char*)(release.str().c_str()));
+
+	/*
+	sprintf(arg[0], "--imem-width=320");
+	sprintf(arg[1], "--imem-height=240");
+	sprintf(arg[2], "--imem-get=%ld", myImemGetCallback);
+	sprintf(arg[3], "--imem-release=%ld", myImemReleaseCallback);
+	sprintf(arg[4], "--imem-codec=RGB2");
+	sprintf(arg[5], "--imem-data=%ld", maybuffer); 
+	sprintf(arg[6], "--imem-cookie=LIBA"); 
+	sprintf(arg[7], "--imem-cat=2");
+	sprintf(arg[8], " --imem-id=1");
+	sprintf(arg[9], " --imem-group=1");
+	*/
+
+	/* Load the VLC engine */
+	std::cout << "Creating VLC Instance ... ";
+	inst = libvlc_new (arguments.size(), (const char *const *)&arguments[0]);
+	//inst = libvlc_new (0, NULL);
+	std::cout << "[DONE]" << std::endl;
+  
+	 /* Create a new item */
+	std::cout << "Creating Media Instance ... ";
+	//m = libvlc_media_new_path (inst, "C:\\Users\\Keith\\Dropbox\\Public\\sponza.mpg");
+	m = libvlc_media_new_path (inst, "imem:// :transcode{vcodec=mp2v,scale=1,acodec=none}" /*(const char*)imemArgs.str().c_str()*/ );// "imem://");
+	std::cout << "[DONE]" << std::endl;        
+	
+	/* Create a media player playing environement */
+	std::cout << "Creating Media Player Instance ... ";
+	mp = libvlc_media_player_new_from_media (m);
+	std::cout << "[DONE]";
+	
+	///* No need to keep the media now */
+	//libvlc_media_release (m);
+ 
+	 /* play the media_player */
+	std::cout << "Media Player Play ... ";
+	char *vlcOptions[] = {""};
+	libvlc_vlm_add_broadcast(inst, "tc_smart", "imem://", "#transcode{vcodec=mp2v,scale=1,acodec=none}:rtp{dst=192.168.17.99,port=10000,mux=ts}", 0, vlcOptions, 1, 0);
+	libvlc_vlm_play_media(inst, "tc_smart");
+	libvlc_media_player_play (mp);
+	
+	std::getchar();
+		
+	/* Stop playing */
+	libvlc_media_player_stop (mp);
+	std::cout << " and Stopped " << std::endl;
+ 
+	 /* Free the media_player */
+	libvlc_media_player_release (mp);
+ 
+	libvlc_release (inst);
+ 
+	std::getchar();
+ }
+
+//static void video_vlc_test(void)
+//{
+//	libvlc_instance_t * inst;
+//	libvlc_media_player_t *mp;
+//	libvlc_media_t *m;
+// 
+//	/* Load the VLC engine */
+//	std::cout << "Creating VLC Instance ... ";
+//	inst = libvlc_new (0, NULL);
+//	std::cout << "[DONE]" << std::endl;
+//  
+//	 /* Create a new item */
+//	std::cout << "Creating Media Instance ... ";
+//	m = libvlc_media_new_path (inst, "C:\\Users\\Keith\\Dropbox\\Public\\sponza.mpg");
+//	std::cout << "[DONE]" << std::endl;        
+//	
+//	/* Create a media player playing environement */
+//	std::cout << "Creating Media Player Instance ... ";
+//	mp = libvlc_media_player_new_from_media (m);
+//	std::cout << "[DONE]";
+//	
+//	/* No need to keep the media now */
+//	libvlc_media_release (m);
+// 
+//	 /* play the media_player */
+//	std::cout << "Media Player Play ... ";
+//	char *vlcOptions[] = {""};
+//	libvlc_vlm_add_broadcast(inst, "tc_smart", "C:\\Users\\Keith\\Dropbox\\Public\\sponza.mpg", "#rtp{dst=192.168.17.212,port=10000,mux=ts}", 0, vlcOptions, 1, 0);
+//	libvlc_vlm_play_media(inst, "tc_smart");
+//	libvlc_media_player_play (mp);
+//	
+//	std::getchar();
+//		
+//	/* Stop playing */
+//	libvlc_media_player_stop (mp);
+//	std::cout << " and Stopped " << std::endl;
+// 
+//	 /* Free the media_player */
+//	libvlc_media_player_release (mp);
+// 
+//	libvlc_release (inst);
+// 
+//	std::getchar();
+// }
 
 void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 {
-	av_register_all();
-	avformat_network_init();
+	//av_register_all();
+	//avformat_network_init();
+	//video_stream_example("127.0.0.1", 6666, CODEC_ID_MPEG2VIDEO);
+	//video_encode_example("Z:\\test.mpeg", CODEC_ID_MPEG2VIDEO);
 
-	// video_stream_example("127.0.0.1", 6666, CODEC_ID_MPEG2VIDEO);
-	// video_encode_example("Z:\\test.mpeg", CODEC_ID_MPEG2VIDEO);
+	// video_vlc_test();
 
 	// std::getchar();
-
 	// return;
 
 	//----------------------------------------------------------------------------------------------
@@ -528,8 +712,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			////pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
 			////pCamera->LookAt(lookAt);
 			Vector3 observer_ = observer;
-			observer_.Z += Maths::Cos(alpha) * 3.f;
-			observer_.X += Maths::Sin(alpha) * 3.f;
+			observer_.Z += Maths::Cos(alpha) * 2.f;
+			observer_.X += Maths::Sin(alpha) * 4.f;
 			pCamera->MoveTo(observer_);
 
 			// Start timer
