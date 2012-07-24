@@ -33,6 +33,7 @@ namespace Illumina
 
 			enum StreamType
 			{
+				Display,
 				Network,
 				Disk
 			};

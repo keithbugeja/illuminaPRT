@@ -16,6 +16,7 @@ using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 void RTPDeviceStream(RTPDevice *p_pRTPDevice)
 {
+	/**/
 	double frameBudget = 0.05; // 1.f / p_pRTPDevice->GetFrameRate();
 	double nextDeadline = Platform::ToSeconds(Platform::GetTime());
 	
@@ -33,6 +34,7 @@ void RTPDeviceStream(RTPDevice *p_pRTPDevice)
 		//	boost::this_thread::sleep(boost::posix_time::microseconds((int64_t)(time * 1e+6)));
 		//}
 	}
+	/**/
 }
 
 //----------------------------------------------------------------------------------------------
@@ -105,9 +107,11 @@ bool RTPDevice::Open(void)
 	// Start streaming feed
 	m_bIsStreaming = true;
 
+	/*
 	m_streamingThread = boost::thread(
 		boost::bind(RTPDeviceStream, this)
 	);	
+	*/
 
 	// Device is open
 	m_bIsOpen = true;
@@ -130,7 +134,7 @@ void RTPDevice::Close(void)
 	{
 		// Stop streaming
 		m_bIsStreaming = false;
-		m_streamingThread.join();
+		// m_streamingThread.join();
 
 		// Close stream
 		m_networkVideoStream.Shutdown();
@@ -148,6 +152,9 @@ void RTPDevice::EndFrame(void)
 	m_nActiveBuffer = 1 - m_nActiveBuffer;
 	m_pFrontBuffer = m_pImage[m_nActiveBuffer];
 	m_pBackBuffer = m_pImage[1 - m_nActiveBuffer];
+
+	//!!!!!
+	this->Stream();
 }
 //----------------------------------------------------------------------------------------------
 void RTPDevice::Set(int p_nX, int p_nY, const Spectrum &p_spectrum) {
