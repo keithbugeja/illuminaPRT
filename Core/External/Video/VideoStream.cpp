@@ -15,16 +15,12 @@ extern "C"
 	#include <libavutil/imgutils.h>
 	#include <libavutil/opt.h>
 }
-
 //----------------------------------------------------------------------------------------------
 #include "External/Video/VideoStream.h"
 #include "Spectrum/Spectrum.h"
 #include "Image/Image.h"
 //----------------------------------------------------------------------------------------------
 using namespace Illumina::Core;
-//----------------------------------------------------------------------------------------------
-// If an FFMPEG helper is created (or rather, when), this function should go in there.
-// Also, base it on a look-up table.
 //----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
@@ -179,8 +175,8 @@ bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 	m_pVideoStreamState->m_pCodecContext->time_base.den = p_nFramesPerSecond;
 
 	// I and B frames
-	// m_pCodecContext->gop_size = 10;
-	// m_pCodecContext->max_b_frames = 25;
+	// m_pVideoStreamState->m_pCodecContext->max_b_frames = 25;
+	m_pVideoStreamState->m_pCodecContext->gop_size = 12;
 	m_pVideoStreamState->m_pCodecContext->pix_fmt = PIX_FMT_YUV420P;
 
 	if (codecId == CODEC_ID_H264)
@@ -194,12 +190,12 @@ bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 	}
 
 	// Allocate image and output buffer (this is yet magic... I still have to look at the calculation's whys)
-	m_pVideoStreamState->m_nOutputBufferSize = 100000 + 12 * m_pVideoStreamState->m_pCodecContext->width * m_pVideoStreamState->m_pCodecContext->height;
+	m_pVideoStreamState->m_nOutputBufferSize = 65535 + 12 * m_pVideoStreamState->m_pCodecContext->width * m_pVideoStreamState->m_pCodecContext->height;
 	m_pVideoStreamState->m_pOutputBuffer = (uint8_t*)malloc(m_pVideoStreamState->m_nOutputBufferSize);
 
 	// FFMPEG tutorial original comment:
 	// the image can be allocated by any means and av_image_alloc() is
-	// just the most convenient way if av_malloc() is to be used */
+	// just the most convenient way if av_malloc() is to be used
 	av_image_alloc(m_pVideoStreamState->m_pPicture->data, m_pVideoStreamState->m_pPicture->linesize,
 				   m_pVideoStreamState->m_pCodecContext->width, m_pVideoStreamState->m_pCodecContext->height, 
 				   m_pVideoStreamState->m_pCodecContext->pix_fmt, 1);
@@ -249,7 +245,7 @@ bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 	pStreamCodec->time_base.num = m_pVideoStreamState->m_pCodecContext->time_base.num;
 
 	// Write the header
-	avformat_write_header(m_pVideoStreamState->m_pFormatContext, NULL);
+	int result = avformat_write_header(m_pVideoStreamState->m_pFormatContext, NULL);
 		
 	// Clear had output
 	m_pVideoStreamState->m_nHadOutput = 0;
@@ -280,9 +276,12 @@ void NetworkVideoStream::Stream(Image *p_pImage)
 		packet.data = m_pVideoStreamState->m_pOutputBuffer;
 		packet.size = m_pVideoStreamState->m_nOutputSize;
 		packet.stream_index = m_pVideoStreamState->m_pStream->index;
+		packet.flags |= AV_PKT_FLAG_KEY;
+		packet.pts = packet.dts = 0;
 
 		// Write the compressed frame to the media file.
 		av_interleaved_write_frame(m_pVideoStreamState->m_pFormatContext, &packet);
+		avio_flush(m_pVideoStreamState->m_pFormatContext->pb);
 	}
 }
 //----------------------------------------------------------------------------------------------
@@ -308,10 +307,13 @@ void NetworkVideoStream::Shutdown(void)
 	}
 
 	// add sequence end code to have a real mpeg file
+	av_write_trailer(m_pVideoStreamState->m_pFormatContext);
+	/* 
 	m_pVideoStreamState->m_pOutputBuffer[0] = 0x00;
 	m_pVideoStreamState->m_pOutputBuffer[1] = 0x00;
 	m_pVideoStreamState->m_pOutputBuffer[2] = 0x01;
 	m_pVideoStreamState->m_pOutputBuffer[3] = 0xb7;
+	*/
 
 	free(m_pVideoStreamState->m_pOutputBuffer);
 
