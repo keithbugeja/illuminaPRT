@@ -744,7 +744,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 	 
 			// Render frame
-			#pragma omp parallel for schedule(static, 8) num_threads(2)
+			#pragma omp parallel for schedule(static, 8) num_threads(4)
 			for (int y = 0; y < regionY; y++)
 			{
 				for (int x = 0; x < regionX; x++)

@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	VideoDevice.h
+//	Filename:	DisplayDevice.h
 //	Author:		Keith Bugeja
 //	Date:		20/07/2012
 //----------------------------------------------------------------------------------------------
@@ -16,12 +16,12 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class RTPDevice 
+		class DisplayDevice 
 			: public IDevice
 		{
 		protected:
-			// Output network video stream
-			NetworkVideoStream m_networkVideoStream;
+			// Output display sink
+			DisplayVideoStream m_displayVideoStream;
 
 			// Image pointers used for double bufferring
 			Image *m_pImage[2],
@@ -31,32 +31,15 @@ namespace Illumina
 			// Denotes active back buffer
 			int m_nActiveBuffer;
 
-			// Thread for asynchronous streaming
-			boost::thread m_streamingThread;
-			bool m_bIsStreaming;
-
 			// Device properties
-			IVideoStream::VideoCodec m_videoCodec;
-			int m_nFramesPerSecond;
-			int m_nBitRate;
-
-			std::string m_strAddress;
-			int m_nPort;
-
-			bool m_bIsOpen;
+			bool m_bIsStreaming,
+				m_bIsOpen;
 
 		public:
-			RTPDevice(const std::string &p_strName, int p_nWidth, int p_nHeight, 
-				const std::string &p_strAddress, int p_nPort = 10000, 
-				int p_nFramesPerSecond = 25, int p_nBitRate = 512,
-				IVideoStream::VideoCodec p_videoCodec = IVideoStream::MPEG1);
+			DisplayDevice(const std::string &p_strName, int p_nWidth, int p_nHeight);
+			DisplayDevice(int p_nWidth, int p_nHeight);
 
-			RTPDevice(int p_nWidth, int p_nHeight, 
-				const std::string &p_strAddress, int p_nPort = 10000, 
-				int p_nFramesPerSecond = 25, int p_nBitRate = 512,
-				IVideoStream::VideoCodec p_videoCodec = IVideoStream::MPEG1);
-
-			~RTPDevice(void);
+			~DisplayDevice(void);
 
 			//----------------------------------------------------------------------------------------------
 			// Interface implementation methods
@@ -90,24 +73,6 @@ namespace Illumina
 		public:
 			bool IsStreaming(void) const;
 			void Stream(void);
-
-			std::string GetFilename(void) const;
-			void SetFilename(const std::string &p_strFilename);
-
-			IVideoStream::VideoCodec GetCodec(void) const;
-			void SetCodec(IVideoStream::VideoCodec p_videoCodec);
-
-			int GetFrameRate(void) const;
-			void SetFrameRate(int p_nFramesPerSecond);
-
-			int GetBitRate(void) const;
-			void SetBitRate(int p_nBitRate);
-
-			int GetPort(void) const;
-			void SetPort(int p_nPort);
-
-			std::string GetAddress(void) const;
-			void SetAddress(const std::string &p_strAddress);
 
 			Image *GetImage(void) const;
 		};

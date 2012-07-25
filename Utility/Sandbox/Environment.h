@@ -126,6 +126,7 @@ public:
 		// Device
 		//----------------------------------------------------------------------------------------------
 		Logger::Message("Registering Devices...", p_bVerbose);
+		m_engineKernel->GetDeviceManager()->RegisterFactory("Display", new DisplayDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("Image", new ImageDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("Video", new VideoDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("RTP", new RTPDeviceFactory());
@@ -269,10 +270,12 @@ public:
 			// Device
 			//----------------------------------------------------------------------------------------------
 			Logger::Message("Freeing and unregistering Devices...", p_bVerbose);
+			delete m_engineKernel->GetDeviceManager()->RequestFactory("Display");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Image");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Video");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("RTP");
 
+			m_engineKernel->GetDeviceManager()->UnregisterFactory("Display");
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("Image");
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("Video");
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("RTP");
