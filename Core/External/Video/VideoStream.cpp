@@ -8,9 +8,7 @@
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 #if (defined __VIDEOSTREAM_USE_FFMPEG__)
-
 	#define __STDC_CONSTANT_MACROS
-
 	extern "C" 
 	{
 		#include <libavcodec/avcodec.h>
@@ -18,17 +16,15 @@
 		#include <libavutil/imgutils.h>
 		#include <libavutil/opt.h>
 	}
-
 #elif (defined __VIDEOSTREAM_USE_VLC__)
-
-	extern "C" 
-	{
+	extern "C" {
 		#include <vlc/vlc.h>
 	}
-
 #endif
 //----------------------------------------------------------------------------------------------
 #include <boost/tokenizer.hpp>
+#include <boost/algorithm/string.hpp>
+#include <sstream>
 //----------------------------------------------------------------------------------------------
 #include "External/Video/VideoStream.h"
 #include "Spectrum/Spectrum.h"
@@ -43,31 +39,28 @@ namespace Illumina
 	{
 		struct VideoStreamState
 		{
-			#if (defined __VIDEOSTREAM_USE_FFMPEG__)
-				
-				// FFMPEG Library objects
-				AVFormatContext *m_pFormatContext;
-				AVCodecContext *m_pCodecContext;
-				AVOutputFormat *m_pOutputFormat;
-				AVStream *m_pStream;
-				AVPacket *m_pPacket;
-				AVFrame *m_pPicture;
-				AVCodec *m_pCodec;
+			#if (defined __VIDEOSTREAM_USE_FFMPEG__)				
+			// FFMPEG Library objects
+			AVFormatContext *m_pFormatContext;
+			AVCodecContext *m_pCodecContext;
+			AVOutputFormat *m_pOutputFormat;
+			AVStream *m_pStream;
+			AVPacket *m_pPacket;
+			AVFrame *m_pPicture;
+			AVCodec *m_pCodec;
 
-				// Encoding
-				int m_nOutputSize,
-					m_nOutputBufferSize,
-					m_nHadOutput;
+			// Encoding
+			int m_nOutputSize,
+				m_nOutputBufferSize,
+				m_nHadOutput;
 
-				uint8_t *m_pOutputBuffer;
+			uint8_t *m_pOutputBuffer;
 
 			#elif (defined __VIDEOSTREAM_USE_VLC__)
-
 				libvlc_instance_t *m_pInstance;
 				libvlc_media_player_t *m_pMediaPlayer;
 				libvlc_media_t *m_pMedia;
 
-				//RGBSurface1I *m_pFrame;
 				unsigned char *m_pFrame;
 				Image *m_pImage;
 
@@ -85,7 +78,8 @@ namespace Illumina
 		};
 	}
 }
-
+//----------------------------------------------------------------------------------------------
+// Callback method VLC uses to request a new frame for streaming
 //----------------------------------------------------------------------------------------------
 #if (defined __VIDEOSTREAM_USE_VLC__)
 int IMEMGetCallback (void *data, const char *cookie, int64_t *dts, int64_t *pts, unsigned *flags, size_t * bufferSize, void ** buffer)
@@ -106,89 +100,124 @@ int IMEMGetCallback (void *data, const char *cookie, int64_t *dts, int64_t *pts,
 	return 0;
 }
 //----------------------------------------------------------------------------------------------
+// Callback method VLC uses to release data
+//-----------------------------------------s-----------------------------------------------------
 int IMEMReleaseCallback (void *data, const char *cookie, size_t bufferSize, void * buffer)
 {
 	return 0;
 }
 #endif
 //----------------------------------------------------------------------------------------------
-int IVideoStream::GetCodec(IVideoStream::VideoCodec p_videoCodec)
+//----------------------------------------------------------------------------------------------
+// Convert from IVideoStream codec to library specific codec 
+//----------------------------------------------------------------------------------------------
+#if (defined __VIDEOSTREAM_USE_FFMPEG__)
+int GetCodec(IVideoStream::VideoCodec p_videoCodec)
 {
-	#if (defined __VIDEOSTREAM_USE_FFMPEG__)
+	switch(p_videoCodec)
+	{
+		case IVideoStream::MPEG1:
+			return CODEC_ID_MPEG1VIDEO;
 
-		switch(p_videoCodec)
-		{
-			case IVideoStream::MPEG1:
-				return CODEC_ID_MPEG1VIDEO;
+		case IVideoStream::MPEG2:
+			return CODEC_ID_MPEG2VIDEO;
 
-			case IVideoStream::MPEG2:
-				return CODEC_ID_MPEG2VIDEO;
+		case IVideoStream::MPEG4:
+			return CODEC_ID_MPEG4;
 
-			case IVideoStream::MPEG4:
-				return CODEC_ID_MPEG4;
+		case IVideoStream::H264:
+			return CODEC_ID_H264;
 
-			case IVideoStream::H264:
-				return CODEC_ID_H264;
+		case IVideoStream::VP8:
+			return CODEC_ID_VP8;
 
-			case IVideoStream::VP8:
-				return CODEC_ID_VP8;
+		default:
+			return CODEC_ID_MPEG1VIDEO;
+	}
+}
+#endif
+//----------------------------------------------------------------------------------------------
+std::string IVideoStream::GetFourCC(VideoCodec p_videoCodec)
+{
+	switch(p_videoCodec)
+	{
+	case IVideoStream::MPEG1:
+		return "mp1v";
+	case IVideoStream::MPEG2:
+		return "mp2v";
+	case IVideoStream::MPEG4:
+		return "mp4v";
+	case IVideoStream::H264:
+		return "h264";
+	case IVideoStream::VP8:
+		return "vp8";
+	default:
+		return "mp1v";
+	}
+}
+//----------------------------------------------------------------------------------------------
+IVideoStream::VideoCodec IVideoStream::GetCodec(const std::string &p_strFourCC)
+{
+	std::string strFourCC = p_strFourCC;
 
-			default:
-				return CODEC_ID_MPEG1VIDEO;
-		}
-	
-	#else
-		
-		return (int)p_videoCodec;
+	boost::algorithm::to_lower(strFourCC);
 
-	#endif
+	if (strFourCC == "mp1v")
+		return IVideoStream::MPEG1;
+	else if (strFourCC == "mp2v")
+		return IVideoStream::MPEG2;
+	else if (strFourCC == "mp4v")
+		return IVideoStream::MPEG4;
+	else if (strFourCC == "h264")
+		return IVideoStream::H264;
+	else if (strFourCC == "vp8")
+		return IVideoStream::VP8;
+
+	return IVideoStream::MPEG1;
 }
 //----------------------------------------------------------------------------------------------
 void IVideoStream::ConvertImageToFrame(Image *p_pImage, void *p_pFrame)
 {
-	#if (defined __VIDEOSTREAM_USE_FFMPEG__)
+#if (defined __VIDEOSTREAM_USE_FFMPEG__)
+	// Perform colour space transform from RGB (Image) to YCbCr (AVPicture)
+	AVPicture *pPicture = (AVPicture*)p_pFrame;
 
-		// Perform colour space transform from RGB (Image) to YCbCr (AVPicture)
-		AVPicture *pPicture = (AVPicture*)p_pFrame;
+	int x, y,
+		width = p_pImage->GetWidth(),
+		height = p_pImage->GetHeight();
 
-		int x, y,
-			width = p_pImage->GetWidth(),
-			height = p_pImage->GetHeight();
-
-		// Y channel
-		for (y = 0; y < height; ++y)
+	// Y channel
+	for (y = 0; y < height; ++y)
+	{
+		for (x = 0; x < width; ++x)
 		{
-			for (x = 0; x < width; ++x)
-			{
-				RGBPixel pixel = p_pImage->Get(x, y) * 256.f;
-				pPicture->data[0][y * pPicture->linesize[0] + x] = (int)((pixel.R * 0.257) + (pixel.G * 0.504) + (pixel.B * 0.098) + 16);
-			}
+			RGBPixel pixel = p_pImage->Get(x, y) * 256.f;
+			pPicture->data[0][y * pPicture->linesize[0] + x] = (int)((pixel.R * 0.257) + (pixel.G * 0.504) + (pixel.B * 0.098) + 16);
 		}
+	}
 
-		// Cb and Cr
-		for (y = 0; y < height >> 1; ++y)
+	// Cb and Cr
+	for (y = 0; y < height >> 1; ++y)
+	{
+		for (x = 0; x < width >> 1; ++x)
 		{
-			for (x = 0; x < width >> 1; ++x)
-			{
-				RGBPixel pixel = p_pImage->Get(x << 1, y << 1) * 256.f;
-				pPicture->data[1][y * pPicture->linesize[1] + x] = (int)(-(pixel.R * 0.148) - (pixel.G * 0.291) + (pixel.B * 0.439) + 128);
-				pPicture->data[2][y * pPicture->linesize[2] + x] = (int)((pixel.R * 0.439) - (pixel.G * 0.368) - (pixel.B * 0.071) + 128);
-			}
+			RGBPixel pixel = p_pImage->Get(x << 1, y << 1) * 256.f;
+			pPicture->data[1][y * pPicture->linesize[1] + x] = (int)(-(pixel.R * 0.148) - (pixel.G * 0.291) + (pixel.B * 0.439) + 128);
+			pPicture->data[2][y * pPicture->linesize[2] + x] = (int)((pixel.R * 0.439) - (pixel.G * 0.368) - (pixel.B * 0.071) + 128);
 		}
-	
-	#elif (defined __VIDEOSTREAM_USE_VLC__)
-		
-		unsigned char *pFrame = (unsigned char*)p_pFrame;
-		RGBPixel4F *pImagePixel = p_pImage->GetSurfaceBuffer();
+	}	
+#elif (defined __VIDEOSTREAM_USE_VLC__)	
+	unsigned char *pFrame = (unsigned char*)p_pFrame;
+	RGBPixel4F *pImagePixel = p_pImage->GetSurfaceBuffer();
 
-		for (int size = p_pImage->GetArea(); size > 0; --size, pImagePixel++, pFrame+=3)
-		{
-			pFrame[0] = pImagePixel->B * 255;
-			pFrame[1] = pImagePixel->G * 255;
-			pFrame[2] = pImagePixel->R * 255;
-		}
+	for (int size = p_pImage->GetArea(); size > 0; --size, pImagePixel++, pFrame+=3)
+	{
+		pFrame[0] = pImagePixel->B * 255;
+		pFrame[1] = pImagePixel->G * 255;
+		pFrame[2] = pImagePixel->R * 255;
+	}
 
-	#endif
+#endif
 }
 
 //----------------------------------------------------------------------------------------------
@@ -232,184 +261,171 @@ IVideoStream::StreamType NetworkVideoStream::GetStreamType(void) const {
 //----------------------------------------------------------------------------------------------
 bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPerSecond, int p_nBitRate, VideoCodec p_videoCodec) 
 {
-	#if (defined __VIDEOSTREAM_USE_FFMPEG__)
+#if (defined __VIDEOSTREAM_USE_FFMPEG__)
 
-		av_register_all();
-		avcodec_register_all();
-		avformat_network_init();
+	av_register_all();
+	avcodec_register_all();
+	avformat_network_init();
 
-		// First find video encoder
-		CodecID codecId = (CodecID)GetCodec(p_videoCodec);
-		m_pVideoStreamState->m_pCodec = avcodec_find_encoder(codecId);
-		if (!m_pVideoStreamState->m_pCodec)
-		{
-			fprintf(stderr, "Error :: VideoDevice::Open() -> Cannot find requested codec!");
-			return false;
-		}
+	// First find video encoder
+	CodecID codecId = (CodecID)GetCodec(p_videoCodec);
+	m_pVideoStreamState->m_pCodec = avcodec_find_encoder(codecId);
+	if (!m_pVideoStreamState->m_pCodec)
+	{
+		fprintf(stderr, "Error :: VideoDevice::Open() -> Cannot find requested codec!");
+		return false;
+	}
 	
-		// Get codec context and allocate video frame
-		m_pVideoStreamState->m_pCodecContext = avcodec_alloc_context3(m_pVideoStreamState->m_pCodec);
-		m_pVideoStreamState->m_pPicture = avcodec_alloc_frame();
+	// Get codec context and allocate video frame
+	m_pVideoStreamState->m_pCodecContext = avcodec_alloc_context3(m_pVideoStreamState->m_pCodec);
+	m_pVideoStreamState->m_pPicture = avcodec_alloc_frame();
 
-		// Bit rate
-		m_pVideoStreamState->m_pCodecContext->bit_rate = p_nBitRate;
+	// Bit rate
+	m_pVideoStreamState->m_pCodecContext->bit_rate = p_nBitRate;
 	
-		// Resolution (must be multiple of two!)
-		m_pVideoStreamState->m_pCodecContext->width = p_nWidth;
-		m_pVideoStreamState->m_pCodecContext->height = p_nHeight;
+	// Resolution (must be multiple of two!)
+	m_pVideoStreamState->m_pCodecContext->width = p_nWidth;
+	m_pVideoStreamState->m_pCodecContext->height = p_nHeight;
 
-		// Frame rate (FPS)
-		m_pVideoStreamState->m_pCodecContext->time_base.num = 1;
-		m_pVideoStreamState->m_pCodecContext->time_base.den = p_nFramesPerSecond;
+	// Frame rate (FPS)
+	m_pVideoStreamState->m_pCodecContext->time_base.num = 1;
+	m_pVideoStreamState->m_pCodecContext->time_base.den = p_nFramesPerSecond;
 
-		// I and B frames
-		// m_pVideoStreamState->m_pCodecContext->max_b_frames = 25;
-		m_pVideoStreamState->m_pCodecContext->gop_size = 12;
-		m_pVideoStreamState->m_pCodecContext->pix_fmt = PIX_FMT_YUV420P;
+	// I and B frames
+	// m_pVideoStreamState->m_pCodecContext->max_b_frames = 25;
+	m_pVideoStreamState->m_pCodecContext->gop_size = 12;
+	m_pVideoStreamState->m_pCodecContext->pix_fmt = PIX_FMT_YUV420P;
 
-		if (codecId == CODEC_ID_H264)
-			av_opt_set(m_pVideoStreamState->m_pCodecContext->priv_data, "preset", "slow", 0);
+	if (codecId == CODEC_ID_H264)
+		av_opt_set(m_pVideoStreamState->m_pCodecContext->priv_data, "preset", "slow", 0);
 
-		// Open codec
-		if (avcodec_open2(m_pVideoStreamState->m_pCodecContext, m_pVideoStreamState->m_pCodec, NULL) < 0) 
-		{
-			fprintf(stderr, "Error :: RTPDevice::Open() -> Cannot open requested codec!");
-			return false;
-		}
+	// Open codec
+	if (avcodec_open2(m_pVideoStreamState->m_pCodecContext, m_pVideoStreamState->m_pCodec, NULL) < 0) 
+	{
+		fprintf(stderr, "Error :: RTPDevice::Open() -> Cannot open requested codec!");
+		return false;
+	}
 
-		// Allocate image and output buffer (this is yet magic... I still have to look at the calculation's whys)
-		m_pVideoStreamState->m_nOutputBufferSize = 65535 + 12 * m_pVideoStreamState->m_pCodecContext->width * m_pVideoStreamState->m_pCodecContext->height;
-		m_pVideoStreamState->m_pOutputBuffer = (uint8_t*)malloc(m_pVideoStreamState->m_nOutputBufferSize);
+	// Allocate image and output buffer (this is yet magic... I still have to look at the calculation's whys)
+	m_pVideoStreamState->m_nOutputBufferSize = 65535 + 12 * m_pVideoStreamState->m_pCodecContext->width * m_pVideoStreamState->m_pCodecContext->height;
+	m_pVideoStreamState->m_pOutputBuffer = (uint8_t*)malloc(m_pVideoStreamState->m_nOutputBufferSize);
 
-		// FFMPEG tutorial original comment:
-		// the image can be allocated by any means and av_image_alloc() is
-		// just the most convenient way if av_malloc() is to be used
-		av_image_alloc(m_pVideoStreamState->m_pPicture->data, m_pVideoStreamState->m_pPicture->linesize,
-					   m_pVideoStreamState->m_pCodecContext->width, m_pVideoStreamState->m_pCodecContext->height, 
-					   m_pVideoStreamState->m_pCodecContext->pix_fmt, 1);
+	// FFMPEG tutorial original comment:
+	// the image can be allocated by any means and av_image_alloc() is
+	// just the most convenient way if av_malloc() is to be used
+	av_image_alloc(m_pVideoStreamState->m_pPicture->data, m_pVideoStreamState->m_pPicture->linesize,
+					m_pVideoStreamState->m_pCodecContext->width, m_pVideoStreamState->m_pCodecContext->height, 
+					m_pVideoStreamState->m_pCodecContext->pix_fmt, 1);
 
-		// Initalize the AV context
-		m_pVideoStreamState->m_pFormatContext = avformat_alloc_context();
-		if (!m_pVideoStreamState->m_pFormatContext)
-		{
-			fprintf(stderr, "Error :: RTPDevice::Open() -> Cannot allocate format context!");
-			return false;
-		}
+	// Initalize the AV context
+	m_pVideoStreamState->m_pFormatContext = avformat_alloc_context();
+	if (!m_pVideoStreamState->m_pFormatContext)
+	{
+		fprintf(stderr, "Error :: RTPDevice::Open() -> Cannot allocate format context!");
+		return false;
+	}
 
-		// Get the output format
-		m_pVideoStreamState->m_pOutputFormat = av_guess_format("rtp", NULL, NULL);
-		if (!m_pVideoStreamState->m_pOutputFormat)
-		{
-			fprintf(stderr, "Error :: RTPDevice::Open() -> Could not guess output format!");
-			return false;
-		}
+	// Get the output format
+	m_pVideoStreamState->m_pOutputFormat = av_guess_format("rtp", NULL, NULL);
+	if (!m_pVideoStreamState->m_pOutputFormat)
+	{
+		fprintf(stderr, "Error :: RTPDevice::Open() -> Could not guess output format!");
+		return false;
+	}
 	
-		m_pVideoStreamState->m_pFormatContext->oformat = m_pVideoStreamState->m_pOutputFormat;
+	m_pVideoStreamState->m_pFormatContext->oformat = m_pVideoStreamState->m_pOutputFormat;
 
-		// Try to open the RTP
-		sprintf(m_pVideoStreamState->m_pFormatContext->filename, "rtp://%s:%d", m_strAddress.c_str(), m_nPort);
-		if (avio_open(&(m_pVideoStreamState->m_pFormatContext->pb), m_pVideoStreamState->m_pFormatContext->filename, AVIO_FLAG_WRITE) < 0)
-		{
-			fprintf(stderr, "Error :: RTPDevice::Open() -> Could not open RTP stream!");
-			return false;
-		}
+	// Try to open the RTP
+	sprintf(m_pVideoStreamState->m_pFormatContext->filename, "rtp://%s:%d", m_strAddress.c_str(), m_nPort);
+	if (avio_open(&(m_pVideoStreamState->m_pFormatContext->pb), m_pVideoStreamState->m_pFormatContext->filename, AVIO_FLAG_WRITE) < 0)
+	{
+		fprintf(stderr, "Error :: RTPDevice::Open() -> Could not open RTP stream!");
+		return false;
+	}
 
-		// Add a stream to RTP
-		m_pVideoStreamState->m_pStream = av_new_stream(m_pVideoStreamState->m_pFormatContext, 1);
-		if (!m_pVideoStreamState->m_pStream)
-		{
-			fprintf(stderr, "Error :: RTPDevice::Open() -> Could not add stream!");
-			return false;
-		}
+	// Add a stream to RTP
+	m_pVideoStreamState->m_pStream = av_new_stream(m_pVideoStreamState->m_pFormatContext, 1);
+	if (!m_pVideoStreamState->m_pStream)
+	{
+		fprintf(stderr, "Error :: RTPDevice::Open() -> Could not add stream!");
+		return false;
+	}
 
-		// Initalize codec
-		AVCodecContext* pStreamCodec = m_pVideoStreamState->m_pStream->codec;
-		pStreamCodec->codec_id = m_pVideoStreamState->m_pCodecContext->codec_id;
-		pStreamCodec->codec_type = m_pVideoStreamState->m_pCodecContext->codec_type;
-		pStreamCodec->bit_rate = m_pVideoStreamState->m_pCodecContext->bit_rate;
-		pStreamCodec->width = m_pVideoStreamState->m_pCodecContext->width;
-		pStreamCodec->height = m_pVideoStreamState->m_pCodecContext->height;
-		pStreamCodec->time_base.den = m_pVideoStreamState->m_pCodecContext->time_base.den;
-		pStreamCodec->time_base.num = m_pVideoStreamState->m_pCodecContext->time_base.num;
+	// Initalize codec
+	AVCodecContext* pStreamCodec = m_pVideoStreamState->m_pStream->codec;
+	pStreamCodec->codec_id = m_pVideoStreamState->m_pCodecContext->codec_id;
+	pStreamCodec->codec_type = m_pVideoStreamState->m_pCodecContext->codec_type;
+	pStreamCodec->bit_rate = m_pVideoStreamState->m_pCodecContext->bit_rate;
+	pStreamCodec->width = m_pVideoStreamState->m_pCodecContext->width;
+	pStreamCodec->height = m_pVideoStreamState->m_pCodecContext->height;
+	pStreamCodec->time_base.den = m_pVideoStreamState->m_pCodecContext->time_base.den;
+	pStreamCodec->time_base.num = m_pVideoStreamState->m_pCodecContext->time_base.num;
 
-		// Write the header
-		int result = avformat_write_header(m_pVideoStreamState->m_pFormatContext, NULL);
+	// Write the header
+	int result = avformat_write_header(m_pVideoStreamState->m_pFormatContext, NULL);
 		
-		// Clear had output
-		m_pVideoStreamState->m_nHadOutput = 0;
+	// Clear had output
+	m_pVideoStreamState->m_nHadOutput = 0;
 
-	#elif (defined __VIDEOSTREAM_USE_VLC__)
- 
-		std::vector<char*> arguments;
-
-		std::stringstream argStream;
+#elif (defined __VIDEOSTREAM_USE_VLC__)
+	std::vector<char*> arguments;
+	std::stringstream argStream;
 		
-		argStream 
-			<< " --imem-id=1"
-			<< " --imem-group=1"
-			<< " --imem-cat=2"
-			<< " --imem-width=" << p_nWidth 
-			<< " --imem-height=" << p_nHeight
-			<< " --imem-codec=RV24" 
-			<< " --imem-get=" << (long long int)IMEMGetCallback
-			<< " --imem-release=" << (long long int)IMEMReleaseCallback
-			<< " --imem-data=" << (long long int)m_pVideoStreamState
-			<< std::endl;
+	argStream 
+		<< " --imem-id=1"
+		<< " --imem-group=1"
+		<< " --imem-cat=2"
+		<< " --imem-width=" << p_nWidth 
+		<< " --imem-height=" << p_nHeight
+		<< " --imem-codec=RV24" 
+		<< " --imem-get=" << (long long int)IMEMGetCallback
+		<< " --imem-release=" << (long long int)IMEMReleaseCallback
+		<< " --imem-data=" << (long long int)m_pVideoStreamState
+		<< std::endl;
 
-		std::string args = argStream.str();
+	std::string args = argStream.str();
 
-		boost::char_separator<char> separator(" ");
-		boost::tokenizer<boost::char_separator<char> > tokens(args, separator);
+	boost::char_separator<char> separator(" ");
+	boost::tokenizer<boost::char_separator<char> > tokens(args, separator);
 
-		size_t tokenSize;
-		char *pToken;
+	size_t tokenSize;
+	char *pToken;
 
-		for (boost::tokenizer<boost::char_separator<char> >::iterator tokenIterator = tokens.begin();
-				tokenIterator != tokens.end(); ++tokenIterator)
-		{
-			int tokenSize = (*tokenIterator).size() + 1;
-			char *pToken = new char[tokenSize];
-			memset(pToken, 0, tokenSize);
-			strncpy(pToken, (*tokenIterator).c_str(), tokenSize - 1);
+	for (boost::tokenizer<boost::char_separator<char> >::iterator tokenIterator = tokens.begin();
+			tokenIterator != tokens.end(); ++tokenIterator)
+	{
+		int tokenSize = (*tokenIterator).size() + 1;
+		char *pToken = new char[tokenSize];
+		memset(pToken, 0, tokenSize);
+		strncpy(pToken, (*tokenIterator).c_str(), tokenSize - 1);
 
-			arguments.push_back(pToken);
-		}
+		arguments.push_back(pToken);
+	}
 
-		// Create new RGBA surface
-		m_pVideoStreamState->m_pFrame = new unsigned char [p_nWidth * p_nHeight * 3];
-		m_pVideoStreamState->m_i64FrameNext = 0;
-		m_pVideoStreamState->m_i64FrameTime = (int64_t)((1.f / p_nFramesPerSecond) * 1e+6);
-		m_pVideoStreamState->m_pImage = NULL;
+	// Create new RGBA surface
+	m_pVideoStreamState->m_pFrame = new unsigned char [p_nWidth * p_nHeight * 3];
+	m_pVideoStreamState->m_i64FrameNext = 0;
+	m_pVideoStreamState->m_i64FrameTime = (int64_t)((1.f / p_nFramesPerSecond) * 1e+6);
+	m_pVideoStreamState->m_pImage = NULL;
 
-		// Load the VLC Engine
-		m_pVideoStreamState->m_pInstance = libvlc_new(arguments.size(), (const char *const *)&arguments[0]);
+	// Load the VLC Engine
+	m_pVideoStreamState->m_pInstance = libvlc_new(arguments.size(), (const char *const *)&arguments[0]);
+	
+	// Play media player
+	char *vlcOptions[] = {""},
+		pOutput[256];
 
-		// Create media instance
-		//m_pVideoStreamState->m_pMedia = libvlc_media_new_path(
-		//	m_pVideoStreamState->m_pInstance,
-		//	"imem:// :transcode{vcodec=mp2v,vb=9800,acodec=none}");
+	p_nBitRate = 9800;
 
-		// Create a media player playing environement
-		//m_pVideoStreamState->m_pMediaPlayer = 
-		//	libvlc_media_player_new_from_media(m_pVideoStreamState->m_pMedia);
+	sprintf(pOutput, "#transcode{vcodec=%s,vb=%d,acodec=none}:rtp{dst=%s,port=%d,mux=ts}", 
+		GetFourCC(p_videoCodec).c_str(), p_nBitRate, m_strAddress.c_str(), m_nPort);
 
-		///* No need to keep the media now */
-		//libvlc_media_release (m);
- 
-		// Play media player
-		char *vlcOptions[] = {""};
-		
-		char pOutput[256];
-		sprintf(pOutput, "#transcode{vcodec=mp2v,vb=9800,acodec=none}:rtp{dst=%s,port=%d,mux=ts}", m_strAddress.c_str(), m_nPort);
+	libvlc_vlm_add_broadcast(m_pVideoStreamState->m_pInstance, 
+		"illumina_stream", "imem://", pOutput,
+		0, vlcOptions, 1, 0);
 
-		libvlc_vlm_add_broadcast(m_pVideoStreamState->m_pInstance, 
-			"tc_smart", "imem://", pOutput,
-			0, vlcOptions, 1, 0);
-
-		libvlc_vlm_play_media(m_pVideoStreamState->m_pInstance, "tc_smart");
-
-		// libvlc_media_player_play(m_pVideoStreamState->m_pMediaPlayer);
-	#endif
+	libvlc_vlm_play_media(m_pVideoStreamState->m_pInstance, "illumina_stream");
+#endif
 
 	return true;
 }

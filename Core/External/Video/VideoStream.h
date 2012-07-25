@@ -1,13 +1,10 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	VideoHelper.h
+//	Filename:	VideoStream.h
 //	Author:		Keith Bugeja
 //	Date:		20/07/2012
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 #pragma once
-
-//----------------------------------------------------------------------------------------------
-#include <boost/thread.hpp>
 //----------------------------------------------------------------------------------------------
 #include "Spectrum/Spectrum.h"
 #include "Image/Image.h"
@@ -39,8 +36,11 @@ namespace Illumina
 			};
 
 		protected:
-			virtual int GetCodec(VideoCodec p_videoCodec);
 			virtual void ConvertImageToFrame(Image *p_pImage, void *p_pFrame);
+		
+		public:
+			static std::string GetFourCC(VideoCodec p_videoCodec);
+			static VideoCodec GetCodec(const std::string &p_strFourCC);
 
 		public:
 			~IVideoStream(void) { }
