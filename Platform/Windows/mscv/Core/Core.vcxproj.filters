@@ -330,6 +330,9 @@
     <ClCompile Include="..\..\..\..\Core\External\Video\VideoStream.cpp">
       <Filter>Header Files\External\Video</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Device\DisplayDevice.cpp">
+      <Filter>Header Files\Device</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -817,6 +820,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\External\Video\VideoStream.h">
       <Filter>Header Files\External\Video</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Device\DisplayDevice.h">
+      <Filter>Header Files\Device</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

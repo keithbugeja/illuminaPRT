@@ -222,6 +222,114 @@ void IVideoStream::ConvertImageToFrame(Image *p_pImage, void *p_pFrame)
 
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
+DisplayVideoStream::DisplayVideoStream(void)
+	: m_pVideoStreamState(new VideoStreamState())
+{ }
+//----------------------------------------------------------------------------------------------
+DisplayVideoStream::~DisplayVideoStream(void)
+{
+	Safe_Delete(m_pVideoStreamState);
+}
+//----------------------------------------------------------------------------------------------
+IVideoStream::StreamType DisplayVideoStream::GetStreamType(void) const {
+	return IVideoStream::Display;
+}
+
+//----------------------------------------------------------------------------------------------
+bool DisplayVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPerSecond, int p_nBitRate, VideoCodec p_videoCodec) 
+{
+#if (defined __VIDEOSTREAM_USE_VLC__)
+	std::vector<char*> arguments;
+	std::stringstream argStream;
+		
+	argStream 
+		<< " --imem-id=1"
+		<< " --imem-group=1"
+		<< " --imem-cat=2"
+		<< " --imem-width=" << p_nWidth 
+		<< " --imem-height=" << p_nHeight
+		<< " --imem-codec=RV24" 
+		<< " --imem-get=" << (long long int)IMEMGetCallback
+		<< " --imem-release=" << (long long int)IMEMReleaseCallback
+		<< " --imem-data=" << (long long int)m_pVideoStreamState
+		<< std::endl;
+
+	std::string args = argStream.str();
+
+	boost::char_separator<char> separator(" ");
+	boost::tokenizer<boost::char_separator<char> > tokens(args, separator);
+
+	size_t tokenSize;
+	char *pToken;
+
+	for (boost::tokenizer<boost::char_separator<char> >::iterator tokenIterator = tokens.begin();
+			tokenIterator != tokens.end(); ++tokenIterator)
+	{
+		int tokenSize = (*tokenIterator).size() + 1;
+		char *pToken = new char[tokenSize];
+		memset(pToken, 0, tokenSize);
+		strncpy(pToken, (*tokenIterator).c_str(), tokenSize - 1);
+
+		arguments.push_back(pToken);
+	}
+
+	// Create new RGBA surface
+	m_pVideoStreamState->m_pFrame = new unsigned char [p_nWidth * p_nHeight * 3];
+	m_pVideoStreamState->m_i64FrameNext = 0;
+	m_pVideoStreamState->m_i64FrameTime = (int64_t)((1.f / p_nFramesPerSecond) * 1e+6);
+	m_pVideoStreamState->m_pImage = NULL;
+
+	// Load the VLC Engine
+	m_pVideoStreamState->m_pInstance = libvlc_new(arguments.size(), (const char *const *)&arguments[0]);
+	
+	// Create media instance
+	m_pVideoStreamState->m_pMedia = libvlc_media_new_path(m_pVideoStreamState->m_pInstance, "imem://");
+
+	// Create a media player playing environement
+	m_pVideoStreamState->m_pMediaPlayer = 
+		libvlc_media_player_new_from_media(m_pVideoStreamState->m_pMedia);
+
+	libvlc_media_player_play(m_pVideoStreamState->m_pMediaPlayer);
+
+	// Free argument strings
+	for (std::vector<char*>::iterator stringIterator = arguments.begin();
+		 stringIterator != arguments.end(); ++stringIterator)
+		 delete *stringIterator;
+
+	arguments.clear();
+
+	// Debug output
+	std::cout << "DisplayVideoStreaming :: " << p_nWidth << " x " << p_nHeight << " x " << p_nFramesPerSecond 
+		<<  "/s, bitrate = " << p_nBitRate << std::endl;
+#endif
+
+	return true;
+}
+//----------------------------------------------------------------------------------------------
+void DisplayVideoStream::Stream(Image *p_pImage)
+{
+#if (defined __VIDEOSTREAM_USE_VLC__)
+	// Save image and covert
+	m_pVideoStreamState->m_pImage = p_pImage;
+	IVideoStream::ConvertImageToFrame(m_pVideoStreamState->m_pImage, (void*)(m_pVideoStreamState->m_pFrame));
+#endif
+}
+//----------------------------------------------------------------------------------------------
+void DisplayVideoStream::Shutdown(void) 
+{ 
+#if (defined __VIDEOSTREAM_USE_VLC__)
+	libvlc_media_player_stop (m_pVideoStreamState->m_pMediaPlayer);
+	libvlc_media_player_release (m_pVideoStreamState->m_pMediaPlayer);
+	libvlc_media_release (m_pVideoStreamState->m_pMedia);
+	libvlc_release(m_pVideoStreamState->m_pInstance);
+
+	Safe_Delete(m_pVideoStreamState->m_pFrame);
+#endif
+}
+//----------------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 NetworkVideoStream::NetworkVideoStream(const std::string &p_strNetworkAddress, int p_nPortNumber)
 	: m_strAddress(p_strNetworkAddress)
 	, m_nPort(p_nPortNumber)
@@ -230,7 +338,7 @@ NetworkVideoStream::NetworkVideoStream(const std::string &p_strNetworkAddress, i
 //----------------------------------------------------------------------------------------------
 NetworkVideoStream::NetworkVideoStream(void)
 	: m_strAddress("127.0.0.1")
-	, m_nPort(6666)
+	, m_nPort(10000)
 	, m_pVideoStreamState(new VideoStreamState())
 { }
 //----------------------------------------------------------------------------------------------
@@ -258,6 +366,7 @@ void NetworkVideoStream::SetPortNumber(int p_nPortNumber) {
 IVideoStream::StreamType NetworkVideoStream::GetStreamType(void) const {
 	return IVideoStream::Network;
 }
+
 //----------------------------------------------------------------------------------------------
 bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPerSecond, int p_nBitRate, VideoCodec p_videoCodec) 
 {
@@ -415,8 +524,6 @@ bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 	char *vlcOptions[] = {""},
 		pOutput[256];
 
-	p_nBitRate = 9800;
-
 	sprintf(pOutput, "#transcode{vcodec=%s,vb=%d,acodec=none}:rtp{dst=%s,port=%d,mux=ts}", 
 		GetFourCC(p_videoCodec).c_str(), p_nBitRate, m_strAddress.c_str(), m_nPort);
 
@@ -425,6 +532,18 @@ bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 		0, vlcOptions, 1, 0);
 
 	libvlc_vlm_play_media(m_pVideoStreamState->m_pInstance, "illumina_stream");
+
+	// Free argument strings
+	for (std::vector<char*>::iterator stringIterator = arguments.begin();
+		 stringIterator != arguments.end(); ++stringIterator)
+		 delete *stringIterator;
+
+	arguments.clear();
+
+	// Debug output
+	std::cout << "NetworkVideoStreaming :: " << p_nWidth << " x " << p_nHeight << " x " << p_nFramesPerSecond 
+		<<  "/s, bitrate = " << p_nBitRate << std::endl
+		<< "streaming " << GetFourCC(p_videoCodec) << " to " << m_strAddress << " : " << m_nPort << std::endl;
 #endif
 
 	return true;
@@ -432,94 +551,85 @@ bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 //----------------------------------------------------------------------------------------------
 void NetworkVideoStream::Stream(Image *p_pImage)
 {
-	#if (defined __VIDEOSTREAM_USE_FFMPEG__)
-		// Convert image to a frame for streaming
-		IVideoStream::ConvertImageToFrame(p_pImage, (void*)(m_pVideoStreamState->m_pPicture));
+#if (defined __VIDEOSTREAM_USE_FFMPEG__)
+	// Convert image to a frame for streaming
+	IVideoStream::ConvertImageToFrame(p_pImage, (void*)(m_pVideoStreamState->m_pPicture));
 
-		// encode the image
-		m_pVideoStreamState->m_nOutputSize = 
-			avcodec_encode_video(m_pVideoStreamState->m_pCodecContext, 
-								 m_pVideoStreamState->m_pOutputBuffer, 
-								 m_pVideoStreamState->m_nOutputBufferSize, 
-								 m_pVideoStreamState->m_pPicture);
+	// encode the image
+	m_pVideoStreamState->m_nOutputSize = 
+		avcodec_encode_video(m_pVideoStreamState->m_pCodecContext, 
+								m_pVideoStreamState->m_pOutputBuffer, 
+								m_pVideoStreamState->m_nOutputBufferSize, 
+								m_pVideoStreamState->m_pPicture);
 
-		m_pVideoStreamState->m_nHadOutput |= m_pVideoStreamState->m_nOutputSize;
+	m_pVideoStreamState->m_nHadOutput |= m_pVideoStreamState->m_nOutputSize;
 
-		if (m_pVideoStreamState->m_nOutputSize > 0)
-		{
-			// initalize a packet
-			AVPacket packet;
-			av_init_packet(&packet);
+	if (m_pVideoStreamState->m_nOutputSize > 0)
+	{
+		// initalize a packet
+		AVPacket packet;
+		av_init_packet(&packet);
 
-			packet.data = m_pVideoStreamState->m_pOutputBuffer;
-			packet.size = m_pVideoStreamState->m_nOutputSize;
-			packet.stream_index = m_pVideoStreamState->m_pStream->index;
-			packet.flags |= AV_PKT_FLAG_KEY;
-			packet.pts = packet.dts = 0;
+		packet.data = m_pVideoStreamState->m_pOutputBuffer;
+		packet.size = m_pVideoStreamState->m_nOutputSize;
+		packet.stream_index = m_pVideoStreamState->m_pStream->index;
+		packet.flags |= AV_PKT_FLAG_KEY;
+		packet.pts = packet.dts = 0;
 
-			// Write the compressed frame to the media file.
-			av_interleaved_write_frame(m_pVideoStreamState->m_pFormatContext, &packet);
-			avio_flush(m_pVideoStreamState->m_pFormatContext->pb);
-		}
+		// Write the compressed frame to the media file.
+		av_interleaved_write_frame(m_pVideoStreamState->m_pFormatContext, &packet);
+		avio_flush(m_pVideoStreamState->m_pFormatContext->pb);
+	}
 
-	#elif (defined __VIDEOSTREAM_USE_VLC__)
+#elif (defined __VIDEOSTREAM_USE_VLC__)
+	// Save image and covert
+	m_pVideoStreamState->m_pImage = p_pImage;
+	IVideoStream::ConvertImageToFrame(m_pVideoStreamState->m_pImage, (void*)(m_pVideoStreamState->m_pFrame));
 
-		m_pVideoStreamState->m_pImage = p_pImage;
-
-		IVideoStream::ConvertImageToFrame(m_pVideoStreamState->m_pImage, (void*)(m_pVideoStreamState->m_pFrame));
-
-	#endif
+#endif
 }
 //----------------------------------------------------------------------------------------------
 void NetworkVideoStream::Shutdown(void) 
 { 
-	#if (defined __VIDEOSTREAM_USE_FFMPEG__)
+#if (defined __VIDEOSTREAM_USE_FFMPEG__)
+	AVPacket packet;
 
-		AVPacket packet;
+	// get the delayed frames
+	while(m_pVideoStreamState->m_nOutputSize || !m_pVideoStreamState->m_nHadOutput)
+	{
+		m_pVideoStreamState->m_nOutputSize = avcodec_encode_video(m_pVideoStreamState->m_pCodecContext, 
+			m_pVideoStreamState->m_pOutputBuffer, m_pVideoStreamState->m_nOutputBufferSize, NULL);
+		m_pVideoStreamState->m_nHadOutput |= m_pVideoStreamState->m_nOutputBufferSize;
 
-		// get the delayed frames
-		while(m_pVideoStreamState->m_nOutputSize || !m_pVideoStreamState->m_nHadOutput)
-		{
-			m_pVideoStreamState->m_nOutputSize = avcodec_encode_video(m_pVideoStreamState->m_pCodecContext, 
-				m_pVideoStreamState->m_pOutputBuffer, m_pVideoStreamState->m_nOutputBufferSize, NULL);
-			m_pVideoStreamState->m_nHadOutput |= m_pVideoStreamState->m_nOutputBufferSize;
+		// initalize a packet
+		av_init_packet(&packet);
+		packet.data = m_pVideoStreamState->m_pOutputBuffer;
+		packet.size = m_pVideoStreamState->m_nOutputSize;
+		packet.stream_index = m_pVideoStreamState->m_pStream->index;
 
-			// initalize a packet
-			av_init_packet(&packet);
-			packet.data = m_pVideoStreamState->m_pOutputBuffer;
-			packet.size = m_pVideoStreamState->m_nOutputSize;
-			packet.stream_index = m_pVideoStreamState->m_pStream->index;
+		// send it out
+		av_write_frame(m_pVideoStreamState->m_pFormatContext, &packet);
+	}
 
-			// send it out
-			av_write_frame(m_pVideoStreamState->m_pFormatContext, &packet);
-		}
+	// add sequence end code to have a real mpeg file
+	av_write_trailer(m_pVideoStreamState->m_pFormatContext);
 
-		// add sequence end code to have a real mpeg file
-		av_write_trailer(m_pVideoStreamState->m_pFormatContext);
-		/* 
-		m_pVideoStreamState->m_pOutputBuffer[0] = 0x00;
-		m_pVideoStreamState->m_pOutputBuffer[1] = 0x00;
-		m_pVideoStreamState->m_pOutputBuffer[2] = 0x01;
-		m_pVideoStreamState->m_pOutputBuffer[3] = 0xb7;
-		*/
+	free(m_pVideoStreamState->m_pOutputBuffer);
+	av_free(m_pVideoStreamState->m_pStream);
+	av_free(m_pVideoStreamState->m_pFormatContext);
 
-		free(m_pVideoStreamState->m_pOutputBuffer);
-
-		av_free(m_pVideoStreamState->m_pStream);
-
-		// avformat_close_input(&(m_pVideoStreamState->m_pFormatContext));
-		av_free(m_pVideoStreamState->m_pFormatContext);
-
-		avcodec_close(m_pVideoStreamState->m_pCodecContext);
-		av_free(m_pVideoStreamState->m_pCodecContext);
-		av_free(m_pVideoStreamState->m_pPicture->data[0]);
-		av_free(m_pVideoStreamState->m_pPicture);
+	avcodec_close(m_pVideoStreamState->m_pCodecContext);
+	av_free(m_pVideoStreamState->m_pCodecContext);
+	av_free(m_pVideoStreamState->m_pPicture->data[0]);
+	av_free(m_pVideoStreamState->m_pPicture);
 	
-	#elif (defined __VIDEOSTREAM_USE_VLC__)
+#elif (defined __VIDEOSTREAM_USE_VLC__)
+	libvlc_vlm_stop_media(m_pVideoStreamState->m_pInstance, "illumina_stream");
+	libvlc_vlm_release(m_pVideoStreamState->m_pInstance);
+	libvlc_release(m_pVideoStreamState->m_pInstance);
 
-		Safe_Delete(m_pVideoStreamState->m_pFrame);
-
-	#endif
+	Safe_Delete(m_pVideoStreamState->m_pFrame);
+#endif
 }
 //----------------------------------------------------------------------------------------------
 

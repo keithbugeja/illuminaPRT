@@ -21,6 +21,7 @@ namespace Illumina
 		public:
 			enum VideoCodec
 			{
+				Dummy,
 				MPEG1,
 				MPEG2,
 				MPEG4,
@@ -56,6 +57,27 @@ namespace Illumina
 		// VideoStreamState
 		//----------------------------------------------------------------------------------------------
 		struct VideoStreamState;
+
+		//----------------------------------------------------------------------------------------------
+		// NetworkVideoStream
+		//----------------------------------------------------------------------------------------------
+		class DisplayVideoStream
+			: public IVideoStream
+		{
+		protected:
+			VideoStreamState *m_pVideoStreamState;
+
+		public:
+			DisplayVideoStream(void);
+			~DisplayVideoStream(void);
+
+		public:
+			bool Initialise(int p_nWidth, int p_nHeight, int p_nFramesPerSecond, int p_nBitRate, VideoCodec p_videoCodec);
+			void Stream(Image *p_pImage);
+			void Shutdown(void);
+
+			StreamType GetStreamType(void) const;
+		};
 
 		//----------------------------------------------------------------------------------------------
 		// NetworkVideoStream
