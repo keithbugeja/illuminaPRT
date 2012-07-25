@@ -442,7 +442,6 @@ int myImemGetCallback (void *data, const char *cookie, int64_t *dts, int64_t *pt
 
 	return 0;
 }
-
 int myImemReleaseCallback (void *data, const char *cookie, size_t bufferSize, void * buffer)
 {
 	return 0;
@@ -712,8 +711,8 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			////pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
 			////pCamera->LookAt(lookAt);
 			Vector3 observer_ = observer;
-			observer_.Z += Maths::Cos(alpha) * 2.f;
-			observer_.X += Maths::Sin(alpha) * 4.f;
+			observer_.Z += Maths::Cos(alpha) * 4.f;
+			observer_.X += Maths::Sin(alpha) * 2.f;
 			pCamera->MoveTo(observer_);
 
 			// Start timer
@@ -745,7 +744,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 			}
 	 
 			// Render frame
-			#pragma omp parallel for schedule(static, 8) num_threads(4)
+			#pragma omp parallel for schedule(static, 8) num_threads(2)
 			for (int y = 0; y < regionY; y++)
 			{
 				for (int x = 0; x < regionX; x++)
