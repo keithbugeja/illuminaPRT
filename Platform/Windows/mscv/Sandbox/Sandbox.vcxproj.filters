@@ -13,6 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\deprecated">
+      <UniqueIdentifier>{a66f369e-507b-4a85-98ca-e46bb5e4155c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\common">
+      <UniqueIdentifier>{7345b4cc-99b7-4c30-858e-ea8560e0ea5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\server">
+      <UniqueIdentifier>{ce7459a4-a149-46f1-bdc4-5b5a60a2d4b8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\main.cpp">
@@ -20,35 +29,35 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\scheduling.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\taskgroup.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\task.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h">
+      <Filter>Source Files\deprecated</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\taskpipeline.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\deprecated</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\message.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\renderpipeline.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\deprecated</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\mpirender.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\deprecated</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\renderpipeline.h">
+      <Filter>Source Files\deprecated</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\Environment.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\scheduling.h">
+      <Filter>Source Files\deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\task.h">
+      <Filter>Source Files\deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\taskgroup.h">
+      <Filter>Source Files\deprecated</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Logger.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Environment.h">
+      <Filter>Source Files\common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
