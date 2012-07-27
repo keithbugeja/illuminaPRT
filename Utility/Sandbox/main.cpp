@@ -10,39 +10,44 @@
 // Move factories to CorePlugins.dll
 // Finish scene loaders
 //----------------------------------------------------------------------------------------------
+
+
 //----------------------------------------------------------------------------------------------
-namespace Illumina
-{
-	namespace Core
-	{
-		const int Major = 0;
-		const int Minor = 5;
-		const int Build = 0;
-	}
-}
+//	Set Illumina PRT compilation mode (SHM or DSM)
+//----------------------------------------------------------------------------------------------
+#define ILLUMINA_SHM
+
+#if (!defined ILLUMINA_SHM)
+	#define ILLUMINA_DSM
+#endif
+
+//----------------------------------------------------------------------------------------------
+//	Set Illumina PRT version
+//----------------------------------------------------------------------------------------------
+namespace Illumina { namespace Core { const int Major = 0; const int Minor = 5; const int Build = 0; } }
+
+using namespace Illumina::Core;
+
+//----------------------------------------------------------------------------------------------
+//	Include basic headers for OpenMP and io, string and file streams
 //----------------------------------------------------------------------------------------------
 #include <omp.h>
 #include <iostream>
 #include <sstream>
 #include <fstream>
 
+//----------------------------------------------------------------------------------------------
+//	Include boost header files for managing program options and file paths
+//----------------------------------------------------------------------------------------------
 #include <boost/program_options.hpp>
-#include <boost/chrono.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/asio.hpp>
 
 //----------------------------------------------------------------------------------------------
-using namespace Illumina::Core;
+#if (defined(ILLUMINA_SHM))
 //----------------------------------------------------------------------------------------------
-// Required in both scheduler and renderer mode
-#include "Environment.h"
 #include "Logger.h"
-//----------------------------------------------------------------------------------------------
-#define ILLUMINA_SHAREDMEMORY
-//#define ILLUMINA_DISTRIBUTED
-//----------------------------------------------------------------------------------------------
-#if (defined(ILLUMINA_SHAREDMEMORY))
-//----------------------------------------------------------------------------------------------
+#include "Environment.h"
+
 void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 {
 	//----------------------------------------------------------------------------------------------
@@ -131,132 +136,123 @@ void IlluminaPRT(bool p_bVerbose, int p_nIterations, std::string p_strScript)
 
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
-		#if (defined(TEST_TILERENDER))
-			
-			// Animate scene 
-			alpha += Maths::PiTwo / 180.f;
+		// Animate scene 
+		alpha += Maths::PiTwo / 180.f;
 		
-			rotation.MakeRotation(Vector3::UnitYPos, alpha);
+		rotation.MakeRotation(Vector3::UnitYPos, alpha);
 
-			////((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetScaling(Vector3::Ones * 20.0f);
-			//// ((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetRotation(rotation);
+		////((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetScaling(Vector3::Ones * 20.0f);
+		//// ((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetRotation(rotation);
 
-			////pCamera->MoveTo(lookFrom);
-			////pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
-			////pCamera->LookAt(lookAt);
-			Vector3 observer_ = observer;
-			observer_.Z += Maths::Cos(alpha) * 4.f;
-			observer_.X += Maths::Sin(alpha) * 2.f;
-			pCamera->MoveTo(observer_);
+		////pCamera->MoveTo(lookFrom);
+		////pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
+		////pCamera->LookAt(lookAt);
+		Vector3 observer_ = observer;
+		observer_.Z += Maths::Cos(alpha) * 4.f;
+		observer_.X += Maths::Sin(alpha) * 2.f;
+		pCamera->MoveTo(observer_);
 
-			// Start timer
-			start = Platform::GetTime();
+		// Start timer
+		start = Platform::GetTime();
 
-			// Prepare integrator
-			pIntegrator->Prepare(pEnvironment->GetScene());
+		// Prepare integrator
+		pIntegrator->Prepare(pEnvironment->GetScene());
 
-			if (p_bVerbose) 
-			{
-				eventComplete = Platform::GetTime();
-				elapsed = Platform::ToSeconds(eventComplete - start); 
-				std::cout << std::endl << "-- Frame " << nFrame;
-				std::cout << std::endl << "-- Integrator Preparation Time : [" << elapsed << "s]" << std::endl;
+		if (p_bVerbose) 
+		{
+			eventComplete = Platform::GetTime();
+			elapsed = Platform::ToSeconds(eventComplete - start); 
+			std::cout << std::endl << "-- Frame " << nFrame;
+			std::cout << std::endl << "-- Integrator Preparation Time : [" << elapsed << "s]" << std::endl;
 
-				eventStart = Platform::GetTime();
-			}
+			eventStart = Platform::GetTime();
+		}
 
-			// Update space
-			pSpace->Update();
+		// Update space
+		pSpace->Update();
 
-			if (p_bVerbose) 
-			{
-				eventComplete = Platform::GetTime();
-				elapsed = Platform::ToSeconds(eventComplete - eventStart); 
-				std::cout << "-- Space Update Time : [" << elapsed << "s]" << std::endl;
+		if (p_bVerbose) 
+		{
+			eventComplete = Platform::GetTime();
+			elapsed = Platform::ToSeconds(eventComplete - eventStart); 
+			std::cout << "-- Space Update Time : [" << elapsed << "s]" << std::endl;
 				
-				eventStart = Platform::GetTime();
-			}
+			eventStart = Platform::GetTime();
+		}
 	 
-			// Render frame
-			#pragma omp parallel for schedule(static, 8) num_threads(4)
-			for (int y = 0; y < regionY; y++)
+		// Render frame
+		#pragma omp parallel for schedule(static, 8) num_threads(4)
+		for (int y = 0; y < regionY; y++)
+		{
+			for (int x = 0; x < regionX; x++)
 			{
-				for (int x = 0; x < regionX; x++)
-				{
-					double regionStart = Platform::GetTime();
-					pRenderer->RenderRegion(pRadianceBuffer, x * regionWidth, y * regionHeight, regionWidth, regionHeight, x * regionWidth, y * regionHeight);
-					double regionEnd = Platform::GetTime();
+				double regionStart = Platform::GetTime();
+				pRenderer->RenderRegion(pRadianceBuffer, x * regionWidth, y * regionHeight, regionWidth, regionHeight, x * regionWidth, y * regionHeight);
+				double regionEnd = Platform::GetTime();
 
-					double lastActual = Platform::ToSeconds(regionEnd - regionStart);
-					reg[x + y * regionX].lastActual = lastActual;
-					reg[x + y * regionX].nextTime = reg[x + y * regionX].lastPredicted * 0.5 + lastActual * 0.5;
-					reg[x + y * regionX].lastPredicted = reg[x + y * regionX].nextTime;
-				}
+				double lastActual = Platform::ToSeconds(regionEnd - regionStart);
+				reg[x + y * regionX].lastActual = lastActual;
+				reg[x + y * regionX].nextTime = reg[x + y * regionX].lastPredicted * 0.5 + lastActual * 0.5;
+				reg[x + y * regionX].lastPredicted = reg[x + y * regionX].nextTime;
 			}
+		}
 
-			requiredBudget = 0.f;
+		requiredBudget = 0.f;
 			
+		for (int j = 0; j < regions; j++)
+		{
+			requiredBudget += reg[j].nextTime;
+		}
+
+		if (p_bVerbose) 
+		{
+			eventComplete = Platform::GetTime();
+			elapsed = Platform::ToSeconds(eventComplete - eventStart); 
+			std::cout << "-- Radiance Computation Time : [" << elapsed << "s]" << std::endl;
+
+			eventStart = Platform::GetTime();
+		}
+
+		// Post-process frame
+		pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+		pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+
+		pEnvironment->GetScene()->GetSampler()->Reset();
+		//pAccumulationBuffer->Reset();
+		//pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+
+		pDragoTone->Apply(pRadianceBuffer, pRadianceBuffer);
+		// pAutoTone->Apply(pRadianceBuffer, pRadianceBuffer);
+
+		if (p_bVerbose) 
+		{
+			eventComplete = Platform::GetTime();
+			elapsed = Platform::ToSeconds(eventComplete - eventStart); 
+			std::cout << "-- Post-processing Time : [" << elapsed << "s]" << std::endl;
+
+			eventStart = Platform::GetTime();
+		}
+
+		// Commit frame
+		static int frameId = 4;
+		// if (frameId++ % 5 == 0)
+			pRenderer->Commit(pRadianceBuffer);
+
+		// Compute frames per second
+		elapsed = Platform::ToSeconds(Platform::GetTime() - start);
+		fTotalFramesPerSecond += (float)(1.f/elapsed);
+		
+		if (p_bVerbose)
+		{
+			std::cout << "-- Frame Render Time : [" << elapsed << "s]" << std::endl;
+			std::cout << "-- Frames per second : [" << fTotalFramesPerSecond / (nFrame + 1)<< "]" << std::endl;
+
 			for (int j = 0; j < regions; j++)
 			{
-				requiredBudget += reg[j].nextTime;
+				reg[j].frameBudget = reg[j].nextTime / requiredBudget;
+				// std::cout << "[Region " << j << "] : B:[" << reg[j].frameBudget << "], T:[" << reg[j].lastActual << "s], P:[" << reg[j].lastPredicted << "s], N:[" << reg[j].nextTime << "]" << std::endl;  
 			}
-
-			if (p_bVerbose) 
-			{
-				eventComplete = Platform::GetTime();
-				elapsed = Platform::ToSeconds(eventComplete - eventStart); 
-				std::cout << "-- Radiance Computation Time : [" << elapsed << "s]" << std::endl;
-
-				eventStart = Platform::GetTime();
-			}
-
-			// Post-process frame
-			pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
-			pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
-
-			pEnvironment->GetScene()->GetSampler()->Reset();
-			//pAccumulationBuffer->Reset();
-			//pAccumulationBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
-
-			pDragoTone->Apply(pRadianceBuffer, pRadianceBuffer);
-			// pAutoTone->Apply(pRadianceBuffer, pRadianceBuffer);
-
-			if (p_bVerbose) 
-			{
-				eventComplete = Platform::GetTime();
-				elapsed = Platform::ToSeconds(eventComplete - eventStart); 
-				std::cout << "-- Post-processing Time : [" << elapsed << "s]" << std::endl;
-
-				eventStart = Platform::GetTime();
-			}
-
-			// Commit frame
-			static int frameId = 4;
-			// if (frameId++ % 5 == 0)
-				pRenderer->Commit(pRadianceBuffer);
-
-			// Compute frames per second
-			elapsed = Platform::ToSeconds(Platform::GetTime() - start);
-			fTotalFramesPerSecond += (float)(1.f/elapsed);
-		
-			if (p_bVerbose)
-			{
-				std::cout << "-- Frame Render Time : [" << elapsed << "s]" << std::endl;
-				std::cout << "-- Frames per second : [" << fTotalFramesPerSecond / (nFrame + 1)<< "]" << std::endl;
-
-				for (int j = 0; j < regions; j++)
-				{
-					reg[j].frameBudget = reg[j].nextTime / requiredBudget;
-					// std::cout << "[Region " << j << "] : B:[" << reg[j].frameBudget << "], T:[" << reg[j].lastActual << "s], P:[" << reg[j].lastPredicted << "s], N:[" << reg[j].nextTime << "]" << std::endl;  
-				}
-			}
-		#else
-			// Update space acceleration structure
-			pSpace->Update();
-
-			// Render image
-			pRenderer->Render();
-		#endif
+		}
 	}
 
 	//----------------------------------------------------------------------------------------------
@@ -378,20 +374,21 @@ int main(int argc, char** argv)
 	// Exit
 	return 1;
 }
+
 //----------------------------------------------------------------------------------------------
-#elif (defined ILLUMINA_DISTRIBUTED)
+#elif (defined ILLUMINA_DSM)
 //----------------------------------------------------------------------------------------------
-#include "scheduling.h"
-//----------------------------------------------------------------------------------------------
+#include "ServiceManager.h"
+
 int main(int argc, char** argv)
 {
-	std::cout << "Illumina Renderer Service : Version " << Major << "." << Minor << "." << Build << " http://www.illuminaprt.codeplex.com " << std::endl;
+	std::cout << "Illumina PRT : Version " << Major << "." << Minor << "." << Build << " http://www.illuminaprt.codeplex.com " << std::endl;
 	std::cout << "Copyright (C) 2010-2012 Keith Bugeja" << std::endl << std::endl;
 
 	// default options
-	int nIterations = 1;
+	int nPort = 6660;
+	std::string strPath;
 	bool bVerbose = false;
-	std::string strScript("default.ilm");
 
 	// Declare the supported options.
 	boost::program_options::options_description description("Allowed Settings");
@@ -399,9 +396,8 @@ int main(int argc, char** argv)
 	description.add_options()
 		("help", "show this message")
 		("verbose", boost::program_options::value<bool>(), "show extended information")
-		("script", boost::program_options::value<std::string>(), "script file to render")
 		("workdir", boost::program_options::value<std::string>(), "working directory")
-		("iterations", boost::program_options::value<int>(), "interations to execute")
+		("port", boost::program_options::value<int>(), "interations to execute")
 		;
 
 	// Declare variable map
@@ -438,43 +434,25 @@ int main(int argc, char** argv)
 		std::cout << "Verbose mode [" << (bVerbose ? "ON]" : "OFF]") << std::endl;
 	}
 
-	// --iterations
-	if (variableMap.count("iterations"))
+	// --port
+	if (variableMap.count("port"))
 	{
 		try {
-			nIterations = variableMap["iterations"].as<int>();
-		} catch (...) { nIterations = 1; } 
-		std::cout << "Iterations [" << nIterations << "]" << std::endl;
-	}
-
-	// --script
-	if (variableMap.count("script"))
-	{
-		strScript = variableMap["script"].as<std::string>();
-		std::cout << "Script [" << strScript << "]" << std::endl;
+			nPort = variableMap["port"].as<int>();
+		} catch (...) { nPort = 6660; } 
+		std::cout << "Port [" << nPort << "]" << std::endl;
 	}
 
 	// --workdir
-	boost::filesystem::path cwdPath;
-
 	if (variableMap.count("workdir"))
 	{
-		cwdPath = boost::filesystem::path(variableMap["workdir"].as<std::string>());
+		strPath = variableMap["workdir"].as<std::string>();
+			//boost::filesystem::path(variableMap["workdir"].as<std::string>());
 	}
-	else
-	{
-		// Setting working directory
-		boost::filesystem::path scriptPath(strScript);
-		cwdPath = boost::filesystem::path(scriptPath.parent_path());
-	}
-
-	try {
-		boost::filesystem::current_path(cwdPath);
-		std::cout << "Working directory [" << cwdPath.string() << "]" << std::endl;;
-	} catch (...) { std::cerr << "Error : Unable to set working directory to " << cwdPath.string() << std::endl; }
 
 	// -- start service
-	RunAsServer(argc, argv, bVerbose);
+	ServiceManager serviceManager(nPort, strPath, bVerbose);
+	serviceManager.Start();
 	
 	return 0;
 }

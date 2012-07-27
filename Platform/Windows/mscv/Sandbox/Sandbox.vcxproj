@@ -169,6 +169,8 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\ServiceManager.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\task.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\taskgroup.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupController.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupManager.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\taskpipeline.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
