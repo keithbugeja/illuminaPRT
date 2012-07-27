@@ -68,5 +68,11 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\_taskgroup.h">
       <Filter>Source Files\deprecated</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroup.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Task.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
