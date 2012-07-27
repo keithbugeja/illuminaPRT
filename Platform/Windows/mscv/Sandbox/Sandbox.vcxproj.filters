@@ -62,5 +62,11 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\ServiceManager.h">
       <Filter>Source Files\server</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupController.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupManager.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
