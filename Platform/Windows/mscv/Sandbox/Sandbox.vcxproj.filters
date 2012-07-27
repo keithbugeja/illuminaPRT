@@ -47,12 +47,6 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\scheduling.h">
       <Filter>Source Files\deprecated</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\task.h">
-      <Filter>Source Files\deprecated</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\taskgroup.h">
-      <Filter>Source Files\deprecated</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Logger.h">
       <Filter>Source Files\common</Filter>
     </ClInclude>
@@ -67,6 +61,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupManager.h">
       <Filter>Source Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\_task.h">
+      <Filter>Source Files\deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\_taskgroup.h">
+      <Filter>Source Files\deprecated</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
