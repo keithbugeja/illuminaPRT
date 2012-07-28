@@ -524,8 +524,8 @@ bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 	char *vlcOptions[] = {""},
 		pOutput[256];
 
-	sprintf(pOutput, "#transcode{vcodec=%s,vb=%d,acodec=none}:rtp{dst=%s,port=%d,mux=ts}", 
-		GetFourCC(p_videoCodec).c_str(), p_nBitRate, m_strAddress.c_str(), m_nPort);
+	sprintf(pOutput, "#transcode{vcodec=%s,fps=%d,vb=%d,acodec=none}:rtp{dst=%s,port=%d,mux=ts}", 
+		GetFourCC(p_videoCodec).c_str(), p_nFramesPerSecond, p_nBitRate, m_strAddress.c_str(), m_nPort);
 
 	libvlc_vlm_add_broadcast(m_pVideoStreamState->m_pInstance, 
 		"illumina_stream", "imem://", pOutput,
