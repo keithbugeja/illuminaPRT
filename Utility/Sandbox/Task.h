@@ -21,4 +21,4 @@ public:
 	bool IsCoordinator(void) { return m_type == Coordinator; }
 	bool IsController(void) { return m_type == Controller; }
 	bool IsIdle(void) { return m_type == Idle; }
-}
+};

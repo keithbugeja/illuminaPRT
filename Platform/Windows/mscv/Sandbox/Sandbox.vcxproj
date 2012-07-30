@@ -152,13 +152,15 @@
       <OpenMPSupport>true</OpenMPSupport>
       <Optimization>
       </Optimization>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\AdminController.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\CommandParser.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Controller.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Environment.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Logger.h" />
