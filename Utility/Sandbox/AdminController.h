@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	TaskGroupController.h
+//	Filename:	AdminController.h
 //	Author:		Keith Bugeja
 //	Date:		27/07/2012
 //----------------------------------------------------------------------------------------------
@@ -13,29 +13,13 @@
 #include <boost/asio.hpp>
 
 #include "Logger.h"
-#include "TaskGroup.h"
 #include "Controller.h"
 
 using namespace Illumina::Core;
 
 //----------------------------------------------------------------------------------------------
-//	TaskGroupState
 //----------------------------------------------------------------------------------------------
-class TaskGroupState
-{
-	std::vector<Task*> m_taskList;
-};
-
-//----------------------------------------------------------------------------------------------
-//	The task group controller should contain some state for the task group. This state shares
-//	generic information regarding the task group (but not its domain specific application and
-//	implementation) as well as task-specific details.
-//
-//	The controller is also reponsible of processing client requests / commands. Specialised
-//	command processors are applied to received commands, which are either parsed and passed
-//	on to the task group, or executed at the head node, or both.
-//----------------------------------------------------------------------------------------------
-class TaskGroupController
+class AdminController
 	: public IController
 {
 protected:
@@ -45,11 +29,10 @@ protected:
 protected:
 
 public:
-	TaskGroupController(void) 
-	{ 
-	}
+	AdminController(void) 
+	{ }
 
-	~TaskGroupController(void) { }
+	~AdminController(void) { }
 
 	bool Bind(boost::asio::ip::tcp::socket *p_pSocket, ICommandParser *p_pCommandParser)
 	{
@@ -63,13 +46,8 @@ public:
 
 	bool Start(void) 
 	{
-		ProcessClientInput();
+		while (ProcessClientInput());
 
-		// Ok, now we wait for client to start sending commands... 
-		//	There is a number of command variants:
-		//		Some are executed only on head node
-		//		Some are executed both on head node and at remote tasks
-		//		Some are parsed on head node and executed only at remote tasks
 		return true;
 	}
 	
@@ -91,26 +69,54 @@ public:
 		m_pCommandParser->DisplayCommand(strCommandName, argumentMap);
 
 		// Process commands
-		if (strCommandName == "init")
+		if (strCommandName == "count")
 		{
 			IController::WriteToSocket(m_pSocket, "OK", 2);
 		}
-		else if (strCommandName == "play")
+		else if (strCommandName == "procs")
 		{
+			std::string response = "0:35:150%:Scene/sponza.ilm;0:35:150%:Scene/sponza.ilm;0:35:150%:Scene/sponza.ilm;0:35:150%:Scene/sponza.ilm";
+			IController::WriteToSocket(m_pSocket, response.c_str(), response.length());
+		}
+		else if (strCommandName == "stats")
+		{
+			int id = boost::lexical_cast<int>(argumentMap["id"]);
+			std::string response = "0:35:150%:Scene/sponza.ilm";
+			IController::WriteToSocket(m_pSocket, response.c_str(), response.length());
+		}
+		else if (strCommandName == "add")
+		{
+			int id = boost::lexical_cast<int>(argumentMap["id"]);
+			int count = boost::lexical_cast<int>(argumentMap["count"]);
+
+			std::cout << "Admin :: Request [" << count << "] resources for Task Group [" << id << "]" << std::endl;
+
 			IController::WriteToSocket(m_pSocket, "OK", 2);
 		}
-		else if (strCommandName == "pause")
+		else if (strCommandName == "sub")
 		{
+			int id = boost::lexical_cast<int>(argumentMap["id"]);
+			int count = boost::lexical_cast<int>(argumentMap["count"]);
+
+			std::cout << "Admin :: Yielding [" << count << "] resources from Task Group [" << id << "]" << std::endl;
+
+			IController::WriteToSocket(m_pSocket, "OK", 2);
+		}
+		else if (strCommandName == "set")
+		{
+			int id = boost::lexical_cast<int>(argumentMap["id"]);
+			int count = boost::lexical_cast<int>(argumentMap["count"]);
+
+			std::cout << "Admin :: Setting resource count to [" << count << "] for Task Group [" << id << "]" << std::endl;
+
 			IController::WriteToSocket(m_pSocket, "OK", 2);
 		}
 		else if (strCommandName == "exit")
 		{
 			IController::WriteToSocket(m_pSocket, "OK", 2);
+			return false;
 		}
 
 		return true;
 	}
-
-	// Needs reference to global state manager
-	// Requires open client connection
 };

@@ -74,5 +74,14 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Task.h">
       <Filter>Source Files\server</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\CommandParser.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Controller.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\AdminController.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -386,7 +386,9 @@ int main(int argc, char** argv)
 	std::cout << "Copyright (C) 2010-2012 Keith Bugeja" << std::endl << std::endl;
 
 	// default options
-	int nPort = 6660;
+	int nPort = 6660,
+		nAdminPort = 6661;
+
 	std::string strPath;
 	bool bVerbose = false;
 
@@ -397,7 +399,8 @@ int main(int argc, char** argv)
 		("help", "show this message")
 		("verbose", boost::program_options::value<bool>(), "show extended information")
 		("workdir", boost::program_options::value<std::string>(), "working directory")
-		("port", boost::program_options::value<int>(), "interations to execute")
+		("port", boost::program_options::value<int>(), "service port")
+		("adminport", boost::program_options::value<int>(), "admin port")
 		;
 
 	// Declare variable map
@@ -443,6 +446,15 @@ int main(int argc, char** argv)
 		std::cout << "Port [" << nPort << "]" << std::endl;
 	}
 
+	// --adminport
+	if (variableMap.count("adminport"))
+	{
+		try {
+			nAdminPort = variableMap["adminport"].as<int>();
+		} catch (...) { nAdminPort = 6661; } 
+		std::cout << "Admin Port [" << nAdminPort << "]" << std::endl;
+	}
+
 	// --workdir
 	if (variableMap.count("workdir"))
 	{
@@ -451,7 +463,7 @@ int main(int argc, char** argv)
 	}
 
 	// -- start service
-	ServiceManager serviceManager(nPort, strPath, bVerbose);
+	ServiceManager serviceManager(nPort, nAdminPort, strPath, bVerbose);
 	serviceManager.Start();
 	
 	return 0;

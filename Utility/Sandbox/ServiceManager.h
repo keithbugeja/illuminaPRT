@@ -12,6 +12,8 @@
 
 #include "Logger.h"
 #include "TaskGroupManager.h"
+#include "AdminController.h"
+#include "CommandParser.h"
 
 using namespace Illumina::Core;
 
@@ -20,15 +22,21 @@ class ServiceManager
 {
 protected:
 	TaskGroupManager m_taskGroupManager;
+	AdminCommandParser m_adminCommandParser;
+	ClientCommandParser m_clientCommandParser;
 
 	boost::asio::io_service m_ioService;
 	boost::filesystem::path m_cwdPath;
+	
 	bool m_bVerbose;
-	int m_nPort;
+	
+	int m_nServicePort,
+		m_nAdminPort;
 
 public:
-	ServiceManager(int p_nPort, const std::string p_strPath, bool p_bVerbose)
-		: m_nPort(p_nPort)
+	ServiceManager(int p_nServicePort, int p_nAdminPort, const std::string p_strPath, bool p_bVerbose)
+		: m_nServicePort(p_nServicePort)
+		, m_nAdminPort(p_nAdminPort)
 		, m_cwdPath(p_strPath)
 		, m_bVerbose(p_bVerbose)
 	{ }
@@ -56,6 +64,7 @@ public:
 		// Terminate application
 		MPI_Finalize();
 		*/
+
 		RunAsServer();
 	}
 
@@ -83,12 +92,17 @@ public:
 			//			object name, property name, property value
 		/**/
 
+		// Kick service thread
+		boost::thread adminThread(
+				boost::bind(&ServiceManager::AdminService, this));
+
+		// Client thread
 		std::stringstream message;
-		message << "Listening for connections on port " << m_nPort << "...";
+		message << "Service :: Listening for connections on port " << m_nServicePort << "...";
 		Logger::Message(message.str(), m_bVerbose);
 
 		// Start server listening
-		boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), m_nPort);
+		boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), m_nServicePort);
 		boost::asio::ip::tcp::acceptor acceptor(m_ioService, endpoint);
 		
 		for (;;)
@@ -99,38 +113,73 @@ public:
 			acceptor.accept(*pSocket);
 
 			boost::thread handlerThread(
-				boost::bind(&ServiceManager::AcceptConnection, this, pSocket));
+				boost::bind(&ServiceManager::AcceptConnection, this, pSocket, false));
 		}
 	}
 
-	void AcceptConnection(boost::asio::ip::tcp::socket *p_pSocket)
+	void AdminService(void)
+	{
+		std::stringstream message;
+		message << "Admin :: Listening for connections on port " << m_nAdminPort << "...";
+		Logger::Message(message.str(), m_bVerbose);
+
+		// Start server listening
+		boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), m_nAdminPort);
+		boost::asio::ip::tcp::acceptor acceptor(m_ioService, endpoint);
+		
+		for (;;)
+		{
+			boost::asio::ip::tcp::socket *pSocket = 
+				new boost::asio::ip::tcp::socket(m_ioService);
+
+			acceptor.accept(*pSocket);
+
+			boost::thread handlerThread(
+				boost::bind(&ServiceManager::AcceptConnection, this, pSocket, true));
+		}
+	}
+
+	void AcceptConnection(boost::asio::ip::tcp::socket *p_pSocket, bool p_bIsAdmin)
 	{
 		std::cout << "Accepting connection from [" << p_pSocket->remote_endpoint().address().to_string() << "]" << std::endl;
 
-		TaskGroupController *pController = new TaskGroupController();
-		m_taskGroupManager.AddController(pController);
+		if (p_bIsAdmin)
+		{
+			AdminController *pController = new AdminController();
+			
+			pController->Bind(p_pSocket, &m_adminCommandParser);
+			pController->Start();
+
+			delete pController;
+		}
+		else
+		{
+			TaskGroupController *pController = new TaskGroupController();
+			m_taskGroupManager.AddController(pController);
 		
-		pController->Bind(p_pSocket);
-		pController->Start();
+			pController->Bind(p_pSocket, &m_clientCommandParser);
+			pController->Start();
 
-		m_taskGroupManager.RemoveController(pController);		
+			m_taskGroupManager.RemoveController(pController);		
+			delete pController;
 
-		// Create new task group controller
-		// Bind connection
+			// Create new task group controller
+			// Bind connection
 
-		// We need a new task group controller
-			// Takes input from client
-				//	Should parse input
-				//	Some input might affect common state
-				//  Input processing should be task-agnostic - 
-				//		possibly use callbacks to provide parsing hooks
-				//  Might need to send back some form of response
+			// We need a new task group controller
+				// Takes input from client
+					//	Should parse input
+					//	Some input might affect common state
+					//  Input processing should be task-agnostic - 
+					//		possibly use callbacks to provide parsing hooks
+					//  Might need to send back some form of response
 
-			// Streams back output to client
-			// Requests resource allocations
-			// Receives resource allocation requests
+				// Streams back output to client
+				// Requests resource allocations
+				// Receives resource allocation requests
 
-		// Do all sorts of weird shit here
+			// Do all sorts of weird shit here
+		}
 
 		std::cout << "Closing connection from [" << p_pSocket->remote_endpoint().address().to_string() << "]" << std::endl;
 		
