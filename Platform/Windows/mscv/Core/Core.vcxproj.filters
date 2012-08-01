@@ -824,6 +824,9 @@
     <ClInclude Include="..\..\..\..\Core\Device\DisplayDevice.h">
       <Filter>Header Files\Device</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\System\Singleton.h">
+      <Filter>Header Files\System</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">
