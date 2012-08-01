@@ -352,6 +352,7 @@
     <ClInclude Include="..\..\..\..\Core\System\Platform.h" />
     <ClInclude Include="..\..\..\..\Core\System\PlugIn.h" />
     <ClInclude Include="..\..\..\..\Core\System\PlugInManager.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Singleton.h" />
     <ClInclude Include="..\..\..\..\Core\System\Version.h" />
     <ClInclude Include="..\..\..\..\Core\Texture\ImageTexture.h" />
     <ClInclude Include="..\..\..\..\Core\Texture\MarbleTexture.h" />

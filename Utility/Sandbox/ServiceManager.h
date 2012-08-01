@@ -10,7 +10,10 @@
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 
+#include <System/Singleton.h>
+
 #include "Logger.h"
+#include "ResourceManager.h"
 #include "TaskGroupManager.h"
 #include "AdminController.h"
 #include "CommandParser.h"
@@ -18,7 +21,8 @@
 using namespace Illumina::Core;
 
 //----------------------------------------------------------------------------------------------
-class ServiceManager
+class ServiceManager 
+	: public TSingleton<ServiceManager>
 {
 protected:
 	TaskGroupManager m_taskGroupManager;
@@ -34,14 +38,26 @@ protected:
 		m_nAdminPort;
 
 public:
-	ServiceManager(int p_nServicePort, int p_nAdminPort, const std::string p_strPath, bool p_bVerbose)
-		: m_nServicePort(p_nServicePort)
-		, m_nAdminPort(p_nAdminPort)
-		, m_cwdPath(p_strPath)
-		, m_bVerbose(p_bVerbose)
-	{ }
+	//ServiceManager(int p_nServicePort, int p_nAdminPort, const std::string p_strPath, bool p_bVerbose)
+	//	: m_nServicePort(p_nServicePort)
+	//	, m_nAdminPort(p_nAdminPort)
+	//	, m_cwdPath(p_strPath)
+	//	, m_bVerbose(p_bVerbose)
+	//{ }
 
-	~ServiceManager(void) { }
+	//~ServiceManager(void) { }
+
+	void Initialise(int p_nServicePort, int p_nAdminPort, const std::string p_strPath, bool p_bVerbose)
+	{ 
+		m_nServicePort = p_nServicePort;
+		m_nAdminPort = p_nAdminPort;
+		m_cwdPath = p_strPath;
+		m_bVerbose = p_bVerbose;
+	}
+
+	void Shutdown(void)
+	{
+	}
 
 	void Start(void) 
 	{
@@ -65,7 +81,13 @@ public:
 		MPI_Finalize();
 		*/
 
-		RunAsServer();
+		ResourceManager rm;
+		rm.Initialise();
+
+		if (rm.WhatAmI() == ResourceManager::Master) RunAsServer();
+		else RunAsResource();
+
+		rm.Shutdown();
 	}
 
 	void RunAsServer(void)
@@ -192,21 +214,4 @@ public:
 		// Initialise own PE structure and go to standby mode
 		// Wait for task group assignment
 	}
-};
-
-
-
-
-
-class ConnectionState
-{
-	int ClientId;
-	std::string ClientAddress;
-	std::map<std::string, std::string> ClientArguments;
-
-	boost::thread ClientThread;
-};
-
-class ClientConnection
-{
 };

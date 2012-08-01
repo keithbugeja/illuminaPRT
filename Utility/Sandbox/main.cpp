@@ -463,8 +463,14 @@ int main(int argc, char** argv)
 	}
 
 	// -- start service
-	ServiceManager serviceManager(nPort, nAdminPort, strPath, bVerbose);
-	serviceManager.Start();
+	ServiceManager *pServiceManager = ServiceManager::GetInstance();
+	
+	pServiceManager->Initialise(nPort, nAdminPort, strPath, bVerbose);
+	pServiceManager->Start();
+	pServiceManager->Shutdown();
+	
+	//ServiceManager serviceManager(nPort, nAdminPort, strPath, bVerbose);
+	//serviceManager.Start();
 	
 	return 0;
 }

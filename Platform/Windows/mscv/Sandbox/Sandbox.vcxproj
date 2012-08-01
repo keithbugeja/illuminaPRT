@@ -167,6 +167,7 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\message.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\mpirender.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\renderpipeline.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\ResourceManager.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\scheduling.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\ServiceManager.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Task.h" />

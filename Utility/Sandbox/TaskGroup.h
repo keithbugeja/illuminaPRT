@@ -1,3 +1,4 @@
+#pragma once
 #include "Task.h"
 
 class TaskGroup
