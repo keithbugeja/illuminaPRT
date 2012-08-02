@@ -13,8 +13,8 @@
 #include <System/Singleton.h>
 
 #include "Logger.h"
-#include "TaskGroupControllerManager.h"
 #include "ResourceManager.h"
+#include "TaskController.h"
 #include "AdminController.h"
 #include "CommandParser.h"
 
@@ -50,9 +50,9 @@ public:
 		m_bVerbose = p_bVerbose;
 	}
 
-	void Shutdown(void)
-	{
-	}
+	void Shutdown(void) { }
+
+	void Stop(void) { }
 
 	void Start(void) 
 	{
@@ -61,32 +61,18 @@ public:
 			std::cout << "Working directory [" << m_cwdPath.string() << "]" << std::endl;;
 		} catch (...) { std::cerr << "Error : Unable to set working directory to " << m_cwdPath.string() << std::endl; }
 
-		/*
-		// Initialise MPI with support for calls from multiple-threads
-		int provided; MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-
-		// Get Process Rank
-		int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-		// If rank is zero, this process will run as server front end
-		if (rank == 0) RunAsServer();
-		else RunAsResource();
-
-		// Terminate application
-		MPI_Finalize();
-		*/
-
+		// Initialise resource manager and run process according to rank/id
 		m_resourceManager.Initialise();
 
 		if (m_resourceManager.WhatAmI() == ResourceManager::Master) 
-			RunAsServer();
+			RunAsMaster();
 		else 
-			RunAsResource();
+			RunAsWorker();
 
 		m_resourceManager.Shutdown();
 	}
 
-	void RunAsServer(void)
+	void RunAsMaster(void)
 	{
 		Logger::Message("Starting Illumina PRT Service Manager...", m_bVerbose);
 		
@@ -167,9 +153,14 @@ public:
 		delete p_pSocket;
 	}
 
-	void RunAsResource(void)
+	void RunAsWorker(void)
 	{
+		Resource *pResource = ServiceManager::GetInstance()->GetResourceManager()->Me();
+
+		std::cout << "Worker ID: " << pResource->GetID() << std::endl;
 		// Initialise own PE structure and go to standby mode
 		// Wait for task group assignment
 	}
+
+
 };

@@ -30,6 +30,9 @@
     <ClCompile Include="..\..\..\..\Utility\Sandbox\ResourceManager.cpp">
       <Filter>Source Files\server</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\TaskController.cpp">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h">
@@ -81,6 +84,12 @@
       <Filter>Source Files\server</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskController.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Resource.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Task.h">
       <Filter>Source Files\server</Filter>
     </ClInclude>
   </ItemGroup>
