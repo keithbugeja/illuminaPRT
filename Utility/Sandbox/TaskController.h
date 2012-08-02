@@ -1,21 +1,16 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	TaskGroupController.h
+//	Filename:	TaskController.h
 //	Author:		Keith Bugeja
 //	Date:		27/07/2012
 //----------------------------------------------------------------------------------------------
 #pragma once
 
 //----------------------------------------------------------------------------------------------
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/trim.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/thread.hpp>
 #include <boost/asio.hpp>
 
 #include "Logger.h"
 #include "Controller.h"
-
-using namespace Illumina::Core;
+#include "Task.h"
 
 //----------------------------------------------------------------------------------------------
 //	The task group controller should contain some state for the task group. This state shares
@@ -32,80 +27,24 @@ class TaskController
 protected:
 	boost::asio::ip::tcp::socket *m_pSocket;
 	ICommandParser *m_pCommandParser; 
-
-	int m_nId;
+	Task m_task;
 
 protected:
+	bool ProcessClientInput(void);
 
 public:
-	TaskController(int p_nControllerId)
-		: m_nId(p_nControllerId)
-	{ }
+	// Constructor / Destructor
+	TaskController(int p_nControllerId);
+	~TaskController(void);
 
-	~TaskController(void) { }
+	// Bind socket and command parser to Controller
+	bool Bind(boost::asio::ip::tcp::socket *p_pSocket, ICommandParser *p_pCommandParser);
 
-	int GetId(void) const { return m_nId; }
+	// Start and stop controller
+	bool Start(void);
+	void Stop(void);
 
-	bool Bind(boost::asio::ip::tcp::socket *p_pSocket, ICommandParser *p_pCommandParser)
-	{
-		BOOST_ASSERT(p_pSocket != NULL && p_pCommandParser != NULL);
-
-		m_pCommandParser = p_pCommandParser;
-		m_pSocket = p_pSocket;
-
-		return true;
-	}
-
-	bool Start(void) 
-	{
-		ProcessClientInput();
-
-		// Ok, now we wait for client to start sending commands... 
-		//	There is a number of command variants:
-		//		Some are executed only on head node
-		//		Some are executed both on head node and at remote tasks
-		//		Some are parsed on head node and executed only at remote tasks
-		return true;
-	}
-	
-	bool ProcessClientInput(void)
-	{
-		char m_pCommandBuffer[1024];
-
-		std::string strCommandName, strCommand;
-		std::map<std::string, std::string> argumentMap;
-
-		// Read from socket
-		IController::ReadFromSocket(m_pSocket, m_pCommandBuffer, 1024);
-
-		// Convert input to string
-		strCommand = m_pCommandBuffer;
-
-		// Parse command
-		m_pCommandParser->Parse(strCommand, strCommandName, argumentMap);
-		m_pCommandParser->DisplayCommand(strCommandName, argumentMap);
-
-		// Process commands
-		if (strCommandName == "init")
-		{
-			IController::WriteToSocket(m_pSocket, "OK", 2);
-		}
-		else if (strCommandName == "play")
-		{
-			IController::WriteToSocket(m_pSocket, "OK", 2);
-		}
-		else if (strCommandName == "pause")
-		{
-			IController::WriteToSocket(m_pSocket, "OK", 2);
-		}
-		else if (strCommandName == "exit")
-		{
-			IController::WriteToSocket(m_pSocket, "OK", 2);
-		}
-
-		return true;
-	}
-
-	// Needs reference to global state manager
-	// Requires open client connection
+	// Resource management event callbacks
+	void OnResourceAdd(const std::vector<Resource*> &p_resourceList);
+	void OnResourceRemove(int p_nResourceCount, std::vector<Resource*> &p_resourceListOut);
 };

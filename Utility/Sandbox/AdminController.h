@@ -27,30 +27,6 @@ protected:
 	ICommandParser *m_pCommandParser; 
 
 protected:
-
-public:
-	AdminController(void) 
-	{ }
-
-	~AdminController(void) { }
-
-	bool Bind(boost::asio::ip::tcp::socket *p_pSocket, ICommandParser *p_pCommandParser)
-	{
-		BOOST_ASSERT(p_pSocket != NULL && p_pCommandParser != NULL);
-
-		m_pCommandParser = p_pCommandParser;
-		m_pSocket = p_pSocket;
-
-		return true;
-	}
-
-	bool Start(void) 
-	{
-		while (ProcessClientInput());
-
-		return true;
-	}
-	
 	bool ProcessClientInput(void)
 	{
 		char m_pCommandBuffer[1024];
@@ -119,4 +95,26 @@ public:
 
 		return true;
 	}
+
+public:
+	AdminController(void) { }
+	~AdminController(void) { }
+
+	bool Bind(boost::asio::ip::tcp::socket *p_pSocket, ICommandParser *p_pCommandParser)
+	{
+		BOOST_ASSERT(p_pSocket != NULL && p_pCommandParser != NULL);
+
+		m_pCommandParser = p_pCommandParser;
+		m_pSocket = p_pSocket;
+
+		return true;
+	}
+
+	bool Start(void) 
+	{
+		while (ProcessClientInput());
+		return true;
+	}
+
+	void Stop(void) { }
 };

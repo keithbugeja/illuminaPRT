@@ -14,8 +14,7 @@
 
 #include "Logger.h"
 #include "CommandParser.h"
-
-using namespace Illumina::Core;
+#include "Resource.h"
 
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
@@ -92,9 +91,21 @@ public:
 public:
 	virtual bool Bind(boost::asio::ip::tcp::socket *p_pSocket, ICommandParser *p_pCommandParser) = 0;
 	virtual bool Start(void) = 0;
+	virtual void Stop(void) = 0;
 };
-
 //----------------------------------------------------------------------------------------------
 class IResourceController
 	: public IController
-{ };
+{ 
+protected:
+	int m_nID;
+
+public:
+	IResourceController(int p_nID) : m_nID(p_nID) { }
+	int GetID(void) const { return m_nID; }
+
+	// Resource change events
+	virtual void OnResourceAdd(const std::vector<Resource*> &p_resourceList) = 0;
+	virtual void OnResourceRemove(int p_nResourceCount, std::vector<Resource*> &p_resourceListOut) = 0;
+};
+//----------------------------------------------------------------------------------------------
