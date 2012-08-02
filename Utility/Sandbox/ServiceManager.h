@@ -25,7 +25,9 @@ class ServiceManager
 	: public TSingleton<ServiceManager>
 {
 protected:
-	TaskGroupManager m_taskGroupManager;
+	TaskGroupControllerManager m_controllerManager;
+	ResourceManager m_resourceManager;
+
 	AdminCommandParser m_adminCommandParser;
 	ClientCommandParser m_clientCommandParser;
 
@@ -38,15 +40,9 @@ protected:
 		m_nAdminPort;
 
 public:
-	//ServiceManager(int p_nServicePort, int p_nAdminPort, const std::string p_strPath, bool p_bVerbose)
-	//	: m_nServicePort(p_nServicePort)
-	//	, m_nAdminPort(p_nAdminPort)
-	//	, m_cwdPath(p_strPath)
-	//	, m_bVerbose(p_bVerbose)
-	//{ }
+	ResourceManager *GetResourceManager(void) { return &m_resourceManager; }
 
-	//~ServiceManager(void) { }
-
+public:
 	void Initialise(int p_nServicePort, int p_nAdminPort, const std::string p_strPath, bool p_bVerbose)
 	{ 
 		m_nServicePort = p_nServicePort;
@@ -81,40 +77,21 @@ public:
 		MPI_Finalize();
 		*/
 
-		ResourceManager rm;
-		rm.Initialise();
+		m_resourceManager.Initialise();
 
-		if (rm.WhatAmI() == ResourceManager::Master) RunAsServer();
-		else RunAsResource();
+		if (m_resourceManager.WhatAmI() == ResourceManager::Master) 
+			RunAsServer();
+		else 
+			RunAsResource();
 
-		rm.Shutdown();
+		m_resourceManager.Shutdown();
 	}
 
 	void RunAsServer(void)
 	{
 		Logger::Message("Starting Illumina PRT Service Manager...", m_bVerbose);
 		
-		// Record available PEs
-		// Initialise task group container
-		// Run monitoring thread (monitor resources, etc) 
-		// Listen for incoming connections
-		// On connection spawn comm endpoint for client i
-			// Client connection state information:
-			//	client connection details
-			//		client ip
-			//		connection arguments
-			//	resources required
-			//	resources granted
-			//	scene, scene state
-			//		displacement, 
-			//		change in orientation
-			//		integrator
-			//		frame budget
-			//		generic properties
-			//			object name, property name, property value
-		/**/
-
-		// Kick service thread
+		// Kick admin service thread
 		boost::thread adminThread(
 				boost::bind(&ServiceManager::AdminService, this));
 
@@ -176,31 +153,18 @@ public:
 		}
 		else
 		{
-			TaskGroupController *pController = new TaskGroupController();
-			m_taskGroupManager.AddController(pController);
+			/*TaskGroupController *pController = new TaskGroupController();
+			m_controllerManager.Register(pController);*/
 		
+			TaskGroupController *pController = 
+				m_controllerManager.CreateInstance();
+
 			pController->Bind(p_pSocket, &m_clientCommandParser);
 			pController->Start();
 
-			m_taskGroupManager.RemoveController(pController);		
-			delete pController;
-
-			// Create new task group controller
-			// Bind connection
-
-			// We need a new task group controller
-				// Takes input from client
-					//	Should parse input
-					//	Some input might affect common state
-					//  Input processing should be task-agnostic - 
-					//		possibly use callbacks to provide parsing hooks
-					//  Might need to send back some form of response
-
-				// Streams back output to client
-				// Requests resource allocations
-				// Receives resource allocation requests
-
-			// Do all sorts of weird shit here
+			m_controllerManager.DestroyInstance(pController);
+			//m_controllerManager.Unregister(pController);		
+			//delete pController;
 		}
 
 		std::cout << "Closing connection from [" << p_pSocket->remote_endpoint().address().to_string() << "]" << std::endl;

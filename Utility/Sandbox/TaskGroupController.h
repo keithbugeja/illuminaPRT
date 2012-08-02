@@ -42,14 +42,18 @@ protected:
 	boost::asio::ip::tcp::socket *m_pSocket;
 	ICommandParser *m_pCommandParser; 
 
+	int m_nId;
+
 protected:
 
 public:
-	TaskGroupController(void) 
-	{ 
-	}
+	TaskGroupController(int p_nControllerId)
+		: m_nId(p_nControllerId)
+	{ }
 
 	~TaskGroupController(void) { }
+
+	int GetId(void) const { return m_nId; }
 
 	bool Bind(boost::asio::ip::tcp::socket *p_pSocket, ICommandParser *p_pCommandParser)
 	{
