@@ -156,6 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\main.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\ResourceManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\AdminController.h" />
@@ -176,7 +177,7 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\_task.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\_taskgroup.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupController.h" />
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupManager.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupControllerManager.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\taskpipeline.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

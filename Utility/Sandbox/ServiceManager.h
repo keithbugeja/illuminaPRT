@@ -13,8 +13,8 @@
 #include <System/Singleton.h>
 
 #include "Logger.h"
+#include "TaskGroupControllerManager.h"
 #include "ResourceManager.h"
-#include "TaskGroupManager.h"
 #include "AdminController.h"
 #include "CommandParser.h"
 
@@ -25,7 +25,6 @@ class ServiceManager
 	: public TSingleton<ServiceManager>
 {
 protected:
-	TaskGroupControllerManager m_controllerManager;
 	ResourceManager m_resourceManager;
 
 	AdminCommandParser m_adminCommandParser;
@@ -153,18 +152,13 @@ public:
 		}
 		else
 		{
-			/*TaskGroupController *pController = new TaskGroupController();
-			m_controllerManager.Register(pController);*/
-		
-			TaskGroupController *pController = 
-				m_controllerManager.CreateInstance();
+			TaskController *pController =
+				m_resourceManager.CreateInstance<TaskController>();
 
 			pController->Bind(p_pSocket, &m_clientCommandParser);
 			pController->Start();
 
-			m_controllerManager.DestroyInstance(pController);
-			//m_controllerManager.Unregister(pController);		
-			//delete pController;
+			m_resourceManager.DestroyInstance(pController);
 		}
 
 		std::cout << "Closing connection from [" << p_pSocket->remote_endpoint().address().to_string() << "]" << std::endl;

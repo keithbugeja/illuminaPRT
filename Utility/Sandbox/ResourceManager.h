@@ -6,18 +6,17 @@
 #pragma once
 
 //----------------------------------------------------------------------------------------------
-#include "Logger.h"
+#include "UniqueId.h"
+#include "Controller.h"
 
-#include "TaskGroup.h"
-#include "Task.h"
-
-using namespace Illumina::Core;
-
+//----------------------------------------------------------------------------------------------
 class ResourceManager
 {
 protected:
-	//TaskGroupManager m_taskGroupManager;
-	//TaskGroup m_resourcePool;
+	UniqueID m_uniqueID;
+
+	std::vector<IResourceController*> m_controllerList;
+	std::map<int, IResourceController*> m_controllerMap;
 
 public:
 	enum ResourceType
@@ -27,51 +26,14 @@ public:
 	};
 
 public:
-	ResourceManager(void) { }
-	~ResourceManager(void) { }
+	ResourceManager(void);
+	~ResourceManager(void);
 
-	ResourceType WhatAmI(void) 
-	{
-		return Master;
-		// int rank; MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-		// return (rank == 0) ? Master : Resource;
-	}
+	ResourceType WhatAmI(void);
 
-	void Initialise(void)
-	{
-		// Initialise MPI with support for calls from multiple-threads
-		/*
-		int provided; MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+	template<class T> T* CreateInstance(void);
+	void DestroyInstance(IResourceController *p_pController);
 
-		// Keep track of tasks, if master
-		if (WhatAmI() == Master)
-		{
-			for (int taskId = 0; taskId < resourceCount; taskId++)
-			{
-				Task *pTask = new Task();
-				pTask->SetRank(taskId);
-
-				m_resourcePool.AddTask(pTask);
-			}
-		}
-		*/
-	}
-
-	void Shutdown(void)
-	{
-		/*
-		// Release tasks if master
-		if (WhatAmI() == Master)
-		{
-		}
-
-		// Terminate application
-		MPI_Finalize();
-		*/
-	}
-
-	//TaskGroupManager *GetTaskGroupManager(void) 
-	//{
-	//	return &m_taskGroupManager;
-	//}
+	void Initialise(void);
+	void Shutdown(void);
 };
