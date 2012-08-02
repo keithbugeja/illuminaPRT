@@ -16,9 +16,8 @@ using namespace Illumina::Core;
 class ResourceManager
 {
 protected:
-	TaskGroup m_resourcePool;
-
-
+	//TaskGroupManager m_taskGroupManager;
+	//TaskGroup m_resourcePool;
 
 public:
 	enum ResourceType
@@ -28,8 +27,8 @@ public:
 	};
 
 public:
-	ResourceManager(void);
-	~ResourceManager(void);
+	ResourceManager(void) { }
+	~ResourceManager(void) { }
 
 	ResourceType WhatAmI(void) 
 	{
@@ -70,4 +69,9 @@ public:
 		MPI_Finalize();
 		*/
 	}
+
+	//TaskGroupManager *GetTaskGroupManager(void) 
+	//{
+	//	return &m_taskGroupManager;
+	//}
 };

@@ -172,6 +172,7 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\ServiceManager.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Task.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroup.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\UniqueId.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\_task.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\_taskgroup.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupController.h" />

@@ -86,5 +86,8 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\ResourceManager.h">
       <Filter>Source Files\server</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\UniqueId.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	TaskGroupManager.h
+//	Filename:	TaskGroupControllerManager.h
 //	Author:		Keith Bugeja
 //	Date:		27/07/2012
 //----------------------------------------------------------------------------------------------
@@ -7,23 +7,40 @@
 
 //----------------------------------------------------------------------------------------------
 #include "TaskGroupController.h"
+#include "UniqueID.h"
 #include "Logger.h"
 
 using namespace Illumina::Core;
 
-class TaskGroupManager
+class TaskGroupControllerManager
 {
-	std::vector<TaskGroupController*> m_taskGroupControllerList;
+	UniqueID m_uniqueID;
+
+	std::vector<TaskGroupController*> m_controllerList;
+	std::map<int, TaskGroupController*> m_controllerMap;
 
 public:
-	void AddController(TaskGroupController *p_pController)
+	TaskGroupController *CreateInstance(void)
 	{
-		m_taskGroupControllerList.push_back(p_pController);
+		int nextID = m_uniqueID.GetNext();
+
+		TaskGroupController *pController = 
+			new TaskGroupController(nextID);
+		
+		m_controllerList.push_back(pController);
+		m_controllerMap[nextID] = pController;
+
+		return pController;
 	}
 
-	void RemoveController(TaskGroupController *p_pController)
+	void DestroyInstance(TaskGroupController *p_pController)
 	{
-		std::vector<TaskGroupController*>::iterator iterator = std::find(m_taskGroupControllerList.begin(), m_taskGroupControllerList.end(), p_pController);
-		m_taskGroupControllerList.erase(iterator);
+		std::vector<TaskGroupController*>::iterator iterator = 
+			std::find(m_controllerList.begin(), m_controllerList.end(), p_pController);
+		m_controllerList.erase(iterator);
+
+		m_controllerMap.erase(p_pController->GetId());
+
+		delete p_pController;
 	}
 };
