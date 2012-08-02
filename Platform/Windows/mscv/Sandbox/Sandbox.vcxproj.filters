@@ -38,9 +38,6 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h">
       <Filter>Source Files\deprecated</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\taskpipeline.h">
-      <Filter>Source Files\deprecated</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\message.h">
       <Filter>Source Files\deprecated</Filter>
     </ClInclude>
@@ -90,6 +87,15 @@
       <Filter>Source Files\server</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Task.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\_taskpipeline.h">
+      <Filter>Source Files\deprecated</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Worker.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskPipeline.h">
       <Filter>Source Files\server</Filter>
     </ClInclude>
   </ItemGroup>
