@@ -27,6 +27,9 @@
     <ClCompile Include="..\..\..\..\Utility\Sandbox\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\ResourceManager.cpp">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h">
@@ -59,9 +62,6 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupController.h">
       <Filter>Source Files\server</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupManager.h">
-      <Filter>Source Files\server</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\_task.h">
       <Filter>Source Files\deprecated</Filter>
     </ClInclude>
@@ -87,6 +87,9 @@
       <Filter>Source Files\server</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\UniqueId.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupControllerManager.h">
       <Filter>Source Files\server</Filter>
     </ClInclude>
   </ItemGroup>

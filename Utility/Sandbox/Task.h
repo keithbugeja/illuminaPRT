@@ -1,5 +1,6 @@
 #pragma once
 
+/*
 class Task
 {
 public:
@@ -24,3 +25,4 @@ public:
 	bool IsController(void) { return m_type == Controller; }
 	bool IsIdle(void) { return m_type == Idle; }
 };
+*/

@@ -13,18 +13,9 @@
 #include <boost/asio.hpp>
 
 #include "Logger.h"
-#include "TaskGroup.h"
 #include "Controller.h"
 
 using namespace Illumina::Core;
-
-//----------------------------------------------------------------------------------------------
-//	TaskGroupState
-//----------------------------------------------------------------------------------------------
-class TaskGroupState
-{
-	std::vector<Task*> m_taskList;
-};
 
 //----------------------------------------------------------------------------------------------
 //	The task group controller should contain some state for the task group. This state shares
@@ -35,8 +26,8 @@ class TaskGroupState
 //	command processors are applied to received commands, which are either parsed and passed
 //	on to the task group, or executed at the head node, or both.
 //----------------------------------------------------------------------------------------------
-class TaskGroupController
-	: public IController
+class TaskController
+	: public IResourceController
 {
 protected:
 	boost::asio::ip::tcp::socket *m_pSocket;
@@ -47,11 +38,11 @@ protected:
 protected:
 
 public:
-	TaskGroupController(int p_nControllerId)
+	TaskController(int p_nControllerId)
 		: m_nId(p_nControllerId)
 	{ }
 
-	~TaskGroupController(void) { }
+	~TaskController(void) { }
 
 	int GetId(void) const { return m_nId; }
 

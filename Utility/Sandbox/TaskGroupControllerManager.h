@@ -12,15 +12,16 @@
 
 using namespace Illumina::Core;
 
+/*
 class TaskGroupControllerManager
 {
 	UniqueID m_uniqueID;
 
-	std::vector<TaskGroupController*> m_controllerList;
-	std::map<int, TaskGroupController*> m_controllerMap;
+	std::vector<TaskController*> m_controllerList;
+	std::map<int, TaskController*> m_controllerMap;
 
 public:
-	TaskGroupController *CreateInstance(void)
+	TaskController *CreateInstance(void)
 	{
 		int nextID = m_uniqueID.GetNext();
 
@@ -44,3 +45,4 @@ public:
 		delete p_pController;
 	}
 };
+*/

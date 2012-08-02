@@ -93,3 +93,8 @@ public:
 	virtual bool Bind(boost::asio::ip::tcp::socket *p_pSocket, ICommandParser *p_pCommandParser) = 0;
 	virtual bool Start(void) = 0;
 };
+
+//----------------------------------------------------------------------------------------------
+class IResourceController
+	: public IController
+{ };

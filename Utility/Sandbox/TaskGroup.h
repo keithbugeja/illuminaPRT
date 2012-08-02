@@ -1,6 +1,6 @@
 #pragma once
 #include "Task.h"
-
+/*
 class TaskGroup
 {
 protected:
@@ -22,3 +22,4 @@ public:
 
 	void AddTasks(std::vector<Task*> p_pTaskList);
 };
+*/
