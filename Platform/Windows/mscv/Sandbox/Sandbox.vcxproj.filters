@@ -59,20 +59,11 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\ServiceManager.h">
       <Filter>Source Files\server</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupController.h">
-      <Filter>Source Files\server</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\_task.h">
       <Filter>Source Files\deprecated</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\_taskgroup.h">
       <Filter>Source Files\deprecated</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroup.h">
-      <Filter>Source Files\server</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\Task.h">
-      <Filter>Source Files\server</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\CommandParser.h">
       <Filter>Source Files\server</Filter>
@@ -89,7 +80,7 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\UniqueId.h">
       <Filter>Source Files\server</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupControllerManager.h">
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskController.h">
       <Filter>Source Files\server</Filter>
     </ClInclude>
   </ItemGroup>

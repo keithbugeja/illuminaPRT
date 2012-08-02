@@ -171,13 +171,10 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\ResourceManager.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\scheduling.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\ServiceManager.h" />
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\Task.h" />
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroup.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\UniqueId.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\_task.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\_taskgroup.h" />
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupController.h" />
-    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskGroupControllerManager.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskController.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\taskpipeline.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
