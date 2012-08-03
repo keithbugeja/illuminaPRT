@@ -20,13 +20,13 @@ protected:
 	Type m_resourceType;
 
 public:
-	Resource(int p_nResourceID, Type p_resourceType)
-		: m_resourceType(p_resourceType)
+	Resource(int p_nResourceID, Type p_resourceType);
+		/*: m_resourceType(p_resourceType)
 		, m_nResourceID(p_nResourceID) 
-	{ } 
+	{ } */
 
-	int GetID(void) const { return m_nResourceID; }
-	bool IsIdle(void) { return m_resourceType == Idle; }
-	bool IsWorker(void) { return m_resourceType == Worker; }
-	bool IsCoordinator(void) { return m_resourceType == Coordinator; }
+	int GetID(void) const;// { return m_nResourceID; }
+	bool IsIdle(void); //{ return m_resourceType == Idle; }
+	bool IsWorker(void); //{ return m_resourceType == Worker; }
+	bool IsCoordinator(void);// { return m_resourceType == Coordinator; }
 };

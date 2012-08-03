@@ -6,6 +6,7 @@
 #pragma once
 
 //----------------------------------------------------------------------------------------------
+#include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem.hpp>

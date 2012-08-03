@@ -156,12 +156,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\main.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\Resource.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\ResourceManager.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\ServiceManager.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\TaskController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\AdminController.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\CommandParser.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Communicator.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Controller.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Environment.h" />
