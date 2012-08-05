@@ -83,7 +83,7 @@ class ClientCommandParser
 public:
 	ClientCommandParser(void) 
 	{
-		this->AddCommand("init|scene|max|min|width|height");
+		this->AddCommand("init|script|max|min|width|height|fps|use");
 		this->AddCommand("exit");
 	}
 };

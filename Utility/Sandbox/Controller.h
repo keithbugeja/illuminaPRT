@@ -94,6 +94,17 @@ public:
 	virtual void Stop(void) = 0;
 };
 //----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+struct ResourceControllerInfo
+{
+	int ID,
+		Allocation;
+
+	float Load;
+
+	std::string Description;
+};
+//----------------------------------------------------------------------------------------------
 class IResourceController
 	: public IController
 { 
@@ -107,5 +118,8 @@ public:
 	// Resource change events
 	virtual void OnResourceAdd(const std::vector<Resource*> &p_resourceList) = 0;
 	virtual void OnResourceRemove(int p_nResourceCount, std::vector<Resource*> &p_resourceListOut) = 0;
+
+	virtual int GetResourceCount(void) const = 0;
+	virtual void GetControllerInfo(ResourceControllerInfo &p_info) = 0;
 };
 //----------------------------------------------------------------------------------------------

@@ -15,7 +15,7 @@
 //----------------------------------------------------------------------------------------------
 //	Set Illumina PRT compilation mode (SHM or DSM)
 //----------------------------------------------------------------------------------------------
-//#define ILLUMINA_SHM
+#define ILLUMINA_SHM
 
 #if (!defined ILLUMINA_SHM)
 	#define ILLUMINA_DSM
@@ -459,7 +459,6 @@ int main(int argc, char** argv)
 	if (variableMap.count("workdir"))
 	{
 		strPath = variableMap["workdir"].as<std::string>();
-			//boost::filesystem::path(variableMap["workdir"].as<std::string>());
 	}
 
 	// -- start service
@@ -468,10 +467,7 @@ int main(int argc, char** argv)
 	pServiceManager->Initialise(nPort, nAdminPort, strPath, bVerbose);
 	pServiceManager->Start();
 	pServiceManager->Shutdown();
-	
-	//ServiceManager serviceManager(nPort, nAdminPort, strPath, bVerbose);
-	//serviceManager.Start();
-	
+		
 	return 0;
 }
 #endif

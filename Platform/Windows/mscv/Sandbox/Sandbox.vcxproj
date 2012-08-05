@@ -155,23 +155,31 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\AdminController.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\Coordinator.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\main.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskPipeline.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Resource.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\ResourceManager.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\ServiceManager.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\TaskController.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\TaskPipeline.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\Worker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\AdminController.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\CommandParser.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Communicator.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Controller.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Coordinator.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Environment.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Logger.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\message.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\MessageQueue.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\mpirender.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\renderpipeline.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskPipeline.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Resource.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\ResourceManager.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\scheduling.h" />

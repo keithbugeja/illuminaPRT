@@ -1,29 +1,26 @@
+//----------------------------------------------------------------------------------------------
+//	Filename:	TaskPipeline.h
+//	Author:		Keith Bugeja
+//	Date:		27/07/2012
+//----------------------------------------------------------------------------------------------
+#pragma once
+//----------------------------------------------------------------------------------------------
+#include "MessageQueue.h"
+#include "Coordinator.h"
+#include "Worker.h"
+//----------------------------------------------------------------------------------------------
 class ITaskPipeline
 {
-	void OnRegisterWorker(void){ }
-	void OnUnregisterWorker(void){ }
+protected:
+	ICoordinator *m_pCoordinator;
+	IWorker *m_pWorker;
 
-	void RegisterWorker(void){ }
-	void UnregisterWorker(void){ }
+protected:
+	ITaskPipeline(ICoordinator *p_pCoordinator,
+		IWorker *p_pWorker);
 
-	void SynchroniseWorkers(void){ }
-	void OnSynchroniseWorker(void){ }
-
-	virtual void ExecuteCoordinator(void){ }
-	virtual void ExecuteWorker(void){ }
-
-	// Should contain methods for:
-	// Coordinator:
-	//	Register/Deregister workers
-	//  Synchronise frame with workers
-	//	Distributed/Gather work from workers
-	
-	// Worker:
-	//	Register/Deregister with coordinator
-	//	Synchronise frame with coordinator
-	//	Receive/Return work from coordinators
+public:
+	virtual void Execute(const std::string &p_strArguments, int p_nResourceID, int p_nCoordinatorID);
+	virtual void Execute(ICoordinator *p_pCoordinator);
+	virtual void Execute(IWorker *p_pWorker);
 };
-
-class RenderPipeline
-	: public ITaskPipeline
-{ };

@@ -49,6 +49,8 @@
 
 	// Detect OS :: Windows
 	#define __PLATFORM_WINDOWS__
+	
+	#define WIN32_LEAN_AND_MEAN 
 
 	// General include files for windows platform
 	#include <windows.h>
