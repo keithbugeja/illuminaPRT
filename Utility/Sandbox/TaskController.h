@@ -27,6 +27,7 @@ class TaskController
 protected:
 	boost::asio::ip::tcp::socket *m_pSocket;
 	ICommandParser *m_pCommandParser; 
+	std::string m_strArguments;
 	Task m_task;
 
 protected:
@@ -47,4 +48,7 @@ public:
 	// Resource management event callbacks
 	void OnResourceAdd(const std::vector<Resource*> &p_resourceList);
 	void OnResourceRemove(int p_nResourceCount, std::vector<Resource*> &p_resourceListOut);
+
+	int GetResourceCount(void) const;
+	void GetControllerInfo(ResourceControllerInfo &p_info);
 };

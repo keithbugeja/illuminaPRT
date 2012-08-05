@@ -3,6 +3,10 @@
 //	Author:		Keith Bugeja
 //	Date:		27/07/2012
 //----------------------------------------------------------------------------------------------
+//	TODO:
+//		Resource unregister : try synchronous and asynchronous versions.
+//							: asynchronous version could create problems within task pipeline
+//----------------------------------------------------------------------------------------------
 #pragma once
 
 //----------------------------------------------------------------------------------------------
@@ -41,6 +45,8 @@ public:
 	ResourceManager *GetResourceManager(void);
 
 public:
+	bool IsVerbose(void) const;
+
 	void Initialise(int p_nServicePort, int p_nAdminPort, const std::string p_strPath, bool p_bVerbose);
 	void Shutdown(void);
 

@@ -5,28 +5,45 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+#include <vector>
+//----------------------------------------------------------------------------------------------
+#include "TaskPipeline.h"
+//----------------------------------------------------------------------------------------------
+
 class Resource
 {
 public:
-	enum Type 
+	enum State 
 	{
-		Idle,
-		Worker,
-		Coordinator
+		ST_Idle,
+		ST_Worker,
+		ST_Coordinator
 	};
 
 protected:
 	int m_nResourceID;
-	Type m_resourceType;
+	State m_resourceState;
 
 public:
-	Resource(int p_nResourceID, Type p_resourceType);
-		/*: m_resourceType(p_resourceType)
-		, m_nResourceID(p_nResourceID) 
-	{ } */
+	Resource(int p_nResourceID, State p_resourceState);
+	
+	void Start(ITaskPipeline *p_pPipeline);
+	void Stop(void);
 
-	int GetID(void) const;// { return m_nResourceID; }
-	bool IsIdle(void); //{ return m_resourceType == Idle; }
-	bool IsWorker(void); //{ return m_resourceType == Worker; }
-	bool IsCoordinator(void);// { return m_resourceType == Coordinator; }
+	int GetID(void) const;
+
+	bool IsIdle(void);
+	bool IsWorker(void);
+	bool IsCoordinator(void);
+
+	// Commands controller can issue:
+public:
+	// Supported only when idle
+	static void Register(const std::string &p_strArgs, int p_nCoordinatorID, std::vector<Resource*> p_resourceList);
+	
+	// Supported only when registered to a coordinator
+	static void Unregister(int p_nCoordinatorID, std::vector<Resource*> p_resourceList);
+
+	// When idle or assigned
+	static void Terminate(std::vector<Resource*> p_resourceList);
 };

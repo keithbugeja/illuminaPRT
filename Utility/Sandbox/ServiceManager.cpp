@@ -5,8 +5,14 @@
 //----------------------------------------------------------------------------------------------
 #include "ServiceManager.h"
 #include "Worker.h"
+
+#include "RenderTaskPipeline.h"
 //----------------------------------------------------------------------------------------------
 using namespace Illumina::Core;
+//----------------------------------------------------------------------------------------------
+bool ServiceManager::IsVerbose(void) const {
+	return m_bVerbose;
+}
 //----------------------------------------------------------------------------------------------
 ResourceManager *ServiceManager::GetResourceManager(void) { 
 	return &m_resourceManager; 
@@ -40,6 +46,14 @@ void ServiceManager::Start(void)
 		RunAsResource();
 
 	m_resourceManager.Shutdown();
+}
+//----------------------------------------------------------------------------------------------
+void ServiceManager::RunAsResource(void)
+{
+	RenderTaskPipeline pipeline;
+
+	// Start resource
+	ServiceManager::GetInstance()->GetResourceManager()->Me()->Start(&pipeline);
 }
 //----------------------------------------------------------------------------------------------
 void ServiceManager::RunAsMaster(void)
@@ -95,7 +109,11 @@ void ServiceManager::AdminService(void)
 //----------------------------------------------------------------------------------------------
 void ServiceManager::AcceptConnection(boost::asio::ip::tcp::socket *p_pSocket, bool p_bIsAdmin)
 {
-	std::cout << "Accepting connection from [" << p_pSocket->remote_endpoint().address().to_string() << "]" << std::endl;
+	{
+		std::stringstream message;
+		message << "Master :: Accepting connection from [" << p_pSocket->remote_endpoint().address().to_string() << "]";
+		Logger::Message(message.str(), m_bVerbose);
+	}
 
 	if (p_bIsAdmin)
 	{
@@ -117,21 +135,13 @@ void ServiceManager::AcceptConnection(boost::asio::ip::tcp::socket *p_pSocket, b
 		m_resourceManager.DestroyInstance(pController);
 	}
 
-	std::cout << "Closing connection from [" << p_pSocket->remote_endpoint().address().to_string() << "]" << std::endl;
-		
+	{
+		std::stringstream message;
+		message << "Closing connection from [" << p_pSocket->remote_endpoint().address().to_string() << "]";
+		Logger::Message(message.str(), m_bVerbose);
+	}
+
 	p_pSocket->close();
 	delete p_pSocket;
-}
-//----------------------------------------------------------------------------------------------
-void ServiceManager::RunAsResource(void)
-{
-	Resource *pResource = ServiceManager::GetInstance()->GetResourceManager()->Me();
-
-	std::cout << "Resource ID: " << pResource->GetID() << std::endl;
-
-//	TResource me;
-	//me.Idle();
-	// Initialise own PE structure and go to standby mode
-	// Wait for task group assignment
 }
 //----------------------------------------------------------------------------------------------

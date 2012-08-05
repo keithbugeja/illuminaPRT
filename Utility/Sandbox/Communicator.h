@@ -1,24 +1,39 @@
+#pragma once
+
 #include <mpi.h>
 
 class Communicator
 {
 public:
 	typedef MPI_Status Status;
+	typedef MPI_Request Request;
 
 	enum TagBase
 	{
-		Coordinator_Worker		= 0x1000,
-		Worker_Coordinator		= 0x2000,
+		Controller_Task				= 0x00000100,
 
-		Controller_Worker		= 0x3000,
-		Worker_Controller		= 0x4000,
-		Controller_Task			= 0x5000,
+		Controller_Coordinator		= 0x00000200,
+		Coordinator_Controller		= 0x00000400,
 
-		Controller_Coordinator	= 0x6000,
-		Coordinator_Controller	= 0x7000
+		Coordinator_Worker			= 0x00001000,
+		Worker_Coordinator			= 0x00002000,
+
+		//Coordinator_Worker_Unreg	= 0x00004000,
+		//Worker_Coordinator_Unreg	= 0x00004001,
+
+		Coordinator_Worker_Reg		= 0x00004002,
+		//Worker_Coordinator_Reg	= 0x00004003,
+
+		Coordinator_Worker_Sync		= 0x00004004,
+		Worker_Coordinator_Sync		= 0x00004005,
+
+		Coordinator_Worker_Job		= 0x00010000,
+		Worker_Coordinator_Job		= 0x00020000
 	};
 
-	static const int CoordinatorRank = 0;
+	static const int Controller_Rank = 0;
+	static const int Source_Any = MPI_ANY_SOURCE;
+	static const int Tag_Any	= MPI_ANY_TAG;
 
 public:
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +67,14 @@ public:
 	{
 		MPI_Irecv(p_buffer, p_size, MPI_BYTE, p_rank, p_tag, MPI_COMM_WORLD, p_request);
 		return IsRequestComplete(p_request, p_status);
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Request cancellation
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	static bool CancelRequest(MPI_Request *p_request)
+	{
+		return MPI_Cancel(p_request);
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

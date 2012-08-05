@@ -22,16 +22,45 @@ TaskController::~TaskController(void) { }
 //----------------------------------------------------------------------------------------------
 void TaskController::OnResourceAdd(const std::vector<Resource*> &p_resourceList)
 {
+	BOOST_ASSERT(p_resourceList.size() > 0);
+
 	// Add resource to task container
 	m_task.Add(p_resourceList);
 
 	// Notify resources and coordinator (or create coord if not available)
+	if (!m_task.HasCoordinator()) m_task.SetCoordinator(p_resourceList[0]);
+	Resource::Register(m_strArguments, m_task.GetCoordinatorID(), p_resourceList);
 }
 //----------------------------------------------------------------------------------------------
 void TaskController::OnResourceRemove(int p_nResourceCount, std::vector<Resource*> &p_resourceListOut)
 {
-	// Notify resources that they are now idle
-	// Remove them from task
+	BOOST_ASSERT(p_nResourceCount <= m_task.Size());
+
+	p_resourceListOut.clear();
+
+	// Do we have to unregister whole task?
+	if (p_nResourceCount == m_task.Size())
+	{
+		for (int nResourceIdx = 0; nResourceIdx < p_nResourceCount; nResourceIdx++)
+			p_resourceListOut.push_back(m_task[nResourceIdx]);
+	}
+	else
+	{
+		for(int nIdx = 0, nResourceIdx = 0; nResourceIdx < p_nResourceCount; nIdx++)
+		{
+			if (m_task[nIdx] != m_task.GetCoordinator())
+			{
+				p_resourceListOut.push_back(m_task[nIdx]);
+				nResourceIdx++;
+			}
+		}
+	}
+
+	// Unregister resources
+	Resource::Unregister(m_task.GetCoordinatorID(), p_resourceListOut);
+
+	// Remove from task
+	m_task.Remove(p_resourceListOut);
 }
 //----------------------------------------------------------------------------------------------
 bool TaskController::Bind(boost::asio::ip::tcp::socket *p_pSocket, ICommandParser *p_pCommandParser)
@@ -72,6 +101,19 @@ bool TaskController::ProcessClientInput(void)
 	// Process commands
 	if (strCommandName == "init")
 	{
+		// Need to push them to local structure too
+		std::stringstream argumentStream;
+		argumentStream << "script=" << argumentMap["script"] 
+		<< ";min=" << argumentMap["min"] 
+		<< ";max=" << argumentMap["max"]
+		<< ";width=" << argumentMap["width"]
+		<< ";height=" << argumentMap["height"]
+		<< ";fps=" << argumentMap["fps"]
+		<< ";use=" << argumentMap["use"]
+		<< ";"; 
+
+		m_strArguments = argumentStream.str();
+
 		IController::WriteToSocket(m_pSocket, "OK", 2);
 	}
 	else if (strCommandName == "play")
@@ -91,3 +133,17 @@ bool TaskController::ProcessClientInput(void)
 	return true;
 }
 //----------------------------------------------------------------------------------------------
+void TaskController::GetControllerInfo(ResourceControllerInfo &p_info)
+{
+	p_info.ID = GetID();
+	p_info.Allocation = m_task.Size();
+	p_info.Description = "No Description yet. Need to implement TASK PIPELINE";
+	p_info.Load = 0.5;
+}
+//----------------------------------------------------------------------------------------------
+int TaskController::GetResourceCount(void) const
+{
+	return m_task.Size();
+}
+//----------------------------------------------------------------------------------------------
+
