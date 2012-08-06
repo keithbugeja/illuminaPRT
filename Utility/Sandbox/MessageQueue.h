@@ -51,11 +51,16 @@ struct Message_Coordinator_Worker_Accept
 	char String[2048];
 };
 
+struct Message_Coordinator_Worker_Sync
+{
+	int  MessageID;
+	bool Unregister;
+};
+
 typedef Message_Header Message_Worker_Coordinator_Register;
 typedef Message_Header Message_Worker_Coordinator_Ready;
 typedef Message_Header Message_Coordinator_Worker_Unregister;
 typedef Message_Header Message_Coordinator_Worker_Reject;
-typedef Message_Header Message_Coordinator_Worker_Sync;
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 struct ResourceMessage

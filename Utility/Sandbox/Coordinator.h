@@ -5,6 +5,9 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 //----------------------------------------------------------------------------------------------
+#include <set>
+#include <boost/thread/mutex.hpp>
+//----------------------------------------------------------------------------------------------
 #include <System/ArgumentMap.h>
 //----------------------------------------------------------------------------------------------
 #include "MessageQueue.h"
@@ -13,6 +16,10 @@ using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 class ICoordinator
 {
+	boost::mutex m_releaseMutex;
+	boost::mutex m_messageQueueMutex;
+
+	std::set<int> m_release;
 	std::vector<int> m_registered;
 	std::vector<int> m_ready;
 

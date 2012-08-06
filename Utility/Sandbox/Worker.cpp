@@ -8,6 +8,7 @@
 #include "Worker.h"
 #include "MessageQueue.h"
 #include "Communicator.h"
+#include "ServiceManager.h"
 //----------------------------------------------------------------------------------------------
 void IWorker::SetCoordinatorID(int p_nCoordinatorID) {
 	m_nCoordinatorID = p_nCoordinatorID;
@@ -35,6 +36,7 @@ void IWorker::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 bool IWorker::CoordinatorMessages(void)
 {
+	/*
 	int pCommandBuffer[1024];
 	Communicator::Status status;
 	
@@ -44,30 +46,41 @@ bool IWorker::CoordinatorMessages(void)
 		
 		switch(pCommandBuffer[0])
 		{
-			case MessageIdentifiers::ID_Coordinator_Unregister:
-			{
-				m_bIsRunning = false;
-				break;
-			}
-
 			default:
 				return OnCoordinatorMessages((void*)pCommandBuffer);
 		}
 	}
 
 	return true;
+	*/
+
+	return true;
 }
 //----------------------------------------------------------------------------------------------
 bool IWorker::Synchronise(void) 
 {
-	// Prepare message buffers
-	Message_Coordinator_Worker_Sync syncMessage;
+	bool bVerbose = 
+		ServiceManager::GetInstance()->IsVerbose();
+
+	// Ready message to signal availability in next computation cycle
 	Message_Worker_Coordinator_Ready readyMessage;
 	readyMessage.MessageID = MessageIdentifiers::ID_Worker_Ready;
-
-	// Send ready signal and wait for ack
 	Communicator::Send(&readyMessage, sizeof(Message_Worker_Coordinator_Ready), GetCoordinatorID(), Communicator::Worker_Coordinator_Sync);
+
+	// Receive synchronise from coordinator
+	Message_Coordinator_Worker_Sync syncMessage;
 	Communicator::Receive(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), GetCoordinatorID(), Communicator::Coordinator_Worker_Sync);
+
+	// If ordered to unregister, exit immediately.
+	if (syncMessage.Unregister)
+	{
+		std::stringstream message;
+		message << "Synchronise releasing worker [" << ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID() << "]";
+		Logger::Message(message.str(), bVerbose);
+
+		m_bIsRunning = false;
+		return false;
+	}
 
 	return OnSynchronise(); 
 }
