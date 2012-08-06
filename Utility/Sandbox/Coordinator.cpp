@@ -29,11 +29,19 @@ void ICoordinator::ControllerCommunication(ResourceMessageQueue *p_pMessageQueue
 
 	while(IsRunning())
 	{
-		Communicator::Probe(Communicator::Controller_Rank, Communicator::Controller_Coordinator, &status);
-		Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), Communicator::Controller_Rank, Communicator::Controller_Coordinator, &status);
+		//Communicator::Probe(Communicator::Controller_Rank, Communicator::Controller_Coordinator, &status)
 
-		ResourceMessage *pMessage = new ResourceMessage(status.MPI_SOURCE, -1, status.MPI_TAG, pCommandBuffer[0], Communicator::GetSize(&status), pCommandBuffer);
-		p_pMessageQueue->push(pMessage);
+		if (Communicator::ProbeAsynchronous(Communicator::Controller_Rank, Communicator::Controller_Coordinator, &status))
+		{
+			Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), Communicator::Controller_Rank, Communicator::Controller_Coordinator, &status);
+			ResourceMessage *pMessage = new ResourceMessage(status.MPI_SOURCE, -1, status.MPI_TAG, pCommandBuffer[0], Communicator::GetSize(&status), pCommandBuffer);
+
+			m_messageQueueMutex.lock();
+			p_pMessageQueue->push(pMessage);
+			m_messageQueueMutex.unlock();
+		}
+
+		boost::this_thread::sleep(boost::posix_time::microsec(100));
 	}
 
 	delete[] pCommandBuffer;
@@ -46,11 +54,18 @@ void ICoordinator::WorkerCommunication(ResourceMessageQueue *p_pMessageQueue)
 
 	while(IsRunning())
 	{
-		Communicator::Probe(Communicator::Source_Any, Communicator::Worker_Coordinator, &status);
-		Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), Communicator::Source_Any, Communicator::Worker_Coordinator, &status);
+		//Communicator::Probe(Communicator::Source_Any, Communicator::Worker_Coordinator, &status);
+		if (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Worker_Coordinator, &status))
+		{
+			Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), Communicator::Source_Any, Communicator::Worker_Coordinator, &status);
+			ResourceMessage *pMessage = new ResourceMessage(status.MPI_SOURCE, -1, status.MPI_TAG, pCommandBuffer[0], Communicator::GetSize(&status), (unsigned char *)pCommandBuffer);
+		
+			m_messageQueueMutex.lock();
+			p_pMessageQueue->push(pMessage);
+			m_messageQueueMutex.unlock();	
+		}
 
-		ResourceMessage *pMessage = new ResourceMessage(status.MPI_SOURCE, -1, status.MPI_TAG, pCommandBuffer[0], Communicator::GetSize(&status), (unsigned char *)pCommandBuffer);
-		p_pMessageQueue->push(pMessage);
+		boost::this_thread::sleep(boost::posix_time::microsec(100));
 	}
 
 	delete[] pCommandBuffer;
@@ -75,7 +90,7 @@ bool ICoordinator::HandleRegister(ResourceMessage* p_pMessage)
 		return false;
 
 	// Add to list of registered resources
-	m_registered.push_back(p_pMessage->OriginID);
+	// m_registered.push_back(p_pMessage->OriginID);
 
 	return true;
 }
@@ -85,20 +100,11 @@ bool ICoordinator::HandleUnregister(ResourceMessage *p_pMessage)
 	Message_Controller_Resource_Unregister *pUnregisterMessage = 
 		(Message_Controller_Resource_Unregister*)p_pMessage->Content;
 
-	Message_Coordinator_Worker_Unregister unregisterMessage;
-	unregisterMessage.MessageID = MessageIdentifiers::ID_Coordinator_Unregister;
-
-	// Fetch ID of coordinator
-	int coordinatorID = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
-
 	for (int workerIdx = 0; workerIdx < pUnregisterMessage->Size; ++workerIdx)
 	{
-		std::cout << "Resource to free : [" << pUnregisterMessage->Resources[workerIdx] << "]" << std::endl;
-
-		if (pUnregisterMessage->Resources[workerIdx] != coordinatorID)
-			Communicator::Send(&unregisterMessage, sizeof(Message_Coordinator_Worker_Unregister), pUnregisterMessage->Resources[workerIdx], Communicator::Coordinator_Worker);
-		else
-			m_bIsRunning = false;
+		m_releaseMutex.lock();
+		m_release.insert(pUnregisterMessage->Resources[workerIdx]);
+		m_releaseMutex.unlock();
 	}
 
 	return true;
@@ -109,8 +115,10 @@ bool ICoordinator::EvaluateMessageQueue(ResourceMessageQueue *p_pMessageQueue)
 	// Process messages in queue
 	while (p_pMessageQueue->size() > 0)
 	{
+		m_messageQueueMutex.lock();
 		ResourceMessage *pMessage = p_pMessageQueue->front();
 		p_pMessageQueue->pop();
+		m_messageQueueMutex.unlock();
 
 		switch(pMessage->Command)
 		{
@@ -141,25 +149,46 @@ bool ICoordinator::EvaluateMessageQueue(ResourceMessageQueue *p_pMessageQueue)
 //----------------------------------------------------------------------------------------------
 bool ICoordinator::Synchronise(void) 
 {
+	// Set up request and status for non-blocking receive
 	Communicator::Request request;
 	Communicator::Status status;
 
+	// Set up buffer for receipt of ready messages from available resources
 	Message_Worker_Coordinator_Ready readyMessage;
-	Message_Coordinator_Worker_Sync syncMessage;
-	syncMessage.MessageID = MessageIdentifiers::ID_Coordinator_Sync;
-
-	m_ready.clear();
 
 	// We open receive window for 5 ms (maybe less?)
 	double timeOpen = Platform::ToSeconds(Platform::GetTime());
-	for(;;)
+	
+	// Clear list of ready resources and start receiving
+	for(m_ready.clear();;)
 	{
 		if (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Worker_Coordinator_Sync, &status))
 		{
 			Communicator::Receive(&readyMessage, Communicator::GetSize(&status), status.MPI_SOURCE, status.MPI_TAG);
-			Communicator::Send(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), status.MPI_SOURCE, Communicator::Coordinator_Worker_Sync);
 
-			m_ready.push_back(status.MPI_SOURCE);
+			if (m_release.empty() == false && 
+				m_release.find(status.MPI_SOURCE) != m_release.end())
+			{
+				Message_Coordinator_Worker_Sync syncMessage;
+				syncMessage.MessageID = MessageIdentifiers::ID_Coordinator_Sync;
+				syncMessage.Unregister = true;
+
+				Communicator::Send(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), status.MPI_SOURCE, Communicator::Coordinator_Worker_Sync);
+
+				m_releaseMutex.lock();
+				m_release.erase(status.MPI_SOURCE);
+				m_releaseMutex.unlock();
+			} 
+			else 
+			{
+				Message_Coordinator_Worker_Sync syncMessage;
+				syncMessage.MessageID = MessageIdentifiers::ID_Coordinator_Sync;
+				syncMessage.Unregister = false;
+
+				Communicator::Send(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), status.MPI_SOURCE, Communicator::Coordinator_Worker_Sync);
+				
+				m_ready.push_back(status.MPI_SOURCE);
+			}
 		}
 
 		// Window is open for 5 ms
@@ -167,9 +196,41 @@ bool ICoordinator::Synchronise(void)
 			break;
 	}
 
-	std::cout << "Workers ready : [" << m_ready.size() << "]" << std::endl;
+	// If THIS PROCESS is the only remaining process on the release list, kill task
+	int coordinatorID = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
+	
+	m_releaseMutex.lock();	
 
-	return OnSynchronise(); 
+	if (m_release.size() == 1)
+	{
+		if (m_release.find(coordinatorID) != m_release.end())
+		{
+			m_release.erase(coordinatorID);
+			m_releaseMutex.unlock();
+			
+			m_bIsRunning = false;
+			return false;
+		}
+	}
+
+	m_releaseMutex.unlock();
+
+	// Have we met the minimum resource requirement for computation?
+	int resourceLowerbound;
+	if (m_argumentMap.GetArgument("min", resourceLowerbound))
+	{
+		if (m_ready.size() < resourceLowerbound)
+			return false;
+	}
+
+	if (ServiceManager::GetInstance()->IsVerbose())
+	{
+		std::stringstream message;
+		message << "Synchronise found [" << m_ready.size() << "] workers ready.";
+		Logger::Message(message.str(), true);
+	}
+
+	return OnSynchronise();
 }
 //----------------------------------------------------------------------------------------------
 bool ICoordinator::Compute(void) 

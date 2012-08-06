@@ -52,8 +52,16 @@ public:
 
 	void SetCoordinator(Resource *p_pResource)
 	{
-		m_nCoordinatorID = p_pResource->GetID();
-		m_pCoordinatorResource = p_pResource;
+		if (p_pResource != NULL)
+		{
+			m_nCoordinatorID = p_pResource->GetID();
+			m_pCoordinatorResource = p_pResource;
+		}
+		else
+		{
+			m_nCoordinatorID = UndefinedCoordinator;
+			m_pCoordinatorResource = NULL;
+		}
 	}
 
 
@@ -87,6 +95,9 @@ public:
 		
 		m_resourceList.erase(resourceIterator);
 		m_resourceMap.erase(p_pResource->GetID());
+
+		if (p_pResource->GetID() == GetCoordinatorID())
+			SetCoordinator(NULL);
 	}
 
 	void Remove(std::vector<Resource*> &p_resourceList)

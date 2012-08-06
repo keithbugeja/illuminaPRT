@@ -43,9 +43,12 @@ bool ResourceManager::AllocateResources(void)
 		}
 	}
 
-	std::stringstream message;
-	message << "Resource Manager allocating " << m_nResourceCount << " resources for use." << std::endl;
-	Logger::Message(message.str(), ServiceManager::GetInstance()->IsVerbose());
+	if (WhoAmI() == Master)
+	{
+		std::stringstream message;
+		message << "Resource Manager allocating " << m_nResourceCount << " resources for use." << std::endl;
+		Logger::Message(message.str(), ServiceManager::GetInstance()->IsVerbose());
+	}
 
 	return true;
 }
@@ -193,14 +196,12 @@ bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 
 			// Update free list
 			m_resourceFreeList.push_back(pResource);
-	
-			std::cout << "Resource [" << pResource->GetID() << "] freed." << std::endl;
 		}
 		else
 			std::cerr << "Unable to delete resource [" << pResource->GetID() << "]. Resource not in allocation list!" << std::endl;
 	}
 
-	std::cout << "Freed " << resourceList.size() << " resources." << std::endl;
+	std::cout << "Freed [" << resourceList.size() << "] resources." << std::endl;
 
 	return true;
 }

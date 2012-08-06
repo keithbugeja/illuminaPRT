@@ -16,14 +16,25 @@ ITaskPipeline::ITaskPipeline(ICoordinator *p_pCoordinator, IWorker *p_pWorker)
 //----------------------------------------------------------------------------------------------
 void ITaskPipeline::Execute(const std::string &p_strArguments, int p_nResourceID, int p_nCoordinatorID)
 {
+	bool bVerbose = 
+		ServiceManager::GetInstance()->IsVerbose();
+
 	if (p_nCoordinatorID == p_nResourceID)
 	{
+		std::stringstream message;
+		message << "Task Pipeline executing coordinator with arguments [" << p_strArguments << "]";
+		Logger::Message(message.str(), bVerbose);
+
 		m_pCoordinator->SetArguments(p_strArguments);
 
 		Execute(m_pCoordinator);
 	}
 	else
 	{
+		std::stringstream message;
+		message << "Task Pipeline executing worker for coordinator [" << p_nCoordinatorID << "]";
+		Logger::Message(message.str(), bVerbose);
+
 		m_pWorker->SetCoordinatorID(p_nCoordinatorID);
 
 		Execute(m_pWorker);
@@ -46,9 +57,14 @@ void ITaskPipeline::Execute(ICoordinator *p_pCoordinator)
 	while(p_pCoordinator->IsRunning())
 	{
 		p_pCoordinator->EvaluateMessageQueue(&messageQueue);
-		p_pCoordinator->Synchronise();
-		p_pCoordinator->Compute();
+
+		if (p_pCoordinator->Synchronise())
+			p_pCoordinator->Compute();
 	}
+
+	// join to threads
+	coordinatorControllerHandler.join();
+	coordinatorWorkerHandler.join();
 
 	p_pCoordinator->Shutdown();
 }
@@ -66,10 +82,9 @@ void ITaskPipeline::Execute(IWorker *p_pWorker)
 	while(p_pWorker->IsRunning())
 	{
 		p_pWorker->CoordinatorMessages(); 
-		if (!p_pWorker->IsRunning()) break;
-
-		p_pWorker->Synchronise();
-		p_pWorker->Compute();
+		
+		if (p_pWorker->Synchronise())
+			p_pWorker->Compute();
 	}
 
 	p_pWorker->Shutdown();
