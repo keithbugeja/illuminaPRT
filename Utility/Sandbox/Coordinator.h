@@ -35,6 +35,8 @@ public:
 	void ControllerCommunication(ResourceMessageQueue *p_pMessageQueue);
 	void WorkerCommunication(ResourceMessageQueue *p_pMessageQueue);
 
+	ArgumentMap* GetArgumentMap(void);
+
 	void SetArguments(const std::string &p_strArguments);
 	std::string GetArguments(void) const;
 

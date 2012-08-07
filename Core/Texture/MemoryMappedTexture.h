@@ -24,7 +24,7 @@ namespace Illumina
 		protected:
 			TextureFiltering m_filtering;
 
-			boost::iostreams::mapped_file  m_imageFile;
+			boost::iostreams::mapped_file_source m_imageFile;
 			unsigned char *m_imageDataLDR;
 			float *m_imageData;
 			int m_width, m_height;
@@ -101,7 +101,7 @@ namespace Illumina
 			{
 				m_imageFile.open(p_strFilename);
 
-				int *imageData = (int*)m_imageFile.const_data();
+				int *imageData = (int*)m_imageFile.data();
 				
 				m_width		= imageData[0];
 				m_height	= imageData[1];

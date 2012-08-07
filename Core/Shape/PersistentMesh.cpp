@@ -7,6 +7,7 @@
 #include "Shape/PersistentMesh.h"
 
 #include <stack>
+#include <iostream>
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
@@ -82,9 +83,9 @@ void PersistentMesh::MapFiles(const std::string &p_strTrunkName)
 	m_nTriangleCount = m_triangleFile.size() / sizeof(PersistentIndexedTriangle);
 	m_nVertexCount = m_vertexFile.size() / sizeof(Vertex);
 
-	m_pRootNode = (PersistentTreeNode*)m_treeFile.const_data();
-	m_pTriangleList = (PersistentIndexedTriangle*)m_triangleFile.const_data();
-	m_pVertexList = (Vertex*)m_vertexFile.const_data();
+	m_pRootNode = (PersistentTreeNode*)m_treeFile.data();
+	m_pTriangleList = (PersistentIndexedTriangle*)m_triangleFile.data();
+	m_pVertexList = (Vertex*)m_vertexFile.data();
 }
 //----------------------------------------------------------------------------------------------
 void PersistentMesh::UnmapFiles(void)

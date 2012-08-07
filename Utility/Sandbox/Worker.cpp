@@ -10,6 +10,10 @@
 #include "Communicator.h"
 #include "ServiceManager.h"
 //----------------------------------------------------------------------------------------------
+ArgumentMap* IWorker::GetArgumentMap(void) {
+	return &m_argumentMap;
+}
+//----------------------------------------------------------------------------------------------
 void IWorker::SetCoordinatorID(int p_nCoordinatorID) {
 	m_nCoordinatorID = p_nCoordinatorID;
 }
