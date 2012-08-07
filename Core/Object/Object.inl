@@ -7,7 +7,7 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-inline const UniqueID& Object::GetID(void) const {
+inline const Illumina::Core::UniqueID& Object::GetID(void) const {
 	return m_uid;
 }
 //----------------------------------------------------------------------------------------------

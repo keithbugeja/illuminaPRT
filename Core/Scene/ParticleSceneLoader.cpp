@@ -363,8 +363,9 @@ bool ParticleSceneLoader::LoadGeometry(const std::string &p_strFilename, Particl
 
 	// Load materials
 	std::string materialLibraryFilename = p_strFilename + ".mtl";
+
 	LoadMaterials(materialLibraryFilename, p_context);
-	
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------

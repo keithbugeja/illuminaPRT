@@ -59,9 +59,9 @@ namespace Illumina
 				m_nVertexCount;
 
 			// Memory-mapped files
-			boost::iostreams::mapped_file  m_vertexFile;
-			boost::iostreams::mapped_file  m_triangleFile;
-			boost::iostreams::mapped_file  m_treeFile;
+			boost::iostreams::mapped_file_source  m_vertexFile;
+			boost::iostreams::mapped_file_source  m_triangleFile;
+			boost::iostreams::mapped_file_source  m_treeFile;
 
 		protected:
 			void MapFiles(const std::string &p_strTrunkName);

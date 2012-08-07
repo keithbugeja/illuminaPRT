@@ -11,6 +11,10 @@
 #include "Communicator.h"
 #include "ServiceManager.h"
 //----------------------------------------------------------------------------------------------
+ArgumentMap* ICoordinator::GetArgumentMap(void) {
+	return &m_argumentMap;
+}
+//----------------------------------------------------------------------------------------------
 void ICoordinator::SetArguments(const std::string &p_strArguments)
 {
 	m_strArguments = p_strArguments;
@@ -71,9 +75,17 @@ void ICoordinator::WorkerCommunication(ResourceMessageQueue *p_pMessageQueue)
 	delete[] pCommandBuffer;
 }
 //----------------------------------------------------------------------------------------------
-bool ICoordinator::Initialise(void) { m_bIsRunning = true; return true; }
+bool ICoordinator::Initialise(void) 
+{ 
+	m_bIsRunning = true; 
+	return OnInitialise(); 
+}
 //----------------------------------------------------------------------------------------------
-void ICoordinator::Shutdown(void) { m_bIsRunning = false; }
+void ICoordinator::Shutdown(void) 
+{ 
+	m_bIsRunning = false; 
+	OnShutdown();
+}
 //----------------------------------------------------------------------------------------------
 bool ICoordinator::IsRunning(void) const { return m_bIsRunning; }
 //----------------------------------------------------------------------------------------------
@@ -225,9 +237,9 @@ bool ICoordinator::Synchronise(void)
 
 	if (ServiceManager::GetInstance()->IsVerbose())
 	{
-		std::stringstream message;
+		/*std::stringstream message;
 		message << "Synchronise found [" << m_ready.size() << "] workers ready.";
-		Logger::Message(message.str(), true);
+		Logger::Message(message.str(), true);*/
 	}
 
 	return OnSynchronise();

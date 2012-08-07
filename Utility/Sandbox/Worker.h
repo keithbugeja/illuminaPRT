@@ -17,6 +17,8 @@ class IWorker
 	bool m_bIsRunning;
 
 public:
+	ArgumentMap* GetArgumentMap(void);
+	
 	void SetCoordinatorID(int p_nCoordinatorID);
 	int GetCoordinatorID(void) const;
 
