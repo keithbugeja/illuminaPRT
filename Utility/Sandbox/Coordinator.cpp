@@ -26,6 +26,11 @@ std::string ICoordinator::GetArguments(void) const
 	return m_strArguments;
 }
 //----------------------------------------------------------------------------------------------
+std::vector<int>& ICoordinator::GetAvailableWorkerList(void)
+{
+	return m_ready;
+}
+//----------------------------------------------------------------------------------------------
 void ICoordinator::ControllerCommunication(ResourceMessageQueue *p_pMessageQueue)
 {
 	unsigned char *pCommandBuffer = new unsigned char[8192];
@@ -33,8 +38,6 @@ void ICoordinator::ControllerCommunication(ResourceMessageQueue *p_pMessageQueue
 
 	while(IsRunning())
 	{
-		//Communicator::Probe(Communicator::Controller_Rank, Communicator::Controller_Coordinator, &status)
-
 		if (Communicator::ProbeAsynchronous(Communicator::Controller_Rank, Communicator::Controller_Coordinator, &status))
 		{
 			Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), Communicator::Controller_Rank, Communicator::Controller_Coordinator, &status);
@@ -44,8 +47,8 @@ void ICoordinator::ControllerCommunication(ResourceMessageQueue *p_pMessageQueue
 			p_pMessageQueue->push(pMessage);
 			m_messageQueueMutex.unlock();
 		}
-
-		boost::this_thread::sleep(boost::posix_time::microsec(100));
+		else
+			boost::this_thread::sleep(boost::posix_time::microsec(1000));
 	}
 
 	delete[] pCommandBuffer;
@@ -58,7 +61,6 @@ void ICoordinator::WorkerCommunication(ResourceMessageQueue *p_pMessageQueue)
 
 	while(IsRunning())
 	{
-		//Communicator::Probe(Communicator::Source_Any, Communicator::Worker_Coordinator, &status);
 		if (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Worker_Coordinator, &status))
 		{
 			Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), Communicator::Source_Any, Communicator::Worker_Coordinator, &status);
@@ -68,8 +70,8 @@ void ICoordinator::WorkerCommunication(ResourceMessageQueue *p_pMessageQueue)
 			p_pMessageQueue->push(pMessage);
 			m_messageQueueMutex.unlock();	
 		}
-
-		boost::this_thread::sleep(boost::posix_time::microsec(100));
+		else
+			boost::this_thread::sleep(boost::posix_time::microsec(1000));
 	}
 
 	delete[] pCommandBuffer;
@@ -101,8 +103,9 @@ bool ICoordinator::HandleRegister(ResourceMessage* p_pMessage)
 	if (!Communicator::Send(&acceptMessage, sizeof(Message_Coordinator_Worker_Accept), p_pMessage->OriginID, Communicator::Coordinator_Worker_Reg))
 		return false;
 
-	// Add to list of registered resources
-	// m_registered.push_back(p_pMessage->OriginID);
+	m_registeredMutex.lock();
+	m_registered.insert(p_pMessage->OriginID);
+	m_registeredMutex.unlock();
 
 	return true;
 }
@@ -117,6 +120,10 @@ bool ICoordinator::HandleUnregister(ResourceMessage *p_pMessage)
 		m_releaseMutex.lock();
 		m_release.insert(pUnregisterMessage->Resources[workerIdx]);
 		m_releaseMutex.unlock();
+
+		m_registeredMutex.lock();
+		m_registered.erase(pUnregisterMessage->Resources[workerIdx]);
+		m_registeredMutex.unlock();
 	}
 
 	return true;
@@ -204,7 +211,7 @@ bool ICoordinator::Synchronise(void)
 		}
 
 		// Window is open for 5 ms
-		if (Platform::ToSeconds(Platform::GetTime()) - timeOpen > 0.0005)
+		if (Platform::ToSeconds(Platform::GetTime()) - timeOpen > 0.001 || m_ready.size() == m_registered.size())
 			break;
 	}
 
@@ -219,7 +226,7 @@ bool ICoordinator::Synchronise(void)
 		{
 			m_release.erase(coordinatorID);
 			m_releaseMutex.unlock();
-			
+
 			m_bIsRunning = false;
 			return false;
 		}
@@ -232,14 +239,17 @@ bool ICoordinator::Synchronise(void)
 	if (m_argumentMap.GetArgument("min", resourceLowerbound))
 	{
 		if (m_ready.size() < resourceLowerbound)
+		{
+			OnSynchroniseAbort();
 			return false;
+		}
 	}
 
 	if (ServiceManager::GetInstance()->IsVerbose())
 	{
-		/*std::stringstream message;
+		std::stringstream message;
 		message << "Synchronise found [" << m_ready.size() << "] workers ready.";
-		Logger::Message(message.str(), true);*/
+		Logger::Message(message.str(), true);
 	}
 
 	return OnSynchronise();
@@ -247,8 +257,7 @@ bool ICoordinator::Synchronise(void)
 //----------------------------------------------------------------------------------------------
 bool ICoordinator::Compute(void) 
 { 
-	boost::this_thread::sleep(boost::posix_time::milliseconds(1000 / 60));
-
+	// boost::this_thread::sleep(boost::posix_time::milliseconds(1000 / 60));
 	return true; 
 }
 //----------------------------------------------------------------------------------------------

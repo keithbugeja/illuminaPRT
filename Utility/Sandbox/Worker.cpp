@@ -40,24 +40,6 @@ void IWorker::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 bool IWorker::CoordinatorMessages(void)
 {
-	/*
-	int pCommandBuffer[1024];
-	Communicator::Status status;
-	
-	while (Communicator::ProbeAsynchronous(GetCoordinatorID(), Communicator::Coordinator_Worker, &status))
-	{
-		Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), status.MPI_SOURCE, status.MPI_TAG);
-		
-		switch(pCommandBuffer[0])
-		{
-			default:
-				return OnCoordinatorMessages((void*)pCommandBuffer);
-		}
-	}
-
-	return true;
-	*/
-
 	return true;
 }
 //----------------------------------------------------------------------------------------------
@@ -79,7 +61,7 @@ bool IWorker::Synchronise(void)
 	if (syncMessage.Unregister)
 	{
 		std::stringstream message;
-		message << "Synchronise releasing worker [" << ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID() << "]";
+		message << "Synchronise :: Releasing worker [" << ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID() << "]";
 		Logger::Message(message.str(), bVerbose);
 
 		m_bIsRunning = false;
@@ -97,13 +79,16 @@ bool IWorker::Compute(void)
 //----------------------------------------------------------------------------------------------
 bool IWorker::Register(void) 
 {
+	bool bVerbose = 
+		ServiceManager::GetInstance()->IsVerbose();
+
 	// Send registration message to coordinator (on standard comm-worker channel)
 	Message_Worker_Coordinator_Register message;
 	message.MessageID = MessageIdentifiers::ID_Worker_Register;
 
 	if (!Communicator::Send(&message, sizeof(Message_Worker_Coordinator_Register), GetCoordinatorID(), Communicator::Worker_Coordinator))
 	{
-		std::cerr << "Failed sending registration message!" << std::endl;
+		Logger::Message("Register :: Failed sending registration message!", bVerbose, Logger::Error);
 		return false;
 	}
 
@@ -116,7 +101,7 @@ bool IWorker::Register(void)
 
 	if (pCommandBuffer[0] != MessageIdentifiers::ID_Coordinator_Accept)
 	{
-		std::cerr << "Coordinator rejected registration message!" << std::endl;
+		Logger::Message("Register :: Coordinator rejected registration message!", bVerbose, Logger::Error);
 		return false;
 	}
 
@@ -125,7 +110,11 @@ bool IWorker::Register(void)
 	std::string argumentString(pAccept->String, pAccept->Size);
 	m_argumentMap.Initialise(argumentString);
 
-	std::cout << "Registration complete. Initialising Worker with [" << argumentString << "]" << std::endl;
+	{
+		std::stringstream message;
+		message << "Registration complete. Initialising Worker with [" << argumentString << "]";
+		Logger::Message(message.str(), bVerbose);
+	}
 
 	return true; 
 }
