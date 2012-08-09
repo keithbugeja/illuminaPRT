@@ -198,8 +198,8 @@ T* FactoryManager<T>::ReleaseInstance(const std::string& p_strInstanceName)
 
 		m_instanceMap.erase(p_strInstanceName);
 	}
-	else
-		throw new Exception("Instance does not exist!");
+	
+	throw new Exception("Instance does not exist!");
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------

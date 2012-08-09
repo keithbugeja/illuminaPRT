@@ -54,6 +54,12 @@
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Worker.cpp">
       <Filter>Source Files\server</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskWorker.cpp">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskCoordinator.cpp">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h">
@@ -129,6 +135,15 @@
       <Filter>Source Files\server</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MessageQueue.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskWorker.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCoordinator.h">
+      <Filter>Source Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCommon.h">
       <Filter>Source Files\server</Filter>
     </ClInclude>
   </ItemGroup>
