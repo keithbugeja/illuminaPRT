@@ -64,6 +64,7 @@ namespace Illumina
 
 						if (pKernelContext->Flag)
 						{
+							pKernelContext->Flag = 0;
 							// pKernelContext->Final = pKernelContext->Direct;
 							continue;
 						}
