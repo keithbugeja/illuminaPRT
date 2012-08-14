@@ -128,7 +128,11 @@ public:
 		inline void Run(void) { m_bIsRunning = true; }
 		inline bool IsRunning(void) { return m_bIsRunning; }
 		inline void Stop(void) { m_bIsRunning = false; }
-		inline int NextTile(void) { return AtomicInt32::FetchAndAdd(&m_nTileID, 1); }
+		inline int NextTile(void) 
+		{ 
+			return AtomicInt32::FetchAndAdd(&m_nTileID, 1); 
+			// return AtomicInt32::Increment(&m_nTileID);
+		}
 		
 		inline void PushThreadStatistics(std::vector<RenderThread::RenderThreadStatistics>* p_pThreadStats)
 		{
@@ -251,12 +255,15 @@ public:
 			{
 				// std::cout << boost::this_thread::get_id() << " : " << tileID << std::endl;
 				const RenderThread::RenderThreadTile &tilePacket = p_pState->GetTilePacket(tileID);
+				
+				/**/
 				pRenderer->RenderRegion(pRadianceBuffer, tilePacket.XStart, tilePacket.YStart, tilePacket.XSize, tilePacket.YSize, tilePacket.XStart, tilePacket.YStart);
+				/**/
 
 				/*
 				pRenderer->RenderRegion(pRadianceBuffer, tilePacket.XStart + 1, tilePacket.YStart + 1, 
 					tilePacket.XSize - 1, tilePacket.YSize - 1, tilePacket.XStart + 1, tilePacket.YStart + 1);
-				*/
+				/**/
 
 				// Increment jobs done
 				threadStats.JobCount++;
@@ -524,17 +531,6 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 			std::cout << "--- Frame Render Time : [" << fFrameTime << "s]" << std::endl;
 			std::cout << "--- Frames per second : [" << fTotalFramesPerSecond / nFramesProcessed << "]" << std::endl;
 		}
-
-		if (nFramesProcessed == 1)
-		{
-			fTotalCommitTime = 
-				fTotalFramesPerSecond = 
-				fTotalIntegratorTime = 
-				fTotalPostProcessingTime = 
-				fTotalRadianceTime = 
-				fTotalSpaceTime = 
-				fTotalTime = 0;
-		}
 	}
 
 	//----------------------------------------------------------------------------------------------
@@ -547,8 +543,6 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 	//----------------------------------------------------------------------------------------------
 	if (p_bVerbose)
 	{
-		if (nFramesProcessed > 1) nFramesProcessed--;
-
 		std::cout << std::endl << "-- Average timings over [" << nFramesProcessed << "] frames" << std::endl;
 		std::cout << "--- Integrator Preparation Time : [" << fTotalIntegratorTime / nFramesProcessed << "s]" << std::endl;
 		std::cout << "--- Space Update Time : [" << fTotalSpaceTime / nFramesProcessed << "s]" << std::endl;
