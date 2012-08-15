@@ -72,7 +72,7 @@ namespace Illumina
 					// Push into map
 					m_argumentMap[name] = value;
 
-					//std::cout << "\t[" << name << " = " << value << "]" << std::endl;
+					// std::cout << "\t[" << name << " = " << value << "]" << std::endl;
 				}
 			}
 
