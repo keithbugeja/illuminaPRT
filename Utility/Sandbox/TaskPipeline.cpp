@@ -26,7 +26,7 @@ void ITaskPipeline::Execute(const std::string &p_strArguments, int p_nResourceID
 		Logger::Message(message.str(), bVerbose);
 
 		m_pCoordinator->SetArguments(p_strArguments);
-
+		
 		Execute(m_pCoordinator);
 	}
 	else

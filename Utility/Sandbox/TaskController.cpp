@@ -108,12 +108,31 @@ bool TaskController::ProcessClientInput(void)
 		<< ";max=" << argumentMap["max"]
 		<< ";width=" << argumentMap["width"]
 		<< ";height=" << argumentMap["height"]
+		<< ";batchsize=" << argumentMap["batchsize"]
+		<< ";useadaptive=" << argumentMap["useadaptive"]
 		<< ";fps=" << argumentMap["fps"]
-		<< ";use=" << argumentMap["use"]
+		<< ";usefps=" << argumentMap["usefps"]
+		<< ";rtpaddr=" << argumentMap["rtpaddr"]
+		<< ";rtpport=" << argumentMap["rtpport"]
+		<< ";usertp=" << argumentMap["usertp"]
 		<< ";"; 
 
 		m_strArguments = argumentStream.str();
 
+		IController::WriteToSocket(m_pSocket, "OK", 2);
+	}
+	else if (strCommandName == "move")
+	{
+		std::stringstream moveCommandStream;
+		moveCommandStream << "action=" << argumentMap["action"]
+		<< ";direction=" << argumentMap["direction"]
+		<< ";";
+
+		if (m_task.HasCoordinator())
+		{
+			std::cout << "Sending [" << moveCommandStream.str() << "]" << std::endl;
+		}
+		
 		IController::WriteToSocket(m_pSocket, "OK", 2);
 	}
 	else if (strCommandName == "play")
