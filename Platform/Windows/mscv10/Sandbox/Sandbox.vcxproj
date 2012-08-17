@@ -1,0 +1,204 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3B58572D-4F96-408F-A991-599C99F3FBCF}</ProjectGuid>
+    <SccProjectName>SAK</SccProjectName>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccProvider>SAK</SccProvider>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Sandbox</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <UseIntelIPP>true</UseIntelIPP>
+    <UseIntelTBB>true</UseIntelTBB>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <UseIntelIPP>true</UseIntelIPP>
+    <UseIntelTBB>true</UseIntelTBB>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <UseIntelIPP>true</UseIntelIPP>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <UseIntelTBB>true</UseIntelTBB>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <UseIntelIPP>true</UseIntelIPP>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <UseIntelTBB>true</UseIntelTBB>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</IntDir>
+    <LibraryPath>$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib;$(MPI_DIR)\lib\i386;$(TBB30_INSTALL_DIR)\lib\tbb\ia32\vc10;$(BOOST_DIR)\lib\x32;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</IntDir>
+    <IncludePath>$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib;$(MPI_DIR)\lib\i386;$(TBB30_INSTALL_DIR)\lib\tbb\ia32\vc10;$(BOOST_DIR)\lib\x32;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IntDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</IntDir>
+    <IncludePath>$(VLC_DIR)\include;$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(VLC_DIR)\lib;$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib;$(MPI_DIR)\lib\amd64;$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IntDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</IntDir>
+    <IncludePath>$(VLC_DIR)\include;$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(VLC_DIR)\lib;$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib;$(MPI_DIR)\lib\amd64;$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <OpenMPSupport>true</OpenMPSupport>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>core.lib;msmpi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <OpenMPSupport>true</OpenMPSupport>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>core.lib;msmpi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <Profile>true</Profile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Link>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libvlc.lib; libvlccore.lib;avutil.lib;avformat.lib;avcodec.lib;core.lib;mpi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OptimizeReferences>false</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <ClCompile>
+      <OpenMPSupport>true</OpenMPSupport>
+      <FloatingPointModel>Fast</FloatingPointModel>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Link>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libvlc.lib; libvlccore.lib;avutil.lib;avformat.lib;avcodec.lib;core.lib;mpi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <ClCompile>
+      <OpenMPSupport>true</OpenMPSupport>
+      <Optimization>
+      </Optimization>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\AdminController.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\Coordinator.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\main.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskCoordinator.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskPipeline.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskWorker.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\Resource.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\ResourceManager.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\ServiceManager.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\TaskController.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\TaskPipeline.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\Worker.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\AdminController.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\CommandParser.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Communicator.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Controller.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Coordinator.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Environment.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Logger.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\message.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\MessageQueue.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\mpirender.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\renderpipeline.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCommon.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCoordinator.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskPipeline.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskWorker.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Resource.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\ResourceManager.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\scheduling.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\ServiceManager.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Task.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskPipeline.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\UniqueId.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Worker.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\_task.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\_taskgroup.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskController.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\_taskpipeline.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
