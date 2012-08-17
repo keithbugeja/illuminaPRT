@@ -32,6 +32,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <UseIntelIPP>true</UseIntelIPP>
     <UseIntelTBB>true</UseIntelTBB>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -39,16 +40,19 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <UseIntelIPP>true</UseIntelIPP>
     <UseIntelTBB>true</UseIntelTBB>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseIntelIPP>true</UseIntelIPP>
     <UseIntelTBB>true</UseIntelTBB>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseIntelIPP>true</UseIntelIPP>
     <UseIntelTBB>true</UseIntelTBB>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -117,6 +121,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <OpenMPSupport>true</OpenMPSupport>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
