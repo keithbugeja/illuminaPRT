@@ -191,7 +191,7 @@ namespace Illumina
 		//----------------------------------------------------------------------------------------------
 		// RGBPixel, 4 bytes per colour channel (0.f - 1.0f)
 		//----------------------------------------------------------------------------------------------
-		typedef TRGBPixel<float, 0.f, 1.f> RGBPixel4F;
+		typedef TRGBPixel<float, 0, 1> RGBPixel4F;
 
 		const RGBPixel4F RGBPixel4F::White = RGBPixel4F(1.f);
 		const RGBPixel4F RGBPixel4F::Black = RGBPixel4F(0.f);

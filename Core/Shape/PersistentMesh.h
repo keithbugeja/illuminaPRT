@@ -70,8 +70,8 @@ namespace Illumina
 			bool IntersectP(Ray &p_ray);
 			bool IntersectP(Ray &p_ray, DifferentialSurface &p_surface);
 
-			bool IntersectFace(Ray p_ray, PersistentIndexedTriangle* p_pTriangle);
-			bool IntersectFace(Ray p_ray, PersistentIndexedTriangle* p_pTriangle, DifferentialSurface &p_surface);
+			bool IntersectFace(Ray &p_ray, PersistentIndexedTriangle* p_pTriangle);
+			bool IntersectFace(Ray &p_ray, PersistentIndexedTriangle* p_pTriangle, DifferentialSurface &p_surface);
 
 		public:
 			PersistentMesh(const std::string &p_strName, const std::string &p_strTrunkName);

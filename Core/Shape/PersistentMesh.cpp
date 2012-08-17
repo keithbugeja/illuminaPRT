@@ -375,7 +375,7 @@ bool PersistentMesh::IntersectP(Ray &p_ray, DifferentialSurface &p_surface)
 
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-bool PersistentMesh::IntersectFace(Ray p_ray, PersistentIndexedTriangle *p_pTriangle)
+bool PersistentMesh::IntersectFace(Ray &p_ray, PersistentIndexedTriangle *p_pTriangle)
 {
 	float te1xte2[3], 
 		edge2[3], 
@@ -408,7 +408,7 @@ bool PersistentMesh::IntersectFace(Ray p_ray, PersistentIndexedTriangle *p_pTria
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-bool PersistentMesh::IntersectFace(Ray p_ray, PersistentIndexedTriangle *p_pTriangle, DifferentialSurface &p_surface)
+bool PersistentMesh::IntersectFace(Ray &p_ray, PersistentIndexedTriangle *p_pTriangle, DifferentialSurface &p_surface)
 {
 	float te1xte2[3], 
 		edge2[3], 
