@@ -1,0 +1,392 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8637448F-8F88-43B0-9CAD-F5FA42323E17}</ProjectGuid>
+    <SccProjectName>SAK</SccProjectName>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccProvider>SAK</SccProvider>
+    <RootNamespace>Core</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <UseIntelIPP>true</UseIntelIPP>
+    <UseIntelTBB>true</UseIntelTBB>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <UseIntelIPP>true</UseIntelIPP>
+    <UseIntelTBB>true</UseIntelTBB>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseIntelIPP>true</UseIntelIPP>
+    <UseIntelTBB>true</UseIntelTBB>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseIntelIPP>true</UseIntelIPP>
+    <UseIntelTBB>true</UseIntelTBB>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IntDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</IntDir>
+    <IncludePath>$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib\i386;$(TBB30_INSTALL_DIR)\lib\tbb\ia32\vc10;$(BOOST_DIR)\lib\x32;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IntDir>$(SolutionDir)..\..\..\Bin\Win32\$(Configuration)\</IntDir>
+    <IncludePath>$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib\i386;$(TBB30_INSTALL_DIR)\lib\tbb\ia32\vc10;$(BOOST_DIR)\lib\x32;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IntDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</IntDir>
+    <IncludePath>$(VLC_DIR)\include;$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(VLC_DIR)\lib;$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib;$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IntDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</IntDir>
+    <IncludePath>$(VLC_DIR)\include;$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(TBB30_INSTALL_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(VLC_DIR)\lib;$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib;$(TBB30_INSTALL_DIR)\lib\tbb\intel64\vc10;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <OpenMPSupport>true</OpenMPSupport>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>
+      </Optimization>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\Core\Camera\Camera.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Camera\PerspectiveCamera.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Camera\ThinLensCamera.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Device\DisplayDevice.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Device\ImageDevice.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Device\RTPDevice.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Device\VideoDevice.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Exception\Exception.cpp" />
+    <ClCompile Include="..\..\..\..\Core\External\Compression\lz4.c" />
+    <ClCompile Include="..\..\..\..\Core\External\Video\VideoStream.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Filter\BoxFilter.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Filter\TentFilter.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Basis.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\BoundingBox.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Intersection.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Interval.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Matrix3x3.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Matrix4x4.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Plane.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Ray.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Transform.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Vector2.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Geometry\Vector3.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Image\Image.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Image\RGBPixel.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Integrator\IGIIntegrator.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Integrator\Integrator.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Integrator\PathIntegrator.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Integrator\PhotonIntegrator.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Integrator\TestIntegrator.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Integrator\WhittedIntegrator.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Light\AreaLight.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Light\DiffuseAreaLight.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Light\InfiniteAreaLight.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Light\PointLight.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Material\BSDF.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Material\LambertianBxDF.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Material\SpecularReflectionBxDF.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Material\SpecularTransmissionBxDF.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Maths\Maths.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Maths\Random.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Object\Object.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Object\UniqueID.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Renderer\BaseRenderer.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Renderer\BasicRenderer.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Renderer\DistributedRenderer.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Renderer\MultipassRenderer.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Renderer\MultithreadedRenderer.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Renderer\Renderer.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Renderer\TimeConstrainedRenderer.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Sampler\JitterSampler.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Sampler\MultijitterSampler.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Sampler\PrecomputationSampler.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Sampler\RandomSampler.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Sampler\SamplerDiagnostics.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\EmissivePrimitive.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\Environment.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\EnvironmentLoader.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\GeometricPrimitive.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\ParticleSceneLoader.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\Scene.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\SceneLoader.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\Visibility.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\WavefrontSceneLoader.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\BasicMesh.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\BVHMesh.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\IndexedTriangle.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\KDTreeMesh.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\PersistentMesh.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\Sphere.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\TreeMesh.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\Triangle.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\TriangleMesh.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Space\BasicSpace.cpp" />
+    <ClCompile Include="..\..\..\..\Core\System\EngineKernel.cpp" />
+    <ClCompile Include="..\..\..\..\Core\System\Lexer.cpp" />
+    <ClCompile Include="..\..\..\..\Core\System\LibraryManager.cpp" />
+    <ClCompile Include="..\..\..\..\Core\System\Platform.cpp" />
+    <ClCompile Include="..\..\..\..\Core\System\PlugInManager.cpp" />
+    <ClCompile Include="..\..\..\..\Core\System\Version.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Threading\Spinlock.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\Core\Camera\Camera.h" />
+    <ClInclude Include="..\..\..\..\Core\Camera\CameraFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Camera\PerspectiveCamera.h" />
+    <ClInclude Include="..\..\..\..\Core\Camera\ThinLensCamera.h" />
+    <ClInclude Include="..\..\..\..\Core\Device\Device.h" />
+    <ClInclude Include="..\..\..\..\Core\Device\DeviceFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Device\DisplayDevice.h" />
+    <ClInclude Include="..\..\..\..\Core\Device\ImageDevice.h" />
+    <ClInclude Include="..\..\..\..\Core\Device\RTPDevice.h" />
+    <ClInclude Include="..\..\..\..\Core\Device\VideoDevice.h" />
+    <ClInclude Include="..\..\..\..\Core\Exception\Exception.h" />
+    <ClInclude Include="..\..\..\..\Core\External\Compression\Compression.h" />
+    <ClInclude Include="..\..\..\..\Core\External\Compression\lz4.h" />
+    <ClInclude Include="..\..\..\..\Core\External\Video\VideoStream.h" />
+    <ClInclude Include="..\..\..\..\Core\Filter\BoxFilter.h" />
+    <ClInclude Include="..\..\..\..\Core\Filter\Filter.h" />
+    <ClInclude Include="..\..\..\..\Core\Filter\FilterFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Filter\TentFilter.h" />
+    <ClInclude Include="..\..\..\..\Core\Geometry\Basis.h" />
+    <ClInclude Include="..\..\..\..\Core\Geometry\BoundingBox.h" />
+    <ClInclude Include="..\..\..\..\Core\Geometry\BoundingVolume.h" />
+    <ClInclude Include="..\..\..\..\Core\Geometry\Intersection.h" />
+    <ClInclude Include="..\..\..\..\Core\Geometry\Interval.h" />
+    <ClInclude Include="..\..\..\..\Core\Geometry\Matrix3x3.h" />
+    <ClInclude Include="..\..\..\..\Core\Geometry\Matrix4x4.h" />
+    <ClInclude Include="..\..\..\..\Core\Geometry\Plane.h" />
+    <ClInclude Include="..\..\..\..\Core\Geometry\Ray.h" />
+    <ClInclude Include="..\..\..\..\Core\Geometry\Transform.h" />
+    <ClInclude Include="..\..\..\..\Core\Geometry\Vector2.h" />
+    <ClInclude Include="..\..\..\..\Core\Geometry\Vector3.h" />
+    <ClInclude Include="..\..\..\..\Core\Image\Image.h" />
+    <ClInclude Include="..\..\..\..\Core\Image\ImageIO.h" />
+    <ClInclude Include="..\..\..\..\Core\Image\ImagePFM.h" />
+    <ClInclude Include="..\..\..\..\Core\Image\ImagePPM.h" />
+    <ClInclude Include="..\..\..\..\Core\Image\ImageTGA.h" />
+    <ClInclude Include="..\..\..\..\Core\Image\RGBPixel.h" />
+    <ClInclude Include="..\..\..\..\Core\Image\Surface.h" />
+    <ClInclude Include="..\..\..\..\Core\Integrator\IGIIntegrator.h" />
+    <ClInclude Include="..\..\..\..\Core\Integrator\Integrator.h" />
+    <ClInclude Include="..\..\..\..\Core\Integrator\IntegratorFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Integrator\PathIntegrator.h" />
+    <ClInclude Include="..\..\..\..\Core\Integrator\PhotonIntegrator.h" />
+    <ClInclude Include="..\..\..\..\Core\Integrator\TestIntegrator.h" />
+    <ClInclude Include="..\..\..\..\Core\Integrator\WhittedIntegrator.h" />
+    <ClInclude Include="..\..\..\..\Core\Light\AreaLight.h" />
+    <ClInclude Include="..\..\..\..\Core\Light\DiffuseAreaLight.h" />
+    <ClInclude Include="..\..\..\..\Core\Light\InfiniteAreaLight.h" />
+    <ClInclude Include="..\..\..\..\Core\Light\Light.h" />
+    <ClInclude Include="..\..\..\..\Core\Light\LightFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Light\PointLight.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\BSDF.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\BxDF.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\Glass.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\Matte.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\LambertianBxDF.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\Material.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\MaterialGroup.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\MaterialFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\Mirror.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\SpecularReflectionBxDF.h" />
+    <ClInclude Include="..\..\..\..\Core\Material\SpecularTransmissionBxDF.h" />
+    <ClInclude Include="..\..\..\..\Core\Maths\Maths.h" />
+    <ClInclude Include="..\..\..\..\Core\Maths\Montecarlo.h" />
+    <ClInclude Include="..\..\..\..\Core\Maths\Random.h" />
+    <ClInclude Include="..\..\..\..\Core\Maths\Statistics.h" />
+    <ClInclude Include="..\..\..\..\Core\Object\Cloneable.h" />
+    <ClInclude Include="..\..\..\..\Core\Object\Object.h" />
+    <ClInclude Include="..\..\..\..\Core\Object\UniqueID.h" />
+    <ClInclude Include="..\..\..\..\Core\Postproc\AccumulationBuffer.h" />
+    <ClInclude Include="..\..\..\..\Core\Postproc\AutoTone.h" />
+    <ClInclude Include="..\..\..\..\Core\Postproc\DiscontinuityBuffer.h" />
+    <ClInclude Include="..\..\..\..\Core\Postproc\DragoTone.h" />
+    <ClInclude Include="..\..\..\..\Core\Postproc\PostProcess.h" />
+    <ClInclude Include="..\..\..\..\Core\Postproc\PostProcessFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Postproc\ReconstructionBuffer.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\BaseRenderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\BasicRenderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\DistributedRenderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\MultipassRenderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\MultithreadedRenderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\Renderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\RendererFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\TimeConstrainedRenderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\JitterSampler.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\MultijitterSampler.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\PrecomputationSampler.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\QuasiRandom.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\RandomSampler.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\Sampler.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\SamplerDiagnostics.h" />
+    <ClInclude Include="..\..\..\..\Core\Sampler\SamplerFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\EmissivePrimitive.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\Environment.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\EnvironmentLoader.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\GeometricPrimitive.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\ParticleSceneLoader.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\Primitive.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\Scene.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\SceneLoader.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\Visibility.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\WavefrontSceneLoader.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\BasicMesh.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\BIHMesh.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\BVHMesh.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\DifferentialSurface.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\HybridMesh.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\IndexedTriangle.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\KDTreeMesh.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\PersistentMesh.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\Shape.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\ShapeForge.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\ShapeFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\Sphere.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\TreeMesh.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\Triangle.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\TriangleMesh.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\VertexFormats.h" />
+    <ClInclude Include="..\..\..\..\Core\Space\BasicSpace.h" />
+    <ClInclude Include="..\..\..\..\Core\Space\BVHSpace.h" />
+    <ClInclude Include="..\..\..\..\Core\Space\Space.h" />
+    <ClInclude Include="..\..\..\..\Core\Space\SpaceFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Spectrum\BaseSpectrum.h" />
+    <ClInclude Include="..\..\..\..\Core\Spectrum\RGBSpectrum.h" />
+    <ClInclude Include="..\..\..\..\Core\Spectrum\Spectrum.h" />
+    <ClInclude Include="..\..\..\..\Core\Staging\Acceleration.h" />
+    <ClInclude Include="..\..\..\..\Core\Staging\Aggregate.h" />
+    <ClInclude Include="..\..\..\..\Core\Staging\WavefrontLoader.h" />
+    <ClInclude Include="..\..\..\..\Core\System\ArgumentMap.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Buffer.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Dummy.h" />
+    <ClInclude Include="..\..\..\..\Core\System\DummyManager.h" />
+    <ClInclude Include="..\..\..\..\Core\System\EngineKernel.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Factory.h" />
+    <ClInclude Include="..\..\..\..\Core\System\FactoryManager.h" />
+    <ClInclude Include="..\..\..\..\Core\System\IlluminaPRT.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Lexer.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Library.h" />
+    <ClInclude Include="..\..\..\..\Core\System\LibraryImpl.h" />
+    <ClInclude Include="..\..\..\..\Core\System\LibraryManager.h" />
+    <ClInclude Include="..\..\..\..\Core\System\LibrarySymbols.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Platform.h" />
+    <ClInclude Include="..\..\..\..\Core\System\PlugIn.h" />
+    <ClInclude Include="..\..\..\..\Core\System\PlugInManager.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Singleton.h" />
+    <ClInclude Include="..\..\..\..\Core\System\Version.h" />
+    <ClInclude Include="..\..\..\..\Core\Texture\ImageTexture.h" />
+    <ClInclude Include="..\..\..\..\Core\Texture\MarbleTexture.h" />
+    <ClInclude Include="..\..\..\..\Core\Texture\MemoryMappedTexture.h" />
+    <ClInclude Include="..\..\..\..\Core\Texture\Noise.h" />
+    <ClInclude Include="..\..\..\..\Core\Texture\NoiseTexture.h" />
+    <ClInclude Include="..\..\..\..\Core\Texture\SimpleTexture.h" />
+    <ClInclude Include="..\..\..\..\Core\Texture\Texture.h" />
+    <ClInclude Include="..\..\..\..\Core\Texture\TextureFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Threading\Atomic.h" />
+    <ClInclude Include="..\..\..\..\Core\Threading\AtomicReference.h" />
+    <ClInclude Include="..\..\..\..\Core\Threading\LinkedList.h" />
+    <ClInclude Include="..\..\..\..\Core\Threading\List.h" />
+    <ClInclude Include="..\..\..\..\Core\Threading\Lock.h" />
+    <ClInclude Include="..\..\..\..\Core\Threading\Monitor.h" />
+    <ClInclude Include="..\..\..\..\Core\Threading\Pointer.h" />
+    <ClInclude Include="..\..\..\..\Core\Threading\Queue.h" />
+    <ClInclude Include="..\..\..\..\Core\Threading\ReentrantLock.h" />
+    <ClInclude Include="..\..\..\..\Core\Threading\Spinlock.h" />
+    <ClInclude Include="..\..\..\..\Core\Threading\WorkQueue.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\Core\Geometry\Basis.inl" />
+    <None Include="..\..\..\..\Core\Geometry\Interval.inl" />
+    <None Include="..\..\..\..\Core\Geometry\Plane.inl" />
+    <None Include="..\..\..\..\Core\Geometry\Ray.inl" />
+    <None Include="..\..\..\..\Core\Geometry\Vector3.inl" />
+    <None Include="..\..\..\..\Core\Image\Image.inl" />
+    <None Include="..\..\..\..\Core\Image\Surface.inl" />
+    <None Include="..\..\..\..\Core\Object\Object.inl" />
+    <None Include="..\..\..\..\Core\System\FactoryManager.inl" />
+    <None Include="..\..\..\..\Core\Threading\Spinlock.inl" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
