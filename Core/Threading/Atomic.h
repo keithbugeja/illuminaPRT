@@ -33,7 +33,7 @@ namespace Illumina
 			{ }
 
 			Int32 operator++(void) {
-                return boost::interprocess::detail::atomic_inc32(reinterpret_cast<volatile uint32_t*>(&m_int32));
+                return boost::interprocess::ipcdetail::atomic_inc32(reinterpret_cast<volatile uint32_t*>(&m_int32));
 			}
 
 			// Incorrect semantics
@@ -61,7 +61,7 @@ namespace Illumina
 			}
 
 			Int32 operator--(void) {
-				return boost::interprocess::detail::atomic_dec32(reinterpret_cast<volatile uint32_t*>(&m_int32));
+				return boost::interprocess::ipcdetail::atomic_dec32(reinterpret_cast<volatile uint32_t*>(&m_int32));
 			}
 
 			Int32 operator--(int)
@@ -136,7 +136,7 @@ namespace Illumina
 
 			Int32 operator=(Int32 p_nValue)
 			{
-				boost::interprocess::detail::atomic_write32(reinterpret_cast<volatile uint32_t*>(&m_int32), p_nValue);
+				boost::interprocess::ipcdetail::atomic_write32(reinterpret_cast<volatile uint32_t*>(&m_int32), p_nValue);
 				return p_nValue;
 			}
 
@@ -190,11 +190,11 @@ namespace Illumina
 			}
 
 			static inline Int32 Increment(Int32 *p_pValue) {
-				return boost::interprocess::detail::atomic_inc32(reinterpret_cast<uint32_t*>(p_pValue));
+				return boost::interprocess::ipcdetail::atomic_inc32(reinterpret_cast<uint32_t*>(p_pValue));
 			}
 
 			static inline Int32 Decrement(Int32 *p_pValue) {
-				return boost::interprocess::detail::atomic_dec32(reinterpret_cast<uint32_t*>(p_pValue));
+				return boost::interprocess::ipcdetail::atomic_dec32(reinterpret_cast<uint32_t*>(p_pValue));
 			}
 
 			static inline Int32 Exchange(Int32 *p_pValue, Int32 p_nExchange)
