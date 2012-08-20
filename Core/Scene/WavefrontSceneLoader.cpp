@@ -485,7 +485,7 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 				continue;
 
 			WavefrontVertex vertex;
-			int vertexIndex[4];
+			int vertexIndex[4] = {0, 0, 0, 0};
 
 			for (size_t index = 1; index < tokenList.size(); index++)
 			{

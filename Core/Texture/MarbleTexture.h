@@ -71,17 +71,17 @@ namespace Illumina
 				m_c2 = p_c2;
 			}
 
-			RGBPixel GetValue(const Vector2 &p_uv, const Vector3 &p_hitPoint) const
+			void GetValue(const Vector2 &p_uv, const Vector3 &p_hitPoint, RGBPixel &p_pixel) const
 			{
 				float temp = m_fScale * m_noise.Turbulence(m_fFrequency * p_hitPoint, m_nOctaves);
 				float t = 2.0F * Maths::FAbs(Maths::Sin(m_fFrequency * p_hitPoint.X + temp));
 
 				if (t < 1.0f)
-					return (m_c1 * t + (1.0f - t) * m_c2);
+					p_pixel = (m_c1 * t + (1.0f - t) * m_c2);
 				else
 				{
 					t -= 1.0f;
-					return (m_c0 * t + (1.0f - t) * m_c1);
+					p_pixel = (m_c0 * t + (1.0f - t) * m_c1);
 				}
 			}
 		};

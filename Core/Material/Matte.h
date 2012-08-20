@@ -53,7 +53,7 @@ namespace Illumina
 			{
 				if (m_pTexture)
 				{
-					RGBPixel pixel = m_pTexture->GetValue(p_surface.PointUV, p_surface.PointWS);
+					RGBPixel pixel; m_pTexture->GetValue(p_surface.PointUV, p_surface.PointWS, pixel);
 					return Spectrum(pixel.R, pixel.G, pixel.B);
 				}
 				else

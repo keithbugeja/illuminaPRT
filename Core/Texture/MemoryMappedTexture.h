@@ -27,74 +27,31 @@ namespace Illumina
 			boost::iostreams::mapped_file_source m_imageFile;
 			unsigned char *m_imageDataLDR;
 			float *m_imageData;
-			int m_width, m_height;
+			int m_width, m_height,
+				m_widthUnits, m_heightUnits;
 
 		protected:
-			RGBPixel GetPixel(int x, int y) const
+			inline void GetPixel(int x, int y, RGBPixel &p_pixel) const
 			{
 				float *pixel = m_imageData + ((y * m_width + x) * 3);
-				return RGBPixel(pixel[0], pixel[1], pixel[2]);
+				p_pixel.Set(pixel[0], pixel[1], pixel[2]);
 			}
 
-			RGBPixel GetPixelLDR(int x, int y) const
+			inline void GetPixelLDR(int x, int y, RGBPixel &p_pixel) const
 			{
-				float r = 1.f / 255.f;
+				static float r = 1.f / 255.f;
 
 				unsigned char *pixel = m_imageDataLDR + ((y * m_width + x) * 3);
-				return RGBPixel((float)pixel[0] * r, (float)pixel[1] * r, (float)pixel[2] * r);
+				p_pixel.Set((float)pixel[0] * r, (float)pixel[1] * r, (float)pixel[2] * r);
 			}
 
-			RGBPixel GetValueNearestNeighbour(const Vector2 &p_uv) const
+			void GetValueNearestNeighbour(const Vector2 &p_uv, RGBPixel &p_pixel) const
 			{
 				// take fractional part of u and v
 				float u = Maths::Frac(p_uv.U);
 				float v = 1.0f - Maths::Frac(p_uv.V);
 
-				float width = m_width - 1,
-					height = m_height - 1;
-
-				// transform to texture space
-				float iu = width * u;
-				float iv = height * v;
-
-				// get discretised coordinates
-				int ix = Maths::Min(width, iu > 0.5f ? Maths::Ceil(iu) : Maths::Floor(iu));
-				int iy = Maths::Min(height, iv > 0.5f ? Maths::Ceil(iv) : Maths::Floor(iv));
-
-				return GetPixelLDR(ix, iy);
-			}
-
-			RGBPixel GetValueBilinear(const Vector2 &p_uv) const
-			{
-				/*
-				// take fractional part of u and v
-				float u = Maths::Frac(p_uv.U);
-				float v = 1.0f - Maths::Frac(p_uv.V);
-
-				// transform to texture space
-				float iu = (m_image->GetWidth() - 1) * u;
-				float iv = (m_image->GetHeight() - 1) * v;
-
-				// get discretised coordinates
-				float ix = Maths::FAbs(Maths::Floor(iu));
-				float iy = Maths::FAbs(Maths::Floor(iv));
-
-				RGBPixel value[4];
-				value[0] = m_image->Get(ix, iy);
-				value[1] = m_image->Get(Maths::Max(0, Maths::Min(ix, m_image->GetWidth() - 1)), iy); 
-				value[2] = m_image->Get(ix, Maths::Max(0, Maths::Min(iy, m_image->GetHeight() - 1)));
-				value[3] = m_image->Get(Maths::Max(0, Maths::Min(ix, m_image->GetWidth() - 1)), Maths::Max(0, Maths::Min(iy, m_image->GetHeight() - 1))); 
-
-				float fx = Maths::Frac(iu);
-				float fy = Maths::Frac(iv);
-
-				float w0 = (1.0f - fx) * (1.0f - fy),
-					  w1 = fx * (1.0f - fy),
-					  w2 = (1.0f - fx) * fy,
-					  w3 = fx * fy;
-
-				return value[0] * w0 + value[1] * w1 + value[2] * w2 + value[3] * w3;
-				*/
+				GetPixelLDR(m_widthUnits * u, m_heightUnits * v, p_pixel);
 			}
 
 			void MapFile(const std::string &p_strFilename)
@@ -105,6 +62,9 @@ namespace Illumina
 				
 				m_width		= imageData[0];
 				m_height	= imageData[1];
+
+				m_widthUnits = m_width - 1;
+				m_heightUnits = m_height - 1;
 
 				m_imageData = (float*)(imageData + 2);
 				m_imageDataLDR = (unsigned char*)(imageData + 2);
@@ -181,16 +141,17 @@ namespace Illumina
 				UnmapFile();
 			}
 
-			RGBPixel GetValue(const Vector2 &p_uv, const Vector3 &p_hitPoint) const
+			void GetValue(const Vector2 &p_uv, const Vector3 &p_hitPoint, RGBPixel &p_pixel) const
 			{
 				switch (m_filtering)
 				{
 					case Bilinear:
-						return GetValueNearestNeighbour(p_uv);
-						// return GetValueBilinear(p_uv);
-					
+						GetValueNearestNeighbour(p_uv, p_pixel);
+						break;
+
 					default:
-						return GetValueNearestNeighbour(p_uv);
+						GetValueNearestNeighbour(p_uv, p_pixel);
+						break;
 				}
 			}
 		};

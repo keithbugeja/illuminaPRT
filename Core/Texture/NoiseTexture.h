@@ -18,8 +18,8 @@ namespace Illumina
 		{
 		protected:
 			float m_fScale;
-			RGBPixel	m_c0, m_c1;
 			Noise m_noise;
+			RGBPixel m_c0, m_c1;
 
 		public:
 			NoiseTexture(const std::string &p_strName, float p_fScale = 1.0f)
@@ -50,10 +50,10 @@ namespace Illumina
 				, m_c1(p_c1)
 			{ }
 
-			RGBPixel GetValue(const Vector2& p_uv, const Vector3 &p_hitPoint) const
+			void GetValue(const Vector2& p_uv, const Vector3 &p_hitPoint, RGBPixel &p_pixel) const
 			{
 				float t = (1.0f + m_noise.Perlin(p_hitPoint * m_fScale)) / 2.0f;
-				return t * m_c0 + (1.0f - t) * m_c1;
+				p_pixel = t * m_c0 + (1.0f - t) * m_c1;
 			}
 		};
 	}
