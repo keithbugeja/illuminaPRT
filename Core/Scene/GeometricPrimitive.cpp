@@ -65,7 +65,7 @@ Vector3 GeometricPrimitive::SamplePoint(const Vector3 &p_viewPoint, float p_u, f
 	}
 }
 //----------------------------------------------------------------------------------------------
-bool GeometricPrimitive::Intersect(const Ray &p_ray, Intersection &p_intersection)
+bool GeometricPrimitive::Intersects(const Ray &p_ray, Intersection &p_intersection)
 {
 	// Todo:
 	// Major bottleneck in ray inverse transform and normal rotation
@@ -75,129 +75,127 @@ bool GeometricPrimitive::Intersect(const Ray &p_ray, Intersection &p_intersectio
 	{
 		const Ray &invRay = p_ray.ApplyInverse(WorldTransform);
 	
-		if (m_pShape->GetBoundingVolume()->Intersects(invRay))
+		// Geometric primitive should not be responsible of providing intersection tests
+		// with bounding volume of shape. Let the shape do that instead.
+		// if (m_pShape->GetBoundingVolume()->Intersects(invRay)) {
+		if (m_pShape->Intersects(invRay, p_intersection.Surface))
 		{
-			if (m_pShape->Intersects(invRay, p_intersection.Surface))
-			{
-				Vector3 shadingNormalWS, 
-					geometryNormalWS;
+			Vector3 shadingNormalWS, 
+				geometryNormalWS;
 
-				// Update geometry normal
-				WorldTransform.Rotate(p_intersection.Surface.GeometryNormal, geometryNormalWS);
-				p_intersection.Surface.GeometryBasisWS.InitFromW(geometryNormalWS);
+			// Update geometry normal
+			WorldTransform.Rotate(p_intersection.Surface.GeometryNormal, geometryNormalWS);
+			p_intersection.Surface.GeometryBasisWS.InitFromW(geometryNormalWS);
 
-				// Update shading normal
-				WorldTransform.Rotate(p_intersection.Surface.ShadingNormal, shadingNormalWS);
-				p_intersection.Surface.ShadingBasisWS.InitFromW(shadingNormalWS);
+			// Update shading normal
+			WorldTransform.Rotate(p_intersection.Surface.ShadingNormal, shadingNormalWS);
+			p_intersection.Surface.ShadingBasisWS.InitFromW(shadingNormalWS);
 
-				// Update intersection point in world space
-				p_intersection.Surface.PointWS = p_ray.PointAlongRay(p_intersection.Surface.Distance);
+			// Update intersection point in world space
+			p_intersection.Surface.PointWS = p_ray.PointAlongRay(p_intersection.Surface.Distance);
 			
-				// Update ray information both in world and surface space
-				p_intersection.Surface.RayOriginWS = p_ray.Origin;
-				p_intersection.Surface.RayDirectionWS = p_ray.Direction;
+			// Update ray information both in world and surface space
+			p_intersection.Surface.RayOriginWS = p_ray.Origin;
+			p_intersection.Surface.RayDirectionWS = p_ray.Direction;
 
-				p_intersection.Surface.RayOrigin = invRay.Origin;
-				p_intersection.Surface.RayDirection = invRay.Direction;
+			p_intersection.Surface.RayOrigin = invRay.Origin;
+			p_intersection.Surface.RayDirection = invRay.Direction;
 
-				// Update primitive world transform
-				p_intersection.WorldTransform = WorldTransform;
+			// Update primitive world transform
+			p_intersection.WorldTransform = WorldTransform;
 
-				// Update primitive, materials and lights
-				p_intersection.SetPrimitive(this);
-				p_intersection.SetLight(NULL);
+			// Update primitive, materials and lights
+			p_intersection.SetPrimitive(this);
+			p_intersection.SetLight(NULL);
 
-				if (m_pMaterial != NULL && m_pMaterial->IsComposite())
-				{
-					MaterialGroup *pGroup = (MaterialGroup*)m_pMaterial;
+			if (m_pMaterial != NULL && m_pMaterial->IsComposite())
+			{
+				MaterialGroup *pGroup = (MaterialGroup*)m_pMaterial;
 					
-					if (p_intersection.Surface.GeometryFragment.HasGroup())
-					{
-						p_intersection.SetMaterial(pGroup->GetByGroupId(p_intersection.Surface.GeometryFragment.GetGroupId()));
-					}
-					else
-					{
-						if (p_intersection.Surface.GetShape()->HasGroup())
-							p_intersection.SetMaterial(pGroup->GetByGroupId(p_intersection.Surface.GetShape()->GetGroupId()));
-						else
-							p_intersection.SetMaterial(pGroup->GetByIndex(0));
-					}
+				if (p_intersection.Surface.GeometryFragment.HasGroup())
+				{
+					p_intersection.SetMaterial(pGroup->GetByGroupId(p_intersection.Surface.GeometryFragment.GetGroupId()));
 				}
 				else
-					p_intersection.SetMaterial(m_pMaterial);
-							
-				return true;
+				{
+					if (p_intersection.Surface.GetShape()->HasGroup())
+						p_intersection.SetMaterial(pGroup->GetByGroupId(p_intersection.Surface.GetShape()->GetGroupId()));
+					else
+						p_intersection.SetMaterial(pGroup->GetByIndex(0));
+				}
 			}
-		}
+			else
+				p_intersection.SetMaterial(m_pMaterial);
+							
+			return true;
+		} // }
 	}
 	else
 	{
-		if (m_pShape->GetBoundingVolume()->Intersects(p_ray))
+		// if (m_pShape->GetBoundingVolume()->Intersects(p_ray)) {
+		if (m_pShape->Intersects(p_ray, p_intersection.Surface))
 		{
-			if (m_pShape->Intersects(p_ray, p_intersection.Surface))
+			// Update geometry normal
+			p_intersection.Surface.GeometryBasisWS.InitFromW(p_intersection.Surface.GeometryNormal);
+
+			// Update shading normal
+			p_intersection.Surface.ShadingBasisWS.InitFromW(p_intersection.Surface.ShadingNormal);
+
+			// Update intersection point in world space
+			p_intersection.Surface.PointWS = p_ray.PointAlongRay(p_intersection.Surface.Distance);
+
+			// Update ray information both in world and surface space
+			p_intersection.Surface.RayOrigin = 
+				p_intersection.Surface.RayOriginWS = p_ray.Origin;
+
+			p_intersection.Surface.RayDirection = 
+				p_intersection.Surface.RayDirectionWS = p_ray.Direction;
+
+			// Update primitive world transform
+			p_intersection.WorldTransform.Reset(); //= WorldTransform;
+
+			// Update primitive, materials and lights
+			p_intersection.SetPrimitive(this);
+			p_intersection.SetLight(NULL);
+
+			if (m_pMaterial != NULL && m_pMaterial->IsComposite())
 			{
-				// Update geometry normal
-				p_intersection.Surface.GeometryBasisWS.InitFromW(p_intersection.Surface.GeometryNormal);
-
-				// Update shading normal
-				p_intersection.Surface.ShadingBasisWS.InitFromW(p_intersection.Surface.ShadingNormal);
-
-				// Update intersection point in world space
-				p_intersection.Surface.PointWS = p_ray.PointAlongRay(p_intersection.Surface.Distance);
-
-				// Update ray information both in world and surface space
-				p_intersection.Surface.RayOrigin = 
-					p_intersection.Surface.RayOriginWS = p_ray.Origin;
-
-				p_intersection.Surface.RayDirection = 
-					p_intersection.Surface.RayDirectionWS = p_ray.Direction;
-
-				// Update primitive world transform
-				p_intersection.WorldTransform.Reset(); //= WorldTransform;
-
-				// Update primitive, materials and lights
-				p_intersection.SetPrimitive(this);
-				p_intersection.SetLight(NULL);
-
-				if (m_pMaterial != NULL && m_pMaterial->IsComposite())
-				{
-					MaterialGroup *pGroup = (MaterialGroup*)m_pMaterial;
+				MaterialGroup *pGroup = (MaterialGroup*)m_pMaterial;
 					
-					if (p_intersection.Surface.GeometryFragment.HasGroup())
-					{
-						p_intersection.SetMaterial(pGroup->GetByGroupId(p_intersection.Surface.GeometryFragment.GetGroupId()));
-					}
-					else
-					{
-						if (p_intersection.Surface.GetShape()->HasGroup())
-							p_intersection.SetMaterial(pGroup->GetByGroupId(p_intersection.Surface.GetShape()->GetGroupId()));
-						else
-							p_intersection.SetMaterial(pGroup->GetByIndex(0));
-					}
+				if (p_intersection.Surface.GeometryFragment.HasGroup())
+				{
+					p_intersection.SetMaterial(pGroup->GetByGroupId(p_intersection.Surface.GeometryFragment.GetGroupId()));
 				}
 				else
-					p_intersection.SetMaterial(m_pMaterial);
-			
-				return true;
+				{
+					if (p_intersection.Surface.GetShape()->HasGroup())
+						p_intersection.SetMaterial(pGroup->GetByGroupId(p_intersection.Surface.GetShape()->GetGroupId()));
+					else
+						p_intersection.SetMaterial(pGroup->GetByIndex(0));
+				}
 			}
-		}
+			else
+				p_intersection.SetMaterial(m_pMaterial);
+			
+			return true;
+		} // }
 	}
 
 	return false;
 }
 //----------------------------------------------------------------------------------------------
-bool GeometricPrimitive::Intersect(const Ray &p_ray)
+bool GeometricPrimitive::Intersects(const Ray &p_ray)
 {
 	if (!WorldTransform.IsIdentity())
 	{
 		const Ray &invRay = p_ray.ApplyInverse(WorldTransform);
-		return (m_pShape->GetBoundingVolume()->Intersects(invRay) && 
-				m_pShape->Intersects(invRay));
+		return m_pShape->Intersects(invRay);
+		/* return (m_pShape->GetBoundingVolume()->Intersects(invRay) && m_pShape->Intersects(invRay)); */
 	}
 	else
 	{
-		return (m_pShape->GetBoundingVolume()->Intersects(p_ray) && 
-				m_pShape->Intersects(p_ray));
+		/* return (m_pShape->GetBoundingVolume()->Intersects(p_ray) && m_pShape->Intersects(p_ray)); */
+		return m_pShape->Intersects(p_ray);
 	}
 }
 //----------------------------------------------------------------------------------------------

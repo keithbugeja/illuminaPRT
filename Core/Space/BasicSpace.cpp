@@ -35,7 +35,7 @@ bool BasicSpace::Intersects(const Ray &p_ray, Intersection &p_intersection) cons
 
 	for (int index = 0, count = (int)PrimitiveList.Size(); index < count; index++)
 	{
-		if (PrimitiveList[index]->Intersect(ray, p_intersection))
+		if (PrimitiveList[index]->Intersects(ray, p_intersection))
 		{
 			bIntersect = true;
 			ray.Max = Maths::Min(ray.Max, p_intersection.Surface.Distance);
@@ -53,7 +53,7 @@ bool BasicSpace::Intersects(const Ray &p_ray, Intersection &p_intersection, IPri
 	for (int index = 0, count = (int)PrimitiveList.Size(); index < count; index++)
 	{
 		if (PrimitiveList[index] != p_pExclude && 
-			PrimitiveList[index]->Intersect(ray, p_intersection))
+			PrimitiveList[index]->Intersects(ray, p_intersection))
 		{
 			bIntersect = true;
 			ray.Max = Maths::Min(ray.Max, p_intersection.Surface.Distance);
@@ -67,7 +67,7 @@ bool BasicSpace::Intersects(const Ray &p_ray) const
 {
 	for (int primitiveIdx = 0, count = (int)PrimitiveList.Size(); primitiveIdx < count; primitiveIdx++)
 	{
-		if (PrimitiveList[primitiveIdx]->Intersect(p_ray))
+		if (PrimitiveList[primitiveIdx]->Intersects(p_ray))
 			return true;
 	}
 
@@ -79,7 +79,7 @@ bool BasicSpace::Intersects(const Ray &p_ray, IPrimitive *p_pExclude) const
 	for (int primitiveIdx = 0, count = (int)PrimitiveList.Size(); primitiveIdx < count; primitiveIdx++)
 	{
 		if (PrimitiveList[primitiveIdx] != p_pExclude && 
-			PrimitiveList[primitiveIdx]->Intersect(p_ray))
+			PrimitiveList[primitiveIdx]->Intersects(p_ray))
 			return true;
 	}
 

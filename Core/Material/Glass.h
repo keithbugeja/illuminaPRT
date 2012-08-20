@@ -71,8 +71,8 @@ namespace Illumina
 			Spectrum SampleF(const DifferentialSurface &p_surface, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, 
 				float *p_pdf, BxDF::Type p_bxdfType = BxDF::All_Combined, BxDF::Type *p_sampledBxDFType = NULL)
 			{
-				Spectrum F = BSDF::SampleF(p_surface, p_wOut, p_wIn, p_u, p_v, p_pdf, p_bxdfType, p_sampledBxDFType);
-				Spectrum fresnel = EvaluateFresnelTerm(p_wOut.Z, m_fEtaI, m_fEtaT);
+				Spectrum &F = BSDF::SampleF(p_surface, p_wOut, p_wIn, p_u, p_v, p_pdf, p_bxdfType, p_sampledBxDFType);
+				Spectrum &fresnel = EvaluateFresnelTerm(p_wOut.Z, m_fEtaI, m_fEtaT);
 
 				if (*p_sampledBxDFType & BxDF::Reflection)
 					return F * fresnel;
@@ -125,7 +125,7 @@ namespace Illumina
 			{
 				if (m_pTexture)
 				{
-					RGBPixel pixel = m_pTexture->GetValue(p_surface.PointUV, p_surface.PointWS);
+					RGBPixel pixel; m_pTexture->GetValue(p_surface.PointUV, p_surface.PointWS, pixel);
 					return Spectrum(pixel.R, pixel.G, pixel.B);
 				}
 				else

@@ -41,6 +41,7 @@ namespace Illumina
 			~TSurface(void);
 
 			inline void Set(int p_x, int p_y, const TPixelType &p_colour);
+			inline void Get(int p_x, int p_y, TPixelType &p_colour);
 			inline TPixelType Get(int p_x, int p_y);
 
 			TPixelType* GetScanline(int p_nScanline) const;

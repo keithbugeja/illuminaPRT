@@ -51,9 +51,14 @@ namespace Illumina
 			ITexture(const std::string &p_strName) : Object(p_strName) { }
 			ITexture(void) : Object() { }
 
-			virtual RGBPixel GetValue(const Vector2 &p_uv, const Vector3 &p_hitPoint) const = 0;
+			virtual RGBPixel GetValue(const Vector2 &p_uv, const Vector3 &p_hitPoint) const { RGBPixel pixel; GetValue(p_uv, p_hitPoint, pixel); return pixel; }
 			virtual RGBPixel GetValue(const Vector2 &p_uv) const { return GetValue(p_uv, Vector3::Zero); }
 			virtual RGBPixel GetValue(const Vector3 &p_hitPoint) const { return GetValue(Vector2::Zero, p_hitPoint); }
+			
+			virtual void GetValue(const Vector2 &p_uv, const Vector3 &p_hitPoint, RGBPixel &p_pixel) const = 0;
+			virtual void GetValue(const Vector2 &p_uv, RGBPixel &p_pixel) const { GetValue(p_uv, Vector3::Zero, p_pixel); };
+			virtual void GetValue(const Vector3 &p_hitpoint, RGBPixel &p_pixel) const { GetValue(Vector2::Zero, p_hitpoint, p_pixel); };
+			
 			virtual std::string ToString(void) { return "ITexture"; }
 		};
 

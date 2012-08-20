@@ -61,6 +61,12 @@ inline T TSurface<T>::Get(int p_x, int p_y) {
 }
 //----------------------------------------------------------------------------------------------
 template<class T>
+inline void TSurface<T>::Get(int p_x, int p_y, T &p_colour) 
+{
+	p_colour = m_bitmap[IndexOf(p_x, p_y)];
+}
+//----------------------------------------------------------------------------------------------
+template<class T>
 inline int TSurface<T>::IndexOf(int p_x, int p_y) {
 	return p_x + p_y * m_nWidth;
 }

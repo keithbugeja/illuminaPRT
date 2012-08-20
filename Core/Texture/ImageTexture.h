@@ -21,28 +21,39 @@ namespace Illumina
 			public ITexture
 		{
 		protected:
+			// Filtering and image buffer
 			TextureFiltering m_filtering;
 			boost::shared_ptr<Image> m_image;
 
+			// Image dimensions (zero inclusive)
+			int m_widthUnits, 
+				m_heightUnits;
+
 		protected:
+			// NN
+			void GetValueNearestNeighbour(const Vector2 &p_uv, RGBPixel &p_pixel) const
+			{
+				float u = Maths::Frac(p_uv.U);
+				float v = 1.f - Maths::Frac(p_uv.V);
+
+				m_image->Get((int)(m_widthUnits * u), (int)(m_heightUnits * v), p_pixel);
+			}
+			
 			RGBPixel GetValueNearestNeighbour(const Vector2 &p_uv) const
 			{
-				// take fractional part of u and v
 				float u = Maths::Frac(p_uv.U);
-				float v = 1.0f - Maths::Frac(p_uv.V);
+				float v = 1.f - Maths::Frac(p_uv.V);
 
-				float width = m_image->GetWidth() - 1,
-					height = m_image->GetHeight() - 1;
+				return m_image->Get((int)(m_widthUnits * u), (int)(m_heightUnits * v));
+			}
 
-				// transform to texture space
-				float iu = width * u;
-				float iv = height * v;
+			// Bilinear (NN for now... to change)
+			void GetValueBilinear(const Vector2 &p_uv, RGBPixel &p_pixel) const
+			{
+				float u = Maths::Frac(p_uv.U);
+				float v = 1.f - Maths::Frac(p_uv.V);
 
-				// get discretised coordinates
-				float ix = Maths::Min(width, iu > 0.5f ? Maths::Ceil(iu) : Maths::Floor(iu));
-				float iy = Maths::Min(height, iv > 0.5f ? Maths::Ceil(iv) : Maths::Floor(iv));
-
-				return m_image->Get(ix, iy);
+				m_image->Get((int)(m_widthUnits * u), (int)(m_heightUnits * v), p_pixel);
 			}
 
 			RGBPixel GetValueBilinear(const Vector2 &p_uv) const
@@ -82,23 +93,31 @@ namespace Illumina
 				, m_filtering(p_filtering)
 			{
 				m_image = boost::shared_ptr<Image>(p_pImageIO->Load(p_strFilename));
+
+				m_widthUnits = m_image->GetWidth() - 1;
+				m_heightUnits = m_image->GetHeight() - 1;
 			}
 
 			ImageTexture(const std::string &p_strFilename, IImageIO *p_pImageIO, TextureFiltering p_filtering = Bilinear) 
 				: m_filtering(p_filtering)
 			{
 				m_image = boost::shared_ptr<Image>(p_pImageIO->Load(p_strFilename));
+
+				m_widthUnits = m_image->GetWidth() - 1;
+				m_heightUnits = m_image->GetHeight() - 1;
 			}
 
-			RGBPixel GetValue(const Vector2 &p_uv, const Vector3 &p_hitPoint) const
+			void GetValue(const Vector2 &p_uv, const Vector3 &p_hitpoint, RGBPixel &p_pixel) const
 			{
 				switch (m_filtering)
 				{
 					case Bilinear:
-						return GetValueBilinear(p_uv);
-					
+						GetValueBilinear(p_uv, p_pixel);
+						break;
+
 					default:
-						return GetValueNearestNeighbour(p_uv);
+						GetValueNearestNeighbour(p_uv, p_pixel);
+						break;
 				}
 			}
 		};
