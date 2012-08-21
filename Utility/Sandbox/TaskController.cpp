@@ -124,13 +124,16 @@ bool TaskController::ProcessClientInput(void)
 	else if (strCommandName == "move")
 	{
 		std::stringstream moveCommandStream;
-		moveCommandStream << "action=" << argumentMap["action"]
+
+		moveCommandStream << "command=" << strCommandName 
+		<< ";action=" << argumentMap["action"]
 		<< ";direction=" << argumentMap["direction"]
 		<< ";";
 
 		if (m_task.HasCoordinator())
 		{
 			std::cout << "Sending [" << moveCommandStream.str() << "]" << std::endl;
+			Resource::Send(moveCommandStream.str(), m_task.GetCoordinatorID(), true);
 		}
 		
 		IController::WriteToSocket(m_pSocket, "OK", 2);

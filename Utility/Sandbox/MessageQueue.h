@@ -7,15 +7,17 @@ class MessageIdentifiers
 public:
 	enum Identifiers
 	{
-		ID_Resource_Register		= 0x0001,
-		ID_Resource_Unregister		= 0x0002,
-		ID_Resource_Terminate		= 0x0003,
-		ID_Worker_Register			= 0x0004,
-		ID_Worker_Ready				= 0x0005,
-		ID_Coordinator_Reject		= 0x0006,
-		ID_Coordinator_Accept		= 0x0007,
-		ID_Coordinator_Sync			= 0x0008,
-		ID_Coordinator_Unregister	= 0x0009
+		ID_Resource_Register			= 0x0001,
+		ID_Resource_Unregister			= 0x0002,
+		ID_Resource_Terminate			= 0x0003,
+		ID_Worker_Register				= 0x0004,
+		ID_Worker_Ready					= 0x0005,
+		ID_Coordinator_Reject			= 0x0006,
+		ID_Coordinator_Accept			= 0x0007,
+		ID_Coordinator_Sync				= 0x0008,
+		ID_Coordinator_Unregister		= 0x0009,
+		ID_Controller_HiPriority		= 0x000A,
+		ID_Controller_LoPriority		= 0x000B
 	};
 };
 //----------------------------------------------------------------------------------------------
@@ -39,6 +41,13 @@ struct Message_Controller_Resource_Unregister
 	int MessageID;
 	int Size;
 	short Resources[1024];
+};
+
+struct Message_Controller_Resource_Generic
+{
+	int MessageID;
+	int Size;
+	char String[2048];
 };
 
 typedef Message_Header Message_Controller_Resource_Terminate;

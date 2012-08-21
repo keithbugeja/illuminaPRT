@@ -6,24 +6,6 @@
 #include "RenderTaskCoordinator.h"
 #include "Communicator.h"
 //----------------------------------------------------------------------------------------------
-bool RenderTaskCoordinator::OnSynchroniseAbort(void)
-{
-	int abortSignal = -1;
-
-	// Get list of available workers
-	std::vector<int> &workerList 
-		= GetAvailableWorkerList();
-
-	// Send first batch of jobs
-	for (std::vector<int>::iterator workerIterator = workerList.begin();
-		 workerIterator != workerList.end(); workerIterator++)
-	{
-		Communicator::Send(&abortSignal, sizeof(int), *workerIterator, Communicator::Coordinator_Worker_Job);
-	}
-
-	return true;
-}
-//----------------------------------------------------------------------------------------------
 bool RenderTaskCoordinator::Compute(void) 
 {
 	RadianceContext *pTileBuffer;
@@ -181,6 +163,14 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_renderTaskContext.TilesPerColumn = m_renderTaskContext.FrameHeight / m_renderTaskContext.TileHeight;
 	m_renderTaskContext.TotalTiles = m_renderTaskContext.TilesPerColumn * m_renderTaskContext.TilesPerRow;
 	
+	// Update observer position
+	m_observerPosition = m_pEnvironment->GetCamera()->GetObserver();
+	m_moveFlag[0] = m_moveFlag[1] = m_moveFlag[2] = m_moveFlag[3];
+
+	// kick off input thread
+	boost::thread inputThreadHandler = 
+		boost::thread(boost::bind(RenderTaskCoordinator::InputThreadHandler, this));
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------
@@ -205,11 +195,92 @@ void RenderTaskCoordinator::OnShutdown(void)
 	delete m_pRenderTile;
 }
 //----------------------------------------------------------------------------------------------
-bool RenderTaskCoordinator::OnSynchronise(void) {
+bool RenderTaskCoordinator::OnSynchronise(void) 
+{
+	int synchronisePacketSize = sizeof(Vector3);
+
+	// Get list of available workers
+	std::vector<int> &workerList 
+		= GetAvailableWorkerList();
+
+	// Send first batch of jobs
+	for (std::vector<int>::iterator workerIterator = workerList.begin();
+		 workerIterator != workerList.end(); workerIterator++)
+	{
+		Communicator::Send(&synchronisePacketSize, sizeof(int), *workerIterator, Communicator::Coordinator_Worker_Job);
+		Communicator::Send(&m_observerPosition, sizeof(Vector3), *workerIterator, Communicator::Coordinator_Worker_Job);
+	}
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage) {
+bool RenderTaskCoordinator::OnSynchroniseAbort(void)
+{
+	int abortSignal = -1;
+
+	// Get list of available workers
+	std::vector<int> &workerList 
+		= GetAvailableWorkerList();
+
+	// Send first batch of jobs
+	for (std::vector<int>::iterator workerIterator = workerList.begin();
+		 workerIterator != workerList.end(); workerIterator++)
+	{
+		Communicator::Send(&abortSignal, sizeof(int), *workerIterator, Communicator::Coordinator_Worker_Job);
+	}
+
+	return true;
+}
+//----------------------------------------------------------------------------------------------
+bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage) 
+{
+	Message_Controller_Resource_Generic *pMessage = (Message_Controller_Resource_Generic*)p_pMessage->Content;
+	// std::cout << "Received a generic message : [" << pMessage->String << "]" << std::endl;
+
+	std::string command, action;
+	ArgumentMap arg(pMessage->String);
+	arg.GetArgument("command", command);
+
+	// Quick and dirty parsing of move command 
+	if (command == "move")
+	{
+		int value, flag, 
+			direction;
+
+		arg.GetArgument("action", action);
+		arg.GetArgument("direction", direction);
+
+		if (action == "start")
+			m_moveFlag[direction] = 1;
+		else
+			m_moveFlag[direction] = 0;
+	}
+
 	return true; 
 }
 //----------------------------------------------------------------------------------------------
+void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordinator)
+{
+	while(p_pCoordinator->IsRunning())
+	{
+		OrthonormalBasis &basis = p_pCoordinator->m_pCamera->GetFrame();
+		Vector3 &observer = p_pCoordinator->m_pCamera->GetObserver();
+
+		if (p_pCoordinator->m_moveFlag[0])
+			observer += basis.GetU() * 0.1f;
+
+		if (p_pCoordinator->m_moveFlag[1])
+			observer -= basis.GetU() * 0.1f;
+		
+		if (p_pCoordinator->m_moveFlag[2])
+			observer += basis.GetW() * 0.1f;
+		
+		if (p_pCoordinator->m_moveFlag[3])
+			observer -= basis.GetW() * 0.1f;
+
+		p_pCoordinator->m_pCamera->MoveTo(observer);
+		p_pCoordinator->m_observerPosition = observer;
+
+		boost::this_thread::sleep(boost::posix_time::millisec(100));
+	}
+}

@@ -46,4 +46,7 @@ public:
 
 	// When idle or assigned
 	static void Terminate(std::vector<Resource*> p_resourceList);
+
+	// Supported only when coordinator is active
+	static void Send(const std::string &p_strMessage, int p_nCoordinatorID, bool p_bHighPriority = false);
 };
