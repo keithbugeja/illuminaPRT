@@ -81,6 +81,21 @@ void Resource::Register(const std::string &p_strArgs, int p_nCoordinatorID, std:
 	}
 }
 //----------------------------------------------------------------------------------------------
+void Resource::Send(const std::string &p_strMessage, int p_nCoordinatorID, bool p_bHighPriority)
+{
+	Message_Controller_Resource_Generic messageGeneric;
+	
+	messageGeneric.MessageID = p_bHighPriority 
+		? MessageIdentifiers::ID_Controller_HiPriority 
+		: MessageIdentifiers::ID_Controller_LoPriority;
+
+	messageGeneric.Size = p_strMessage.length();
+	memset(messageGeneric.String, 0, sizeof(messageGeneric.String));
+	memcpy(messageGeneric.String, p_strMessage.c_str(), p_strMessage.length());
+
+	Communicator::Send(&messageGeneric, sizeof(Message_Controller_Resource_Generic), p_nCoordinatorID, Communicator::Controller_Coordinator);
+}
+//----------------------------------------------------------------------------------------------
 void Resource::Start(ITaskPipeline *p_pTaskPipeline)
 {
 	std::cout << "Resource [" << GetID() << "] online." << std::endl;

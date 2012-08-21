@@ -125,6 +125,19 @@ void RenderTaskWorker::OnShutdown(void)
 //----------------------------------------------------------------------------------------------
 bool RenderTaskWorker::OnSynchronise(void) 
 {
+	int synchronisePacketSize;
+
+	Communicator::Receive(&synchronisePacketSize, sizeof(int), GetCoordinatorID(), Communicator::Coordinator_Worker_Job);
+	
+	if (synchronisePacketSize == -1)
+		return false;
+
+	char buffer[2048];
+
+	Communicator::Receive(buffer, synchronisePacketSize, GetCoordinatorID(), Communicator::Coordinator_Worker_Job);
+	Vector3 *observer = (Vector3*)buffer;
+	m_pCamera->MoveTo(*observer);
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------

@@ -13,6 +13,7 @@
 class RenderTaskCoordinator
 	: public ICoordinator
 {
+protected:
 	RenderTaskContext m_renderTaskContext;
 	SerialisableRenderTile *m_pRenderTile;
 
@@ -34,6 +35,13 @@ class RenderTaskCoordinator
 		*m_pDragoTone; 
 
 	AccumulationBuffer *m_pAccumulationBuffer;
+
+protected:
+	int m_moveFlag[4];
+	Vector3 m_observerPosition;
+
+protected:
+	static void InputThreadHandler(RenderTaskCoordinator *p_pCoordinator);
 
 public:
 	bool Compute(void);

@@ -43,9 +43,18 @@ void ICoordinator::ControllerCommunication(ResourceMessageQueue *p_pMessageQueue
 			Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), Communicator::Controller_Rank, Communicator::Controller_Coordinator, &status);
 			ResourceMessage *pMessage = new ResourceMessage(status.MPI_SOURCE, -1, status.MPI_TAG, pCommandBuffer[0], Communicator::GetSize(&status), pCommandBuffer);
 
-			m_messageQueueMutex.lock();
-			p_pMessageQueue->push(pMessage);
-			m_messageQueueMutex.unlock();
+			// Commands tagged as client messages should be processed immediately
+			if (pMessage->Command == MessageIdentifiers::ID_Controller_HiPriority)
+			{
+				OnMessageReceived(pMessage);
+				delete pMessage;
+			} 
+			else
+			{
+				m_messageQueueMutex.lock();
+				p_pMessageQueue->push(pMessage);
+				m_messageQueueMutex.unlock();	
+			}
 		}
 		else
 			boost::this_thread::sleep(boost::posix_time::microsec(1000));
@@ -68,7 +77,7 @@ void ICoordinator::WorkerCommunication(ResourceMessageQueue *p_pMessageQueue)
 		
 			m_messageQueueMutex.lock();
 			p_pMessageQueue->push(pMessage);
-			m_messageQueueMutex.unlock();	
+			m_messageQueueMutex.unlock();
 		}
 		else
 			boost::this_thread::sleep(boost::posix_time::microsec(1000));
@@ -151,6 +160,12 @@ bool ICoordinator::EvaluateMessageQueue(ResourceMessageQueue *p_pMessageQueue)
 			case MessageIdentifiers::ID_Resource_Unregister:
 			{
 				HandleUnregister(pMessage); delete pMessage; 
+				break;
+			}
+
+			case MessageIdentifiers::ID_Controller_LoPriority:
+			{
+				OnMessageReceived(pMessage); delete pMessage;
 				break;
 			}
 
@@ -257,7 +272,6 @@ bool ICoordinator::Synchronise(void)
 //----------------------------------------------------------------------------------------------
 bool ICoordinator::Compute(void) 
 { 
-	// boost::this_thread::sleep(boost::posix_time::milliseconds(1000 / 60));
 	return true; 
 }
 //----------------------------------------------------------------------------------------------
