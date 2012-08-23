@@ -13,7 +13,7 @@
 #include "System/DummyManager.h"
 
 #include "Integrator/Integrator.h"
-#include "Postproc/Postprocess.h"
+#include "Postproc/PostProcess.h"
 #include "Renderer/Renderer.h"
 #include "Material/Material.h"
 #include "Texture/Texture.h"
