@@ -180,8 +180,6 @@
     <ClCompile Include="..\..\..\..\Core\Renderer\BaseRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\BasicRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\DistributedRenderer.cpp" />
-    <ClCompile Include="..\..\..\..\Core\Renderer\MultipassRenderer.cpp" />
-    <ClCompile Include="..\..\..\..\Core\Renderer\MultithreadedRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\Renderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\TimeConstrainedRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Sampler\JitterSampler.cpp" />
@@ -295,8 +293,6 @@
     <ClInclude Include="..\..\..\..\Core\Renderer\BaseRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\BasicRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\DistributedRenderer.h" />
-    <ClInclude Include="..\..\..\..\Core\Renderer\MultipassRenderer.h" />
-    <ClInclude Include="..\..\..\..\Core\Renderer\MultithreadedRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\Renderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\RendererFactories.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\TimeConstrainedRenderer.h" />

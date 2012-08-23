@@ -107,7 +107,7 @@ namespace Illumina
 			bool Intersects(const Ray &p_ray, DifferentialSurface &p_surface);
 			bool Intersects(const Ray &p_ray);
 
-			std::string PersistentMesh::ToString(void) const;
+			std::string ToString(void) const;
 		};		
 	} 
 }

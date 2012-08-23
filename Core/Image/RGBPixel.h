@@ -170,34 +170,40 @@ namespace Illumina
 		inline TRGBPixel<TComponentType, TMin, TMax> operator*(TComponentType p_scale, const TRGBPixel<TComponentType, TMin, TMax> &p_colour) {
 			return TRGBPixel<TComponentType, TMin, TMax>(p_colour.R * p_scale, p_colour.G * p_scale, p_colour.B * p_scale); 
 		}
-		
+
+		/*
 		template <class TComponent, int TMin, int TMax> TRGBPixel<TComponent, TMin, TMax> const TRGBPixel<TComponent, TMin, TMax>::White;
 		template <class TComponent, int TMin, int TMax> TRGBPixel<TComponent, TMin, TMax> const TRGBPixel<TComponent, TMin, TMax>::Black;
 		template <class TComponent, int TMin, int TMax> TRGBPixel<TComponent, TMin, TMax> const TRGBPixel<TComponent, TMin, TMax>::Red;
 		template <class TComponent, int TMin, int TMax> TRGBPixel<TComponent, TMin, TMax> const TRGBPixel<TComponent, TMin, TMax>::Green;
 		template <class TComponent, int TMin, int TMax> TRGBPixel<TComponent, TMin, TMax> const TRGBPixel<TComponent, TMin, TMax>::Blue;
+		*/
 
 		//----------------------------------------------------------------------------------------------
 		// RGBPixel, 1 byte per colour channel (0 - 255)
 		//----------------------------------------------------------------------------------------------
 		typedef TRGBPixel<unsigned char, 0, 255> RGBPixel1I;
 		
+		/*
 		const RGBPixel1I RGBPixel1I::White = RGBPixel1I(255);
 		const RGBPixel1I RGBPixel1I::Black = RGBPixel1I(0);
 		const RGBPixel1I RGBPixel1I::Red = RGBPixel1I(255, 0, 0);
 		const RGBPixel1I RGBPixel1I::Green = RGBPixel1I(0, 255, 0);
 		const RGBPixel1I RGBPixel1I::Blue = RGBPixel1I(0, 0, 255);
+		*/
 
 		//----------------------------------------------------------------------------------------------
 		// RGBPixel, 4 bytes per colour channel (0.f - 1.0f)
 		//----------------------------------------------------------------------------------------------
 		typedef TRGBPixel<float, 0, 1> RGBPixel4F;
-
+		
+		/*
 		const RGBPixel4F RGBPixel4F::White = RGBPixel4F(1.f);
 		const RGBPixel4F RGBPixel4F::Black = RGBPixel4F(0.f);
 		const RGBPixel4F RGBPixel4F::Red = RGBPixel4F(1.f, 0.f, 0.f);
 		const RGBPixel4F RGBPixel4F::Green = RGBPixel4F(0.f, 1.f, 0.f);
 		const RGBPixel4F RGBPixel4F::Blue = RGBPixel4F(0.f, 0.f, 1.f);
+		*/
 
 		//----------------------------------------------------------------------------------------------
 		// Common aliases
