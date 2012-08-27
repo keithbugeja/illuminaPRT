@@ -262,8 +262,8 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 {
 	while(p_pCoordinator->IsRunning())
 	{
-		OrthonormalBasis &basis = p_pCoordinator->m_pCamera->GetFrame();
-		Vector3 &observer = p_pCoordinator->m_pCamera->GetObserver();
+		const OrthonormalBasis &basis = p_pCoordinator->m_pCamera->GetFrame();
+		Vector3 observer = p_pCoordinator->m_pCamera->GetObserver();
 
 		if (p_pCoordinator->m_moveFlag[0])
 			observer += basis.GetU() * 0.1f;
