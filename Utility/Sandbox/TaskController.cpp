@@ -3,9 +3,6 @@
 //	Author:		Keith Bugeja
 //	Date:		27/07/2012
 //----------------------------------------------------------------------------------------------
-#pragma once
-
-//----------------------------------------------------------------------------------------------
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem.hpp>

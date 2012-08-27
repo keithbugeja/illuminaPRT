@@ -66,9 +66,11 @@ public:
 		m_controllerList.push_back(pController);
 		m_controllerMap[nID] = pController;
 
+		/*
 		std::stringstream message;
 		message << "ResourceManager::CreateInstance : Creating Controller with ID [" << nID << "]";
 		Logger::Message(message.str(), ServiceManager::GetInstance()->IsVerbose());
+		*/
 
 		return pController;
 	}

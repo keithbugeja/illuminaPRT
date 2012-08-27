@@ -244,8 +244,7 @@ bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 	// Quick and dirty parsing of move command 
 	if (command == "move")
 	{
-		int value, flag, 
-			direction;
+		int direction;
 
 		arg.GetArgument("action", action);
 		arg.GetArgument("direction", direction);

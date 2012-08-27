@@ -3,9 +3,6 @@
 //	Author:		Keith Bugeja
 //	Date:		27/07/2012
 //----------------------------------------------------------------------------------------------
-#pragma once
-
-//----------------------------------------------------------------------------------------------
 #include <sstream>
 //----------------------------------------------------------------------------------------------
 #include <boost/lexical_cast.hpp>
@@ -77,7 +74,9 @@ bool AdminController::ProcessClientInput(void)
 	}
 	else if (strCommandName == "stats")
 	{
-		int id = boost::lexical_cast<int>(argumentMap["id"]);
+		// To remove gcc warning until we implement stat functionality
+		// int id = boost::lexical_cast<int>(argumentMap["id"]);
+
 		std::string response = "0:35:150%:Scene/sponza.ilm";
 		IController::WriteToSocket(m_pSocket, response.c_str(), response.length());
 	}
