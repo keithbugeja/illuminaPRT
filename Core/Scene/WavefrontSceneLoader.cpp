@@ -36,7 +36,7 @@ using namespace Illumina::Core;
 struct WavefrontVertex
 {
 private:
-	static struct Hash 
+	struct Hash 
 	{
 		Int64 Position : 21;
 		Int64 Texture : 21;

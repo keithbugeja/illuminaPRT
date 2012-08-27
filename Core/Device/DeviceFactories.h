@@ -35,8 +35,6 @@ namespace Illumina
 			// -- Height {Integer}
 			Illumina::Core::IDevice *CreateInstance(ArgumentMap &p_argumentMap)
 			{
-				IVideoStream::VideoCodec videoCodec;
-
 				int width = 640,
 					height = 480;
 

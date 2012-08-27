@@ -37,9 +37,15 @@ void Image::GammaCorrect(float p_fGamma)
 //----------------------------------------------------------------------------------------------
 void Image::MakeTestCard(void)
 {
+	/*
 	RGBPixel cardHues[9] = {RGBPixel::White, RGBPixel::Black, RGBPixel::Green, 
 		RGBPixel::Blue, RGBPixel::Red, RGBPixel::Blue, 
 		RGBPixel::Green, RGBPixel::Black, RGBPixel::White};
+	*/
+
+	RGBPixel cardHues[9] = {RGBPixel(1), RGBPixel(0), RGBPixel(0,1,0),
+		RGBPixel(0,0,1), RGBPixel(1,0,0), RGBPixel(0,0,1),
+		RGBPixel(0,1,0), RGBPixel(0), RGBPixel(1)};
 
 	for (int y = 0; y < this->GetHeight(); ++y)
 	{
