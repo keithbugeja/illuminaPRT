@@ -16,10 +16,8 @@ namespace Illumina
 		struct VirtualPointLight
 		{
 			Intersection Context;
-
-			Spectrum Contribution;
-
 			Vector3 Direction;
+			Spectrum Contribution;
 
 			bool Occluded;
 

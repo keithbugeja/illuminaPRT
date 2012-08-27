@@ -90,8 +90,6 @@ namespace Illumina
 							image[i].R = (unsigned char)imageFile.get();
 
 							image[i]/=255.0f;
-
-							char c = imageFile.get();
 						}
 
 						break;

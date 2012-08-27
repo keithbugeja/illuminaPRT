@@ -41,9 +41,6 @@ namespace Illumina
 		/* Structure describing a surface point */
 		class DifferentialSurface
 		{
-		protected:
-			IShape *m_pShape;
-
 		public:
 			/* Surface info in local space */
 			Vector3 ShadingNormal;
@@ -65,11 +62,16 @@ namespace Illumina
 				RayDirectionWS;
 
 			Fragment GeometryFragment;
+		
+		protected:
+			IShape *m_pShape;
 
 		public:
-			DifferentialSurface(void) : Distance(Maths::Maximum), m_pShape(NULL) { }
+			DifferentialSurface(void) : m_pShape(NULL), Distance(Maths::Maximum) { }
+
 			DifferentialSurface(const DifferentialSurface &p_surface) 
-				: ShadingNormal(p_surface.ShadingNormal)
+				: m_pShape(p_surface.m_pShape)
+				, ShadingNormal(p_surface.ShadingNormal)
 				, GeometryNormal(p_surface.GeometryNormal)
 				, Point(p_surface.Point)
 				, PointUV(p_surface.PointUV)
@@ -82,7 +84,6 @@ namespace Illumina
 				, RayOriginWS(p_surface.RayDirectionWS)
 				, RayDirectionWS(p_surface.RayDirectionWS)
 				, GeometryFragment(p_surface.GeometryFragment)
-				, m_pShape(p_surface.m_pShape)
 			{ }
 
 			inline void Reset(void) 

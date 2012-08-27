@@ -39,7 +39,9 @@ namespace Illumina
 			 */
 			Illumina::Core::ICamera *CreateInstance(ArgumentMap &p_argumentMap)
 			{
+				#if defined(__PLATFORM_WINDOWS__)
 				#pragma message ("Camera frame arguments are ignored at the moment.")
+				#endif
 
 				float aspect = 1.0f,
 					fov = 60.0f,
@@ -111,7 +113,9 @@ namespace Illumina
 			// -- Distance {Float}
 			Illumina::Core::ICamera *CreateInstance(ArgumentMap &p_argumentMap)
 			{
+				#if defined(__PLATFORM_WINDOWS__)
 				#pragma message ("Camera frame arguments are ignored at the moment.")
+				#endif
 
 				float aperture = 0.0f, 
 					aspect = 1.0f,

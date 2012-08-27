@@ -21,13 +21,13 @@ namespace Illumina
 		class Buffer2D
 		{
 		protected:
-			T* m_buffer;
-
 			size_t m_width, 
 				m_height,
 				m_area;
 		
 			bool m_ownBuffer;
+
+			T* m_buffer;
 
 		protected:
 			FORCEINLINE size_t IndexOf(int p_nX, int p_nY) {
@@ -49,8 +49,8 @@ namespace Illumina
 				: m_width(p_nWidth)
 				, m_height(p_nHeight)
 				, m_area(p_nWidth * p_nHeight)
-				, m_buffer(p_pBuffer)
 				, m_ownBuffer(false)
+				, m_buffer(p_pBuffer)
 			{
 				BOOST_ASSERT(m_buffer != NULL);
 			}
