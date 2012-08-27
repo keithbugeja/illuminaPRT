@@ -32,7 +32,7 @@ public:
 
 		std::vector<std::string> commandArgs;
 
-		for (int j = 1; j < argumentList.size(); j++)
+		for (size_t j = 1; j < argumentList.size(); j++)
 			commandArgs.push_back(argumentList[j]);
 
 		m_commandMap[argumentList[0]] = commandArgs;
@@ -55,7 +55,7 @@ public:
 		if (argumentList.size() > 1)
 		{
 			const std::vector<std::string> &argumentNameList = m_commandMap[p_strCommandName];
-			for (int j = 0; j < argumentNameList.size(); j++)
+			for (size_t j = 0; j < argumentNameList.size(); j++)
 			{
 				p_strArgumentMap[argumentNameList[j]] = argumentList[j + 1];
 			}

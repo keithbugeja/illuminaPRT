@@ -21,10 +21,10 @@
 class IController
 {
 public:
-	static bool ReadFromSocket(boost::asio::ip::tcp::socket *p_pSocket, char *p_pCommandBuffer, int p_nCommandBufferSize)
+	static bool ReadFromSocket(boost::asio::ip::tcp::socket *p_pSocket, char *p_pCommandBuffer, size_t p_nCommandBufferSize)
 	{
 		boost::system::error_code error;
-		unsigned int sizeBuffer = 0;
+		size_t sizeBuffer = 0;
 
 		// Receive length in bytes first
 		size_t bytesRead = boost::asio::read(*p_pSocket, boost::asio::buffer(&sizeBuffer, sizeof(sizeBuffer)), error);
@@ -63,7 +63,7 @@ public:
 		return true;
 	}
 
-	static bool WriteToSocket(boost::asio::ip::tcp::socket *p_pSocket, const char *p_pCommandBuffer, int p_nCommandBufferSize)
+	static bool WriteToSocket(boost::asio::ip::tcp::socket *p_pSocket, const char *p_pCommandBuffer, size_t p_nCommandBufferSize)
 	{
 		boost::system::error_code error;
 

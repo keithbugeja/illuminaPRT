@@ -21,8 +21,8 @@ public:
 	};
 
 protected:
-	int m_nResourceID;
 	State m_resourceState;
+	int m_nResourceID;
 
 public:
 	Resource(int p_nResourceID, State p_resourceState);

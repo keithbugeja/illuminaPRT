@@ -184,7 +184,6 @@ bool ICoordinator::EvaluateMessageQueue(ResourceMessageQueue *p_pMessageQueue)
 bool ICoordinator::Synchronise(void) 
 {
 	// Set up request and status for non-blocking receive
-	Communicator::Request request;
 	Communicator::Status status;
 
 	// Set up buffer for receipt of ready messages from available resources
@@ -250,7 +249,7 @@ bool ICoordinator::Synchronise(void)
 	m_releaseMutex.unlock();
 
 	// Have we met the minimum resource requirement for computation?
-	int resourceLowerbound;
+	size_t resourceLowerbound;
 	if (m_argumentMap.GetArgument("min", resourceLowerbound))
 	{
 		if (m_ready.size() < resourceLowerbound)

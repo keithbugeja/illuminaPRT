@@ -64,14 +64,11 @@ public:
 		}
 	}
 
-
-	Resource* operator[](int p_nIndex)
+	Resource* operator[](size_t p_nIndex)
 	{
-		BOOST_ASSERT(p_nIndex >=0 && p_nIndex < m_resourceList.size());
+		BOOST_ASSERT(p_nIndex < m_resourceList.size());
 		return m_resourceList[p_nIndex];
 	}
-
-
 
 	void Add(Resource *p_pResource)
 	{
