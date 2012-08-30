@@ -140,7 +140,7 @@ namespace Illumina
 			}
 
 			inline static bool Equals(float p_fValue1, float p_fValue2, float p_fTolerance = Epsilon) {
-				return (Abs(p_fValue1 - p_fValue2) <= Epsilon);
+				return (Abs(p_fValue1 - p_fValue2) <= p_fTolerance);
 			}
 
 			inline static float Lerp(float u0, float u1, float x) {

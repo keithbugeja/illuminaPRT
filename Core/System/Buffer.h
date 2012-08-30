@@ -21,7 +21,7 @@ namespace Illumina
 		class Buffer2D
 		{
 		protected:
-			size_t m_width, 
+			uint32_t m_width, 
 				m_height,
 				m_area;
 		
@@ -30,7 +30,7 @@ namespace Illumina
 			T* m_buffer;
 
 		protected:
-			FORCEINLINE size_t IndexOf(int p_nX, int p_nY) {
+			FORCEINLINE uint32_t IndexOf(int p_nX, int p_nY) {
 				return p_nY * m_width + p_nX;
 			}
 
@@ -55,21 +55,21 @@ namespace Illumina
 				BOOST_ASSERT(m_buffer != NULL);
 			}
 
-			~Buffer2D(void) 
+			virtual ~Buffer2D(void) 
 			{
 				if (m_ownBuffer)
 					Safe_AlignedFree(m_buffer);
 			}
 
-			inline size_t GetWidth(void) const {
+			inline uint32_t GetWidth(void) const {
 				return m_width;
 			}
 
-			inline size_t GetHeight(void) const {
+			inline uint32_t GetHeight(void) const {
 				return m_height;
 			}
 
-			inline size_t GetArea(void) const {
+			inline uint32_t GetArea(void) const {
 				return m_area;
 			}
 

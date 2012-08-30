@@ -82,11 +82,11 @@ RTPDevice::~RTPDevice()
 	Safe_Delete(m_pImage[1]);
 }
 //----------------------------------------------------------------------------------------------
-int RTPDevice::GetWidth(void) const { 
+uint32_t RTPDevice::GetWidth(void) const { 
 	return m_pBackBuffer->GetWidth(); 
 }
 //----------------------------------------------------------------------------------------------
-int RTPDevice::GetHeight(void) const { 
+uint32_t RTPDevice::GetHeight(void) const { 
 	return m_pBackBuffer->GetHeight(); 
 }
 //----------------------------------------------------------------------------------------------

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Postproc/PostProcess.h"
+#include "Geometry/Intersection.h"
 
 //----------------------------------------------------------------------------------------------
 namespace Illumina
@@ -42,8 +43,8 @@ namespace Illumina
 
 				m_nSampleCount = 0;
 				
-				for (size_t y = 0; y < m_pAccumulationBuffer->GetHeight(); ++y)
-					for (size_t x = 0; x < m_pAccumulationBuffer->GetWidth(); ++x)
+				for (int y = 0; y < m_pAccumulationBuffer->GetHeight(); ++y)
+					for (int x = 0; x < m_pAccumulationBuffer->GetWidth(); ++x)
 						m_pAccumulationBuffer->GetP(x,y)->Final = 0.f;
 
 			}
