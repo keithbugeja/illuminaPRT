@@ -327,6 +327,9 @@
     <ClCompile Include="..\..\..\..\Core\Device\DisplayDevice.cpp">
       <Filter>Header Files\Device</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Material\BxDF.cpp">
+      <Filter>Header Files\Material</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">

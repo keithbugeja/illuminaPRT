@@ -81,7 +81,7 @@ namespace Illumina
 			{
 				std::string strId;
 				Vector3 p_position[3];
-				Vector2 p_uv[2];
+				Vector2 p_uv[3];
 
 				if (p_argumentMap.GetArgument("P0", p_position[0]) && 
 					p_argumentMap.GetArgument("P1", p_position[1]) && 

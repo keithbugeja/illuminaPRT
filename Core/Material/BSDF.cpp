@@ -97,7 +97,7 @@ bool BSDF::HasBxDFType(BxDF::Type p_bxdfType, bool p_bExactMatch)
 int BSDF::GetBxDFCount(BxDF::Type p_bxdfType, bool p_bExactMatch)
 {
 	if (!p_bExactMatch && p_bxdfType == BxDF::All_Combined)
-		return m_bxdfList.Size();
+		return (int)m_bxdfList.Size();
 
 	int bxdfCount = 0;
 
@@ -123,7 +123,7 @@ int BSDF::GetBxDF(BxDF::Type p_bxdfType, int p_nBxDFIndex, BxDF **p_pBxDF, bool 
 			if (p_nBxDFIndex == 0)
 			{
 				*p_pBxDF = m_bxdfList[bxdfIndex];
-				return bxdfIndex;
+				return (int)bxdfIndex;
 			}
 
 			p_nBxDFIndex--;
@@ -250,8 +250,8 @@ Spectrum BSDF::F(const DifferentialSurface& p_surface, const Vector3 &p_wOut, co
 //----------------------------------------------------------------------------------------------
 float BSDF::Pdf(const Vector3 &p_wIn, const Vector3 &p_wOut, BxDF::Type p_bxdfType) 
 { 
-	int bxdfCount = m_bxdfList.Size(),
-		bxdfMatchCount = 0;
+	size_t  bxdfCount = m_bxdfList.Size(),
+			bxdfMatchCount = 0;
 	
 	float pdf = 0;
 

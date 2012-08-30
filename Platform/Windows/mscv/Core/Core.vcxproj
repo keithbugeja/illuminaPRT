@@ -125,6 +125,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <WarningLevel>Level2</WarningLevel>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -170,6 +171,7 @@
     <ClCompile Include="..\..\..\..\Core\Light\InfiniteAreaLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Light\PointLight.cpp" />
     <ClCompile Include="..\..\..\..\Core\Material\BSDF.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Material\BxDF.cpp" />
     <ClCompile Include="..\..\..\..\Core\Material\LambertianBxDF.cpp" />
     <ClCompile Include="..\..\..\..\Core\Material\SpecularReflectionBxDF.cpp" />
     <ClCompile Include="..\..\..\..\Core\Material\SpecularTransmissionBxDF.cpp" />

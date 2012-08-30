@@ -34,11 +34,11 @@ VideoDevice::~VideoDevice()
 	Safe_Delete(m_pImage);
 }
 //----------------------------------------------------------------------------------------------
-int VideoDevice::GetWidth(void) const { 
+uint32_t VideoDevice::GetWidth(void) const { 
 	return m_pImage->GetWidth(); 
 }
 //----------------------------------------------------------------------------------------------
-int VideoDevice::GetHeight(void) const { 
+uint32_t VideoDevice::GetHeight(void) const { 
 	return m_pImage->GetHeight(); 
 }
 //----------------------------------------------------------------------------------------------

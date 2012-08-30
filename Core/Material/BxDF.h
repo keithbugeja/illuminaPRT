@@ -37,25 +37,17 @@ namespace Illumina
 			BxDF::Type m_bxdfType;
 
 		public:
-			BxDF(BxDF::Type p_bxdfType) 
-				: m_bxdfType(p_bxdfType) 
-			{ }
-			
-			BxDF(const std::string &p_strName, BxDF::Type p_bxdfType) 
-				: Object(p_strName)
-				, m_bxdfType(p_bxdfType)
-			{ }
+			BxDF(BxDF::Type p_bxdfType);			
+			BxDF(const std::string &p_strName, BxDF::Type p_bxdfType);
 
-			BxDF::Type GetType(void) const { return m_bxdfType; }
-			bool IsType(BxDF::Type p_bxdfType, bool p_bExactMatch = false) const { 
-				return p_bExactMatch ? (int)(p_bxdfType & m_bxdfType) == (int)p_bxdfType : (int)(p_bxdfType & m_bxdfType) != 0; 
-			}
+			BxDF::Type GetType(void) const;
+			bool IsType(BxDF::Type p_bxdfType, bool p_bExactMatch = false) const;
 
-			virtual Spectrum Rho(const Spectrum &p_reflectance, const Vector3 &p_wOut, int p_nSampleSize = 1, float *p_pSampleList = NULL) { return 0.0f; }
-			virtual Spectrum SampleF(const Spectrum &p_reflectance, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float *p_pdf) { return 0.0f; }
-			virtual Spectrum F(const Spectrum &p_reflectance, const Vector3 &p_wOut, const Vector3 &p_wIn) { return 0.0f; }
-			virtual Spectrum F(const Vector3 &p_wOut, const Vector3 &p_wIn) { return 0.0f; }
-			virtual float Pdf(const Vector3 &p_wOut, const Vector3 &p_wIn) { return 1.0f; }
+			virtual Spectrum Rho(const Spectrum &p_reflectance, const Vector3 &p_wOut, int p_nSampleSize = 1, float *p_pSampleList = NULL);
+			virtual Spectrum SampleF(const Spectrum &p_reflectance, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float *p_pdf);
+			virtual Spectrum F(const Spectrum &p_reflectance, const Vector3 &p_wOut, const Vector3 &p_wIn);
+			virtual Spectrum F(const Vector3 &p_wOut, const Vector3 &p_wIn);
+			virtual float Pdf(const Vector3 &p_wOut, const Vector3 &p_wIn);
 		};
 	}
 }
