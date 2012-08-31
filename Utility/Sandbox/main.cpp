@@ -30,7 +30,7 @@ using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 //	Include basic headers for OpenMP and io, string and file streams
 //----------------------------------------------------------------------------------------------
-#include <omp.h>
+// #include <omp.h>
 #include <iostream>
 #include <sstream>
 #include <fstream>
