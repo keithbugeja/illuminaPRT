@@ -70,8 +70,8 @@ namespace Illumina
 				VideoStreamState()
 					: m_pFrame(NULL)
 					, m_pImage(NULL)
+                    , m_i64FrameTime(0)
 					, m_i64FrameNext(0)
-					, m_i64FrameTime(0)
 				{ }
 
 			#endif
@@ -265,8 +265,8 @@ bool DisplayVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 	for (boost::tokenizer<boost::char_separator<char> >::iterator tokenIterator = tokens.begin();
 			tokenIterator != tokens.end(); ++tokenIterator)
 	{
-		int tokenSize = (*tokenIterator).size() + 1;
-		char *pToken = new char[tokenSize];
+		tokenSize = (*tokenIterator).size() + 1;
+		pToken = new char[tokenSize];
 		memset(pToken, 0, tokenSize);
 		strncpy(pToken, (*tokenIterator).c_str(), tokenSize - 1);
 
@@ -331,15 +331,15 @@ void DisplayVideoStream::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 NetworkVideoStream::NetworkVideoStream(const std::string &p_strNetworkAddress, int p_nPortNumber)
-	: m_strAddress(p_strNetworkAddress)
-	, m_nPort(p_nPortNumber)
-	, m_pVideoStreamState(new VideoStreamState())
+	: m_pVideoStreamState(new VideoStreamState())
+    , m_nPort(p_nPortNumber)
+    , m_strAddress(p_strNetworkAddress)
 { }
 //----------------------------------------------------------------------------------------------
 NetworkVideoStream::NetworkVideoStream(void)
-	: m_strAddress("127.0.0.1")
-	, m_nPort(10000)
-	, m_pVideoStreamState(new VideoStreamState())
+	: m_pVideoStreamState(new VideoStreamState())
+    , m_nPort(10000)
+    , m_strAddress("127.0.0.1")
 { }
 //----------------------------------------------------------------------------------------------
 NetworkVideoStream::~NetworkVideoStream(void)
@@ -503,8 +503,8 @@ bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 	for (boost::tokenizer<boost::char_separator<char> >::iterator tokenIterator = tokens.begin();
 			tokenIterator != tokens.end(); ++tokenIterator)
 	{
-		int tokenSize = (*tokenIterator).size() + 1;
-		char *pToken = new char[tokenSize];
+		tokenSize = (*tokenIterator).size() + 1;
+		pToken = new char[tokenSize];
 		memset(pToken, 0, tokenSize);
 		strncpy(pToken, (*tokenIterator).c_str(), tokenSize - 1);
 
@@ -638,13 +638,13 @@ void NetworkVideoStream::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 FileVideoStream::FileVideoStream(const std::string &p_strFilename)
-	: m_strFilename(p_strFilename)
-	, m_pVideoStreamState(new VideoStreamState())
+    : m_pVideoStreamState(new VideoStreamState())
+	, m_strFilename(p_strFilename)
 { }
 //----------------------------------------------------------------------------------------------
 FileVideoStream::FileVideoStream(void)
-	: m_strFilename("default.mpg")
-	, m_pVideoStreamState(new VideoStreamState())
+    : m_pVideoStreamState(new VideoStreamState())
+	, m_strFilename("default.mpg")
 { }
 //----------------------------------------------------------------------------------------------
 FileVideoStream::~FileVideoStream(void)

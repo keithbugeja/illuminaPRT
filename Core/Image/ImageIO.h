@@ -16,10 +16,9 @@ namespace Illumina
 	{
 		class IImageIO
 		{
-		
 		public:
-			virtual ~IImageIO() { };
-
+            virtual ~IImageIO() {}
+            
 			virtual Image* Load(const std::string &p_strImageFile) = 0;
 			virtual void Save(const Image &p_image, const std::string &p_strImageFile) = 0;
 		};

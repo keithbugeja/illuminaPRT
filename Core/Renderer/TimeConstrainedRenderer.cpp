@@ -36,14 +36,17 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 	Intersection intersection;
 	IntegratorContext context;
 
+    /*
 	// Compute tile bounds
 	int regionXEnd = p_nRegionX + p_nRegionWidth,
 		regionYEnd = p_nRegionY + p_nRegionHeight;
-
+     */
+    
 	// Compute dimension reciprocals for normalisation
 	float rcpWidth = 1.f / m_pDevice->GetWidth(),
-		rcpHeight = 1.f / m_pDevice->GetHeight(),
-		rcpSampleCount = 1.f / m_nSampleCount;
+        rcpHeight = 1.f / m_pDevice->GetHeight();
+    
+    //float rcpSampleCount = 1.f / m_nSampleCount;
 
 	double startTime = Platform::GetTime();
 

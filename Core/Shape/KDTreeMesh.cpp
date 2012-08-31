@@ -260,7 +260,7 @@ bool KDTreeMesh::Compile(void)
 		std::cout << "Average triangles per leaf node : " << (float)lic / (float)lc << std::endl;
 		int s = std::getchar();
 	}
-	/**/
+	*/
 	//----------------------------------------------------------------------------------------------
 
 	// Update Stats
@@ -325,7 +325,7 @@ bool KDTreeMesh::Intersect_New(KDTreeMeshNode *p_pNode, Ray &p_ray)
 	int todoPos = 0;
 
 	// Traverse kd-tree nodes in order for ray
-	bool hit = false;
+	// bool hit = false;
 	const KDTreeMeshNode *node = p_pNode;
 	while (node != NULL) {
 		// Bail out if we found a hit closer than the current node

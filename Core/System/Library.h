@@ -15,6 +15,8 @@ namespace Illumina
 		class ILibrary
 		{
 		public:
+            virtual ~ILibrary() {}
+            
 			// Load a dynamic library
 			virtual bool Load(const std::string& p_strPlugIn) = 0;
 	

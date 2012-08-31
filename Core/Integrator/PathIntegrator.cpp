@@ -20,14 +20,14 @@ using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 PathIntegrator::PathIntegrator(const std::string &p_strName, int p_nMaxRayDepth, int p_nShadowSampleCount, float p_fReflectEpsilon)
 	: IIntegrator(p_strName) 
+    , m_nMaxRayDepth(p_nMaxRayDepth)
 	, m_nShadowSampleCount(p_nShadowSampleCount)
-	, m_nMaxRayDepth(p_nMaxRayDepth)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
 { }
 //----------------------------------------------------------------------------------------------
 PathIntegrator::PathIntegrator(int p_nMaxRayDepth, int p_nShadowSampleCount, float p_fReflectEpsilon)
-	: m_nShadowSampleCount(p_nShadowSampleCount)
-	, m_nMaxRayDepth(p_nMaxRayDepth)
+    : m_nMaxRayDepth(p_nMaxRayDepth)
+    , m_nShadowSampleCount(p_nShadowSampleCount)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
 { }
 //----------------------------------------------------------------------------------------------

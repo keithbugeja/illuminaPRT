@@ -16,7 +16,7 @@
 #include "System/EngineKernel.h"
 #include "Scene/SceneLoader.h"
 
-class ParticleContext;
+struct ParticleContext;
 
 //----------------------------------------------------------------------------------------------
 namespace Illumina

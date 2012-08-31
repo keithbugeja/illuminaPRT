@@ -166,7 +166,9 @@ float PersistentMesh::GetArea(void) const
 //----------------------------------------------------------------------------------------------
 bool PersistentMesh::Intersects(const Ray &p_ray, DifferentialSurface &p_surface)
 {
-	return IntersectP(Ray(p_ray), p_surface);
+    Ray ray(p_ray);
+    
+	return IntersectP(ray, p_surface);
 }
 
 //----------------------------------------------------------------------------------------------
@@ -175,7 +177,8 @@ bool PersistentMesh::Intersects(const Ray &p_ray, DifferentialSurface &p_surface
 //----------------------------------------------------------------------------------------------
 bool PersistentMesh::Intersects(const Ray &p_ray)
 {
-	return IntersectP(Ray(p_ray));
+    Ray ray(p_ray);
+	return IntersectP(ray);
 }
 
 //----------------------------------------------------------------------------------------------
@@ -219,7 +222,7 @@ bool PersistentMesh::IntersectP(Ray &p_ray)
 	int todoPos = 0;
 
 	// Traverse kd-tree nodes in order for ray
-	bool hit = false;
+	// bool hit = false;
 	const PersistentTreeNode *node = m_pRootNode;
 	while (node != NULL) {
 		// Bail out if we found a hit closer than the current node

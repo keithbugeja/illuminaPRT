@@ -16,6 +16,7 @@
 #include "Scene/Scene.h"
 
 using namespace Illumina::Core;
+/*
 //----------------------------------------------------------------------------------------------
 TestIntegrator::TestIntegrator(const std::string &p_strName)
 	: IIntegrator(p_strName) 
@@ -95,7 +96,6 @@ Spectrum TestIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 			IsSpecularTransmissive = false;
 
 		// Reflection
-		/**/ /**/
 		if (pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Reflection)))
 		{
 			IsSpecularReflective = true;
@@ -128,11 +128,8 @@ Spectrum TestIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 				Ls = f * Radiance(p_pContext, p_pScene, ray, intersection, p_nRayDepth + 1);
 			}
 		} 
-		/**/
-		//*/
-		/**/
+
 		// Refraction
-	/**/
 		if (pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Transmission)))
 		{
 			IsSpecularTransmissive = true;
@@ -164,11 +161,11 @@ Spectrum TestIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 				Lt = f * Radiance(p_pContext, p_pScene, ray, intersection, p_nRayDepth + 1);
 			}
 		}
-	/**/
 		
 		return Ld + Ls + Lt;
 	}
 
 	return 0.0f;
 }
+ */
 //----------------------------------------------------------------------------------------------
