@@ -82,14 +82,14 @@ namespace Illumina
 				if (m_pDummyFactory == NULL)
 					m_pDummyFactory = new DummyFactory();
 
-				p_pEngineKernel->GetDummyManager()->RegisterFactory("DummyFactory", m_pDummyFactory);
+				//p_pEngineKernel->GetDummyManager()->RegisterFactory("DummyFactory", m_pDummyFactory);
 			}
 
 			void Unregister(Illumina::Core::EngineKernel* p_pEngineKernel)
 			{
 				std::cout << "Unregistering Dummy Factory" << std::endl;
 
-				p_pEngineKernel->GetDummyManager()->UnregisterFactory("DummyFactory");
+				//p_pEngineKernel->GetDummyManager()->UnregisterFactory("DummyFactory");
 
 				if (m_pDummyFactory)
 					delete m_pDummyFactory;
