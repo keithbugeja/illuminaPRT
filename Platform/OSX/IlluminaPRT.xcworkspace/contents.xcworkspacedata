@@ -1,0 +1,1034 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <Group
+      location = "group:../../Utility/Sandbox"
+      name = "Sandbox">
+      <FileRef
+         location = "group:_task.h">
+      </FileRef>
+      <FileRef
+         location = "group:_taskgroup.h">
+      </FileRef>
+      <FileRef
+         location = "group:_taskpipeline.h">
+      </FileRef>
+      <FileRef
+         location = "group:AdminController.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:AdminController.h">
+      </FileRef>
+      <FileRef
+         location = "group:AdminController.o">
+      </FileRef>
+      <FileRef
+         location = "group:CommandParser.h">
+      </FileRef>
+      <FileRef
+         location = "group:Communicator.h">
+      </FileRef>
+      <FileRef
+         location = "group:Controller.h">
+      </FileRef>
+      <FileRef
+         location = "group:Coordinator.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:Coordinator.h">
+      </FileRef>
+      <FileRef
+         location = "group:Coordinator.o">
+      </FileRef>
+      <FileRef
+         location = "group:defs.h">
+      </FileRef>
+      <FileRef
+         location = "group:Environment.h">
+      </FileRef>
+      <FileRef
+         location = "group:Logger.h">
+      </FileRef>
+      <FileRef
+         location = "group:main.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:message.h">
+      </FileRef>
+      <FileRef
+         location = "group:MessageQueue.h">
+      </FileRef>
+      <FileRef
+         location = "group:mpirender.h">
+      </FileRef>
+      <FileRef
+         location = "group:renderpipeline.h">
+      </FileRef>
+      <FileRef
+         location = "group:RenderTaskCommon.h">
+      </FileRef>
+      <FileRef
+         location = "group:RenderTaskCoordinator.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:RenderTaskCoordinator.h">
+      </FileRef>
+      <FileRef
+         location = "group:RenderTaskCoordinator.o">
+      </FileRef>
+      <FileRef
+         location = "group:RenderTaskPipeline.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:RenderTaskPipeline.h">
+      </FileRef>
+      <FileRef
+         location = "group:RenderTaskPipeline.o">
+      </FileRef>
+      <FileRef
+         location = "group:RenderTaskWorker.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:RenderTaskWorker.h">
+      </FileRef>
+      <FileRef
+         location = "group:RenderTaskWorker.o">
+      </FileRef>
+      <FileRef
+         location = "group:Resource.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:Resource.h">
+      </FileRef>
+      <FileRef
+         location = "group:Resource.o">
+      </FileRef>
+      <FileRef
+         location = "group:ResourceManager.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:ResourceManager.h">
+      </FileRef>
+      <FileRef
+         location = "group:ResourceManager.o">
+      </FileRef>
+      <FileRef
+         location = "group:scheduling.h">
+      </FileRef>
+      <FileRef
+         location = "group:ServiceManager.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:ServiceManager.h">
+      </FileRef>
+      <FileRef
+         location = "group:ServiceManager.o">
+      </FileRef>
+      <FileRef
+         location = "group:Task.h">
+      </FileRef>
+      <FileRef
+         location = "group:TaskController.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:TaskController.h">
+      </FileRef>
+      <FileRef
+         location = "group:TaskController.o">
+      </FileRef>
+      <FileRef
+         location = "group:TaskPipeline.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:TaskPipeline.h">
+      </FileRef>
+      <FileRef
+         location = "group:TaskPipeline.o">
+      </FileRef>
+      <FileRef
+         location = "group:UniqueId.h">
+      </FileRef>
+      <FileRef
+         location = "group:Worker.cpp">
+      </FileRef>
+      <FileRef
+         location = "group:Worker.h">
+      </FileRef>
+      <FileRef
+         location = "group:Worker.o">
+      </FileRef>
+   </Group>
+   <Group
+      location = "group:../../Core"
+      name = "Core">
+      <Group
+         location = "group:Camera"
+         name = "Camera">
+         <FileRef
+            location = "group:Camera.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Camera.h">
+         </FileRef>
+         <FileRef
+            location = "group:CameraFactories.h">
+         </FileRef>
+         <FileRef
+            location = "group:PerspectiveCamera.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:PerspectiveCamera.h">
+         </FileRef>
+         <FileRef
+            location = "group:ThinLensCamera.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:ThinLensCamera.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Device"
+         name = "Device">
+         <FileRef
+            location = "group:Device.h">
+         </FileRef>
+         <FileRef
+            location = "group:DeviceFactories.h">
+         </FileRef>
+         <FileRef
+            location = "group:DisplayDevice.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:DisplayDevice.h">
+         </FileRef>
+         <FileRef
+            location = "group:ImageDevice.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:ImageDevice.h">
+         </FileRef>
+         <FileRef
+            location = "group:RTPDevice.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:RTPDevice.h">
+         </FileRef>
+         <FileRef
+            location = "group:VideoDevice.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:VideoDevice.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Distributed"
+         name = "Distributed">
+      </Group>
+      <Group
+         location = "group:Exception"
+         name = "Exception">
+         <FileRef
+            location = "group:Exception.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Exception.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:External"
+         name = "External">
+         <Group
+            location = "group:Compression"
+            name = "Compression">
+            <FileRef
+               location = "group:Compression.h">
+            </FileRef>
+            <FileRef
+               location = "group:lz4.c">
+            </FileRef>
+            <FileRef
+               location = "group:lz4.h">
+            </FileRef>
+         </Group>
+         <Group
+            location = "group:Video"
+            name = "Video">
+            <FileRef
+               location = "group:VideoStream.cpp">
+            </FileRef>
+            <FileRef
+               location = "group:VideoStream.h">
+            </FileRef>
+         </Group>
+      </Group>
+      <Group
+         location = "group:Filter"
+         name = "Filter">
+         <FileRef
+            location = "group:BoxFilter.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:BoxFilter.h">
+         </FileRef>
+         <FileRef
+            location = "group:Filter.h">
+         </FileRef>
+         <FileRef
+            location = "group:FilterFactories.h">
+         </FileRef>
+         <FileRef
+            location = "group:TentFilter.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:TentFilter.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Geometry"
+         name = "Geometry">
+         <FileRef
+            location = "group:Basis.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Basis.h">
+         </FileRef>
+         <FileRef
+            location = "group:Basis.inl">
+         </FileRef>
+         <FileRef
+            location = "group:BoundingBox.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:BoundingBox.h">
+         </FileRef>
+         <FileRef
+            location = "group:BoundingVolume.h">
+         </FileRef>
+         <FileRef
+            location = "group:Intersection.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Intersection.h">
+         </FileRef>
+         <FileRef
+            location = "group:Interval.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Interval.h">
+         </FileRef>
+         <FileRef
+            location = "group:Interval.inl">
+         </FileRef>
+         <FileRef
+            location = "group:Matrix3x3.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Matrix3x3.h">
+         </FileRef>
+         <FileRef
+            location = "group:Matrix4x4.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Matrix4x4.h">
+         </FileRef>
+         <FileRef
+            location = "group:Plane.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Plane.h">
+         </FileRef>
+         <FileRef
+            location = "group:Plane.inl">
+         </FileRef>
+         <FileRef
+            location = "group:Ray.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Ray.h">
+         </FileRef>
+         <FileRef
+            location = "group:Ray.inl">
+         </FileRef>
+         <FileRef
+            location = "group:Transform.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Transform.h">
+         </FileRef>
+         <FileRef
+            location = "group:Vector2.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Vector2.h">
+         </FileRef>
+         <FileRef
+            location = "group:Vector3.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Vector3.h">
+         </FileRef>
+         <FileRef
+            location = "group:Vector3.inl">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Image"
+         name = "Image">
+         <FileRef
+            location = "group:Image.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Image.h">
+         </FileRef>
+         <FileRef
+            location = "group:Image.inl">
+         </FileRef>
+         <FileRef
+            location = "group:ImageIO.h">
+         </FileRef>
+         <FileRef
+            location = "group:ImagePFM.h">
+         </FileRef>
+         <FileRef
+            location = "group:ImagePPM.h">
+         </FileRef>
+         <FileRef
+            location = "group:ImageTGA.h">
+         </FileRef>
+         <FileRef
+            location = "group:RGBPixel.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:RGBPixel.h">
+         </FileRef>
+         <FileRef
+            location = "group:Surface.h">
+         </FileRef>
+         <FileRef
+            location = "group:Surface.inl">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Integrator"
+         name = "Integrator">
+         <FileRef
+            location = "group:IGIIntegrator.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:IGIIntegrator.h">
+         </FileRef>
+         <FileRef
+            location = "group:Integrator.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Integrator.h">
+         </FileRef>
+         <FileRef
+            location = "group:IntegratorFactories.h">
+         </FileRef>
+         <FileRef
+            location = "group:PathIntegrator.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:PathIntegrator.h">
+         </FileRef>
+         <FileRef
+            location = "group:PhotonIntegrator.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:PhotonIntegrator.h">
+         </FileRef>
+         <FileRef
+            location = "group:TestIntegrator.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:TestIntegrator.h">
+         </FileRef>
+         <FileRef
+            location = "group:WhittedIntegrator.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:WhittedIntegrator.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Light"
+         name = "Light">
+         <FileRef
+            location = "group:AreaLight.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:AreaLight.h">
+         </FileRef>
+         <FileRef
+            location = "group:DiffuseAreaLight.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:DiffuseAreaLight.h">
+         </FileRef>
+         <FileRef
+            location = "group:InfiniteAreaLight.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:InfiniteAreaLight.h">
+         </FileRef>
+         <FileRef
+            location = "group:Light.h">
+         </FileRef>
+         <FileRef
+            location = "group:LightFactories.h">
+         </FileRef>
+         <FileRef
+            location = "group:PointLight.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:PointLight.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Material"
+         name = "Material">
+         <FileRef
+            location = "group:BSDF.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:BSDF.h">
+         </FileRef>
+         <FileRef
+            location = "group:BxDF.h">
+         </FileRef>
+         <FileRef
+            location = "group:Glass.h">
+         </FileRef>
+         <FileRef
+            location = "group:LambertianBxDF.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:LambertianBxDF.h">
+         </FileRef>
+         <FileRef
+            location = "group:Material.h">
+         </FileRef>
+         <FileRef
+            location = "group:MaterialFactories.h">
+         </FileRef>
+         <FileRef
+            location = "group:MaterialGroup.h">
+         </FileRef>
+         <FileRef
+            location = "group:Matte.h">
+         </FileRef>
+         <FileRef
+            location = "group:Mirror.h">
+         </FileRef>
+         <FileRef
+            location = "group:SpecularReflectionBxDF.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:SpecularReflectionBxDF.h">
+         </FileRef>
+         <FileRef
+            location = "group:SpecularTransmissionBxDF.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:SpecularTransmissionBxDF.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Maths"
+         name = "Maths">
+         <FileRef
+            location = "group:Maths.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Maths.h">
+         </FileRef>
+         <FileRef
+            location = "group:Montecarlo.h">
+         </FileRef>
+         <FileRef
+            location = "group:Random.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Random.h">
+         </FileRef>
+         <FileRef
+            location = "group:Statistics.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Object"
+         name = "Object">
+         <FileRef
+            location = "group:Cloneable.h">
+         </FileRef>
+         <FileRef
+            location = "group:Object.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Object.h">
+         </FileRef>
+         <FileRef
+            location = "group:Object.inl">
+         </FileRef>
+         <FileRef
+            location = "group:UniqueID.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:UniqueID.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Postproc"
+         name = "Postproc">
+         <FileRef
+            location = "group:AccumulationBuffer.h">
+         </FileRef>
+         <FileRef
+            location = "group:AutoTone.h">
+         </FileRef>
+         <FileRef
+            location = "group:DiscontinuityBuffer.h">
+         </FileRef>
+         <FileRef
+            location = "group:DragoTone.h">
+         </FileRef>
+         <FileRef
+            location = "group:PostProcess.h">
+         </FileRef>
+         <FileRef
+            location = "group:PostProcessFactories.h">
+         </FileRef>
+         <FileRef
+            location = "group:ReconstructionBuffer.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Renderer"
+         name = "Renderer">
+         <FileRef
+            location = "group:BaseRenderer.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:BaseRenderer.h">
+         </FileRef>
+         <FileRef
+            location = "group:BasicRenderer.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:BasicRenderer.h">
+         </FileRef>
+         <FileRef
+            location = "group:DistributedRenderer.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:DistributedRenderer.h">
+         </FileRef>
+         <FileRef
+            location = "group:MultipassRenderer.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:MultipassRenderer.h">
+         </FileRef>
+         <FileRef
+            location = "group:MultithreadedRenderer.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:MultiThreadedRenderer.h">
+         </FileRef>
+         <FileRef
+            location = "group:Renderer.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Renderer.h">
+         </FileRef>
+         <FileRef
+            location = "group:RendererFactories.h">
+         </FileRef>
+         <FileRef
+            location = "group:TimeConstrainedRenderer.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:TimeConstrainedRenderer.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Sampler"
+         name = "Sampler">
+         <FileRef
+            location = "group:JitterSampler.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:JitterSampler.h">
+         </FileRef>
+         <FileRef
+            location = "group:MultijitterSampler.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:MultijitterSampler.h">
+         </FileRef>
+         <FileRef
+            location = "group:PrecomputationSampler.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:PrecomputationSampler.h">
+         </FileRef>
+         <FileRef
+            location = "group:QuasiRandom.h">
+         </FileRef>
+         <FileRef
+            location = "group:RandomSampler.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:RandomSampler.h">
+         </FileRef>
+         <FileRef
+            location = "group:Sampler.h">
+         </FileRef>
+         <FileRef
+            location = "group:SamplerDiagnostics.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:SamplerDiagnostics.h">
+         </FileRef>
+         <FileRef
+            location = "group:SamplerFactories.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Scene"
+         name = "Scene">
+         <FileRef
+            location = "group:EmissivePrimitive.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:EmissivePrimitive.h">
+         </FileRef>
+         <FileRef
+            location = "group:Environment.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Environment.h">
+         </FileRef>
+         <FileRef
+            location = "group:EnvironmentLoader.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:EnvironmentLoader.h">
+         </FileRef>
+         <FileRef
+            location = "group:GeometricPrimitive.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:GeometricPrimitive.h">
+         </FileRef>
+         <FileRef
+            location = "group:ParticleSceneLoader.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:ParticleSceneLoader.h">
+         </FileRef>
+         <FileRef
+            location = "group:Primitive.h">
+         </FileRef>
+         <FileRef
+            location = "group:Scene.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Scene.h">
+         </FileRef>
+         <FileRef
+            location = "group:SceneLoader.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:SceneLoader.h">
+         </FileRef>
+         <FileRef
+            location = "group:Visibility.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Visibility.h">
+         </FileRef>
+         <FileRef
+            location = "group:WavefrontSceneLoader.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:WavefrontSceneLoader.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Shape"
+         name = "Shape">
+         <FileRef
+            location = "group:BasicMesh.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:BasicMesh.h">
+         </FileRef>
+         <FileRef
+            location = "group:BIHMesh.h">
+         </FileRef>
+         <FileRef
+            location = "group:BVHMesh.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:BVHMesh.h">
+         </FileRef>
+         <FileRef
+            location = "group:DifferentialSurface.h">
+         </FileRef>
+         <FileRef
+            location = "group:HybridMesh.h">
+         </FileRef>
+         <FileRef
+            location = "group:IndexedTriangle.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:IndexedTriangle.h">
+         </FileRef>
+         <FileRef
+            location = "group:KDTreeMesh.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:KDTreeMesh.h">
+         </FileRef>
+         <FileRef
+            location = "group:PersistentMesh.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:PersistentMesh.h">
+         </FileRef>
+         <FileRef
+            location = "group:Shape.h">
+         </FileRef>
+         <FileRef
+            location = "group:ShapeFactories.h">
+         </FileRef>
+         <FileRef
+            location = "group:ShapeForge.h">
+         </FileRef>
+         <FileRef
+            location = "group:Sphere.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Sphere.h">
+         </FileRef>
+         <FileRef
+            location = "group:TreeMesh.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:TreeMesh.h">
+         </FileRef>
+         <FileRef
+            location = "group:Triangle.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Triangle.h">
+         </FileRef>
+         <FileRef
+            location = "group:TriangleMesh.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:TriangleMesh.h">
+         </FileRef>
+         <FileRef
+            location = "group:VertexFormats.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Space"
+         name = "Space">
+         <FileRef
+            location = "group:BasicSpace.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:BasicSpace.h">
+         </FileRef>
+         <FileRef
+            location = "group:BVHSpace.h">
+         </FileRef>
+         <FileRef
+            location = "group:Space.h">
+         </FileRef>
+         <FileRef
+            location = "group:SpaceFactories.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Spectrum"
+         name = "Spectrum">
+         <FileRef
+            location = "group:BaseSpectrum.h">
+         </FileRef>
+         <FileRef
+            location = "group:RGBSpectrum.h">
+         </FileRef>
+         <FileRef
+            location = "group:Spectrum.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Staging"
+         name = "Staging">
+         <FileRef
+            location = "group:Acceleration.h">
+         </FileRef>
+         <FileRef
+            location = "group:Aggregate.h">
+         </FileRef>
+         <FileRef
+            location = "group:WavefrontLoader.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:System"
+         name = "System">
+         <FileRef
+            location = "group:ArgumentMap.h">
+         </FileRef>
+         <FileRef
+            location = "group:Buffer.h">
+         </FileRef>
+         <FileRef
+            location = "group:Dummy.h">
+         </FileRef>
+         <FileRef
+            location = "group:DummyManager.h">
+         </FileRef>
+         <FileRef
+            location = "group:EngineKernel.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:EngineKernel.h">
+         </FileRef>
+         <FileRef
+            location = "group:Factory.h">
+         </FileRef>
+         <FileRef
+            location = "group:FactoryManager.h">
+         </FileRef>
+         <FileRef
+            location = "group:FactoryManager.inl">
+         </FileRef>
+         <FileRef
+            location = "group:IlluminaPRT.h">
+         </FileRef>
+         <FileRef
+            location = "group:Lexer.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Lexer.h">
+         </FileRef>
+         <FileRef
+            location = "group:Library.h">
+         </FileRef>
+         <FileRef
+            location = "group:LibraryImpl.h">
+         </FileRef>
+         <FileRef
+            location = "group:LibraryManager.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:LibraryManager.h">
+         </FileRef>
+         <FileRef
+            location = "group:LibrarySymbols.h">
+         </FileRef>
+         <FileRef
+            location = "group:Platform.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Platform.h">
+         </FileRef>
+         <FileRef
+            location = "group:PlugIn.h">
+         </FileRef>
+         <FileRef
+            location = "group:PlugInManager.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:PlugInManager.h">
+         </FileRef>
+         <FileRef
+            location = "group:Singleton.h">
+         </FileRef>
+         <FileRef
+            location = "group:Version.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Version.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Texture"
+         name = "Texture">
+         <FileRef
+            location = "group:ImageTexture.h">
+         </FileRef>
+         <FileRef
+            location = "group:MarbleTexture.h">
+         </FileRef>
+         <FileRef
+            location = "group:MemoryMappedTexture.h">
+         </FileRef>
+         <FileRef
+            location = "group:Noise.h">
+         </FileRef>
+         <FileRef
+            location = "group:NoiseTexture.h">
+         </FileRef>
+         <FileRef
+            location = "group:SimpleTexture.h">
+         </FileRef>
+         <FileRef
+            location = "group:Texture.h">
+         </FileRef>
+         <FileRef
+            location = "group:TextureFactories.h">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:Threading"
+         name = "Threading">
+         <FileRef
+            location = "group:Atomic.h">
+         </FileRef>
+         <FileRef
+            location = "group:AtomicReference.h">
+         </FileRef>
+         <FileRef
+            location = "group:LinkedList.h">
+         </FileRef>
+         <FileRef
+            location = "group:List.h">
+         </FileRef>
+         <FileRef
+            location = "group:Lock.h">
+         </FileRef>
+         <FileRef
+            location = "group:Monitor.h">
+         </FileRef>
+         <FileRef
+            location = "group:Pointer.h">
+         </FileRef>
+         <FileRef
+            location = "group:Queue.h">
+         </FileRef>
+         <FileRef
+            location = "group:ReentrantLock.h">
+         </FileRef>
+         <FileRef
+            location = "group:Spinlock.cpp">
+         </FileRef>
+         <FileRef
+            location = "group:Spinlock.h">
+         </FileRef>
+         <FileRef
+            location = "group:Spinlock.inl">
+         </FileRef>
+         <FileRef
+            location = "group:WorkQueue.h">
+         </FileRef>
+      </Group>
+   </Group>
+</Workspace>
