@@ -49,16 +49,16 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 		L(0.f);
 	
 	IMaterial *pMaterial = NULL;
-	bool specularBounce = false;
+	//bool specularBounce = false;
 
-	BxDF::Type bxdfType;
+	//BxDF::Type bxdfType;
 	
 	Vector3 wIn, wOut, 
 		wInLocal, wOutLocal; 
 
 	Vector2 sample;
 
-	float pdf;
+	//float pdf;
 
 	int rayDepth = 0;
 

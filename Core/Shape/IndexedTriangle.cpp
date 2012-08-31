@@ -134,7 +134,7 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 	//----------------------------------------------------------------------------------------------
 	// Moeller-Trumbore
 	//----------------------------------------------------------------------------------------------
-	/**/ /*
+	/*
 	double edge1[3], edge2[3], tvec[3], pvec[3], qvec[3];
 	double det, inv_det;
 	float alpha, beta, gamma, t;
@@ -170,12 +170,12 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 	t = DOT(edge2, qvec) * inv_det;
 	if (t < p_ray.Min || t > p_ray.Max)
 		return false;
-	/**/
+	*/
 
 	//----------------------------------------------------------------------------------------------
 	// Reference
 	//----------------------------------------------------------------------------------------------
-	/**//*
+	/*
 	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]];
 	const Vertex &v1 = m_pMesh->VertexList[m_nVertexID[1]];
 	const Vertex &v2 = m_pMesh->VertexList[m_nVertexID[2]];
@@ -219,7 +219,7 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 	float t = A.Determinant() * invDetA;
 	if (t < p_ray.Min || t > p_ray.Max)
 		return false;
-	/**/
+	*/
 	//----------------------------------------------------------------------------------------------
 
 	// Populate differential surface
@@ -240,10 +240,11 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 	p_surface.ShadingNormal.Normalize();
 	p_surface.GeometryNormal = p_surface.ShadingNormal;
 
-	/* Sanity check */ /*
+	/* Sanity check */
+    /*
 	if (p_surface.ShadingNormal.X != p_surface.ShadingNormal.X)
 		std::cerr << "Warning : Indeterminate normal computation!" << std::endl;
-	/* */
+	 */
 
 	return true;
 }
@@ -285,7 +286,7 @@ bool IndexedTriangle::Intersects(const Ray &p_ray)
 	//----------------------------------------------------------------------------------------------
 	// Muller-Trumbore
 	//----------------------------------------------------------------------------------------------
-	/**//*
+	/*
 	double edge1[3], edge2[3], tvec[3], pvec[3], qvec[3];
 	double det, inv_det;
 	float u, v, a, t;
@@ -323,12 +324,12 @@ bool IndexedTriangle::Intersects(const Ray &p_ray)
 		return false;
 
 	return true;
-	/**/
+	 */
 
 	//----------------------------------------------------------------------------------------------
 	// Reference
 	//----------------------------------------------------------------------------------------------
-	/**/ /*
+	/*
 	const Vertex &v0 = m_pMesh->VertexList[m_nVertexID[0]],
 		&v1 = m_pMesh->VertexList[m_nVertexID[1]],
 		&v2 = m_pMesh->VertexList[m_nVertexID[2]];
@@ -375,7 +376,7 @@ bool IndexedTriangle::Intersects(const Ray &p_ray)
 		return false;
 
 	return true;
-	/**/
+	 */
 }
 //----------------------------------------------------------------------------------------------
 float IndexedTriangle::GetArea(void) const

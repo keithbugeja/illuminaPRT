@@ -43,12 +43,12 @@ RTPDevice::RTPDevice(const std::string &p_strName,
 	int p_nFramesPerSecond, int p_nBitRate, IVideoStream::VideoCodec p_videoCodec)	
 	: IDevice(p_strName) 
 	, m_nActiveBuffer(0)
-	, m_strAddress(p_strAddress)
-	, m_nPort(p_nPort)
+    , m_videoCodec(p_videoCodec)
+    , m_nFramesPerSecond(p_nFramesPerSecond)
 	, m_nBitRate(p_nBitRate)
-	, m_nFramesPerSecond(p_nFramesPerSecond)
-	, m_videoCodec(p_videoCodec)
-	, m_bIsOpen(false)
+    , m_strAddress(p_strAddress)
+    , m_nPort(p_nPort)
+    , m_bIsOpen(false)
 {
 	m_pImage[0] = new Image(p_nWidth, p_nHeight);
 	m_pImage[1] = new Image(p_nWidth, p_nHeight);
@@ -62,12 +62,12 @@ RTPDevice::RTPDevice(int p_nWidth, int p_nHeight,
 	int p_nFramesPerSecond, int p_nBitRate, 
 	IVideoStream::VideoCodec p_videoCodec)
 	: m_nActiveBuffer(0)
-	, m_strAddress(p_strAddress)
-	, m_nPort(p_nPort)
-	, m_nBitRate(p_nBitRate)
-	, m_nFramesPerSecond(p_nFramesPerSecond)
-	, m_videoCodec(p_videoCodec)
-	, m_bIsOpen(false)
+    , m_videoCodec(p_videoCodec)
+    , m_nFramesPerSecond(p_nFramesPerSecond)
+    , m_nBitRate(p_nBitRate)
+    , m_strAddress(p_strAddress)
+    , m_nPort(p_nPort)
+    , m_bIsOpen(false)
 {
 	m_pImage[0] = new Image(p_nWidth, p_nHeight);
 	m_pImage[1] = new Image(p_nWidth, p_nHeight);
@@ -82,11 +82,11 @@ RTPDevice::~RTPDevice()
 	Safe_Delete(m_pImage[1]);
 }
 //----------------------------------------------------------------------------------------------
-uint32_t RTPDevice::GetWidth(void) const { 
+int RTPDevice::GetWidth(void) const { 
 	return m_pBackBuffer->GetWidth(); 
 }
 //----------------------------------------------------------------------------------------------
-uint32_t RTPDevice::GetHeight(void) const { 
+int RTPDevice::GetHeight(void) const { 
 	return m_pBackBuffer->GetHeight(); 
 }
 //----------------------------------------------------------------------------------------------

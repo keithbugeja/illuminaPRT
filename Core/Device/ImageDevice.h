@@ -30,8 +30,8 @@ namespace Illumina
 			//----------------------------------------------------------------------------------------------
 			// Interface implementation methods
 			//----------------------------------------------------------------------------------------------
-			uint32_t GetWidth(void) const;
-			uint32_t GetHeight(void) const;
+			int GetWidth(void) const;
+			int GetHeight(void) const;
 			
 			IDevice::AccessType GetAccessType(void) const;
 

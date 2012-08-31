@@ -10,7 +10,7 @@
 
 #include "System/PlugInManager.h"
 #include "System/FactoryManager.h"
-#include "System/DummyManager.h"
+// #include "System/DummyManager.h"
 
 #include "Integrator/Integrator.h"
 #include "Postproc/PostProcess.h"
@@ -53,7 +53,7 @@ namespace Illumina
 			ShapeManager* GetShapeManager(void) const;
 			SpaceManager* GetSpaceManager(void) const;
 			LightManager* GetLightManager(void) const;
-			DummyManager* GetDummyManager(void) const;
+			// DummyManager* GetDummyManager(void) const;
 		};
 	}
 }

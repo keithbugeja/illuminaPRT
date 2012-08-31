@@ -27,9 +27,9 @@ IGIIntegrator::IGIIntegrator(const std::string &p_strName, int p_nMaxVPL, int p_
 	, m_nMaxPath(p_nMaxPath)
 	, m_nTileWidth(p_nTileWidth)
 	, m_nTileArea(p_nTileWidth * p_nTileWidth)
+    , m_nMaxRayDepth(p_nMaxRayDepth)
 	, m_nShadowSampleCount(p_nShadowSampleCount)
-	, m_nIndirectSampleCount(p_nIndirectSampleCount)
-	, m_nMaxRayDepth(p_nMaxRayDepth)
+    , m_nIndirectSampleCount(p_nIndirectSampleCount)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
 	, m_fGTermMax(p_fGTermMax)
 { }
@@ -40,10 +40,10 @@ IGIIntegrator::IGIIntegrator(int p_nMaxVPL, int p_nMaxPath, int p_nTileWidth, fl
 	, m_nMaxPath(p_nMaxPath)
 	, m_nTileWidth(p_nTileWidth)
 	, m_nTileArea(p_nTileWidth * p_nTileWidth)
-	, m_nShadowSampleCount(p_nShadowSampleCount)
-	, m_nIndirectSampleCount(p_nIndirectSampleCount)
-	, m_nMaxRayDepth(p_nMaxRayDepth)
-	, m_fReflectEpsilon(p_fReflectEpsilon)
+    , m_nMaxRayDepth(p_nMaxRayDepth)
+    , m_nShadowSampleCount(p_nShadowSampleCount)
+    , m_nIndirectSampleCount(p_nIndirectSampleCount)
+    , m_fReflectEpsilon(p_fReflectEpsilon)
 	, m_fGTermMax(p_fGTermMax)
 { }
 //----------------------------------------------------------------------------------------------
@@ -161,8 +161,7 @@ bool IGIIntegrator::Prepare(Scene *p_pScene)
 //----------------------------------------------------------------------------------------------
 Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_intersection, RadianceContext *p_pRadianceContext)
 {
-	float samplesUsed, 
-		pdf;
+	float samplesUsed;
 
 	Vector3 wIn;
 

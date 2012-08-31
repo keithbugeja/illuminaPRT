@@ -137,7 +137,7 @@ bool ParticleSceneLoader::LoadMaterials(const std::string &p_strFilename, Partic
 	// define some temporary containers
 	Vector2 vector2;
 	Vector3 vector3;
-	int value;
+	// int value;
 
 	std::string currentLine;
 	std::vector<std::string> tokenList;

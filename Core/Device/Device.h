@@ -35,8 +35,8 @@ namespace Illumina
 			IDevice(void) { }
 
 		public:
-			virtual uint32_t GetWidth(void) const = 0;
-			virtual uint32_t GetHeight(void) const = 0;
+			virtual int GetWidth(void) const = 0;
+			virtual int GetHeight(void) const = 0;
 			
 			virtual AccessType GetAccessType(void) const = 0;
 

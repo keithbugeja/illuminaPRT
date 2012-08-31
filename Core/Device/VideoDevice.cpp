@@ -15,17 +15,17 @@ using namespace Illumina::Core;
 VideoDevice::VideoDevice(const std::string &p_strName, int p_nWidth, int p_nHeight, const std::string &p_strFilename, int p_nFramesPerSecond, IVideoStream::VideoCodec p_videoCodec)
 	: IDevice(p_strName) 
 	, m_pImage(new Image(p_nWidth, p_nHeight))
-	, m_strFilename(p_strFilename)
-	, m_nFramesPerSecond(p_nFramesPerSecond)
-	, m_videoCodec(p_videoCodec)
+    , m_videoCodec(p_videoCodec)
+    , m_nFramesPerSecond(p_nFramesPerSecond)
+    , m_strFilename(p_strFilename)
 	, m_bIsOpen(false)
 { }
 //----------------------------------------------------------------------------------------------
 VideoDevice::VideoDevice(int p_nWidth, int p_nHeight, const std::string &p_strFilename, int p_nFramesPerSecond, IVideoStream::VideoCodec p_videoCodec)
 	: m_pImage(new Image(p_nWidth, p_nHeight))
+    , m_videoCodec(p_videoCodec)
+    , m_nFramesPerSecond(p_nFramesPerSecond)
 	, m_strFilename(p_strFilename)
-	, m_nFramesPerSecond(p_nFramesPerSecond)
-	, m_videoCodec(p_videoCodec)
 	, m_bIsOpen(false)
 { }
 //----------------------------------------------------------------------------------------------
@@ -34,11 +34,11 @@ VideoDevice::~VideoDevice()
 	Safe_Delete(m_pImage);
 }
 //----------------------------------------------------------------------------------------------
-uint32_t VideoDevice::GetWidth(void) const { 
+int VideoDevice::GetWidth(void) const { 
 	return m_pImage->GetWidth(); 
 }
 //----------------------------------------------------------------------------------------------
-uint32_t VideoDevice::GetHeight(void) const { 
+int VideoDevice::GetHeight(void) const { 
 	return m_pImage->GetHeight(); 
 }
 //----------------------------------------------------------------------------------------------

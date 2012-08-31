@@ -11,9 +11,9 @@ inline bool Spinlock::TryLock(void)
 {
 	#if defined(__COMPILER_MSVC__)
 		return (!m_lock && !_interlockedbittestandset(&m_lock, 0));
-	#elif defined(__COMPILER_GCC__)
+	#elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 		return (!m_lock && !__sync_lock_test_and_set(&m_lock, 1));
-	#else
+    #else
 		#pragma message ("No Atomic TAS primitive available!")
 		return false;
 	#endif
@@ -34,8 +34,8 @@ inline void Spinlock::Lock(void)
 					_mm_pause(); 
 			}
 		} while(_interlockedbittestandset(&m_lock, 0));
-	#elif defined(__COMPILER_GCC__)
-		do 
+	#elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
+		do
 		{
 			backoff += m_backoff;
 
@@ -52,7 +52,7 @@ inline void Spinlock::Unlock(void)
 {
 	#if defined(__COMPILER_MSVC__)
 		m_lock = 0;
-	#elif defined(__COMPILER_GCC__)
+	#elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 		__sync_lock_release(&m_lock);
 	#endif
 }

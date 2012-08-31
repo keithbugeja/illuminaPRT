@@ -42,11 +42,11 @@ DisplayDevice::~DisplayDevice()
 	Safe_Delete(m_pImage[1]);
 }
 //----------------------------------------------------------------------------------------------
-uint32_t DisplayDevice::GetWidth(void) const { 
+int DisplayDevice::GetWidth(void) const { 
 	return m_pBackBuffer->GetWidth(); 
 }
 //----------------------------------------------------------------------------------------------
-uint32_t DisplayDevice::GetHeight(void) const { 
+int DisplayDevice::GetHeight(void) const { 
 	return m_pBackBuffer->GetHeight(); 
 }
 //----------------------------------------------------------------------------------------------

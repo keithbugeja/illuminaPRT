@@ -39,7 +39,7 @@ namespace Illumina
 			// Incorrect semantics
 			Int32 operator++(int)
 			{
-                #if defined(__COMPILER_GCC__)
+                #if defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
                     return __sync_fetch_and_add(&m_int32, 1);
 				#elif defined(__COMPILER_MSVC__)
 					#if defined(__ARCHITECTURE_X64__)
@@ -66,7 +66,7 @@ namespace Illumina
 
 			Int32 operator--(int)
 			{
-                #if defined(__COMPILER_GCC__)
+                #if defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
                     return __sync_fetch_and_sub(&m_int32, 1);
 				#elif defined(__COMPILER_MSVC__)
 					#if defined(__ARCHITECTURE_X64__)
@@ -89,7 +89,7 @@ namespace Illumina
 
 			Int32 operator+=(Int32 p_nValue)
 			{
-				#if defined(__COMPILER_GCC__)
+                #if defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
                     return __sync_add_and_fetch(&m_int32, p_nValue);
 				#elif defined(__COMPILER_MSVC__)
 					#if defined(__ARCHITECTURE_X64__)
@@ -112,8 +112,8 @@ namespace Illumina
 
 			Int32 operator-=(Int32 p_nValue)
 			{
-				#if defined(__COMPILER_GCC__)
-                    return __sync_sub_and_fetch(&m_int32, p_nValue);
+                #if defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
+                        return __sync_sub_and_fetch(&m_int32, p_nValue);
 				#elif defined(__COMPILER_MSVC__)
 					#if defined(__ARCHITECTURE_X64__)
 						return _InterlockedAdd(reinterpret_cast<volatile long*>(&m_int32), -p_nValue);
@@ -146,7 +146,7 @@ namespace Illumina
 
 			inline Int32 FetchAndAdd(Int32 p_nIncrement)
 			{
-				#if defined(__COMPILER_GCC__)
+                #if defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
                     return __sync_fetch_and_add(&m_int32, p_nIncrement);
 				#elif defined(__COMPILER_MSVC__)
 					#if defined(__ARCHITECTURE_X64__)
@@ -168,7 +168,7 @@ namespace Illumina
 
 			static inline Int32 Add(Int32 *p_pValue, Int32 p_nIncrement)
 			{
-				#if defined(__COMPILER_GCC__)
+                #if defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 					return __sync_add_and_fetch(p_pValue, p_nIncrement);
 				#elif defined(__COMPILER_MSVC__)
 					#if defined(__ARCHITECTURE_X64__)
@@ -201,7 +201,7 @@ namespace Illumina
 			{
 				#if defined(__COMPILER_MSVC__)
 					return _InterlockedExchange(reinterpret_cast<long *>(p_pValue), p_nExchange);
-				#elif defined(__COMPILER_GCC__)
+                #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 					Int32 nValue;
 
 					do { nValue = *p_pValue; }
@@ -213,7 +213,7 @@ namespace Illumina
 
 			static inline Int32 FetchAndAdd(Int32 *p_pValue, Int32 p_nIncrement)
 			{
-				#if defined(__COMPILER_GCC__)
+                #if defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 					return __sync_fetch_and_add(p_pValue, p_nIncrement);
 				#elif defined(__COMPILER_MSVC__)
 					#if defined(__ARCHITECTURE_X64__)
@@ -235,7 +235,7 @@ namespace Illumina
 
 			static inline Int32 CompareAndSwap(Int32 *p_pDestination, Int32 p_nExchange, Int32 p_nComparand)
 			{
-				#if defined(__COMPILER_GCC__)
+                #if defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 					return __sync_val_compare_and_swap(p_pDestination, p_nComparand, p_nExchange);
 				#elif defined(__COMPILER_MSVC__)
 					#if defined(__ARCHITECTURE_X64__)
@@ -278,7 +278,7 @@ namespace Illumina
 				{
 					#if defined(__COMPILER_MSVC__)
 						return _InterlockedIncrement64(&m_int64);
-					#elif defined(__COMPILER_GCC__)
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 						return __sync_add_and_fetch(&m_int64, 1);
 					#endif
 				}
@@ -287,7 +287,7 @@ namespace Illumina
 				{
 					#if defined(__COMPILER_MSVC__)
 						return _InterlockedExchangeAdd64(&m_int64, 1);
-					#elif defined(__COMPILER_GCC__)
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 						return __sync_fetch_and_add(&m_int64, 1);
 					#endif
 				}
@@ -296,7 +296,7 @@ namespace Illumina
 				{
 					#if defined(__COMPILER_MSVC__)
 						return _InterlockedDecrement64(&m_int64);
-					#elif defined(__COMPILER_GCC__)
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 						return __sync_sub_and_fetch(&m_int64, 1);
 					#endif
 				}
@@ -305,7 +305,7 @@ namespace Illumina
 				{
 					#if defined(__COMPILER_MSVC__)
 						return _InterlockedExchangeAdd64(&m_int64, -1);
-					#elif defined(__COMPILER_GCC__)
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 						return __sync_fetch_and_sub(&m_int64, 1);
 					#endif
 				}
@@ -314,7 +314,7 @@ namespace Illumina
 				{
 					#if defined(__COMPILER_MSVC__)
 						return _InterlockedAdd64(&m_int64, p_nValue);
-					#elif defined(__COMPILER_GCC__)
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 						return __sync_add_and_fetch(&m_int64, p_nValue);
 					#endif
 				}
@@ -323,7 +323,7 @@ namespace Illumina
 				{
 					#if defined(__COMPILER_MSVC__)
 						return _InterlockedAdd64(&m_int64, -p_nValue);
-					#elif defined(__COMPILER_GCC__)
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 						return __sync_sub_and_fetch(&m_int64, p_nValue);
 					#endif
 				}
@@ -333,8 +333,8 @@ namespace Illumina
 					#if defined(__COMPILER_MSVC__)
 						_InterlockedExchange64(&m_int64, p_nValue);
 						return m_int64;
-					#elif defined(__COMPILER_GCC__)
-						while(!__sync_bool_compare_and_swap(&m_int64, m_int64, p_nValue));
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
+                    while(!__sync_bool_compare_and_swap(&m_int64, m_int64, p_nValue));
 						return m_int64;
 					#endif
 				}
@@ -357,7 +357,7 @@ namespace Illumina
 				{
 					#if defined(__COMPILER_MSVC__)
 						return _InterlockedExchangeAdd64(&m_int64, p_nIncrement);
-					#elif defined(__COMPILER_GCC__)
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 						return __sync_fetch_and_add(&m_int64, p_nIncrement);
 					#endif
 				}
@@ -366,7 +366,7 @@ namespace Illumina
 				{
 					#if defined(__COMPILER_MSVC__)
 						return _InterlockedAdd64(p_pValue, p_nIncrement);
-					#elif defined(__COMPILER_GCC__)
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 						return __sync_add_and_fetch(p_pValue, p_nIncrement);
 					#endif
 				}
@@ -375,7 +375,7 @@ namespace Illumina
 				{
 					#if defined(__COMPILER_MSVC__)
 						return _InterlockedIncrement64(p_pValue);
-					#elif defined(__COMPILER_GCC__)
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 						return __sync_add_and_fetch(p_pValue, 1);
 					#endif
 				}
@@ -384,7 +384,7 @@ namespace Illumina
 				{
 					#if defined(__COMPILER_MSVC__)
 						return _InterlockedDecrement64(p_pValue);
-					#elif defined(__COMPILER_GCC__)
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 						return __sync_sub_and_fetch(p_pValue, 1);
 					#endif
 				}
@@ -393,7 +393,7 @@ namespace Illumina
 				{
 					#if defined(__COMPILER_MSVC__)
 						return _InterlockedExchange64(p_pValue, p_nExchange);
-					#else
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 						Int64 nValue;
 
 						do { nValue = *p_pValue; }
@@ -407,7 +407,7 @@ namespace Illumina
 				{
 					#if defined(__COMPILER_MSVC__)
 						return _InterlockedExchangeAdd64(p_pValue, p_nIncrement);
-					#elif defined(__COMPILER_GCC__)
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 						return __sync_fetch_and_add(p_pValue, p_nIncrement);
 					#endif
 				}
@@ -416,7 +416,7 @@ namespace Illumina
 				{
 					#if defined(__COMPILER_MSVC__)
 						return _InterlockedCompareExchange64(p_pDestination, p_nExchange, p_nComparand);
-					#elif defined(__COMPILER_GCC__)
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 						return __sync_val_compare_and_swap(p_pDestination, p_nComparand, p_nExchange);
 					#endif
 				}
@@ -438,7 +438,7 @@ namespace Illumina
 					#else
 						return (Int32)p_pComparand == _InterlockedCompareExchange((long*)p_pReference, (long)p_pNewReference, (long)p_pComparand);
 					#endif
-                #elif defined(__COMPILER_GCC__)
+                #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 					#if defined(__ARCHITECTURE_X64__)
 						return __sync_bool_compare_and_swap((Int64*)p_pReference, (Int64)p_pComparand, (Int64) p_pNewReference);
 					#else
@@ -455,7 +455,7 @@ namespace Illumina
 					#else
 						return (void*)_InterlockedCompareExchange((long*)p_pReference, (long)p_pNewReference, (long)p_pComparand);
 					#endif
-                #elif defined(__COMPILER_GCC__)
+                #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 					#if defined(__ARCHITECTURE_X64__)
 						return (void*)__sync_val_compare_and_swap((Int64*)p_pReference, (Int64)p_pComparand, (Int64)p_pNewReference);
 					#else
@@ -467,7 +467,7 @@ namespace Illumina
 			inline static Int32 CompareAndSwap(Int32 *p_pDestination, Int32 p_nExchange, Int32 p_nComparand) {
 				#if defined(__COMPILER_MSVC__)
 					return (Int32)_InterlockedCompareExchange((long*)p_pDestination, (long)p_nExchange, (long)p_nComparand);
-                #elif defined(__COMPILER_GCC__)
+                #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)  
 					return __sync_val_compare_and_swap(p_pDestination, p_nComparand, p_nExchange);
 				#endif
 			}
@@ -475,7 +475,7 @@ namespace Illumina
 			inline static Int64 CompareAndSwap(Int64 *p_pDestination, Int64 p_nExchange, Int64 p_nComparand) {
 				#if defined(__COMPILER_MSVC__)
 					return _InterlockedCompareExchange64((long long*)p_pDestination, (long long)p_nExchange, (long long)p_nComparand);
-                #elif defined(__COMPILER_GCC__)
+                #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 					return __sync_val_compare_and_swap(p_pDestination, p_nComparand, p_nExchange);
 				#endif
 			}
@@ -487,7 +487,7 @@ namespace Illumina
 
 				#if defined(__COMPILER_MSVC__)
 					long long result = _InterlockedCompareExchange64((Int64 volatile*)p_pDestination, (Int64)exchange, (Int64)comparand);
-                #elif defined(__COMPILER_GCC__)
+                #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
 					long long result = __sync_val_compare_and_swap((Int64*)p_pDestination, (Int64)comparand, (Int64)exchange);
 				#endif
 
@@ -511,7 +511,7 @@ namespace Illumina
 							(Int64 volatile*)p_pDestination,
 							(Int64)p_nExchangeHi, (Int64)p_nExchangeLo,
 							(Int64*)p_pComparandResult) != 0);
-					#elif defined(__COMPILER_GCC__)
+                    #elif defined(__COMPILER_GCC__) || defined(__COMPILER_APPLE_GCC__)
                         Int64 result;
 
                         asm __volatile__ (

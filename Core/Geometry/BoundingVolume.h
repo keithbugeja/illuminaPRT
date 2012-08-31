@@ -26,6 +26,8 @@ namespace Illumina
 		class IBoundingVolume
 		{
 		public:
+            virtual ~IBoundingVolume() {}
+            
 			virtual BoundingVolumeType GetType(void) const = 0;
 
 			virtual boost::shared_ptr<IBoundingVolume> Clone(void) const = 0;

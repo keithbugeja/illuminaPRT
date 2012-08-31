@@ -16,7 +16,7 @@
 #include "System/EngineKernel.h"
 #include "Scene/SceneLoader.h"
 
-class WavefrontContext;
+struct WavefrontContext;
 
 //----------------------------------------------------------------------------------------------
 namespace Illumina

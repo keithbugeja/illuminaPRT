@@ -119,7 +119,12 @@ LexerToken Lexer::ExtractToken(void)
 
 				break;
 			}
-		}
+                
+            case Lexer::Error:
+            {
+                throw new Exception("Parsing error : Unexpected lexical error!");
+            }
+        }
 	}
 
 	if (state != Lexer::Start)

@@ -6,7 +6,12 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+#if !defined(__APPLE__)
 #include <malloc.h>
+#else
+// #include <stdio.h>
+#endif
+
 #include <boost/timer.hpp>
 
 //----------------------------------------------------------------------------------------------
@@ -114,9 +119,10 @@
 	// Aligned malloc and free call ordinary malloc and free functions
 	inline void* AlignedMalloc(size_t size, int boundary) 
 	{
-		void *memory; 
+        return valloc(size);
+		/* void *memory;
 		posix_memalign(&memory, boundary, size);
-		return memory;
+		return memory; */
 	}
 
 	template<class T> void AlignedFree(T*& p) {

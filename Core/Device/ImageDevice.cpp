@@ -36,11 +36,11 @@ ImageDevice::~ImageDevice()
 		delete m_pImageIO;
 }
 //----------------------------------------------------------------------------------------------
-uint32_t ImageDevice::GetWidth(void) const { 
+int ImageDevice::GetWidth(void) const { 
 	return m_pImage->GetWidth(); 
 }
 //----------------------------------------------------------------------------------------------
-uint32_t ImageDevice::GetHeight(void) const { 
+int ImageDevice::GetHeight(void) const { 
 	return m_pImage->GetHeight(); 
 }
 //----------------------------------------------------------------------------------------------

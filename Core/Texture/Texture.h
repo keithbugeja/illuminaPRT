@@ -59,7 +59,7 @@ namespace Illumina
 			virtual void GetValue(const Vector2 &p_uv, RGBPixel &p_pixel) const { GetValue(p_uv, Vector3::Zero, p_pixel); };
 			virtual void GetValue(const Vector3 &p_hitpoint, RGBPixel &p_pixel) const { GetValue(Vector2::Zero, p_hitpoint, p_pixel); };
 			
-			virtual std::string ToString(void) { return "ITexture"; }
+            std::string ToString(void) const { return "ITexture"; }
 		};
 
 		typedef boost::shared_ptr<ITexture> TexturePtr; 

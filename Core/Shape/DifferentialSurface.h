@@ -67,11 +67,10 @@ namespace Illumina
 			IShape *m_pShape;
 
 		public:
-			DifferentialSurface(void) : m_pShape(NULL), Distance(Maths::Maximum) { }
+			DifferentialSurface(void) : Distance(Maths::Maximum), m_pShape(NULL) { }
 
 			DifferentialSurface(const DifferentialSurface &p_surface) 
-				: m_pShape(p_surface.m_pShape)
-				, ShadingNormal(p_surface.ShadingNormal)
+				: ShadingNormal(p_surface.ShadingNormal)
 				, GeometryNormal(p_surface.GeometryNormal)
 				, Point(p_surface.Point)
 				, PointUV(p_surface.PointUV)
@@ -84,6 +83,7 @@ namespace Illumina
 				, RayOriginWS(p_surface.RayDirectionWS)
 				, RayDirectionWS(p_surface.RayDirectionWS)
 				, GeometryFragment(p_surface.GeometryFragment)
+                , m_pShape(p_surface.m_pShape)
 			{ }
 
 			inline void Reset(void) 
