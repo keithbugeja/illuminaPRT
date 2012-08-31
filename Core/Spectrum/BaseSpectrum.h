@@ -40,21 +40,21 @@ namespace Illumina
 				return *this = *this / p_fScale;
 			}
 
-			virtual BaseSpectrum operator*(float p_fScale) const = 0;
-			virtual BaseSpectrum operator/(float p_fScale) const = 0;
-			virtual BaseSpectrum operator/(const BaseSpectrum &p_spectrum) const = 0;
-			virtual BaseSpectrum operator*(const BaseSpectrum &p_spectrum) const = 0;
-			virtual BaseSpectrum operator+(const BaseSpectrum &p_spectrum) const = 0;
-			virtual BaseSpectrum operator-(const BaseSpectrum &p_spectrum) const = 0;
+			virtual BaseSpectrum operator*(float p_fScale) const { return *this; }
+			virtual BaseSpectrum operator/(float p_fScale) const { return *this; }
+			virtual BaseSpectrum operator/(const BaseSpectrum &p_spectrum) const { return *this; }
+			virtual BaseSpectrum operator*(const BaseSpectrum &p_spectrum) const { return *this; }
+			virtual BaseSpectrum operator+(const BaseSpectrum &p_spectrum) const { return *this; }
+			virtual BaseSpectrum operator-(const BaseSpectrum &p_spectrum) const { return *this; }
 
-			virtual BaseSpectrum& operator=(const BaseSpectrum &p_spectrum) = 0;
+			virtual BaseSpectrum& operator=(const BaseSpectrum &p_spectrum) { return *this; }
 			
-			virtual void Set(float *p_fValueArray) = 0;
+			virtual void Set(float *p_fValueArray) { }
 
-			virtual void Normalize(void) = 0;
-			virtual void Clamp(float p_fMin = 0.0f, float p_fMax = 1.0f) = 0;
+			virtual void Normalize(void) { }
+			virtual void Clamp(float p_fMin = 0.0f, float p_fMax = 1.0f) { }
 
-			virtual std::string ToString(void) = 0;
+			virtual std::string ToString(void) { return std::string(); }
 
 		protected:
 			float m_fSamples[nSampleCount];
