@@ -1,13 +1,21 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	RenderTaskWorker.h
+//	Filename:	RenderTaskWorker.cpp
 //	Author:		Keith Bugeja
 //	Date:		27/07/2012
 //----------------------------------------------------------------------------------------------
+#include "ServiceManager.h"
 #include "RenderTaskWorker.h"
 #include "Communicator.h"
+
 //----------------------------------------------------------------------------------------------
-bool RenderTaskWorker::Compute(void) 
+//----------------------------------------------------------------------------------------------
+bool RenderTaskWorker::ComputeUniform(void)
 {
+	double eventStart, eventComplete,
+		computationTime;
+
+	eventStart = Platform::GetTime();
+
 	// Prepare integrator
 	m_pIntegrator->Prepare(m_pEnvironment->GetScene());
 
@@ -38,6 +46,9 @@ bool RenderTaskWorker::Compute(void)
 		m_pRenderer->RenderRegion(m_pRenderTile->GetImageData(), 
 			sx, sy, m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight); 
 
+		// Tone mapping moved to workers
+		m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRenderTile->GetImageData());
+
 		//--------------------------------------------------
 		// Send back result
 		//--------------------------------------------------
@@ -48,7 +59,83 @@ bool RenderTaskWorker::Compute(void)
 			GetCoordinatorID(), Communicator::Worker_Coordinator_Job);
 	}
 
+	eventComplete = Platform::GetTime();
+	computationTime = Platform::ToSeconds(eventComplete - eventStart);
+
+	int meid = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
+	std::cout << "---[" << meid << "] Computation time = " << computationTime << "s" << std::endl;
+
 	return true;
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+bool RenderTaskWorker::ComputeVariable(void)
+{
+	double eventStart, eventComplete,
+		computationTime;
+
+	eventStart = Platform::GetTime();
+
+	// Prepare integrator
+	m_pIntegrator->Prepare(m_pEnvironment->GetScene());
+
+	// Update space
+	m_pSpace->Update();
+
+	// Render
+	int tileID;
+
+	while (true)
+	{
+		//--------------------------------------------------
+		// Receive tile
+		//--------------------------------------------------
+		Communicator::Receive(&tileID, sizeof(int), GetCoordinatorID(), Communicator::Coordinator_Worker_Job);
+
+		//--------------------------------------------------
+		// If termination signal, stop
+		//--------------------------------------------------
+		if (tileID == -1) break;
+
+		//--------------------------------------------------
+		// We have task id - render
+		//--------------------------------------------------
+		// consider const Packet &packet!
+		RenderTilePackets::Packet packet = m_renderTaskContext.TilePackets.GetPacket(tileID);
+
+		m_pRenderer->RenderRegion(m_pRenderTile->GetImageData(), 
+			packet.XStart, packet.YStart, packet.XSize, packet.YSize);
+
+		// Tone mapping moved to workers
+		m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRenderTile->GetImageData());
+
+		//--------------------------------------------------
+		// Send back result
+		//--------------------------------------------------
+		m_pRenderTile->SetID(tileID);
+		m_pRenderTile->Compress();
+
+		Communicator::Send(m_pRenderTile->GetCompressedBuffer(), m_pRenderTile->GetCompressedBufferSize(),
+			GetCoordinatorID(), Communicator::Worker_Coordinator_Job);
+	}
+
+	eventComplete = Platform::GetTime();
+	computationTime = Platform::ToSeconds(eventComplete - eventStart);
+
+	int meid = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
+	std::cout << "---[" << meid << "] Computation time = " << computationTime << "s" << std::endl;
+
+	return true;
+}
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+bool RenderTaskWorker::Compute(void) 
+{
+	/* 
+	 * Uniform tile sizes
+	 */
+
+	return ComputeUniform();
 }
 //----------------------------------------------------------------------------------------------
 // User handlers for init, shutdown and sync events
@@ -98,6 +185,7 @@ bool RenderTaskWorker::OnInitialise(void)
 	// Discontinuity, reconstruction and tone mapping
 	m_pDiscontinuityBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
 	m_pReconstructionBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Reconstruction", "ReconstructionBuffer", "");
+	m_pToneMapper = m_pEngineKernel->GetPostProcessManager()->CreateInstance("GlobalTone", "GlobalTone", "");
 
 	// Set up context
 	m_renderTaskContext.FrameWidth = m_pRenderer->GetDevice()->GetWidth();
@@ -106,6 +194,10 @@ bool RenderTaskWorker::OnInitialise(void)
 	m_renderTaskContext.TilesPerColumn = m_renderTaskContext.FrameHeight / m_renderTaskContext.TileHeight;
 	m_renderTaskContext.TotalTiles = m_renderTaskContext.TilesPerColumn * m_renderTaskContext.TilesPerRow;
 	
+	// NOTE: Possibly need to generate this every time worker count changes
+	m_renderTaskContext.TilePackets.GeneratePackets(m_renderTaskContext.FrameWidth, m_renderTaskContext.FrameHeight,
+		Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), 8);
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------

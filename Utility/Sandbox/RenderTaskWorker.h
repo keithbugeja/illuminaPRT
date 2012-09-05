@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	RenderTaskPipeline.h
+//	Filename:	RenderTaskWorker.h
 //	Author:		Keith Bugeja
 //	Date:		27/07/2012
 //----------------------------------------------------------------------------------------------
@@ -26,7 +26,13 @@ class RenderTaskWorker
 	ISpace *m_pSpace;
 
 	IPostProcess *m_pDiscontinuityBuffer,
-		*m_pReconstructionBuffer;		
+		*m_pReconstructionBuffer,
+		*m_pToneMapper;		
+
+protected:
+	bool ComputeUniform(void);
+	bool ComputeVariable(void);
+	bool ComputeTilePackets(int p_nStepSize);
 
 public:
 	bool Compute(void);

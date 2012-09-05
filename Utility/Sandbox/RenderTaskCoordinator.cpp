@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	RenderTaskCoordinator.h
+//	Filename:	RenderTaskCoordinator.cpp
 //	Author:		Keith Bugeja
 //	Date:		27/07/2012
 //----------------------------------------------------------------------------------------------
@@ -15,9 +15,17 @@ bool RenderTaskCoordinator::Compute(void)
 
 	int tileID = m_renderTaskContext.TotalTiles - 1;
 
+	double eventStart, eventComplete, 
+		radianceTime,
+		discontinuityTime,
+		toneTime,
+		commitTime;
+
 	// Get list of available workers
 	std::vector<int> &workerList 
 		= GetAvailableWorkerList();
+
+	eventStart = Platform::GetTime();
 
 	// Send first batch of jobs
 	for (std::vector<int>::iterator workerIterator = workerList.begin();
@@ -85,14 +93,35 @@ bool RenderTaskCoordinator::Compute(void)
 		}
 	}
 
-	// Apply discontinuity buffer
-	m_pDiscontinuityBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	eventComplete = Platform::GetTime();
+	radianceTime = Platform::ToSeconds(eventComplete - eventStart);
 
-	// Apply tone mapping
+	// Discontinuity buffer
+	/*
+	eventStart = Platform::GetTime();
+	m_pDiscontinuityBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	eventComplete = Platform::GetTime();
+	discontinuityTime = Platform::ToSeconds(eventComplete - eventStart);
+	*/
+
+	// Tone mapping (moved to server)
+	/*
+	eventStart = Platform::GetTime();
 	m_pDragoTone->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	eventComplete = Platform::GetTime();
+	toneTime = Platform::ToSeconds(eventComplete - eventStart);
+	*/
 
 	// Commit to device
+	eventStart = Platform::GetTime();
 	m_pRenderer->Commit(m_pRadianceBuffer);
+	eventComplete = Platform::GetTime();
+	commitTime = Platform::ToSeconds(eventComplete - eventStart);
+
+	std::cout << "---| Radiance Time : " << radianceTime << "s" << std::endl;
+	std::cout << "---| Discontinuity Time : " << discontinuityTime << "s" << std::endl;
+	std::cout << "---| Tonemapping Time : " << toneTime << "s" << std::endl;
+	std::cout << "---| Commit Time : " << commitTime << "s" << std::endl;
 
 	return true;
 }
@@ -146,7 +175,8 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	// Discontinuity, reconstruction and tone mapping
 	m_pDiscontinuityBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
 	m_pReconstructionBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Reconstruction", "ReconstructionBuffer", "");
-	m_pDragoTone = m_pEngineKernel->GetPostProcessManager()->CreateInstance("DragoTone", "DragoTone", "");
+	m_pDragoTone = m_pEngineKernel->GetPostProcessManager()->CreateInstance("GlobalTone", "GlobalTone", "");
+		//m_pEngineKernel->GetPostProcessManager()->CreateInstance("DragoTone", "DragoTone", "");
 
 	// Accumulation buffer
 	m_pAccumulationBuffer = (AccumulationBuffer*)m_pEngineKernel->GetPostProcessManager()->CreateInstance("Accumulation", "AccumulationBuffer", "");
@@ -162,6 +192,10 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_renderTaskContext.TilesPerRow = m_renderTaskContext.FrameWidth / m_renderTaskContext.TileWidth;
 	m_renderTaskContext.TilesPerColumn = m_renderTaskContext.FrameHeight / m_renderTaskContext.TileHeight;
 	m_renderTaskContext.TotalTiles = m_renderTaskContext.TilesPerColumn * m_renderTaskContext.TilesPerRow;
+	
+	// NOTE: Possibly need to generate this every time worker count changes
+	m_renderTaskContext.TilePackets.GeneratePackets(m_renderTaskContext.FrameWidth, m_renderTaskContext.FrameHeight,
+		Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), 8);
 	
 	// Update observer position
 	m_observerPosition = m_pEnvironment->GetCamera()->GetObserver();

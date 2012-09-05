@@ -103,11 +103,12 @@ public:
 		//engineKernel.GetIntegratorManager()->RegisterFactory("Test", new TestIntegratorFactory());
 		
 		//----------------------------------------------------------------------------------------------
-		// Materials
+		// Post processing
 		//----------------------------------------------------------------------------------------------
 		Logger::Message("Registering Post Processes...", p_bVerbose);
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("AutoTone", new AutoToneFactory());
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("DragoTone", new DragoToneFactory());
+		m_engineKernel->GetPostProcessManager()->RegisterFactory("GlobalTone", new GlobalToneFactory());
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("Accumulation", new AccumulationBufferFactory());
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("Discontinuity", new DiscontinuityBufferFactory());
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("Reconstruction", new ReconstructionBufferFactory());
@@ -341,7 +342,25 @@ public:
 			m_engineKernel->GetMaterialManager()->UnregisterFactory("Mirror");
 			m_engineKernel->GetMaterialManager()->UnregisterFactory("Glass");
 			m_engineKernel->GetMaterialManager()->UnregisterFactory("Group");
-					
+			
+			//----------------------------------------------------------------------------------------------
+			// Post processing
+			//----------------------------------------------------------------------------------------------
+			Logger::Message("Freeing and unregistering Post Processes...", p_bVerbose);
+			delete m_engineKernel->GetPostProcessManager()->RequestFactory("AutoTone");
+			delete m_engineKernel->GetPostProcessManager()->RequestFactory("DragoTone");
+			delete m_engineKernel->GetPostProcessManager()->RequestFactory("GlobalTone");
+			delete m_engineKernel->GetPostProcessManager()->RequestFactory("Accumulation");
+			delete m_engineKernel->GetPostProcessManager()->RequestFactory("Discontinuity");
+			delete m_engineKernel->GetPostProcessManager()->RequestFactory("Reconstruction");
+
+			m_engineKernel->GetPostProcessManager()->UnregisterFactory("AutoTone");
+			m_engineKernel->GetPostProcessManager()->UnregisterFactory("DragoTone");
+			m_engineKernel->GetPostProcessManager()->UnregisterFactory("GlobalTone");
+			m_engineKernel->GetPostProcessManager()->UnregisterFactory("Accumulation");
+			m_engineKernel->GetPostProcessManager()->UnregisterFactory("Discontinuity");
+			m_engineKernel->GetPostProcessManager()->UnregisterFactory("Reconstruction");
+
 			//----------------------------------------------------------------------------------------------
 			// Engine Kernel
 			//----------------------------------------------------------------------------------------------
