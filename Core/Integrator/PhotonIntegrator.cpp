@@ -189,7 +189,7 @@ bool PhotonIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 	{
 		// Start by selecting a light source
 		sample = p_pScene->GetSampler()->Get1DSample();
-		lightIdx = Maths::Floor(sample * p_pScene->LightList.Size());
+		lightIdx = (int)Maths::Floor(sample * p_pScene->LightList.Size());
 
 		// Select an object in the scene
 		//sample = p_pScene->GetSampler()->Get1DSample();

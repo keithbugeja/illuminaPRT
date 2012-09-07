@@ -134,11 +134,11 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 			sample.X = p_nRegionWidth * QuasiRandomSequence::VanDerCorput(maxSamples - requiredSamples);
 			sample.Y = p_nRegionHeight * QuasiRandomSequence::Sobol2(maxSamples - requiredSamples);
 
-			int srcX = sample.X + p_nRegionX,
-				srcY = sample.Y + p_nRegionY;
+			int srcX = (int)(sample.X + p_nRegionX),
+				srcY = (int)(sample.Y + p_nRegionY);
 
-			int dstX = sample.X + p_nBufferX,
-				dstY = sample.Y + p_nBufferY;
+			int dstX = (int)(sample.X + p_nBufferX),
+				dstY = (int)(sample.Y + p_nBufferY);
 
 			// Get sub-pixel position
 			sample = m_pScene->GetSampler()->Get2DSample();
@@ -147,7 +147,7 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 			pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
 
 			// Set integrator context
-			context.SurfacePosition.Set(srcX, srcY);
+			context.SurfacePosition.Set((float)srcX, (float)srcY);
 			context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
 
 			// Get ray from camera
@@ -164,7 +164,7 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 			sample.X = p_nRegionWidth * QuasiRandomSequence::VanDerCorput(maxSamples - requiredSamples) + p_nBufferX;
 			sample.Y = p_nRegionHeight * QuasiRandomSequence::Sobol2(maxSamples - requiredSamples) + p_nBufferY;
 
-			pRadianceContext = p_pRadianceBuffer->GetP(sample.X, sample.Y);
+			pRadianceContext = p_pRadianceBuffer->GetP((int)sample.X, (int)sample.Y);
 			pRadianceContext->Flag = false;
 		}
 

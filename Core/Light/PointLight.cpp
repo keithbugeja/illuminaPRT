@@ -55,7 +55,7 @@ Spectrum PointLight::SampleRadiance(const Vector3 &p_surfacePoint, float p_u, fl
 	p_visibilityQuery.SetSegment(m_position, 1e-4f, p_surfacePoint, 1e-4f); 
 
 	Vector3::Subtract(p_surfacePoint, m_position, p_wIn);
-	double distanceSquared = p_wIn.LengthSquared();
+	float distanceSquared = p_wIn.LengthSquared();
 	p_wIn.Normalize();
 	p_pdf = 1.0f;
 

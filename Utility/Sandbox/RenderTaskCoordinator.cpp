@@ -3,6 +3,8 @@
 //	Author:		Keith Bugeja
 //	Date:		27/07/2012
 //----------------------------------------------------------------------------------------------
+#include <boost/algorithm/string.hpp> 
+
 #include "RenderTaskCoordinator.h"
 #include "Communicator.h"
 //----------------------------------------------------------------------------------------------
@@ -13,7 +15,7 @@ bool RenderTaskCoordinator::Compute(void)
 	int receivedTileID,
 		waitingTasks = 0;
 
-	int tileID = m_renderTaskContext.TotalTiles - 1;
+	int tileID = m_renderTaskContext.TilePackets.GetPacketCount();
 
 	double eventStart, eventComplete, 
 		radianceTime,
@@ -46,12 +48,9 @@ bool RenderTaskCoordinator::Compute(void)
 	{
 		// Probe for incoming message
 		Communicator::Probe(Communicator::Source_Any, Communicator::Worker_Coordinator_Job, &status);
-		
-		// Set size of compressed buffer
-		m_pRenderTile->SetCompressedBufferSize(Communicator::GetSize(&status));
 
 		// Receive compressed tile
-		Communicator::Receive(m_pRenderTile->GetCompressedBuffer(), 
+		Communicator::Receive(m_pRenderTile->GetTransferBuffer(), 
 			Communicator::GetSize(&status), status.MPI_SOURCE,
 			Communicator::Worker_Coordinator_Job);
 
@@ -71,17 +70,18 @@ bool RenderTaskCoordinator::Compute(void)
 		}
 
 		// Decompress current tile
-		m_pRenderTile->Decompress();
+		m_pRenderTile->Unpackage();
 
 		// Get image data and copy to buffer
 		receivedTileID = m_pRenderTile->GetID();
 		pTileBuffer = m_pRenderTile->GetImageData()->GetBuffer(); 
 
-		int sx = (receivedTileID % m_renderTaskContext.TilesPerRow) * m_renderTaskContext.TileWidth,
-			sy = (receivedTileID / m_renderTaskContext.TilesPerRow) * m_renderTaskContext.TileHeight,
-			sxe = sx + m_renderTaskContext.TileWidth,
-			sye = sy + m_renderTaskContext.TileHeight;
-
+		RenderTilePackets::Packet packet = m_renderTaskContext.TilePackets.GetPacket(receivedTileID);
+		int sx = packet.XStart,
+			sy = packet.YStart,
+			sxe = sx + packet.XSize,
+			sye = sy + packet.YSize;
+		
 		for (int y = sy; y < sye; y++) 
 		{
 			for (int x = sx; x < sxe; x++) 
@@ -154,6 +154,12 @@ bool RenderTaskCoordinator::OnInitialise(void)
 			<< m_renderTaskContext.TileHeight << "]" << std::endl;
 	}
 
+	// Read adaptive tile settings
+	std::string adaptiveTile;
+	pArgumentMap->GetArgument("useadaptive", adaptiveTile); boost::to_lower(adaptiveTile);
+	m_renderTaskContext.AdaptiveTiles = adaptiveTile == "false" ? false : true;
+	pArgumentMap->GetArgument("batchsize", m_renderTaskContext.TileBatchSize);
+
 	// Read the minimum number of required workers
 	if (pArgumentMap->GetArgument("min", m_renderTaskContext.WorkersRequired))
 		std::cout << "Workers required [" << m_renderTaskContext.WorkersRequired << "]" << std::endl;
@@ -192,11 +198,22 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_renderTaskContext.TilesPerRow = m_renderTaskContext.FrameWidth / m_renderTaskContext.TileWidth;
 	m_renderTaskContext.TilesPerColumn = m_renderTaskContext.FrameHeight / m_renderTaskContext.TileHeight;
 	m_renderTaskContext.TotalTiles = m_renderTaskContext.TilesPerColumn * m_renderTaskContext.TilesPerRow;
-	
-	// NOTE: Possibly need to generate this every time worker count changes
-	m_renderTaskContext.TilePackets.GeneratePackets(m_renderTaskContext.FrameWidth, m_renderTaskContext.FrameHeight,
-		Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), 8);
-	
+		
+	if (m_renderTaskContext.AdaptiveTiles)
+	{
+		std::cout << "Adaptive tiling enabled: Tile Batch [" << m_renderTaskContext.TileBatchSize << "]" << std::endl;
+
+		m_renderTaskContext.TilePackets.GeneratePackets(m_renderTaskContext.FrameWidth, m_renderTaskContext.FrameHeight,
+			Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), m_renderTaskContext.TileBatchSize);
+	} 
+	else
+	{
+		std::cout << "Adaptive tiling disabled." << std::endl;
+
+		m_renderTaskContext.TilePackets.GeneratePackets(m_renderTaskContext.FrameWidth, m_renderTaskContext.FrameHeight,
+			Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), 10000);
+	}
+
 	// Update observer position
 	m_observerPosition = m_pEnvironment->GetCamera()->GetObserver();
 	m_moveFlag[0] = m_moveFlag[1] = m_moveFlag[2] = m_moveFlag[3];

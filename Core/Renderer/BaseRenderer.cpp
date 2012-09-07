@@ -102,7 +102,7 @@ void BaseRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nRegion
 				(*m_pFilter)(pSampleBuffer, m_nSampleCount);
 
 				// Set context (used in IGI interleaved sampling)
-				context.SurfacePosition.Set(srcX, srcY);
+				context.SurfacePosition.Set((float)srcX, (float)srcY);
 				context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
 
 				// Super sample
@@ -154,7 +154,7 @@ void BaseRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nRegion
 				pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
 
 				// Set integrator context
-				context.SurfacePosition.Set(srcX, srcY);
+				context.SurfacePosition.Set((float)srcX, (float)srcY);
 				context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
 
 				// Get ray from camera

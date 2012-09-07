@@ -51,7 +51,7 @@ namespace Illumina
 				float u = Maths::Frac(p_uv.U);
 				float v = 1.0f - Maths::Frac(p_uv.V);
 
-				GetPixelLDR(m_widthUnits * u, m_heightUnits * v, p_pixel);
+				GetPixelLDR((int)(m_widthUnits * u), (int)(m_heightUnits * v), p_pixel);
 			}
 
 			void MapFile(const std::string &p_strFilename)
