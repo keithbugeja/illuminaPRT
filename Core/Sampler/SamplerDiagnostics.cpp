@@ -20,8 +20,8 @@ float SamplerDiagnostics::FrequencyTest(ISampler *p_pSampler, int p_nSequenceLen
 	for (int j = 0; j < p_nSequenceLength; j++)
 		sequence += p_pSampler->Get1DSample() > 0.5f ? 1 : -1;
 
-	float absSObs = Maths::Abs(sequence);
-	float sqrtSeqLen = Maths::Sqrt(p_nSequenceLength);
+	float absSObs = Maths::Abs((float)sequence);
+	float sqrtSeqLen = Maths::Sqrt((float)p_nSequenceLength);
 
 	float sObs = absSObs / sqrtSeqLen;
 
@@ -59,7 +59,7 @@ void SamplerDiagnostics::DistributionTest(ISampler *p_pSampler, int p_nSequenceL
 		float x = p_pSampler->Get1DSample();
 		float y = p_pSampler->Get1DSample();
 
-		image.Set(x * 512.f, y * 512.f, RGBPixel::Black);
+		image.Set((int)(x * 512.f), (int)(y * 512.f), RGBPixel::Black);
 	}
 
 	ImagePPM imageIO;

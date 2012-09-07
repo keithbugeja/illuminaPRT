@@ -259,7 +259,7 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 				}
 				/**/
 
-				p_pRadianceContext->Indirect = p_pRadianceContext->Indirect / pointLightSet.size(); //samplesUsed;
+				p_pRadianceContext->Indirect = p_pRadianceContext->Indirect / (int)pointLightSet.size(); //samplesUsed;
 			}
 			else
 			{

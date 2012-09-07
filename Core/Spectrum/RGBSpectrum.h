@@ -74,6 +74,10 @@ namespace Illumina
 				return *this = *this / p_fScale;
 			}
 
+			RGBSpectrum& operator/=(int p_nScale) {
+				return *this = *this / (float)p_nScale;
+			}
+
 			bool IsBlack(void) const
 			{
 				if (Maths::FAbs(m_fSamples[0]) > Maths::Epsilon) return false;
@@ -106,6 +110,10 @@ namespace Illumina
 			RGBSpectrum operator/(float p_fScale) const {
 				//BOOST_ASSERT(p_fScale > 0);
 				return *this * (1.0f / p_fScale);
+			}
+
+			RGBSpectrum operator/(int p_nScale) const {
+				return RGBSpectrum(m_fSamples[0] / p_nScale, m_fSamples[1] / p_nScale, m_fSamples[2] / p_nScale);
 			}
 
 			RGBSpectrum operator/(const RGBSpectrum &p_spectrum) const

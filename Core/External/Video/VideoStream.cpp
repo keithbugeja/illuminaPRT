@@ -212,9 +212,9 @@ void IVideoStream::ConvertImageToFrame(Image *p_pImage, void *p_pFrame)
 
 	for (int size = p_pImage->GetArea(); size > 0; --size, pImagePixel++, pFrame+=3)
 	{
-		pFrame[0] = pImagePixel->B * 255;
-		pFrame[1] = pImagePixel->G * 255;
-		pFrame[2] = pImagePixel->R * 255;
+		pFrame[0] = (int)(pImagePixel->B * 255);
+		pFrame[1] = (int)(pImagePixel->G * 255);
+		pFrame[2] = (int)(pImagePixel->R * 255);
 	}
 
 #endif

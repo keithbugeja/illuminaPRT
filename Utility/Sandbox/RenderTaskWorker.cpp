@@ -3,14 +3,16 @@
 //	Author:		Keith Bugeja
 //	Date:		27/07/2012
 //----------------------------------------------------------------------------------------------
+#include <boost/algorithm/string.hpp> 
+
 #include "ServiceManager.h"
 #include "RenderTaskWorker.h"
 #include "Communicator.h"
-
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 bool RenderTaskWorker::ComputeUniform(void)
 {
+	/*
 	double eventStart, eventComplete,
 		computationTime;
 
@@ -64,7 +66,7 @@ bool RenderTaskWorker::ComputeUniform(void)
 
 	int meid = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
 	std::cout << "---[" << meid << "] Computation time = " << computationTime << "s" << std::endl;
-
+	*/
 	return true;
 }
 //----------------------------------------------------------------------------------------------
@@ -102,6 +104,7 @@ bool RenderTaskWorker::ComputeVariable(void)
 		//--------------------------------------------------
 		// consider const Packet &packet!
 		RenderTilePackets::Packet packet = m_renderTaskContext.TilePackets.GetPacket(tileID);
+		m_pRenderTile->Resize(packet.XSize, packet.YSize);
 
 		m_pRenderer->RenderRegion(m_pRenderTile->GetImageData(), 
 			packet.XStart, packet.YStart, packet.XSize, packet.YSize);
@@ -113,9 +116,9 @@ bool RenderTaskWorker::ComputeVariable(void)
 		// Send back result
 		//--------------------------------------------------
 		m_pRenderTile->SetID(tileID);
-		m_pRenderTile->Compress();
+		m_pRenderTile->Package();
 
-		Communicator::Send(m_pRenderTile->GetCompressedBuffer(), m_pRenderTile->GetCompressedBufferSize(),
+		Communicator::Send(m_pRenderTile->GetTransferBuffer(), m_pRenderTile->GetTransferBufferSize(),
 			GetCoordinatorID(), Communicator::Worker_Coordinator_Job);
 	}
 
@@ -135,7 +138,7 @@ bool RenderTaskWorker::Compute(void)
 	 * Uniform tile sizes
 	 */
 
-	return ComputeUniform();
+	return ComputeVariable();
 }
 //----------------------------------------------------------------------------------------------
 // User handlers for init, shutdown and sync events
@@ -172,6 +175,12 @@ bool RenderTaskWorker::OnInitialise(void)
 			<< m_renderTaskContext.TileHeight << "]" << std::endl;
 	}
 
+	// Read adaptive tile settings
+	std::string adaptiveTile;
+	pArgumentMap->GetArgument("useadaptive", adaptiveTile); boost::to_lower(adaptiveTile);
+	m_renderTaskContext.AdaptiveTiles = adaptiveTile == "false" ? false : true;
+	pArgumentMap->GetArgument("batchsize", m_renderTaskContext.TileBatchSize);
+
 	// Engine, environment
 	m_pEnvironment = m_pSandbox->GetEnvironment();
 	m_pEngineKernel = m_pSandbox->GetEngineKernel();
@@ -193,10 +202,21 @@ bool RenderTaskWorker::OnInitialise(void)
 	m_renderTaskContext.TilesPerRow = m_renderTaskContext.FrameWidth / m_renderTaskContext.TileWidth;
 	m_renderTaskContext.TilesPerColumn = m_renderTaskContext.FrameHeight / m_renderTaskContext.TileHeight;
 	m_renderTaskContext.TotalTiles = m_renderTaskContext.TilesPerColumn * m_renderTaskContext.TilesPerRow;
-	
-	// NOTE: Possibly need to generate this every time worker count changes
-	m_renderTaskContext.TilePackets.GeneratePackets(m_renderTaskContext.FrameWidth, m_renderTaskContext.FrameHeight,
-		Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), 8);
+
+	if (m_renderTaskContext.AdaptiveTiles)
+	{
+		std::cout << "Adaptive tiling enabled: Tile Batch [" << m_renderTaskContext.TileBatchSize << "]" << std::endl;
+
+		m_renderTaskContext.TilePackets.GeneratePackets(m_renderTaskContext.FrameWidth, m_renderTaskContext.FrameHeight,
+			Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), m_renderTaskContext.TileBatchSize);
+	} 
+	else
+	{
+		std::cout << "Adaptive tiling disabled." << std::endl;
+
+		m_renderTaskContext.TilePackets.GeneratePackets(m_renderTaskContext.FrameWidth, m_renderTaskContext.FrameHeight,
+			Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), 10000);
+	}
 
 	return true;
 }

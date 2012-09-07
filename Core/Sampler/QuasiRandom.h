@@ -29,7 +29,7 @@ namespace Illumina
 				while (i > 0) 
 				{
 					result = result + f * (i % base);
-					i = Maths::Floor(i / base);
+					i = (int)Maths::Floor((float)i / base);
 					f = f / base;
 				}
 

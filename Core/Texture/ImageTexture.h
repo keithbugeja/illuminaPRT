@@ -67,8 +67,8 @@ namespace Illumina
 				float iv = (m_image->GetHeight() - 1) * v;
 
 				// get discretised coordinates
-				float ix = Maths::FAbs(Maths::Floor(iu));
-				float iy = Maths::FAbs(Maths::Floor(iv));
+				int ix = (int)Maths::FAbs(Maths::Floor(iu));
+				int iy = (int)Maths::FAbs(Maths::Floor(iv));
 
 				RGBPixel value[4];
 				value[0] = m_image->Get(ix, iy);
