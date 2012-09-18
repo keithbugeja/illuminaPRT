@@ -74,8 +74,12 @@ bool RenderTaskWorker::ComputeUniform(void)
 bool RenderTaskWorker::ComputeVariable(void)
 {
 	double eventStart, eventComplete,
-		computationTime;
+		communicationStart, communicationComplete,
+		jobTime, communicationTime;
 
+	int pixelsRendered = 0;
+
+	// Start clocking job time
 	eventStart = Platform::GetTime();
 
 	// Prepare integrator
@@ -87,12 +91,17 @@ bool RenderTaskWorker::ComputeVariable(void)
 	// Render
 	int tileID;
 
-	while (true)
+	for (communicationTime = 0, jobTime = 0;;)
 	{
 		//--------------------------------------------------
 		// Receive tile
 		//--------------------------------------------------
+		communicationStart = Platform::GetTime();
+
 		Communicator::Receive(&tileID, sizeof(int), GetCoordinatorID(), Communicator::Coordinator_Worker_Job);
+		
+		communicationComplete = Platform::GetTime();
+		communicationTime += Platform::ToSeconds(communicationComplete - communicationStart);
 
 		//--------------------------------------------------
 		// If termination signal, stop
@@ -109,24 +118,37 @@ bool RenderTaskWorker::ComputeVariable(void)
 		m_pRenderer->RenderRegion(m_pRenderTile->GetImageData(), 
 			packet.XStart, packet.YStart, packet.XSize, packet.YSize);
 
+		pixelsRendered += packet.XSize * packet.YSize;
+		
 		// Tone mapping moved to workers
-		m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRenderTile->GetImageData());
+		// m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRenderTile->GetImageData());
 
 		//--------------------------------------------------
-		// Send back result
+		// Package result
 		//--------------------------------------------------
 		m_pRenderTile->SetID(tileID);
 		m_pRenderTile->Package();
 
+		//--------------------------------------------------
+		// Send back result
+		//--------------------------------------------------
+		communicationStart = Platform::GetTime();
+
 		Communicator::Send(m_pRenderTile->GetTransferBuffer(), m_pRenderTile->GetTransferBufferSize(),
 			GetCoordinatorID(), Communicator::Worker_Coordinator_Job);
+
+		communicationComplete = Platform::GetTime();
+		communicationTime += Platform::ToSeconds(communicationComplete - communicationStart);
 	}
 
 	eventComplete = Platform::GetTime();
-	computationTime = Platform::ToSeconds(eventComplete - eventStart);
+	jobTime = Platform::ToSeconds(eventComplete - eventStart);
 
 	int meid = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
-	std::cout << "---[" << meid << "] Computation time = " << computationTime << "s" << std::endl;
+	std::cout << "---[" << meid << "] Job time = " << jobTime << "s" << std::endl;
+	std::cout << "---[" << meid << "] -- Computation time = " << jobTime - communicationTime << "s" << std::endl;
+	std::cout << "---[" << meid << "] -- Communication time = " << communicationTime << "s" << std::endl;
+	std::cout << "---[" << meid << "] -- Pixels rendered = " << pixelsRendered << std::endl;
 
 	return true;
 }

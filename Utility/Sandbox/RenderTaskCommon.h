@@ -7,6 +7,9 @@
 //----------------------------------------------------------------------------------------------
 #include <boost/asio.hpp>
 #include <External/Compression/Compression.h>
+#include <Maths/Maths.h>
+
+#include "Half.h"
 //----------------------------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------------------------
@@ -100,7 +103,287 @@ struct RenderTaskContext
 };
 //----------------------------------------------------------------------------------------------
 
+class CompressedRadianceContext
+{
+public:
+	unsigned short Direct[3];
+	unsigned short Indirect[3];
+	unsigned short Albedo[3];
+
+	unsigned short Normal[2];
+	// unsigned short Position[3];
+
+	unsigned short Flag;
+};
+
+class CompressedRadianceBuffer
+	: public Buffer2D<CompressedRadianceContext>
+{ 
+protected:
+	inline unsigned short CompressFloat(float p_fValue)
+	{		
+		return half_from_float(*(reinterpret_cast<uint32_t*>(&p_fValue)));
+	}
+
+	inline float DecompressFloat(unsigned short h)
+	{
+		uint32_t f = half_to_float(h);
+		return *(reinterpret_cast<float*>(&f));		
+	}
+
+	inline void CompressVector(Vector3 *p_pVector, unsigned short *p_pCompressedVector)
+	{
+		p_pCompressedVector[0] = CompressFloat(p_pVector->X);
+		p_pCompressedVector[1] = CompressFloat(p_pVector->Y);
+		p_pCompressedVector[2] = CompressFloat(p_pVector->Z);
+	}
+
+	inline void DecompressVector(unsigned short *p_pCompressedVector, Vector3 *p_pVector)
+	{
+		p_pVector->X = DecompressFloat(p_pCompressedVector[0]);
+		p_pVector->Y = DecompressFloat(p_pCompressedVector[1]);
+		p_pVector->Z = DecompressFloat(p_pCompressedVector[2]);
+	}
+
+	inline void CompressNormal(Vector3 *p_pNormal, unsigned short *p_pCompressedNormal) 
+	{
+		p_pCompressedNormal[0] = CompressFloat(p_pNormal->X);
+		p_pCompressedNormal[1] = CompressFloat(p_pNormal->Y);
+	}
+
+	inline void DecompressNormal(unsigned short *p_pCompressedNormal, Vector3 *p_pNormal) 
+	{
+		p_pNormal->X = DecompressFloat(p_pCompressedNormal[0]);
+		p_pNormal->Y = DecompressFloat(p_pCompressedNormal[1]);
+		p_pNormal->Z = Maths::Sqrt(1 - p_pNormal->X - p_pNormal->Y);
+	}
+
+	inline void CompressSpectrum(Spectrum *p_pSpectrum, unsigned short *p_pCompressedSpectrum) 
+	{
+		p_pCompressedSpectrum[0] = CompressFloat((*p_pSpectrum)[0]);
+		p_pCompressedSpectrum[1] = CompressFloat((*p_pSpectrum)[1]);
+		p_pCompressedSpectrum[2] = CompressFloat((*p_pSpectrum)[2]);
+	}
+
+	inline void DecompressSpectrum(unsigned short *p_pCompressedSpectrum, Spectrum *p_pSpectrum) 
+	{ 
+		(*p_pSpectrum)[0] = DecompressFloat(p_pCompressedSpectrum[0]);
+		(*p_pSpectrum)[1] = DecompressFloat(p_pCompressedSpectrum[1]);
+		(*p_pSpectrum)[2] = DecompressFloat(p_pCompressedSpectrum[2]);
+	}
+
+public:
+	CompressedRadianceBuffer(int p_nWidth, int p_nHeight)
+		: Buffer2D<CompressedRadianceContext>::Buffer2D(p_nWidth, p_nHeight)
+	{ }
+
+	CompressedRadianceBuffer(int p_nWidth, int p_nHeight, CompressedRadianceContext *p_pBuffer)
+		: Buffer2D<CompressedRadianceContext>::Buffer2D(p_nWidth, p_nHeight, p_pBuffer)
+	{ }
+
+	void FromRadianceBuffer(RadianceBuffer *p_pRadianceBuffer) 
+	{
+		RadianceContext *pSrc = p_pRadianceBuffer->GetP(0,0);
+		CompressedRadianceContext *pDst = this->GetP(0,0);
+
+		for (int i = 0; i < p_pRadianceBuffer->GetArea(); i++)
+		{
+			CompressSpectrum(&(pSrc->Albedo), pDst->Albedo);
+			CompressSpectrum(&(pSrc->Direct), pDst->Direct);
+			CompressSpectrum(&(pSrc->Indirect), pDst->Indirect);
+			CompressNormal(&(pSrc->Normal), pDst->Normal);
+			// CompressVector(&(pSrc->Position), pDst->Position);
+
+			pDst->Flag = pSrc->Flag;
+
+			pDst++; pSrc++;
+		}
+	}
+	
+	void ToRadianceBuffer(RadianceBuffer *p_pRadianceBuffer) 
+	{ 
+		CompressedRadianceContext *pSrc = this->GetP(0,0);
+		RadianceContext *pDst = p_pRadianceBuffer->GetP(0,0);
+
+		for (int i = 0; i < p_pRadianceBuffer->GetArea(); i++)
+		{
+			DecompressSpectrum(pSrc->Albedo, &(pDst->Albedo));
+			DecompressSpectrum(pSrc->Direct, &(pDst->Direct));
+			DecompressSpectrum(pSrc->Indirect, &(pDst->Indirect));
+			DecompressNormal(pSrc->Normal, &(pDst->Normal));
+			// DecompressVector(pSrc->Position, &(pDst->Position));
+
+			pDst->Final = pDst->Direct + pDst->Indirect;
+			pDst->Flag = 0; // pSrc->Flag;
+			
+			pDst++; pSrc++;
+		}
+	}
+};
+
 //----------------------------------------------------------------------------------------------
+class SerialisableRenderTile
+{
+private:
+	enum Uncompressed 
+	{
+		ucHdr_id = 0,
+		ucHdr_width = 1,
+		ucHdr_height = 2,
+		ucHdr_count = 3
+	};
+
+	enum Compressed
+	{
+		cHdr_size = 0,
+		cHdr_count = 1
+	};
+
+protected:
+	int *m_pBuffer,
+		*m_pImageBuffer;
+
+	size_t m_nBufferSize;
+
+	int *m_pStagingBuffer,
+		*m_pStagingImageBuffer;
+
+	size_t m_nStagingBufferSize;
+
+	char *m_pCompressedBuffer;
+	size_t m_nCompressedSize;
+
+	int *m_pTransferBuffer;
+	size_t m_nTransferSize;
+
+	RadianceBuffer *m_pRadianceBuffer;
+	CompressedRadianceBuffer *m_pStagingRadianceBuffer;
+
+public:
+	SerialisableRenderTile(int p_nID, int p_nMaxWidth, int p_nMaxHeight)
+	{
+		// Buffer, id, width, height
+		m_nBufferSize = p_nMaxWidth * p_nMaxHeight * sizeof(RadianceContext) +
+			sizeof(int) * ucHdr_count;
+
+		// Staging buffer 
+		m_nStagingBufferSize = p_nMaxWidth * p_nMaxHeight * sizeof(CompressedRadianceContext) + 
+			sizeof(int) * ucHdr_count;
+
+		// Initialise unknown quantities
+		m_nCompressedSize = 
+			m_nTransferSize = 0;
+
+		// Buffer allocations
+		m_pBuffer = (int*)new char[m_nBufferSize];
+		m_pBuffer[ucHdr_id] = -1;
+		m_pBuffer[ucHdr_width] = p_nMaxWidth;
+		m_pBuffer[ucHdr_height] = p_nMaxHeight;
+		m_pImageBuffer = m_pBuffer + ucHdr_count; 
+
+		// Staging buffer
+		m_pStagingBuffer = (int*)new char[m_nStagingBufferSize];
+		m_pStagingImageBuffer = m_pStagingBuffer + ucHdr_count;
+
+		// Transfer and compressed bufer
+		m_pTransferBuffer = (int*)new char[m_nBufferSize * 2 + sizeof(int)];
+		m_pCompressedBuffer = (char*)(m_pTransferBuffer + 1);
+
+		m_pRadianceBuffer = new RadianceBuffer(p_nMaxWidth, p_nMaxHeight, (RadianceContext*)m_pImageBuffer);
+		m_pStagingRadianceBuffer = new CompressedRadianceBuffer(p_nMaxHeight, p_nMaxHeight, (CompressedRadianceContext*)m_pStagingImageBuffer); 
+	}
+
+	~SerialisableRenderTile(void) 
+	{
+		delete[] m_pBuffer;
+		delete[] m_pStagingBuffer;
+		delete[] m_pTransferBuffer;
+		delete m_pRadianceBuffer;
+		delete m_pStagingRadianceBuffer;
+	}
+
+	inline void Resize(int p_nWidth, int p_nHeight)
+	{
+		m_pBuffer[ucHdr_width] = p_nWidth;
+		m_pBuffer[ucHdr_height] = p_nHeight;
+
+		Reinterpret();
+	}
+
+	inline void Reinterpret(void) 
+	{
+		int width = m_pBuffer[ucHdr_width],
+			height = m_pBuffer[ucHdr_height];
+
+		m_nBufferSize = width * height * sizeof(RadianceContext) +
+			sizeof(int) * ucHdr_count;
+
+		m_nStagingBufferSize = width * height * sizeof(CompressedRadianceContext) +
+			sizeof(int) * ucHdr_count;
+
+		Safe_Delete(m_pRadianceBuffer);
+		Safe_Delete(m_pStagingRadianceBuffer);
+
+		m_pRadianceBuffer = new RadianceBuffer(width, height, (RadianceContext*)m_pImageBuffer);
+		m_pStagingRadianceBuffer = new CompressedRadianceBuffer(width, height, (CompressedRadianceContext*)m_pStagingImageBuffer);
+	}
+
+	inline int GetID(void) const { return m_pBuffer[ucHdr_id]; }
+	inline void SetID(int p_nID) { m_pBuffer[ucHdr_id] = p_nID; }
+
+	inline int GetWidth(void) const { return m_pBuffer[ucHdr_width]; }
+	inline int GetHeight(void) const { return m_pBuffer[ucHdr_height]; }
+
+	inline void Package(void) 
+	{
+		m_pStagingRadianceBuffer->FromRadianceBuffer(m_pRadianceBuffer);
+		m_pStagingBuffer[ucHdr_id] = m_pBuffer[ucHdr_id];
+		m_pStagingBuffer[ucHdr_width] = m_pBuffer[ucHdr_width];
+		m_pStagingBuffer[ucHdr_height] = m_pBuffer[ucHdr_height];
+
+		m_nCompressedSize = Compress();
+
+		m_pTransferBuffer[cHdr_size] = m_nStagingBufferSize;
+		m_nTransferSize = m_nCompressedSize + sizeof(int);
+	}
+
+	inline void Unpackage(void)
+	{
+		m_nStagingBufferSize = m_pTransferBuffer[cHdr_size];
+		
+		Decompress();
+
+		m_pBuffer[ucHdr_id]	= m_pStagingBuffer[ucHdr_id];
+		m_pBuffer[ucHdr_width] = m_pStagingBuffer[ucHdr_width];
+		m_pBuffer[ucHdr_height]	= m_pStagingBuffer[ucHdr_height];
+		
+		Reinterpret();
+	
+		m_pStagingRadianceBuffer->ToRadianceBuffer(m_pRadianceBuffer);
+	}
+
+	inline size_t Compress(void) 
+	{
+		return Illumina::Core::Compressor::Compress((char*)m_pStagingBuffer, m_nStagingBufferSize, m_pCompressedBuffer);
+	}
+
+	inline void Decompress(void) 
+	{
+		Illumina::Core::Compressor::Decompress(m_pCompressedBuffer, m_nStagingBufferSize, (char*)m_pStagingBuffer);
+	}
+
+	inline char* GetTransferBuffer(void) const {
+		return (char*)m_pTransferBuffer;
+	}
+
+	inline size_t GetTransferBufferSize(void) const {
+		return m_nTransferSize;
+	}
+
+	inline RadianceBuffer* GetImageData(void) { return m_pRadianceBuffer; }	
+};
+
+/*
 class SerialisableRenderTile
 {
 private:
@@ -227,4 +510,5 @@ public:
 
 	inline RadianceBuffer* GetImageData(void) { return m_pRadianceBuffer; }	
 };
+*/
 //----------------------------------------------------------------------------------------------
