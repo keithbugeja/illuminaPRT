@@ -165,6 +165,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\AdminController.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Coordinator.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\Half.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\main.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskCoordinator.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskPipeline.cpp" />
@@ -184,6 +185,7 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Coordinator.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Environment.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Half.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Logger.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\message.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MessageQueue.h" />

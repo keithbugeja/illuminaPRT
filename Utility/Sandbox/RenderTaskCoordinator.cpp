@@ -105,12 +105,12 @@ bool RenderTaskCoordinator::Compute(void)
 	*/
 
 	// Tone mapping (moved to server)
-	/*
+	/**/
 	eventStart = Platform::GetTime();
 	m_pDragoTone->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 	toneTime = Platform::ToSeconds(eventComplete - eventStart);
-	*/
+	/**/
 
 	// Commit to device
 	eventStart = Platform::GetTime();

@@ -6,9 +6,6 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
-// Disable DLL export warnings
-#pragma warning (disable:4251)
-
 namespace Illumina
 {
 	namespace Core
