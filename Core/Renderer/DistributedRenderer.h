@@ -4,6 +4,7 @@
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
+/*
 #pragma once
 
 #include "boost/mpi.hpp"
@@ -48,9 +49,7 @@ namespace Illumina
 			void Render(void);
 			void RenderDebug(void);
 			
-			/*
-			void RenderToAuxiliary(int p_nTileX, int p_nTileY, int p_nTileWidth, int p_nTileHeight, Spectrum *p_colourBuffer) { throw new Exception ("Method not implemented!"); }
-			*/
 		};
 	}
 }
+*/

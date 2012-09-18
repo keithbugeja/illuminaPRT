@@ -12,9 +12,7 @@
 
 #include "Renderer/Renderer.h"
 #include "Renderer/BasicRenderer.h"
-#include "Renderer/MultipassRenderer.h"
 #include "Renderer/DistributedRenderer.h"
-#include "Renderer/MultithreadedRenderer.h"
 #include "Renderer/TimeConstrainedRenderer.h"
 
 namespace Illumina
@@ -90,7 +88,7 @@ namespace Illumina
 			}
 		};
 		
-
+		/*
 		class DistributedRendererFactory : public Illumina::Core::Factory<Illumina::Core::IRenderer>
 		{
 		public:
@@ -131,5 +129,6 @@ namespace Illumina
 				return new DistributedRenderer(NULL, NULL, NULL, NULL, NULL, p_nSamples, p_nTileWidth, p_nTileHeight);
 			}
 		};
+		*/
 	}
 }
