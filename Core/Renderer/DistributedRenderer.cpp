@@ -1,9 +1,10 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	BasicRenderer.cpp
+//	Filename:	DistributedRenderer.cpp
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
+/*
 #include <time.h>
 #include <vector>
 #include <map>
@@ -104,7 +105,6 @@ bool DistributedRenderer::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 void DistributedRenderer::RenderDebug(void)
 {
-	/*
 	int deviceWidth = m_pDevice->GetWidth(),
 		deviceHeight = m_pDevice->GetHeight();
 
@@ -221,12 +221,10 @@ void DistributedRenderer::RenderDebug(void)
 	m_pDevice->EndFrame();
 
 	delete[] pSampleBuffer;
-	*/
 }
 //----------------------------------------------------------------------------------------------
 void DistributedRenderer::Render(void)
 {
-	/*
 	const int WI_RESULT	= 0x0001;
 	const int WI_TASKID = 0x0002;
 
@@ -469,6 +467,6 @@ void DistributedRenderer::Render(void)
 	//std::cout << "Process " << m_pMPICommunicator->rank() << " at end barrier..." << std::endl;
 	m_pMPICommunicator->barrier();
 	//std::cout << "Process " << m_pMPICommunicator->rank() << " past end barrier..." << std::endl;
-	*/
 }
 //----------------------------------------------------------------------------------------------
+*/

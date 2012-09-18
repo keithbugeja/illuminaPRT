@@ -138,9 +138,9 @@ bool KDTreeMesh::Compile(void)
 	// I should create some export function in persistent meshes (and even change their ridiculous name, at that).
 	// For the time being, I'll leave this here.
 	//----------------------------------------------------------------------------------------------
-	/**//*
+	// /**//*
 	{
-		ImmutableDiskList<Vertex>::Make(&(this->VertexList), "Z:\\Object.ver");
+		ImmutableDiskList<Vertex>::Make(&(this->VertexList), "object.ver");
 	
 		List<PersistentIndexedTriangle> indexedTriList;
 		int tcount = this->TriangleList.Size();
@@ -161,11 +161,11 @@ bool KDTreeMesh::Compile(void)
 			indexedTriList.PushBack(p);
 		}
 
-		ImmutableDiskList<PersistentIndexedTriangle>::Make(&indexedTriList, "Z:\\Object.tri");
+		ImmutableDiskList<PersistentIndexedTriangle>::Make(&indexedTriList, "object.tri");
 
 		// Traverse tree and build disk-tree
 		std::ofstream ftree;
-		ftree.open("Z:\\Object.tre", std::ios::binary);
+		ftree.open("object.tre", std::ios::binary);
 
 		int lc = 0, lic = 0;
 		int dummy = 0xF0F0F0F0;
@@ -260,7 +260,7 @@ bool KDTreeMesh::Compile(void)
 		std::cout << "Average triangles per leaf node : " << (float)lic / (float)lc << std::endl;
 		int s = std::getchar();
 	}
-	*/
+	/* */
 	//----------------------------------------------------------------------------------------------
 
 	// Update Stats
