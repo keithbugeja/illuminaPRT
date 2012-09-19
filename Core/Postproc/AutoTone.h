@@ -67,7 +67,7 @@ namespace Illumina
 
 						pOutputContext->Final = (pInputContext->Final - low) / range;
 						pOutputContext->Final.Clamp();
-						pOutputContext->Flag = 1;
+						pOutputContext->Flags |= RadianceContext::DF_ToneMapped;
 					}
 				}
 

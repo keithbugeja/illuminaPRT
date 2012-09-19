@@ -91,7 +91,7 @@ namespace Illumina
 						// Compute final colour
 						if (irradianceSamples) {
 							pOutputContext->Final = pKernelContext->Direct + (Li * pKernelContext->Albedo) / irradianceSamples; //((Li + Ld) * pKernelContext->Albedo) / irradianceSamples;
-							pOutputContext->Flag = 1;
+							pOutputContext->Flags |= RadianceContext::DF_Processed;
 						}
 					}
 				}

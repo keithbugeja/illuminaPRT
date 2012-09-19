@@ -62,9 +62,9 @@ namespace Illumina
 						pKernelContext = p_pInput->GetP(x, y);
 						pOutputContext = p_pOutput->GetP(x, y);
 
-						if (pKernelContext->Flag)
+						if (pKernelContext->Flags | RadianceContext::DF_Computed)
 						{
-							pKernelContext->Flag = 0;
+							// pKernelContext->Flag = 0;
 							// pKernelContext->Final = pKernelContext->Direct;
 							continue;
 						}
@@ -83,7 +83,7 @@ namespace Illumina
 
 							for (int dx = xs; dx < xe; dx++)
 							{
-								if (pNeighbourContext->Flag) 
+								if (pNeighbourContext->Flags | RadianceContext::DF_Computed) 
 								{
 									// if (Vector3::Dot(pKernelContext->Normal, pNeighbourContext->Normal) > m_fAngle)
 									{
@@ -107,11 +107,13 @@ namespace Illumina
 							pOutputContext->Albedo = albedo / irradianceSamples;
 
 							pOutputContext->Final = pOutputContext->Direct + pOutputContext->Indirect * pOutputContext->Albedo;
+							pOutputContext->Flags |= RadianceContext::DF_Final | RadianceContext::DF_Direct | RadianceContext::DF_Indirect | RadianceContext::DF_Albedo; 
 							// pOutputContext->Flag = 1;
 						}
 					}
 				}
 				
+				/*
 				for (int y = p_nRegionY; y < p_nRegionHeight; ++y)
 				{
 					for (int x = p_nRegionX; x < p_nRegionWidth; ++x)
@@ -119,6 +121,7 @@ namespace Illumina
 						p_pOutput->GetP(x, y)->Flag = false;
 					}
 				}
+				*/
 
 				return true;
 			}
