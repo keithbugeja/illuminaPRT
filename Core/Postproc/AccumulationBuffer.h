@@ -78,7 +78,7 @@ namespace Illumina
 						pAccumulatorContext->Final = pInputContext->Final + pAccumulatorContext->Final;
 						
 						pOutputContext->Final = pAccumulatorContext->Final * countInv;
-						pOutputContext->Flag = 1;
+						pOutputContext->Flags |= RadianceContext::DF_Accumulated;
 					}
 				}
 

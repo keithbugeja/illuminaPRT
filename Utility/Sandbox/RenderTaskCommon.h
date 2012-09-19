@@ -113,7 +113,7 @@ public:
 	unsigned short Normal[2];
 	// unsigned short Position[3];
 
-	unsigned short Flag;
+	unsigned short Flags;
 };
 
 class CompressedRadianceBuffer
@@ -194,7 +194,7 @@ public:
 			CompressNormal(&(pSrc->Normal), pDst->Normal);
 			// CompressVector(&(pSrc->Position), pDst->Position);
 
-			pDst->Flag = pSrc->Flag;
+			pDst->Flags = pSrc->Flags;
 
 			pDst++; pSrc++;
 		}
@@ -214,7 +214,7 @@ public:
 			// DecompressVector(pSrc->Position, &(pDst->Position));
 
 			pDst->Final = pDst->Direct + pDst->Indirect;
-			pDst->Flag = 0; // pSrc->Flag;
+			pDst->Flags = 0; // pSrc->Flag;
 			
 			pDst++; pSrc++;
 		}

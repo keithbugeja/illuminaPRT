@@ -155,7 +155,7 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 				
 			// Get radiance
 			pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
-			pRadianceContext->Flag = true;
+			pRadianceContext->Flags |= RadianceContext::DF_Computed;
 		}
 
 		// Update remaining samples flag to show they were not processed
@@ -165,7 +165,7 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 			sample.Y = p_nRegionHeight * QuasiRandomSequence::Sobol2(maxSamples - requiredSamples) + p_nBufferY;
 
 			pRadianceContext = p_pRadianceBuffer->GetP((int)sample.X, (int)sample.Y);
-			pRadianceContext->Flag = false;
+			pRadianceContext->Flags &= ~RadianceContext::DF_Computed;
 		}
 
 		/*

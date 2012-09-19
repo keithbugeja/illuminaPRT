@@ -54,6 +54,25 @@ namespace Illumina
 		class RadianceContext
 		{
 		public:
+			enum DetailField
+			{
+				DF_Final		= 0x0001,
+				DF_Direct		= 0x0002,
+				DF_Indirect		= 0x0003,
+				DF_Albedo		= 0x0004,
+
+				DF_Distance		= 0x0008,
+				DF_Normal		= 0x0010,
+				DF_Position		= 0x0020,
+				DF_ViewRay		= 0x0040,
+
+				DF_Computed			= 0x0080,
+				DF_ToneMapped		= 0x0100,
+				DF_Accumulated		= 0x0200,
+				DF_Processed		= 0x0400
+			};
+
+		public:
 			Spectrum Final;
 			Spectrum Direct;
 			Spectrum Indirect;
@@ -64,16 +83,22 @@ namespace Illumina
 
 			Ray ViewRay;
 
-			char Flag;
+			float Distance;
+
+			unsigned short Flags;
 
 		public:
 			inline void SetSpatialContext(Intersection *p_pIntersection)
 			{
+				Flags |= DF_Distance | DF_Normal | DF_Position | DF_ViewRay;
+				
 				ViewRay.Set(p_pIntersection->Surface.RayOriginWS, 
 					p_pIntersection->Surface.RayDirectionWS);
 
 				Normal = p_pIntersection->Surface.ShadingBasisWS.W;
 				Position = p_pIntersection->Surface.PointWS;
+			
+				Distance = p_pIntersection->Surface.Distance;
 			}
 		};
 

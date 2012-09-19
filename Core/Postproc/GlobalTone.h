@@ -47,7 +47,7 @@ namespace Illumina
 						pOutputContext = p_pOutput->GetP(x, y);
 
 						pOutputContext->Final = pInputContext->Final / (pInputContext->Final + 1);
-						pOutputContext->Flag = 1;
+						pOutputContext->Flags |= RadianceContext::DF_ToneMapped;
 					}
 				}
 
