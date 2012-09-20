@@ -14,7 +14,7 @@
 //----------------------------------------------------------------------------------------------
 //	Set Illumina PRT compilation mode (SHM or DSM)
 //----------------------------------------------------------------------------------------------
-// #define ILLUMINA_SHM
+#define ILLUMINA_SHM
 
 #if (!defined ILLUMINA_SHM)
 	#define ILLUMINA_DSM

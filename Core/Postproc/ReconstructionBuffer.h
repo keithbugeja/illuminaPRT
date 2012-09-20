@@ -41,6 +41,8 @@ namespace Illumina
 
 			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight)
 			{
+				std::cout << "Reconstructing..." << std::endl;
+
 				RadianceContext *pKernelContext,
 					*pNeighbourContext,
 					*pOutputContext;
@@ -61,13 +63,18 @@ namespace Illumina
 					{
 						pKernelContext = p_pInput->GetP(x, y);
 						pOutputContext = p_pOutput->GetP(x, y);
-
-						if (pKernelContext->Flags | RadianceContext::DF_Computed)
+						
+						if (pKernelContext->Flags & RadianceContext::DF_Computed)
 						{
+							//pOutputContext->Final = pOutputContext->Indirect = pOutputContext->Direct = pOutputContext->Albedo = 10.f;
+							//pOutputContext->Flags |= RadianceContext::DF_Final | RadianceContext::DF_Direct | RadianceContext::DF_Indirect | RadianceContext::DF_Albedo; 
+
 							// pKernelContext->Flag = 0;
 							// pKernelContext->Final = pKernelContext->Direct;
 							continue;
 						}
+
+						// continue;
 
 						xs = x - m_nKernelSize;
 						xe = x + m_nKernelSize;
@@ -83,7 +90,7 @@ namespace Illumina
 
 							for (int dx = xs; dx < xe; dx++)
 							{
-								if (pNeighbourContext->Flags | RadianceContext::DF_Computed) 
+								if (pNeighbourContext->Flags & RadianceContext::DF_Computed) 
 								{
 									// if (Vector3::Dot(pKernelContext->Normal, pNeighbourContext->Normal) > m_fAngle)
 									{
@@ -110,6 +117,12 @@ namespace Illumina
 							pOutputContext->Flags |= RadianceContext::DF_Final | RadianceContext::DF_Direct | RadianceContext::DF_Indirect | RadianceContext::DF_Albedo; 
 							// pOutputContext->Flag = 1;
 						}
+						/*else
+						{
+							pOutputContext->Final = pOutputContext->Indirect = pOutputContext->Direct = pOutputContext->Albedo = 10.f;
+							pOutputContext->Flags |= RadianceContext::DF_Final | RadianceContext::DF_Direct | RadianceContext::DF_Indirect | RadianceContext::DF_Albedo; 
+							pOutputContext->Flags |= RadianceContext::DF_Processed;
+						}*/
 					}
 				}
 				

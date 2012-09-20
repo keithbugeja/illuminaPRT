@@ -172,6 +172,8 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 		p_pRadianceContext = &radianceContext;
 	
 	// Initialise context
+	p_pRadianceContext->Flags = 0;
+
 	p_pRadianceContext->Indirect = 
 		p_pRadianceContext->Direct = 
 		p_pRadianceContext->Albedo = 0.f;
@@ -276,10 +278,11 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 			p_pRadianceContext->Direct += p_pScene->LightList[lightIndex]->Radiance(ray);
 	}
 
-	p_pRadianceContext->Final = 
-		p_pRadianceContext->Direct + p_pRadianceContext->Indirect;
-
-	return p_pRadianceContext->Final;
+	// Populate radiance context
+	p_pRadianceContext->Flags |= RadianceContext::DF_Computed | RadianceContext::DF_Albedo |  
+		RadianceContext::DF_Direct | RadianceContext::DF_Indirect;
+	
+	return p_pRadianceContext->Direct + p_pRadianceContext->Indirect;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext)
