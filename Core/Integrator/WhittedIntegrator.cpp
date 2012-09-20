@@ -71,6 +71,8 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 		p_pRadianceContext = &radianceContext;
 	
 	// Initialise context
+	p_pRadianceContext->Flags = 0;
+
 	p_pRadianceContext->Indirect = 
 		p_pRadianceContext->Direct = 
 		p_pRadianceContext->Albedo = 0.f;
@@ -86,6 +88,8 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 	{
 		for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
 			p_pRadianceContext->Direct += p_pScene->LightList[lightIndex]->Radiance(-ray);
+
+		p_pRadianceContext->Flags |= RadianceContext::DF_Direct;
 
 		return p_pRadianceContext->Direct;
 	} 
@@ -119,10 +123,12 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 			if (p_intersection.IsEmissive())
 			{
 				p_pRadianceContext->Direct = 
-					p_pRadianceContext->Final = 
 					p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut); 
-				
-				return p_pRadianceContext->Final;
+
+				p_pRadianceContext->Flags |= RadianceContext::DF_Computed | 
+					RadianceContext::DF_Albedo | RadianceContext::DF_Direct;
+
+				return p_pRadianceContext->Direct;
 			}
 		}
 
@@ -137,6 +143,10 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 				p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
 		}
 	}
+
+	// Return radiance
+	p_pRadianceContext->Flags |= RadianceContext::DF_Computed | 
+		RadianceContext::DF_Albedo | RadianceContext::DF_Direct;
 
 	return p_pRadianceContext->Direct;
 }
