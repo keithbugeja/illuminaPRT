@@ -237,6 +237,11 @@ namespace Illumina
 				float fDen = 2.f * p_fStandardDeviation * p_fStandardDeviation;
 				return fLeft * Maths::Exp(-(fNum / fDen));
 			}
+
+			static float GaussianPDFApprox(float p_fX)
+			{
+				return (1 + Maths::Cos(p_fX)) * Maths::InvPiTwo;
+			}
 		};
 	}
 }

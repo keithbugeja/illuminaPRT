@@ -87,6 +87,9 @@ public:
 		// Barrier for frame synchronisation
 		int m_nThreadCount;
 
+		// Budget for each frame
+		float m_fThreadBudget;
+
 		boost::barrier *m_pRenderBarrier;
 		boost::mutex *m_pStatLock;
 
@@ -96,7 +99,7 @@ public:
 		std::vector< RenderThread::RenderThreadTile> m_tilePacket;
 
 	public:
-		RenderThreadState(IRenderer *p_pRenderer, RadianceBuffer *p_pRadianceBuffer, int p_nTileWidth, int p_nTileHeight, int p_nThreadCount)
+		RenderThreadState(IRenderer *p_pRenderer, RadianceBuffer *p_pRadianceBuffer, int p_nTileWidth, int p_nTileHeight, int p_nThreadCount, float p_fThreadBudget = 1e+20)
 			: m_pRenderer(p_pRenderer)
 			, m_pRadianceBuffer(p_pRadianceBuffer)
 			, m_nWidth(p_nTileWidth)
@@ -105,6 +108,7 @@ public:
 			, m_pStatLock(new boost::mutex())
 			, m_nTileID(0)
 			, m_nThreadCount(p_nThreadCount)
+			, m_fThreadBudget(p_fThreadBudget)
 		{ }
 
 		~RenderThreadState(void)
@@ -120,9 +124,10 @@ public:
 
 		inline IRenderer* GetRenderer(void) { return m_pRenderer; }
 		inline RadianceBuffer* GetRadianceBuffer(void) { return m_pRadianceBuffer; }
-		inline int GetThreadCount(void) { return m_nThreadCount; }
-		inline int GetWidth(void) { return m_nWidth; }
-		inline int GetHeight(void) { return m_nHeight; }
+		inline float GetThreadBudget(void) const { return m_fThreadBudget; }
+		inline int GetThreadCount(void) const { return m_nThreadCount; }
+		inline int GetWidth(void) const { return m_nWidth; }
+		inline int GetHeight(void) const { return m_nHeight; }
 		inline void Reset(void) { m_nTileID = 0; }
 		inline void Wait(void) { m_pRenderBarrier->wait(); }
 		inline void Run(void) { m_bIsRunning = true; }
@@ -251,7 +256,7 @@ public:
 
 			// Time job
 			threadStats.JobTime = Platform::GetTime();
-			while((tileID = p_pState->NextTile()) < tilesPerPage)			
+			while((tileID = p_pState->NextTile()) < tilesPerPage && Platform::ToSeconds(Platform::GetTime() - threadStats.JobTime) < p_pState->GetThreadBudget())			
 			{
 				// std::cout << boost::this_thread::get_id() << " : " << tileID << std::endl;
 				const RenderThread::RenderThreadTile &tilePacket = p_pState->GetTilePacket(tileID);
@@ -351,9 +356,32 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 	pAccumulationBuffer->Reset();
 
 	//----------------------------------------------------------------------------------------------
+	// Rendering budget setup
+	//----------------------------------------------------------------------------------------------
+	float fRenderBudget;
+
+	if (p_nFPS != 0)
+	{
+		fRenderBudget = 1.f / p_nFPS;
+		pRenderer->SetRenderBudget(fRenderBudget * 0.5f);
+		/*
+		int tileCount = (pRenderer->GetDevice()->GetWidth() / p_nSize) * 
+			(pRenderer->GetDevice()->GetHeight() / p_nSize);
+
+		float perTileBudget = 1.f / (p_nFPS * (tileCount / p_nThreads));
+		pRenderer->SetRenderBudget(perTileBudget);
+		*/
+	}
+	else
+	{
+		fRenderBudget = 1e+20;
+		pRenderer->SetRenderBudget(10000);
+	}
+
+	//----------------------------------------------------------------------------------------------
 	// Rendering threads setup
 	//----------------------------------------------------------------------------------------------
-	RenderThread::RenderThreadState renderThreadState(pRenderer, pRadianceBuffer, p_nSize, p_nSize, p_nThreads + 1);
+	RenderThread::RenderThreadState renderThreadState(pRenderer, pRadianceBuffer, p_nSize, p_nSize, p_nThreads + 1, fRenderBudget);
 	renderThreadState.Reset();
 	renderThreadState.Run();
 
@@ -361,20 +389,6 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 
 	for (int threadIdx = 0; threadIdx < p_nThreads; threadIdx++)
 		boost::thread runThread(boost::bind(&RenderThread::Render, &renderThreadState));
-
-	//----------------------------------------------------------------------------------------------
-	// Rendering budget setup
-	//----------------------------------------------------------------------------------------------
-	if (p_nFPS != 0)
-	{
-		int tileCount = (pRenderer->GetDevice()->GetWidth() / p_nSize) * 
-			(pRenderer->GetDevice()->GetHeight() / p_nSize);
-
-		float perTileBudget = 1.f / (p_nFPS * (tileCount / p_nThreads));
-		pRenderer->SetRenderBudget(perTileBudget);
-	}
-	else
-		pRenderer->SetRenderBudget(10000);
 
 	//----------------------------------------------------------------------------------------------
 	// Initialise timing
@@ -394,16 +408,16 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 	//----------------------------------------------------------------------------------------------
 	// Render loop
 	//----------------------------------------------------------------------------------------------
-	//float alpha = Maths::Pi;
-	//Matrix3x3 rotation;
-	// Vector3 observer = pCamera->GetObserver();
+	float alpha = Maths::Pi;
+	Matrix3x3 rotation;
+	Vector3 observer = pCamera->GetObserver();
 
 	for (int nFrame = 0; nFrame < p_nIterations; ++nFrame)
 	{
 		// Animate scene 
 		//alpha += Maths::PiTwo / 180.f;
 		
-		//rotation.MakeRotation(Vector3::UnitYPos, alpha);
+		rotation.MakeRotation(Vector3::UnitYPos, alpha);
 
 		////((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetScaling(Vector3::Ones * 20.0f);
 		//// ((GeometricPrimitive*)pSpace->PrimitiveList[0])->WorldTransform.SetRotation(rotation);
@@ -412,10 +426,10 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 		////pCamera->MoveTo(Vector3(Maths::Cos(alpha) * lookFrom.X, lookFrom.Y, Maths::Sin(alpha) * lookFrom.Z));
 		////pCamera->LookAt(lookAt);
 
-		//Vector3 observer_ = observer;
-		//observer_.Z += Maths::Cos(alpha) * 4.f;
-		//observer_.X += Maths::Sin(alpha) * 2.f;
-		//pCamera->MoveTo(observer_);
+		Vector3 observer_ = observer;
+		observer_.Z += Maths::Cos(alpha) * 4.f;
+		observer_.X += Maths::Sin(alpha) * 2.f;
+		// pCamera->MoveTo(observer_);
 
 
 		//----------------------------------------------------------------------------------------------

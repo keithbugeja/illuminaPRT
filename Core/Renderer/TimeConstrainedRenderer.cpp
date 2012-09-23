@@ -35,19 +35,11 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 
 	Intersection intersection;
 	IntegratorContext context;
-
-    /*
-	// Compute tile bounds
-	int regionXEnd = p_nRegionX + p_nRegionWidth,
-		regionYEnd = p_nRegionY + p_nRegionHeight;
-     */
     
 	// Compute dimension reciprocals for normalisation
 	float rcpWidth = 1.f / m_pDevice->GetWidth(),
         rcpHeight = 1.f / m_pDevice->GetHeight();
     
-    //float rcpSampleCount = 1.f / m_nSampleCount;
-
 	double startTime = Platform::GetTime();
 
 	// Handle supersampling independently
@@ -115,6 +107,290 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 	}
 	else
 	{
+		/*
+		// Compute tile bounds
+		int regionXEnd = p_nRegionX + p_nRegionWidth,
+			regionYEnd = p_nRegionY + p_nRegionHeight;
+
+		Vector2 sample = 
+			m_pScene->GetSampler()->Get2DSample();
+
+		// No supersampling
+		context.SampleIndex = 0;
+
+		const int ci = 0x01;
+		const int nci = 0xFFFFFFFE;
+
+		// Render tile
+		for (int srcY = p_nRegionY, dstY = p_nBufferY; srcY < regionYEnd; ++srcY, ++dstY)
+		{
+			for (int srcX = p_nRegionX, dstX = p_nBufferX; srcX < regionXEnd; ++srcX, ++dstX)
+			{
+				// Get radiance context
+				pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
+
+				// Set integrator context
+				context.SurfacePosition.Set((float)srcX, (float)srcY);
+				context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
+
+				// Get ray from camera
+				m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, sample.U * rcpWidth, sample.V * rcpHeight, pRadianceContext->ViewRay);
+				//m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.5f * rcpWidth, 0.5f * rcpHeight, pRadianceContext->ViewRay);
+
+				// pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
+
+				// Get radiance
+				if (((srcX & ci) | (srcY & ci)) != 0)
+				{
+					IIntegrator::Direct(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
+
+					pRadianceContext->Indirect = 
+						p_pRadianceBuffer->GetP(dstX & nci, dstY & nci)->Indirect;
+					pRadianceContext->Final = pRadianceContext->Indirect * pRadianceContext->Albedo + pRadianceContext->Direct;
+				}
+				else
+					pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
+			}
+		}
+		*/
+
+		/*
+		RadianceContext *rc;
+		Spectrum indirect;
+		int kernelEntry = 4,
+			kernelSize = kernelEntry * 8;
+		
+		*/
+
+		/*
+		for (int srcY = p_nRegionY + kernelSize, dstY = p_nBufferY + kernelSize; srcY < regionYEnd - kernelSize; srcY+=kernelEntry, dstY+=kernelEntry)
+		{
+			for (int srcX = p_nRegionX + kernelSize, dstX = p_nBufferX + kernelSize; srcX < regionXEnd - kernelSize; srcX+=kernelEntry, dstX+=kernelEntry)
+			{
+				// Get radiance context
+				pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
+				indirect = p_pRadianceBuffer->GetP(dstX, dstY)->Indirect;
+
+				float weight = 0;
+				Spectrum _indirect = 0;
+				
+				for (int ky = -kernelSize; ky < kernelSize; ky+=kernelEntry)
+				{
+					for (int kx = -kernelSize; kx < kernelSize; kx+=kernelEntry)
+					{
+						// compute edge details
+						rc = p_pRadianceBuffer->GetP(dstX + kx, dstY + ky);
+						//float dist = Maths::Min(0.99f, Maths::Abs(pRadianceContext->Distance - rc->Distance));
+
+						if (Vector3::Dot(rc->Normal, pRadianceContext->Normal) > 0.75)
+						{
+							//float dist = 
+							//	Statistics::GaussianPDF(Maths::Sqr(pRadianceContext->Distance - rc->Distance), 0, 2.0f);
+
+							//weight+=dist;
+							//_indirect = _indirect + rc->Indirect * dist;
+
+							weight++;
+							_indirect = _indirect + rc->Indirect;
+						}
+					}
+				}
+
+				pRadianceContext->Indirect = pRadianceContext->Albedo *_indirect / weight;
+				pRadianceContext->Final = pRadianceContext->Indirect + pRadianceContext->Direct;
+			}
+		}
+		/**/
+
+		/*
+		// Naive upscaling
+		for (int srcY = p_nRegionY, dstY = p_nBufferY; srcY < regionYEnd; ++srcY, ++dstY)
+		{
+			for (int srcX = p_nRegionX, dstX = p_nBufferX; srcX < regionXEnd; ++srcX, ++dstX)
+			{
+				pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
+				pRadianceContext->Indirect = 
+					p_pRadianceBuffer->GetP(dstX & 0xFFFFFFFE, dstY & 0xFFFFFFFE)->Indirect;
+				pRadianceContext->Final = pRadianceContext->Indirect * pRadianceContext->Albedo + pRadianceContext->Direct;
+			}
+		}
+		*/
+
+		// Naive BLF
+		/*
+		kernelSize = 4;
+		float sr = 4, ss = 1;
+		int iters=1;
+
+		for (int srcY = p_nRegionY + kernelSize, dstY = p_nBufferY + kernelSize; srcY < regionYEnd - kernelSize; ++srcY, ++dstY)
+		{
+			for (int srcX = p_nRegionX + kernelSize, dstX = p_nBufferX + kernelSize; srcX < regionXEnd - kernelSize; ++srcX, ++dstX)
+			{
+				pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
+				indirect = p_pRadianceBuffer->GetP(dstX & 0xFFFFFFF8, dstY & 0xFFFFFFF8)->Indirect;
+				pRadianceContext->Indirect = indirect;
+
+				int dstX1 = Maths::Max(0, dstX-1),
+					dstY1 = Maths::Max(0, dstY-1);
+
+				RadianceContext *ri0j1 = p_pRadianceBuffer->GetP(dstX1, dstY),
+					*ri1j0 = p_pRadianceBuffer->GetP(dstX, dstY1),
+					*ri0j0 = p_pRadianceBuffer->GetP(dstX1,dstY1);
+
+				rc->Final = ri0j1->Final + ri1j0->Final - ri0j0->Final + pRadianceContext->Indirect;
+			}
+		}
+		*/
+
+		/*
+		for (int srcY = p_nRegionY + kernelSize, dstY = p_nBufferY + kernelSize; srcY < regionYEnd - kernelSize; ++srcY, ++dstY)
+		{
+			for (int srcX = p_nRegionX + kernelSize, dstX = p_nBufferX + kernelSize; srcX < regionXEnd - kernelSize; ++srcX, ++dstX)
+			{
+				// Get radiance context
+				pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
+				indirect = pRadianceContext->Indirect;
+
+				float weight = 0;
+				Spectrum _indirect = 0;
+				
+				for (int ky = -kernelSize; ky < kernelSize; ++ky)
+				{
+					for (int kx = -kernelSize; kx < kernelSize; ++kx)
+					{
+						// compute edge details
+						rc = p_pRadianceBuffer->GetP(dstX + kx, dstY + ky);
+						float dist = Maths::Sqr(pRadianceContext->Distance - rc->Distance);
+						dist=Statistics::GaussianPDF(dist, 0, ss);
+
+						rc = p_pRadianceBuffer->GetP(dstX + kx, dstY + ky);
+						
+						//float y1 = 0.2126 * pRadianceContext->Indirect[0] +
+						//	0.7152 * pRadianceContext->Indirect[1] +
+						//	0.0722 * pRadianceContext->Indirect[2];
+
+						//float y2 = 0.2126 * rc->Indirect[0] +
+						//	0.7152 * rc->Indirect[1] +
+						//	0.0722 * rc->Indirect[2];
+						
+						//float cDist = Maths::Sqr(y1-y2);
+						float cDist = 1;
+
+						//float cDist = Maths::Sqr(pRadianceContext->Indirect[0] - rc->Indirect[0]) + 
+						//	Maths::Sqr(pRadianceContext->Indirect[1] - rc->Indirect[1]) + 
+						//	Maths::Sqr(pRadianceContext->Indirect[2] - rc->Indirect[2]);
+
+						//cDist=Statistics::GaussianPDF(cDist, 0, sr);
+
+						weight += dist*cDist;//(1-dist) * (1-cDist);
+						_indirect = _indirect + rc->Indirect * dist * cDist; //(1-dist) * (1-cDist);
+					}
+				}
+
+				//pRadianceContext->Indirect = pRadianceContext->Albedo * _indirect / weight;
+				pRadianceContext->Indirect = _indirect / weight;
+				pRadianceContext->Direct = 0;
+				pRadianceContext->Final = pRadianceContext->Indirect + pRadianceContext->Direct;
+			}
+		}
+		/**/
+
+		/*
+		for (int srcY = p_nRegionY + kernelSize, dstY = p_nBufferY + kernelSize; srcY < regionYEnd - kernelSize; ++srcY, ++dstY)
+		{
+			for (int srcX = p_nRegionX + kernelSize, dstX = p_nBufferX + kernelSize; srcX < regionXEnd - kernelSize; ++srcX, ++dstX)
+			{
+				// Get radiance context
+				pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
+				indirect = p_pRadianceBuffer->GetP(dstX & 0xFFFFFFF8, dstY & 0xFFFFFFF8)->Indirect;
+
+				float weight = 0;
+				Spectrum _indirect = 0;
+				
+				for (int ky = -kernelSize; ky < kernelSize; ++ky)
+				{
+					for (int kx = -kernelSize; kx < kernelSize; ++kx)
+					{
+						// compute edge details
+						rc = p_pRadianceBuffer->GetP(dstX + kx, dstY + ky);
+						float dist = Maths::Min(0.95f, Maths::Abs(pRadianceContext->Distance - rc->Distance));
+
+						rc = p_pRadianceBuffer->GetP((dstX + kx) & 0xFFFFFFF8, (dstY + ky) & 0xFFFFFFF8);
+						float cDist = Maths::Min(0.95f, 
+							Maths::Sqr(pRadianceContext->Indirect[0] - rc->Indirect[0]) + 
+							Maths::Sqr(pRadianceContext->Indirect[1] - rc->Indirect[1]) + 
+							Maths::Sqr(pRadianceContext->Indirect[2] - rc->Indirect[2]));
+						
+						weight += (1-dist) * (1-cDist);
+						_indirect = _indirect + rc->Indirect * (1-dist) * (1-cDist);
+
+					}
+				}
+
+				pRadianceContext->Indirect = pRadianceContext->Albedo * _indirect / weight;
+				pRadianceContext->Final = pRadianceContext->Indirect; // + pRadianceContext->Direct;
+			}
+		}
+		/**/
+
+		/*
+		for (int srcY = p_nRegionY + kernelSize; srcY < regionYEnd - kernelSize; ++srcY)
+		{
+			for (int srcX = p_nRegionX + kernelSize; srcX < regionXEnd - kernelSize; ++srcX)
+			{
+				RadianceContext *r = m_pRadianceBuffer->GetP(srcX, srcY);
+				float weight = 0;
+				Spectrum L = 0.5f;
+
+				for (int ky = -kernelSize; ky < kernelSize; ky++)
+				{
+					for (int kx = -kernelSize; kx < kernelSize; kx++)
+					{
+						// compute edge details
+						pRadianceContext = p_pRadianceBuffer->GetP(srcX + kx, srcY + ky);
+						float dist = Maths::Min(0.95f, Maths::Abs(pRadianceContext->Distance - r->Distance));
+
+						pRadianceContext = p_pRadianceBuffer->GetP((srcX + kx) & 0xFFFFFFF8, 
+							(srcY + ky) & 0xFFFFFFF8);
+						float cDist = Maths::Min(0.95f, 
+							Maths::Sqr(pRadianceContext->Indirect[0] - r->Indirect[0]) + 
+							Maths::Sqr(pRadianceContext->Indirect[1] - r->Indirect[1]) + 
+							Maths::Sqr(pRadianceContext->Indirect[2] - r->Indirect[2]));
+						
+						weight += (1-dist) * (1-cDist);
+						L = L + r->Indirect * (1-dist) * (1-cDist);
+
+						//pRadianceContext = p_pRadianceBuffer->GetP(srcX + kx, srcY + ky);
+						//float weight2 = (pRadianceContext->Distance - r->Distance)
+					}
+				}
+				r->Indirect = L / weight;
+				r->Final = r->Direct + r->Indirect * r->Albedo;
+			}
+		}
+		*/
+
+		/*
+		// Naive upscaling
+		for (int srcY = p_nRegionY, dstY = p_nBufferY; srcY < regionYEnd; ++srcY, ++dstY)
+		{
+			for (int srcX = p_nRegionX, dstX = p_nBufferX; srcX < regionXEnd; ++srcX, ++dstX)
+			{
+				// Get radiance context
+				pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
+				if ((srcX & 0x07) | (srcY & 0x07))
+				{
+					indirect = p_pRadianceBuffer->GetP(dstX & 0xFFFFFFF8, dstY & 0xFFFFFFF8)->Indirect;
+					pRadianceContext->Indirect = indirect;
+					pRadianceContext->Final = indirect * pRadianceContext->Albedo + pRadianceContext->Direct;
+				}
+
+			}
+		}
+		/**/
+
+		/* FOR SCIENCE!! */
+		/**/
 		Vector2 sample;
 
 		// No supersampling
@@ -155,6 +431,8 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 				
 			// Get radiance
 			pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
+				// IIntegrator::Direct(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
+
 			pRadianceContext->Flags |= RadianceContext::DF_Computed;
 		}
 
@@ -167,35 +445,6 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 			pRadianceContext = p_pRadianceBuffer->GetP((int)sample.X, (int)sample.Y);
 			pRadianceContext->Flags &= ~RadianceContext::DF_Computed;
 		}
-
-		/*
-		// Render tile
-		for (int srcY = p_nRegionY, dstY = p_nBufferY; srcY < regionYEnd && !done; ++srcY, ++dstY)
-		{
-			for (int srcX = p_nRegionX, dstX = p_nBufferX; srcX < regionXEnd; ++srcX, ++dstX)
-			{
-				double currentTime = Platform::GetTime();
-				
-				if (Platform::ToSeconds(currentTime - startTime) > m_fRenderBudget)
-				{
-					done = true;
-					break;
-				}
-
-				// Get radiance context
-				pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
-
-				// Set integrator context
-				context.SurfacePosition.Set(srcX, srcY);
-				context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
-
-				// Get ray from camera
-				m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, sample.U * rcpWidth, sample.V * rcpHeight, pRadianceContext->ViewRay);
-				
-				// Get radiance
-				pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
-			}
-		}
-		*/
+		/**/
 	}
 }

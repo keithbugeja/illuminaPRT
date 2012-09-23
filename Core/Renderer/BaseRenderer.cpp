@@ -127,11 +127,7 @@ void BaseRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nRegion
 				pRadianceContext->Indirect = accumulator.Indirect * rcpSampleCount;
 				pRadianceContext->Albedo = accumulator.Albedo * rcpSampleCount;
 				
-				/*
-				pRadianceContext->Final.Set(Maths::Abs(pRadianceContext->Normal.Element[0]),
-					Maths::Abs(pRadianceContext->Normal.Element[1]), 
-					Maths::Abs(pRadianceContext->Normal.Element[2]));
-				*/
+				pRadianceContext->Flags |= RadianceContext::DF_Computed;
 			}
 		}
 
