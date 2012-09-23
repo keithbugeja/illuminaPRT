@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Postproc/PostProcess.h"
+#include "Maths/Statistics.h"
 
 //----------------------------------------------------------------------------------------------
 namespace Illumina
@@ -49,6 +50,9 @@ namespace Illumina
 
 				int ys, ye, xs, xe;
 				int irradianceSamples;
+				//float irradianceSamples;
+
+				m_nKernelSize = 3;
 
 				//----------------------------------------------------------------------------------------------
 				for (int y = p_nRegionY + m_nKernelSize; y < p_nRegionHeight - m_nKernelSize; ++y)
@@ -63,7 +67,6 @@ namespace Illumina
 
 						irradianceSamples = 0;
 						Li = 0.f;
-						// Ld = 0.f;
 
 						pKernelContext = p_pInput->GetP(x, y);
 						pOutputContext = p_pOutput->GetP(x, y);
@@ -76,12 +79,14 @@ namespace Illumina
 							{
 								if (Vector3::Dot(pKernelContext->Normal, pNeighbourContext->Normal) > m_fAngle)
 								{
-									// if (Vector3::DistanceSquared(pKernelContext->Position, pNeighbourContext->Position) < m_fDistance)
-									{										
-										// Ld += pNeighbourContext->Direct;
-										Li += pNeighbourContext->Indirect;
-										irradianceSamples++;
-									}
+									Li += pNeighbourContext->Indirect;
+									irradianceSamples++;
+
+									//float wd = Maths::Sqr(pKernelContext->Distance - pNeighbourContext->Distance);
+									//wd = Statistics::GaussianPDFApprox(wd);//(wd, 0, 4);
+
+									//Li += pNeighbourContext->Indirect * wd;
+									//irradianceSamples += wd;
 								}
 
 								pNeighbourContext++;
@@ -90,7 +95,9 @@ namespace Illumina
 			
 						// Compute final colour
 						if (irradianceSamples) {
-							pOutputContext->Final = pKernelContext->Direct + (Li * pKernelContext->Albedo) / irradianceSamples; //((Li + Ld) * pKernelContext->Albedo) / irradianceSamples;
+							pOutputContext->Final = pKernelContext->Direct + (Li * pKernelContext->Albedo) / irradianceSamples;
+							//pOutputContext->Indirect = (Li * pKernelContext->Albedo) / irradianceSamples;
+							//pOutputContext->Final = pOutputContext->Indirect;// pKernelContext->Direct + pOutputContext->Indirect; // * pKernelContext->Albedo;
 							pOutputContext->Flags |= RadianceContext::DF_Processed;
 						}
 					}

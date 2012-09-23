@@ -279,7 +279,7 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 	}
 
 	// Populate radiance context
-	p_pRadianceContext->Flags |= RadianceContext::DF_Computed | RadianceContext::DF_Albedo |  
+	p_pRadianceContext->Flags |= RadianceContext::DF_Albedo |  
 		RadianceContext::DF_Direct | RadianceContext::DF_Indirect;
 	
 	return p_pRadianceContext->Direct + p_pRadianceContext->Indirect;

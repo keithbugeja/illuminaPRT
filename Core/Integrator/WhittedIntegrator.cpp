@@ -125,8 +125,8 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 				p_pRadianceContext->Direct = 
 					p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut); 
 
-				p_pRadianceContext->Flags |= RadianceContext::DF_Computed | 
-					RadianceContext::DF_Albedo | RadianceContext::DF_Direct;
+				p_pRadianceContext->Flags |= RadianceContext::DF_Albedo | 
+					RadianceContext::DF_Direct;
 
 				return p_pRadianceContext->Direct;
 			}
@@ -145,8 +145,8 @@ Spectrum WhittedIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSc
 	}
 
 	// Return radiance
-	p_pRadianceContext->Flags |= RadianceContext::DF_Computed | 
-		RadianceContext::DF_Albedo | RadianceContext::DF_Direct;
+	p_pRadianceContext->Flags |= RadianceContext::DF_Albedo | 
+		RadianceContext::DF_Direct;
 
 	return p_pRadianceContext->Direct;
 }
