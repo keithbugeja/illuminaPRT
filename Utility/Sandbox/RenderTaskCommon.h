@@ -214,7 +214,7 @@ public:
 			// DecompressVector(pSrc->Position, &(pDst->Position));
 
 			pDst->Final = pDst->Direct + pDst->Indirect;
-			pDst->Flags = 0; // pSrc->Flag;
+			pDst->Flags = pSrc->Flags;
 			
 			pDst++; pSrc++;
 		}

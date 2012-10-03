@@ -821,6 +821,9 @@
     <ClInclude Include="..\..\..\..\Core\Postproc\GlobalTone.h">
       <Filter>Header Files\Postproc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Postproc\BilateralFilter.h">
+      <Filter>Header Files\Postproc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">

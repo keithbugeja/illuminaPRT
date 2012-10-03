@@ -43,98 +43,86 @@ namespace Illumina
 			{
 				std::cout << "Reconstructing..." << std::endl;
 
+				m_nKernelSize = 7;
+
 				RadianceContext *pKernelContext,
 					*pNeighbourContext,
 					*pOutputContext;
 
-				Spectrum Li, Ld;
+				int halfKernel = 
+					m_nKernelSize >> 1;
 
-				int ys, ye, xs, xe;
-				int irradianceSamples;
-				m_nKernelSize = 7;
+				int xs, xe, ys, ye,
+					sx, sy,
+					remainingSamples,
+					maxSamples = 
+						m_nKernelSize * m_nKernelSize;
 
-				//----------------------------------------------------------------------------------------------
-				for (int y = p_nRegionY + m_nKernelSize; y < p_nRegionHeight - m_nKernelSize; ++y)
+				float weight,
+					totalWeight;
+
+				for (int y = p_nRegionY + halfKernel; y < p_nRegionHeight - halfKernel; ++y)
 				{
-					ys = y - m_nKernelSize;
-					ye = y + m_nKernelSize;
+					ys = y - halfKernel;
+					ye = y + halfKernel;
 
-					for (int x = p_nRegionX + m_nKernelSize; x < p_nRegionWidth - m_nKernelSize; ++x)
+					for (int x = p_nRegionX + halfKernel; x < p_nRegionWidth - halfKernel; ++x)
 					{
+						xs = x - halfKernel;
+						xe = x + halfKernel;
+
 						pKernelContext = p_pInput->GetP(x, y);
 						pOutputContext = p_pOutput->GetP(x, y);
-						
-						if (pKernelContext->Flags & RadianceContext::DF_Computed)
-						{
-							//pOutputContext->Final = pOutputContext->Indirect = pOutputContext->Direct = pOutputContext->Albedo = 10.f;
-							//pOutputContext->Flags |= RadianceContext::DF_Final | RadianceContext::DF_Direct | RadianceContext::DF_Indirect | RadianceContext::DF_Albedo; 
 
-							// pKernelContext->Flag = 0;
-							// pKernelContext->Final = pKernelContext->Direct;
+						if (pKernelContext->Flags & RadianceContext::DF_Direct > 0)
 							continue;
-						}
 
-						// continue;
-
-						xs = x - m_nKernelSize;
-						xe = x + m_nKernelSize;
-
-						irradianceSamples = 0;
-						Spectrum Ld = 0.f, 
-							Li = 0.f, 
+						Spectrum indirect = 0.f,
+							direct = 0.f,
 							albedo = 0.f;
 
-						for (int dy = ys; dy < ye; dy++)
+						remainingSamples = (m_nKernelSize * m_nKernelSize); // >> 2;
+
+						for(totalWeight = 0; remainingSamples-- > 0;)
 						{
-							pNeighbourContext = p_pInput->GetP(xs, dy);
+							sx = xs + m_nKernelSize * QuasiRandomSequence::VanDerCorput(maxSamples - remainingSamples);
+							sy = ys + m_nKernelSize * QuasiRandomSequence::Sobol2(maxSamples - remainingSamples);
 
-							for (int dx = xs; dx < xe; dx++)
+							pNeighbourContext = p_pInput->GetP(sx, sy);
+
+							// int d0 = (pNeighbourContext->Flags & RadianceContext::DF_Direct) / RadianceContext::DF_Direct;
+							if (pNeighbourContext->Flags & RadianceContext::DF_Direct > 0)
 							{
-								if (pNeighbourContext->Flags & RadianceContext::DF_Computed) 
-								{
-									// if (Vector3::Dot(pKernelContext->Normal, pNeighbourContext->Normal) > m_fAngle)
-									{
-										Ld += pNeighbourContext->Direct;
-										Li += pNeighbourContext->Indirect;
-										albedo += pNeighbourContext->Albedo;
+								float d = 1.f;
 
-										irradianceSamples++;
-									}
-								}
+								indirect += pNeighbourContext->Indirect * d;
+								direct += pNeighbourContext->Direct * d;
+								albedo += pNeighbourContext->Albedo * d;
 
-								pNeighbourContext++;
+								totalWeight += d;
 							}
 						}
-			
-						// Compute final colour
-						if (irradianceSamples) 
-						{
-							pOutputContext->Direct = Ld / irradianceSamples;
-							pOutputContext->Indirect = Li / irradianceSamples;
-							pOutputContext->Albedo = albedo / irradianceSamples;
 
-							pOutputContext->Final = pOutputContext->Direct + pOutputContext->Indirect * pOutputContext->Albedo;
-							pOutputContext->Flags |= RadianceContext::DF_Final | RadianceContext::DF_Direct | RadianceContext::DF_Indirect | RadianceContext::DF_Albedo; 
-							// pOutputContext->Flag = 1;
-						}
-						/*else
+						if (totalWeight > Maths::Epsilon)
 						{
-							pOutputContext->Final = pOutputContext->Indirect = pOutputContext->Direct = pOutputContext->Albedo = 10.f;
-							pOutputContext->Flags |= RadianceContext::DF_Final | RadianceContext::DF_Direct | RadianceContext::DF_Indirect | RadianceContext::DF_Albedo; 
-							pOutputContext->Flags |= RadianceContext::DF_Processed;
-						}*/
+							// if ((pOutputContext->Flags & RadianceContext::DF_Direct) == 0)
+							{
+								pOutputContext->Direct = direct / totalWeight;
+								pOutputContext->Albedo = albedo / totalWeight;
+							}
+
+							// if ((pOutputContext->Flags & RadianceContext::DF_Indirect) == 0)
+							{
+								pOutputContext->Indirect = indirect / totalWeight;
+							}
+
+							pOutputContext->Final = (pOutputContext->Direct + pOutputContext->Indirect) * pOutputContext->Albedo;
+						}
+						/* */
 					}
 				}
-				
-				/*
-				for (int y = p_nRegionY; y < p_nRegionHeight; ++y)
-				{
-					for (int x = p_nRegionX; x < p_nRegionWidth; ++x)
-					{
-						p_pOutput->GetP(x, y)->Flag = false;
-					}
-				}
-				*/
+
+				//----------------------------------------------------------------------------------------------
 
 				return true;
 			}

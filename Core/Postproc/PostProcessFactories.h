@@ -14,6 +14,7 @@
 #include "Postproc/AutoTone.h"
 #include "Postproc/DragoTone.h"
 #include "Postproc/GlobalTone.h"
+#include "Postproc/BilateralFilter.h"
 #include "Postproc/AccumulationBuffer.h"
 #include "Postproc/DiscontinuityBuffer.h"
 #include "Postproc/ReconstructionBuffer.h"
@@ -140,6 +141,41 @@ namespace Illumina
 			Illumina::Core::IPostProcess *CreateInstance(int dummy)
 			{
 				return new GlobalTone();
+			}
+		};
+
+		class BilateralFilterFactory : public Illumina::Core::Factory<Illumina::Core::IPostProcess>
+		{
+		public:
+			Illumina::Core::IPostProcess *CreateInstance(void)
+			{
+				return new BilateralFilter();
+			}
+
+			// Arguments
+			// -- Id
+			// -- KernelSize
+			Illumina::Core::IPostProcess *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				int kernelSize = 3;
+				
+				p_argumentMap.GetArgument("KernelSize", kernelSize);
+
+				std::string strId;
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId, kernelSize);
+
+				return CreateInstance(kernelSize);
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(const std::string &p_strId, int p_nKernelSize)
+			{
+				return new BilateralFilter(p_strId, p_nKernelSize);
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(int p_nKernelSize)
+			{
+				return new BilateralFilter(p_nKernelSize);
 			}
 		};
 
