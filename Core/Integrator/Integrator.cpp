@@ -54,7 +54,7 @@ Spectrum IIntegrator::Direct(IntegratorContext *p_pContext, Scene *p_pScene, con
 		for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
 			p_pRadianceContext->Direct += p_pScene->LightList[lightIndex]->Radiance(-ray);
 
-		p_pRadianceContext->Flags |= RadianceContext::DF_Direct | RadianceContext::DF_Computed;
+		p_pRadianceContext->Flags |= RadianceContext::DF_Direct;
 
 		return p_pRadianceContext->Direct;
 	} 
@@ -88,8 +88,7 @@ Spectrum IIntegrator::Direct(IntegratorContext *p_pContext, Scene *p_pScene, con
 			p_pRadianceContext->Direct = 
 				p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut); 
 
-			p_pRadianceContext->Flags |= RadianceContext::DF_Computed | 
-				RadianceContext::DF_Albedo | RadianceContext::DF_Direct;
+			p_pRadianceContext->Flags |= RadianceContext::DF_Albedo | RadianceContext::DF_Direct;
 
 			return p_pRadianceContext->Direct;
 		}
@@ -107,8 +106,7 @@ Spectrum IIntegrator::Direct(IntegratorContext *p_pContext, Scene *p_pScene, con
 	}
 
 	// Return radiance
-	p_pRadianceContext->Flags |= RadianceContext::DF_Computed | 
-		RadianceContext::DF_Albedo | RadianceContext::DF_Direct;
+	p_pRadianceContext->Flags |= RadianceContext::DF_Albedo | RadianceContext::DF_Direct;
 
 	return p_pRadianceContext->Direct;
 }

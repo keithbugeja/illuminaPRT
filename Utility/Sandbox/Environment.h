@@ -112,6 +112,7 @@ public:
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("Accumulation", new AccumulationBufferFactory());
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("Discontinuity", new DiscontinuityBufferFactory());
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("Reconstruction", new ReconstructionBufferFactory());
+		m_engineKernel->GetPostProcessManager()->RegisterFactory("BilateralFilter", new BilateralFilterFactory());
 
 		//----------------------------------------------------------------------------------------------
 		// Renderer
@@ -350,6 +351,7 @@ public:
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("Accumulation");
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("Discontinuity");
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("Reconstruction");
+			delete m_engineKernel->GetPostProcessManager()->RequestFactory("BilateralFilter");
 
 			m_engineKernel->GetPostProcessManager()->UnregisterFactory("AutoTone");
 			m_engineKernel->GetPostProcessManager()->UnregisterFactory("DragoTone");
@@ -357,6 +359,7 @@ public:
 			m_engineKernel->GetPostProcessManager()->UnregisterFactory("Accumulation");
 			m_engineKernel->GetPostProcessManager()->UnregisterFactory("Discontinuity");
 			m_engineKernel->GetPostProcessManager()->UnregisterFactory("Reconstruction");
+			m_engineKernel->GetPostProcessManager()->UnregisterFactory("BilateralFilter");
 
 			//----------------------------------------------------------------------------------------------
 			// Engine Kernel

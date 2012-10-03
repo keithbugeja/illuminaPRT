@@ -295,14 +295,16 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 	// Parse flags
 	//----------------------------------------------------------------------------------------------
 	bool bToneMappingEnabled			= (p_nFlags & 0x01), 
-		bDiscontinuityBufferEnabled		= (p_nFlags & 0x02),
-		bFrameReconstructionEnabled		= (p_nFlags & 0x04),
-		bAccumulationBufferEnabled		= (p_nFlags & 0x08),
-		bOutputToNullDeviceEnabled		= (p_nFlags & 0x10);
+		bBilateralFilterEnabled			= (p_nFlags & 0x02),
+		bDiscontinuityBufferEnabled		= (p_nFlags & 0x04),
+		bFrameReconstructionEnabled		= (p_nFlags & 0x08),
+		bAccumulationBufferEnabled		= (p_nFlags & 0x10),
+		bOutputToNullDeviceEnabled		= (p_nFlags & 0x20);
 
 	if (p_bVerbose)
 	{
 		std::cout << "-- Tone Mapping [" << bToneMappingEnabled << "]" << std::endl;
+		std::cout << "-- Bilateral Filter [" << bBilateralFilterEnabled << "]" << std::endl;
 		std::cout << "-- Discontinuity Buffer [" << bDiscontinuityBufferEnabled << "]" << std::endl;
 		std::cout << "-- Frame Reconstruction [" << bFrameReconstructionEnabled << "]" << std::endl;
 		std::cout << "-- Accumulation Buffer [" << bAccumulationBufferEnabled << "]" << std::endl;
@@ -343,14 +345,18 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 	//----------------------------------------------------------------------------------------------
 	RadianceBuffer *pRadianceBuffer = new RadianceBuffer(
 		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight()),
+		*pRadianceScratchBuffer = new RadianceBuffer(
+		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight()),
 		*pRadianceAccumulationBuffer = new RadianceBuffer(
 		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight());
 
 	IPostProcess *pDiscontinuityBuffer = pEngineKernel->GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
 	IPostProcess *pAutoTone = pEngineKernel->GetPostProcessManager()->CreateInstance("AutoTone", "AutoTone", "");
-	IPostProcess *pDragoTone = pEngineKernel->GetPostProcessManager()->CreateInstance("DragoTone", "DragoTone", "");
+	IPostProcess *pDragoTone = pEngineKernel->GetPostProcessManager()->CreateInstance("DragoTone", "DragoTone", ""); 
+	IPostProcess *pGlobalTone = pEngineKernel->GetPostProcessManager()->CreateInstance("GlobalTone", "GlobalTone", "");
 	IPostProcess *pReconstructionBuffer = pEngineKernel->GetPostProcessManager()->CreateInstance("Reconstruction", "ReconstructionBuffer", "");
-	
+	IPostProcess *pBilateralFilter = pEngineKernel->GetPostProcessManager()->CreateInstance("BilateralFilter", "BilateralFilter", "");
+
 	AccumulationBuffer *pAccumulationBuffer = (AccumulationBuffer*)pEngineKernel->GetPostProcessManager()->CreateInstance("Accumulation", "AccumulationBuffer", "");
 	pAccumulationBuffer->SetAccumulationBuffer(pRadianceAccumulationBuffer);
 	pAccumulationBuffer->Reset();
@@ -363,7 +369,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 	if (p_nFPS != 0)
 	{
 		fRenderBudget = 1.f / p_nFPS;
-		pRenderer->SetRenderBudget(fRenderBudget * 0.5f);
+		pRenderer->SetRenderBudget((fRenderBudget * p_nThreads) / 256.0f );
 		/*
 		int tileCount = (pRenderer->GetDevice()->GetWidth() / p_nSize) * 
 			(pRenderer->GetDevice()->GetHeight() / p_nSize);
@@ -463,6 +469,10 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 		//----------------------------------------------------------------------------------------------
 		eventStart = Platform::GetTime();
 
+		RadianceContext *c = pRadianceBuffer->GetP(0, 0);
+		for (int j = pRadianceBuffer->GetArea(); j > 0; j--, c++)
+			c->Flags = 0;
+
 		// Render phase
 		renderThreadState.Reset();
 		renderThreadState.Wait();
@@ -480,8 +490,24 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 
 		// Reconstruction
 		if (bFrameReconstructionEnabled)
-			pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
+		{
+			pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceScratchBuffer);
+			RadianceContext *d = pRadianceBuffer->GetP(0,0),
+				*s = pRadianceScratchBuffer->GetP(0,0);
+
+			for (int j = pRadianceBuffer->GetArea(); j > 0; j--, s++,d++)
+			{
+				d->Indirect = s->Indirect;
+				d->Direct = s->Indirect;
+				d->Final = s->Final;
+				d->Albedo = s->Albedo;
+				d->Flags = s->Flags;
+			}
+		}
 		
+		if (bBilateralFilterEnabled)
+			pBilateralFilter->Apply(pRadianceBuffer, pRadianceBuffer);
+
 		// Discontinuity
 		if (bDiscontinuityBufferEnabled)
 			pDiscontinuityBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
@@ -497,7 +523,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 
 		// Tonemapping
 		if (bToneMappingEnabled)
-			pDragoTone->Apply(pRadianceBuffer, pRadianceBuffer);
+			pGlobalTone->Apply(pRadianceBuffer, pRadianceBuffer);
 
 		// Time radiance computation event
 		eventComplete = Platform::GetTime();

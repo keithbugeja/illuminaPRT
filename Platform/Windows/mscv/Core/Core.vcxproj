@@ -287,6 +287,7 @@
     <ClInclude Include="..\..\..\..\Core\Object\UniqueID.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\AccumulationBuffer.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\AutoTone.h" />
+    <ClInclude Include="..\..\..\..\Core\Postproc\BilateralFilter.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\DiscontinuityBuffer.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\DragoTone.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\GlobalTone.h" />
