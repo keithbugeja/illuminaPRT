@@ -74,9 +74,17 @@ namespace Illumina
 						pKernelContext = p_pInput->GetP(x, y);
 						pOutputContext = p_pOutput->GetP(x, y);
 
-						if (pKernelContext->Flags & RadianceContext::DF_Direct > 0)
-							continue;
+						if (pKernelContext->Flags & RadianceContext::DF_Computed != 0)
+						{
+							pOutputContext->Direct = pKernelContext->Direct;
+							pOutputContext->Indirect = pKernelContext->Indirect;
+							pOutputContext->Albedo = pKernelContext->Albedo;
+							pOutputContext->Final = pKernelContext->Final;
 
+							continue;
+						}
+
+						/*
 						Spectrum indirect = 0.f,
 							direct = 0.f,
 							albedo = 0.f;
@@ -91,7 +99,7 @@ namespace Illumina
 							pNeighbourContext = p_pInput->GetP(sx, sy);
 
 							// int d0 = (pNeighbourContext->Flags & RadianceContext::DF_Direct) / RadianceContext::DF_Direct;
-							if (pNeighbourContext->Flags & RadianceContext::DF_Direct > 0)
+							if (pNeighbourContext->Flags & RadianceContext::DF_Computed > 0)
 							{
 								float d = 1.f;
 

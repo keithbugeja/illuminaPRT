@@ -435,7 +435,7 @@ void TimeConstrainedRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, in
 		bool outOfTime = requiredSamples > 0;
 
 		// Update remaining samples flag to show they were not processed
-		while(requiredSamples-- >= 0)
+		for(; requiredSamples > 0; requiredSamples--)
 		{
 			sample.X = p_nRegionWidth * QuasiRandomSequence::VanDerCorput(maxSamples - requiredSamples) + p_nBufferX;
 			sample.Y = p_nRegionHeight * QuasiRandomSequence::Sobol2(maxSamples - requiredSamples) + p_nBufferY;
