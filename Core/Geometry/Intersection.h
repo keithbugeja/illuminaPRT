@@ -70,7 +70,7 @@ namespace Illumina
 				DF_ToneMapped		= 0x0100,
 				DF_Accumulated		= 0x0200,
 				DF_Processed		= 0x0400,
-				DF_MaskEnabled		= 0x0500
+				DF_MaskEnabled		= 0x0800
 			};
 
 		public:
