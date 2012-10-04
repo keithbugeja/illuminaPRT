@@ -343,12 +343,21 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 	//----------------------------------------------------------------------------------------------
 	// Post processing setup
 	//----------------------------------------------------------------------------------------------
-	RadianceBuffer *pRadianceBuffer = new RadianceBuffer(
-		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight()),
-		*pRadianceScratchBuffer = new RadianceBuffer(
+	RadianceBuffer *pRadianceTemporalBuffer = new RadianceBuffer(
 		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight()),
 		*pRadianceAccumulationBuffer = new RadianceBuffer(
+		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight()),
+		*pRadianceBuffer, *pRadianceBufferChain[2];
+	
+	pRadianceBufferChain[0] = new RadianceBuffer(
 		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight());
+	
+	pRadianceBufferChain[1] = new RadianceBuffer(
+		pRenderer->GetDevice()->GetWidth(), pRenderer->GetDevice()->GetHeight());
+
+	pRadianceBuffer = pRadianceBufferChain[0];
+
+	int backBuffer = 0;
 
 	IPostProcess *pDiscontinuityBuffer = pEngineKernel->GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
 	IPostProcess *pAutoTone = pEngineKernel->GetPostProcessManager()->CreateInstance("AutoTone", "AutoTone", "");
@@ -489,20 +498,12 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 		eventStart = Platform::GetTime();
 
 		// Reconstruction
-		if (bFrameReconstructionEnabled)
+		if (bFrameReconstructionEnabled) 
 		{
-			pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceScratchBuffer);
-			RadianceContext *d = pRadianceBuffer->GetP(0,0),
-				*s = pRadianceScratchBuffer->GetP(0,0);
+			pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceTemporalBuffer);
+			memcpy((void*)pRadianceBuffer->GetBuffer(), (void*)pRadianceTemporalBuffer->GetBuffer(), sizeof(RadianceContext) * pRadianceTemporalBuffer->GetArea());
 
-			for (int j = pRadianceBuffer->GetArea(); j > 0; j--, s++,d++)
-			{
-				d->Indirect = s->Indirect;
-				d->Direct = s->Indirect;
-				d->Final = s->Final;
-				d->Albedo = s->Albedo;
-				d->Flags = s->Flags;
-			}
+			// pReconstructionBuffer->Apply(pRadianceBuffer, pRadianceBuffer);
 		}
 		
 		if (bBilateralFilterEnabled)

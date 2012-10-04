@@ -43,7 +43,7 @@ namespace Illumina
 			{
 				std::cout << "Reconstructing..." << std::endl;
 
-				m_nKernelSize = 7;
+				m_nKernelSize = 9;
 
 				RadianceContext *pKernelContext,
 					*pNeighbourContext,
@@ -58,8 +58,11 @@ namespace Illumina
 					maxSamples = 
 						m_nKernelSize * m_nKernelSize;
 
-				float weight,
-					totalWeight;
+				float directWeight,
+					totalDirectWeight,
+					indirectWeight,
+					totalIndirectWeight,
+					weight;
 
 				for (int y = p_nRegionY + halfKernel; y < p_nRegionHeight - halfKernel; ++y)
 				{
@@ -80,8 +83,53 @@ namespace Illumina
 							pOutputContext->Indirect = pKernelContext->Indirect;
 							pOutputContext->Albedo = pKernelContext->Albedo;
 							pOutputContext->Final = pKernelContext->Final;
+							pOutputContext->Flags = RadianceContext::DF_Final | RadianceContext::DF_Direct | RadianceContext::DF_Indirect | RadianceContext::DF_Albedo | RadianceContext::DF_Computed; 
 
 							continue;
+						}
+
+						Spectrum indirect = 0.f,
+							direct = 0.f,
+							albedo = 0.f;
+
+						remainingSamples = 16; //(m_nKernelSize * m_nKernelSize) >> 2;
+
+						for(totalIndirectWeight = totalDirectWeight = 0; remainingSamples-- > 0;)
+						{
+							sx = xs + m_nKernelSize * QuasiRandomSequence::VanDerCorput(maxSamples - remainingSamples);
+							sy = ys + m_nKernelSize * QuasiRandomSequence::Sobol2(maxSamples - remainingSamples);
+
+							// sx = xs + remainingSamples % m_nKernelSize;
+							// sy = ys + remainingSamples / m_nKernelSize;
+
+							pNeighbourContext = p_pInput->GetP(sx, sy);
+
+							// if (pNeighbourContext->Flags & RadianceContext::DF_Direct)
+							{
+								float s = (sx - x) * (sx - x) + (sy - y) * (sy - y);
+								weight = Maths::Exp(-0.5f * (s*s) / (m_nKernelSize * m_nKernelSize));
+
+								directWeight = weight * (pNeighbourContext->Flags & RadianceContext::DF_Direct) / RadianceContext::DF_Direct;
+								indirectWeight = weight * (pNeighbourContext->Flags & RadianceContext::DF_Indirect) / RadianceContext::DF_Indirect;
+
+								indirect += pNeighbourContext->Indirect * indirectWeight;
+								direct += pNeighbourContext->Direct * directWeight;
+								albedo += pNeighbourContext->Albedo * directWeight;
+
+								totalDirectWeight += directWeight;
+								totalIndirectWeight += indirectWeight;
+
+								// totalWeight += weight;
+							}
+						}
+
+						if (totalDirectWeight + totalIndirectWeight > Maths::Epsilon)
+						{
+							pOutputContext->Direct = direct / totalDirectWeight;
+							pOutputContext->Albedo = albedo / totalDirectWeight;
+							pOutputContext->Indirect = indirect / totalIndirectWeight;
+							pOutputContext->Final = (pOutputContext->Direct + pOutputContext->Indirect) * pOutputContext->Albedo;
+							pOutputContext->Flags = RadianceContext::DF_Final | RadianceContext::DF_Direct | RadianceContext::DF_Indirect | RadianceContext::DF_Albedo | RadianceContext::DF_Computed; 
 						}
 
 						/*
