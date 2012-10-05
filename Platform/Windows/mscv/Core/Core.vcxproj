@@ -181,6 +181,7 @@
     <ClCompile Include="..\..\..\..\Core\Object\UniqueID.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\BaseRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\BasicRenderer.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Renderer\DisparityRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\DistributedRenderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\Renderer.cpp" />
     <ClCompile Include="..\..\..\..\Core\Renderer\TimeConstrainedRenderer.cpp" />
@@ -296,6 +297,7 @@
     <ClInclude Include="..\..\..\..\Core\Postproc\ReconstructionBuffer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\BaseRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\BasicRenderer.h" />
+    <ClInclude Include="..\..\..\..\Core\Renderer\DisparityRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\DistributedRenderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\Renderer.h" />
     <ClInclude Include="..\..\..\..\Core\Renderer\RendererFactories.h" />

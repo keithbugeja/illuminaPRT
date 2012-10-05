@@ -330,6 +330,9 @@
     <ClCompile Include="..\..\..\..\Core\Material\BxDF.cpp">
       <Filter>Header Files\Material</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Renderer\DisparityRenderer.cpp">
+      <Filter>Header Files\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -823,6 +826,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Postproc\BilateralFilter.h">
       <Filter>Header Files\Postproc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Renderer\DisparityRenderer.h">
+      <Filter>Header Files\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

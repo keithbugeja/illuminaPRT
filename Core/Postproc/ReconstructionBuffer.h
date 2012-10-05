@@ -92,7 +92,7 @@ namespace Illumina
 							direct = 0.f,
 							albedo = 0.f;
 
-						remainingSamples = 16; //(m_nKernelSize * m_nKernelSize) >> 2;
+						remainingSamples = /*m_nKernelSize * m_nKernelSize; //*/ 16; //(m_nKernelSize * m_nKernelSize) >> 2;
 
 						for(totalIndirectWeight = totalDirectWeight = 0; remainingSamples-- > 0;)
 						{
