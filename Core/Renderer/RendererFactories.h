@@ -12,7 +12,8 @@
 
 #include "Renderer/Renderer.h"
 #include "Renderer/BasicRenderer.h"
-#include "Renderer/DistributedRenderer.h"
+// #include "Renderer/DistributedRenderer.h"
+#include "Renderer/DisparityRenderer.h"
 #include "Renderer/TimeConstrainedRenderer.h"
 
 namespace Illumina
@@ -87,7 +88,42 @@ namespace Illumina
 				return new TimeConstrainedRenderer(NULL, NULL, NULL, NULL, NULL, p_nSamples);
 			}
 		};
+
 		
+		class DisparityRendererFactory : public Illumina::Core::Factory<Illumina::Core::IRenderer>
+		{
+		public:
+			Illumina::Core::IRenderer *CreateInstance(void)
+			{
+				return new DisparityRenderer();
+			}
+
+			// Arguments
+			// -- Id
+			// -- Samples
+			Illumina::Core::IRenderer *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				int samples = 1;
+				p_argumentMap.GetArgument("Samples", samples);
+
+				std::string strId;
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId, samples);
+
+				return CreateInstance(samples);
+			}
+
+			Illumina::Core::IRenderer *CreateInstance(const std::string &p_strId, int p_nSamples)
+			{
+				return new DisparityRenderer(p_strId, NULL, NULL, NULL, NULL, NULL, p_nSamples);
+			}
+
+			Illumina::Core::IRenderer *CreateInstance(int p_nSamples)
+			{
+				return new DisparityRenderer(NULL, NULL, NULL, NULL, NULL, p_nSamples);
+			}
+		};
+
 		/*
 		class DistributedRendererFactory : public Illumina::Core::Factory<Illumina::Core::IRenderer>
 		{

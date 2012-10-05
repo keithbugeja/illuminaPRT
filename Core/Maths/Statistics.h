@@ -240,6 +240,7 @@ namespace Illumina
 
 			static float GaussianPDFApprox(float p_fX)
 			{
+				return 0;
 				/*
 				const float B = 4*Maths::InvPi;
 				const float C = -4*Maths::InvPiTwo;

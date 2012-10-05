@@ -119,6 +119,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		Logger::Message("Registering Renderers...", p_bVerbose);
 		m_engineKernel->GetRendererManager()->RegisterFactory("Basic", new BasicRendererFactory());
+		m_engineKernel->GetRendererManager()->RegisterFactory("Disparity", new DisparityRendererFactory());
 		m_engineKernel->GetRendererManager()->RegisterFactory("TimeConstrained", new TimeConstrainedRendererFactory());
 
 		//----------------------------------------------------------------------------------------------
@@ -254,9 +255,11 @@ public:
 			//----------------------------------------------------------------------------------------------
 			Logger::Message("Freeing and unregistering Renderers...", p_bVerbose);
 			delete m_engineKernel->GetRendererManager()->RequestFactory("Basic");
+			delete m_engineKernel->GetRendererManager()->RequestFactory("Disparity");
 			delete m_engineKernel->GetRendererManager()->RequestFactory("TimeConstrained");
 
 			m_engineKernel->GetRendererManager()->UnregisterFactory("Basic");
+			m_engineKernel->GetRendererManager()->UnregisterFactory("Disparity");
 			m_engineKernel->GetRendererManager()->UnregisterFactory("TimeConstrained");
 
 			//----------------------------------------------------------------------------------------------
