@@ -19,6 +19,7 @@ bool RenderTaskCoordinator::Compute(void)
 
 	double eventStart, eventComplete, 
 		radianceTime,
+		bilateralTime,
 		discontinuityTime,
 		toneTime,
 		commitTime;
@@ -97,12 +98,17 @@ bool RenderTaskCoordinator::Compute(void)
 	radianceTime = Platform::ToSeconds(eventComplete - eventStart);
 
 	// Discontinuity buffer
-	/*
+	/**/
 	eventStart = Platform::GetTime();
-	m_pDiscontinuityBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	// m_pBilateralFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	eventComplete = Platform::GetTime();
+	bilateralTime = Platform::ToSeconds(eventComplete - eventStart);
+	
+	eventStart = Platform::GetTime();
+	// m_pDiscontinuityBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 	discontinuityTime = Platform::ToSeconds(eventComplete - eventStart);
-	*/
+	/**/
 
 	// Tone mapping (moved to server)
 	/**/
@@ -119,6 +125,7 @@ bool RenderTaskCoordinator::Compute(void)
 	commitTime = Platform::ToSeconds(eventComplete - eventStart);
 
 	std::cout << "---| Radiance Time : " << radianceTime << "s" << std::endl;
+	std::cout << "---| Bilateral Time : " << bilateralTime << "s" << std::endl;
 	std::cout << "---| Discontinuity Time : " << discontinuityTime << "s" << std::endl;
 	std::cout << "---| Tonemapping Time : " << toneTime << "s" << std::endl;
 	std::cout << "---| Commit Time : " << commitTime << "s" << std::endl;
@@ -179,6 +186,7 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_pRadianceAccumulationBuffer = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight());
 
 	// Discontinuity, reconstruction and tone mapping
+	m_pBilateralFilter = m_pEngineKernel->GetPostProcessManager()->CreateInstance("BilateralFilter", "BilateralFilter", "");
 	m_pDiscontinuityBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
 	m_pReconstructionBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Reconstruction", "ReconstructionBuffer", "");
 	m_pDragoTone = m_pEngineKernel->GetPostProcessManager()->CreateInstance("GlobalTone", "GlobalTone", "");
