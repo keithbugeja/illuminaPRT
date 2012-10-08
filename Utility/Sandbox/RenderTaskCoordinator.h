@@ -30,7 +30,8 @@ protected:
 	RadianceBuffer *m_pRadianceBuffer,
 		*m_pRadianceAccumulationBuffer;
 
-	IPostProcess *m_pDiscontinuityBuffer,
+	IPostProcess *m_pBilateralFilter, 
+		*m_pDiscontinuityBuffer,
 		*m_pReconstructionBuffer,
 		*m_pDragoTone; 
 
