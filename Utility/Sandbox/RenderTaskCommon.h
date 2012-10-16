@@ -120,6 +120,47 @@ class CompressedRadianceBuffer
 	: public Buffer2D<CompressedRadianceContext>
 { 
 protected:
+	inline void XYZToRGB(const Spectrum &p_xyz, Spectrum &p_rgb)
+	{
+		p_rgb[0] = (float)(2.690*p_xyz[0] + -1.276*p_xyz[1] + -0.414*p_xyz[2]);
+		p_rgb[0] = (float)(-1.022*p_xyz[0] +  1.978*p_xyz[1] +  0.044*p_xyz[2]);
+		p_rgb[0] = (float)( 0.061*p_xyz[0] + -0.224*p_xyz[1] +  1.163*p_xyz[2]);
+	}
+
+	inline void RGBToXYZ(const Spectrum &p_rgb, Spectrum &p_xyz)
+	{
+		p_xyz[0] =  (float)(0.497*p_rgb[0] +  0.339*p_rgb[1] +  0.164*p_rgb[2]);
+		p_xyz[1] =  (float)(0.256*p_rgb[0] +  0.678*p_rgb[1] +  0.066*p_rgb[2]);
+		p_xyz[2] =  (float)(0.023*p_rgb[0] +  0.113*p_rgb[1] +  0.864*p_rgb[2]);
+	}
+	
+	inline unsigned int ToLogLuv(const Spectrum &p_rgb) 
+	{
+		Spectrum xyz;
+
+		RGBToXYZ(p_rgb, xyz);
+
+		float xyza = (xyz[0] + xyz[1] + xyz[2]);
+
+		float x = xyz[0] / xyza,
+			y = xyz[1] / xyza;
+
+		unsigned short Le = (unsigned short)Maths::Floor(256.f * (Maths::Log(xyz[1] + 64)));
+
+		float d = (-2 * x + 12 * y + 3),
+			u = (4 * x) / d,
+			v = (9 * y) / d;
+		
+		unsigned char ue = (unsigned char)(410.f * u);
+		unsigned char ve = (unsigned char)(410.f * v);
+	
+		return (Le << 16) | (ue << 8) | ve; 
+	}
+
+	inline void FromLogLuv(unsigned int p_nLogLuv, Spectrum &p_rgb)
+	{
+	}
+
 	inline unsigned short CompressFloat(float p_fValue)
 	{		
 		return half_from_float(*(reinterpret_cast<uint32_t*>(&p_fValue)));
@@ -365,11 +406,20 @@ public:
 	inline size_t Compress(void) 
 	{
 		return Illumina::Core::Compressor::Compress((char*)m_pStagingBuffer, m_nStagingBufferSize, m_pCompressedBuffer);
+
+		/* Uncomment to disable compression */
+		/* memcpy((void*)m_pCompressedBuffer, (void*)m_pStagingBuffer, m_nStagingBufferSize);
+		 * return m_nStagingBufferSize;
+		 */
 	}
 
 	inline void Decompress(void) 
 	{
 		Illumina::Core::Compressor::Decompress(m_pCompressedBuffer, m_nStagingBufferSize, (char*)m_pStagingBuffer);
+		
+		/* Uncomment to disable compression */
+		/* memcpy((void*)m_pStagingBuffer, (void*)m_pCompressedBuffer, m_nStagingBufferSize);
+		 */
 	}
 
 	inline char* GetTransferBuffer(void) const {
