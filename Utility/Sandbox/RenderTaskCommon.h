@@ -106,11 +106,16 @@ struct RenderTaskContext
 class CompressedRadianceContext
 {
 public:
-	unsigned short Direct[3];
-	unsigned short Indirect[3];
-	unsigned short Albedo[3];
+	// unsigned short Direct[3];
+	// unsigned short Indirect[3];
+	// unsigned short Albedo[3];
+
+	unsigned int Direct;
+	unsigned int Indirect;
+	unsigned int Albedo;
 
 	unsigned short Normal[2];
+	unsigned short Distance;
 	// unsigned short Position[3];
 
 	unsigned short Flags;
@@ -134,31 +139,48 @@ protected:
 		p_xyz[2] =  (float)(0.023*p_rgb[0] +  0.113*p_rgb[1] +  0.864*p_rgb[2]);
 	}
 	
-	inline unsigned int ToLogLuv(const Spectrum &p_rgb) 
+	inline unsigned int ToRGBE(Spectrum &p_rgb)
 	{
-		Spectrum xyz;
+		float v;
+		int e;
 
-		RGBToXYZ(p_rgb, xyz);
+		float red = p_rgb[0],
+			green = p_rgb[1],
+			blue = p_rgb[2];
 
-		float xyza = (xyz[0] + xyz[1] + xyz[2]);
+		unsigned int r;
+		unsigned char *rgbe = (unsigned char*)&r;
 
-		float x = xyz[0] / xyza,
-			y = xyz[1] / xyza;
+		v = red;
+		if (green > v) v = green;
+		if (blue > v) v = blue;
+		if (v < 1e-32) {
+			rgbe[0] = rgbe[1] = rgbe[2] = rgbe[3] = 0;
+		}
+		else {
+			v = frexp(v,&e) * 256.0/v;
+			rgbe[0] = (unsigned char) (red * v);
+			rgbe[1] = (unsigned char) (green * v);
+			rgbe[2] = (unsigned char) (blue * v);
+			rgbe[3] = (unsigned char) (e + 128);
+		}
 
-		unsigned short Le = (unsigned short)Maths::Floor(256.f * (Maths::Log(xyz[1] + 64)));
-
-		float d = (-2 * x + 12 * y + 3),
-			u = (4 * x) / d,
-			v = (9 * y) / d;
-		
-		unsigned char ue = (unsigned char)(410.f * u);
-		unsigned char ve = (unsigned char)(410.f * v);
-	
-		return (Le << 16) | (ue << 8) | ve; 
+		return r;
 	}
 
-	inline void FromLogLuv(unsigned int p_nLogLuv, Spectrum &p_rgb)
+	inline void FromRGBE(unsigned int p_nRGBE, Spectrum &p_rgb)
 	{
+		float f;
+		unsigned char *rgbe = (unsigned char*)&p_nRGBE;
+
+		if (rgbe[3]) {   /*nonzero pixel*/
+			f = ldexp(1.0,rgbe[3]-(int)(128+8));
+			p_rgb[0] = rgbe[0] * f;
+			p_rgb[1] = rgbe[1] * f;
+			p_rgb[2] = rgbe[2] * f;
+		}
+		else
+			p_rgb = 0.0;
 	}
 
 	inline unsigned short CompressFloat(float p_fValue)
@@ -199,6 +221,16 @@ protected:
 		p_pNormal->Z = Maths::Sqrt(1 - p_pNormal->X - p_pNormal->Y);
 	}
 
+	inline void CompressSpectrum(Spectrum *p_pSpectrum, unsigned int *p_pCompressedSpectrum)
+	{
+		*p_pCompressedSpectrum = ToRGBE(*p_pSpectrum);
+	}
+
+	inline void DecompressSpectrum(unsigned int *p_pCompressedSpectrum, Spectrum *p_pSpectrum)
+	{
+		FromRGBE(*p_pCompressedSpectrum, *p_pSpectrum);
+	}
+
 	inline void CompressSpectrum(Spectrum *p_pSpectrum, unsigned short *p_pCompressedSpectrum) 
 	{
 		p_pCompressedSpectrum[0] = CompressFloat((*p_pSpectrum)[0]);
@@ -229,11 +261,18 @@ public:
 
 		for (int i = 0; i < p_pRadianceBuffer->GetArea(); i++)
 		{
-			CompressSpectrum(&(pSrc->Albedo), pDst->Albedo);
-			CompressSpectrum(&(pSrc->Direct), pDst->Direct);
-			CompressSpectrum(&(pSrc->Indirect), pDst->Indirect);
+			pDst->Distance = CompressFloat(pSrc->Distance);
+
+			CompressSpectrum(&(pSrc->Albedo), &(pDst->Albedo));
+			CompressSpectrum(&(pSrc->Direct), &(pDst->Direct));
+			CompressSpectrum(&(pSrc->Indirect), &(pDst->Indirect));
 			CompressNormal(&(pSrc->Normal), pDst->Normal);
-			// CompressVector(&(pSrc->Position), pDst->Position);
+
+			//CompressSpectrum(&(pSrc->Albedo), pDst->Albedo);
+			//CompressSpectrum(&(pSrc->Direct), pDst->Direct);
+			//CompressSpectrum(&(pSrc->Indirect), pDst->Indirect);
+			//CompressNormal(&(pSrc->Normal), pDst->Normal);
+			//CompressVector(&(pSrc->Position), pDst->Position);
 
 			pDst->Flags = pSrc->Flags;
 
@@ -248,11 +287,18 @@ public:
 
 		for (int i = 0; i < p_pRadianceBuffer->GetArea(); i++)
 		{
-			DecompressSpectrum(pSrc->Albedo, &(pDst->Albedo));
-			DecompressSpectrum(pSrc->Direct, &(pDst->Direct));
-			DecompressSpectrum(pSrc->Indirect, &(pDst->Indirect));
+			pDst->Distance = DecompressFloat(pSrc->Distance);
+
+			DecompressSpectrum(&(pSrc->Albedo), &(pDst->Albedo));
+			DecompressSpectrum(&(pSrc->Direct), &(pDst->Direct));
+			DecompressSpectrum(&(pSrc->Indirect), &(pDst->Indirect));
 			DecompressNormal(pSrc->Normal, &(pDst->Normal));
-			// DecompressVector(pSrc->Position, &(pDst->Position));
+
+			//DecompressSpectrum(pSrc->Albedo, &(pDst->Albedo));
+			//DecompressSpectrum(pSrc->Direct, &(pDst->Direct));
+			//DecompressSpectrum(pSrc->Indirect, &(pDst->Indirect));
+			//DecompressNormal(pSrc->Normal, &(pDst->Normal));
+			//DecompressVector(pSrc->Position, &(pDst->Position));
 
 			pDst->Final = pDst->Direct + pDst->Indirect;
 			pDst->Flags = pSrc->Flags;

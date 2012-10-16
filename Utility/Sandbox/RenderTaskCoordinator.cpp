@@ -24,9 +24,11 @@ bool RenderTaskCoordinator::Compute(void)
 		discontinuityTime,
 		toneTime,
 		commitTime,
-		decompressionTime;
+		decompressionTime,
+		framePackageSize;
 
-	decompressionTime = 0;
+	decompressionTime = 
+		framePackageSize = 0;
 
 	// Get list of available workers
 	std::vector<int> &workerList 
@@ -58,6 +60,9 @@ bool RenderTaskCoordinator::Compute(void)
 		Communicator::Receive(m_pRenderTile->GetTransferBuffer(), 
 			Communicator::GetSize(&status), status.MPI_SOURCE,
 			Communicator::Worker_Coordinator_Job);
+
+		// Add frame size
+		framePackageSize += Communicator::GetSize(&status);
 
 		if (tileID >= 0)
 		{
@@ -134,7 +139,7 @@ bool RenderTaskCoordinator::Compute(void)
 	commitTime = Platform::ToSeconds(eventComplete - eventStart);
 
 	std::cout << "---| Radiance Time : " << radianceTime << "s" << std::endl;
-	std::cout << "---| Decompression Time : " << decompressionTime << "s" << std::endl;
+	std::cout << "---| Decompression Time : " << decompressionTime << "s for " << framePackageSize / (1024 * 1024) << " MB" << std::endl;
 	std::cout << "---| Bilateral Time : " << bilateralTime << "s" << std::endl;
 	std::cout << "---| Discontinuity Time : " << discontinuityTime << "s" << std::endl;
 	std::cout << "---| Tonemapping Time : " << toneTime << "s" << std::endl;
