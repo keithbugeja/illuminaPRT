@@ -82,6 +82,8 @@ bool RenderTaskWorker::ComputeVariable(void)
 	// Start clocking job time
 	eventStart = Platform::GetTime();
 
+	m_pEnvironment->GetSampler()->Reset();
+
 	// Prepare integrator
 	m_pIntegrator->Prepare(m_pEnvironment->GetScene());
 

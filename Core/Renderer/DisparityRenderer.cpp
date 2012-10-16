@@ -105,8 +105,8 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 	}
 	else
 	{
-		const int indirectFrequency = 0x01;
-		const int indirectFrequencyMask = 0xFFFFFFFE;
+		const int indirectFrequency = 0x03; //0x01;
+		const int indirectFrequencyMask = 0xFFFFFFFC; //0xFFFFFFFE;
 
 		// Compute tile bounds
 		int regionXEnd = p_nRegionX + p_nRegionWidth,
