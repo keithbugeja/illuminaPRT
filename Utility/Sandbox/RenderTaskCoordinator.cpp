@@ -18,11 +18,15 @@ bool RenderTaskCoordinator::Compute(void)
 	int tileID = m_renderTaskContext.TilePackets.GetPacketCount();
 
 	double eventStart, eventComplete, 
+		subEventStart, subEventComplete,
 		radianceTime,
 		bilateralTime,
 		discontinuityTime,
 		toneTime,
-		commitTime;
+		commitTime,
+		decompressionTime;
+
+	decompressionTime = 0;
 
 	// Get list of available workers
 	std::vector<int> &workerList 
@@ -70,6 +74,8 @@ bool RenderTaskCoordinator::Compute(void)
 			waitingTasks--;
 		}
 
+		subEventStart = Platform::GetTime();
+
 		// Decompress current tile
 		m_pRenderTile->Unpackage();
 
@@ -92,6 +98,9 @@ bool RenderTaskCoordinator::Compute(void)
 				pTileBuffer++;
 			}
 		}
+
+		subEventComplete = Platform::GetTime();
+		decompressionTime += Platform::ToSeconds(subEventComplete - subEventStart);
 	}
 
 	eventComplete = Platform::GetTime();
@@ -100,12 +109,12 @@ bool RenderTaskCoordinator::Compute(void)
 	// Discontinuity buffer
 	/**/
 	eventStart = Platform::GetTime();
-	// m_pBilateralFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	m_pBilateralFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 	bilateralTime = Platform::ToSeconds(eventComplete - eventStart);
 	
 	eventStart = Platform::GetTime();
-	// m_pDiscontinuityBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	m_pDiscontinuityBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 	discontinuityTime = Platform::ToSeconds(eventComplete - eventStart);
 	/**/
@@ -125,6 +134,7 @@ bool RenderTaskCoordinator::Compute(void)
 	commitTime = Platform::ToSeconds(eventComplete - eventStart);
 
 	std::cout << "---| Radiance Time : " << radianceTime << "s" << std::endl;
+	std::cout << "---| Decompression Time : " << decompressionTime << "s" << std::endl;
 	std::cout << "---| Bilateral Time : " << bilateralTime << "s" << std::endl;
 	std::cout << "---| Discontinuity Time : " << discontinuityTime << "s" << std::endl;
 	std::cout << "---| Tonemapping Time : " << toneTime << "s" << std::endl;
@@ -339,6 +349,6 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 		p_pCoordinator->m_pCamera->MoveTo(observer);
 		p_pCoordinator->m_observerPosition = observer;
 
-		boost::this_thread::sleep(boost::posix_time::millisec(100));
+		boost::this_thread::sleep(boost::posix_time::millisec(20));
 	}
 }
