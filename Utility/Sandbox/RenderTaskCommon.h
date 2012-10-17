@@ -116,7 +116,6 @@ public:
 
 	unsigned short Normal[2];
 	unsigned short Distance;
-	// unsigned short Position[3];
 
 	unsigned short Flags;
 };
@@ -453,6 +452,12 @@ public:
 	{
 		return Illumina::Core::Compressor::Compress((char*)m_pStagingBuffer, m_nStagingBufferSize, m_pCompressedBuffer);
 
+		/* 
+		 * m_nStagingBufferSize = sizeof(int) * ucHdr_count;
+		 * memcpy((void*)m_pCompressedBuffer, (void*)m_pStagingBuffer, m_nStagingBufferSize);
+		 * return m_nStagingBufferSize;
+		 */
+
 		/* Uncomment to disable compression */
 		/* memcpy((void*)m_pCompressedBuffer, (void*)m_pStagingBuffer, m_nStagingBufferSize);
 		 * return m_nStagingBufferSize;
@@ -462,7 +467,12 @@ public:
 	inline void Decompress(void) 
 	{
 		Illumina::Core::Compressor::Decompress(m_pCompressedBuffer, m_nStagingBufferSize, (char*)m_pStagingBuffer);
-		
+
+		/* Uncomment to send only control data */
+		/* m_nStagingBufferSize = sizeof(int) * ucHdr_count;
+		 * memcpy((void*)m_pStagingBuffer, (void*)m_pCompressedBuffer, m_nStagingBufferSize);
+		 */
+
 		/* Uncomment to disable compression */
 		/* memcpy((void*)m_pStagingBuffer, (void*)m_pCompressedBuffer, m_nStagingBufferSize);
 		 */
