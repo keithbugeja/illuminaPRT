@@ -78,7 +78,8 @@ bool RenderTaskWorker::ComputeVariable(void)
 		jobTime, communicationTime;
 
 	int pixelsRendered = 0;
-
+	size_t bytesTransferred = 0;
+	
 	// Start clocking job time
 	eventStart = Platform::GetTime();
 
@@ -117,11 +118,41 @@ bool RenderTaskWorker::ComputeVariable(void)
 		RenderTilePackets::Packet packet = m_renderTaskContext.TilePackets.GetPacket(tileID);
 		m_pRenderTile->Resize(packet.XSize, packet.YSize);
 
+		packet.XSize+=8;
+		packet.YSize+=8;
+		packet.XStart-= 4;
+		packet.YStart-= 4;
+
+		m_pRimmedRenderTile->Resize(packet.XSize, packet.YSize);
+		
+		m_pRenderer->RenderRegion(m_pRimmedRenderTile->GetImageData(),
+			packet.XStart, packet.YStart, packet.XSize, packet.YSize);
+
+		pixelsRendered += packet.XSize * packet.YSize;
+
+		RadianceContext *p1, *p2;
+
+		for (int y = 4; y < packet.YSize - 8; y++)
+		{
+			for (int x = 4; x < packet.XSize - 8; x++)
+			{
+				p1 = m_pRimmedRenderTile->GetImageData()->GetP(x, y);
+				p2 = m_pRenderTile->GetImageData()->GetP(x - 4, y - 4);
+
+				p2->Direct = p1->Direct;
+				p2->Flags = RadianceContext::DF_Direct;
+			}
+		}
+		
+		/*
+		m_pRenderTile->Resize(packet.XSize, packet.YSize);
+
 		m_pRenderer->RenderRegion(m_pRenderTile->GetImageData(), 
 			packet.XStart, packet.YStart, packet.XSize, packet.YSize);
 
 		pixelsRendered += packet.XSize * packet.YSize;
-		
+		*/
+
 		// Tone mapping moved to workers
 		// m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRenderTile->GetImageData());
 
@@ -130,6 +161,8 @@ bool RenderTaskWorker::ComputeVariable(void)
 		//--------------------------------------------------
 		m_pRenderTile->SetID(tileID);
 		m_pRenderTile->Package();
+
+		bytesTransferred += m_pRenderTile->GetTransferBufferSize();
 
 		//--------------------------------------------------
 		// Send back result
@@ -150,6 +183,7 @@ bool RenderTaskWorker::ComputeVariable(void)
 	std::cout << "---[" << meid << "] Job time = " << jobTime << "s" << std::endl;
 	std::cout << "---[" << meid << "] -- Computation time = " << jobTime - communicationTime << "s" << std::endl;
 	std::cout << "---[" << meid << "] -- Communication time = " << communicationTime << "s" << std::endl;
+	std::cout << "---[" << meid << "] -- Bytes transferred = " << bytesTransferred << std::endl;
 	std::cout << "---[" << meid << "] -- Pixels rendered = " << pixelsRendered << std::endl;
 
 	return true;
@@ -197,6 +231,9 @@ bool RenderTaskWorker::OnInitialise(void)
 			m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight);
 		std::cout << "Tile size[" << m_renderTaskContext.TileWidth << " x " 
 			<< m_renderTaskContext.TileHeight << "]" << std::endl;
+
+		m_pRimmedRenderTile = new SerialisableRenderTile(-1,
+			m_renderTaskContext.TileWidth + 8, m_renderTaskContext.TileHeight + 8);
 	}
 
 	// Read adaptive tile settings

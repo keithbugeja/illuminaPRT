@@ -13,7 +13,9 @@ class RenderTaskWorker
 	: public IWorker
 {
 	RenderTaskContext m_renderTaskContext;
-	SerialisableRenderTile *m_pRenderTile;
+	SerialisableRenderTile *m_pRenderTile,
+		*m_pRimmedRenderTile;
+
 	SandboxEnvironment *m_pSandbox;
 
 	Environment *m_pEnvironment;

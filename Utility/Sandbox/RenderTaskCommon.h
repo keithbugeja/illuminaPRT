@@ -260,20 +260,23 @@ public:
 
 		for (int i = 0; i < p_pRadianceBuffer->GetArea(); i++)
 		{
-			pDst->Distance = CompressFloat(pSrc->Distance);
+			pDst->Flags = pSrc->Flags;
 
-			CompressSpectrum(&(pSrc->Albedo), &(pDst->Albedo));
+			pDst->Distance = (pSrc->Distance);
+			
 			CompressSpectrum(&(pSrc->Direct), &(pDst->Direct));
+			
+			/* */
+			CompressSpectrum(&(pSrc->Albedo), &(pDst->Albedo));
 			CompressSpectrum(&(pSrc->Indirect), &(pDst->Indirect));
 			CompressNormal(&(pSrc->Normal), pDst->Normal);
-
+			/* */
+			
 			//CompressSpectrum(&(pSrc->Albedo), pDst->Albedo);
 			//CompressSpectrum(&(pSrc->Direct), pDst->Direct);
 			//CompressSpectrum(&(pSrc->Indirect), pDst->Indirect);
 			//CompressNormal(&(pSrc->Normal), pDst->Normal);
 			//CompressVector(&(pSrc->Position), pDst->Position);
-
-			pDst->Flags = pSrc->Flags;
 
 			pDst++; pSrc++;
 		}
@@ -286,12 +289,16 @@ public:
 
 		for (int i = 0; i < p_pRadianceBuffer->GetArea(); i++)
 		{
+			pDst->Flags = pSrc->Flags;		
 			pDst->Distance = DecompressFloat(pSrc->Distance);
 
-			DecompressSpectrum(&(pSrc->Albedo), &(pDst->Albedo));
 			DecompressSpectrum(&(pSrc->Direct), &(pDst->Direct));
+
+			/* */
+			DecompressSpectrum(&(pSrc->Albedo), &(pDst->Albedo));
 			DecompressSpectrum(&(pSrc->Indirect), &(pDst->Indirect));
 			DecompressNormal(pSrc->Normal, &(pDst->Normal));
+			/* */
 
 			//DecompressSpectrum(pSrc->Albedo, &(pDst->Albedo));
 			//DecompressSpectrum(pSrc->Direct, &(pDst->Direct));
@@ -299,8 +306,12 @@ public:
 			//DecompressNormal(pSrc->Normal, &(pDst->Normal));
 			//DecompressVector(pSrc->Position, &(pDst->Position));
 
+			// pDst->Albedo = 1.0f;
+			// pDst->Indirect = 0.f;
+			// pDst->Distance = 1.f;
+			// pDst->Flags = RadianceContext::DF_Direct;
+
 			pDst->Final = pDst->Direct + pDst->Indirect;
-			pDst->Flags = pSrc->Flags;
 			
 			pDst++; pSrc++;
 		}
