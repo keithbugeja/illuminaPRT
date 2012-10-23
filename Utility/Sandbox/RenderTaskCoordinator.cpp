@@ -15,7 +15,7 @@ bool RenderTaskCoordinator::Compute(void)
 	int receivedTileID,
 		waitingTasks = 0;
 
-	int tileID = m_renderTaskContext.TilePackets.GetPacketCount();
+	int tileID = m_renderTaskContext.TilePackets.GetPacketCount() - 1;
 
 	double eventStart, eventComplete, 
 		subEventStart, subEventComplete,
@@ -51,15 +51,33 @@ bool RenderTaskCoordinator::Compute(void)
 	// Wait for results and send 
 	Communicator::Status status;
 
+	SerialisableRenderTile *pRenderTile = NULL;
+
+	m_nProducerIndex = 0;
+	m_nConsumerIndex = 0;
+	m_nTilesPacked = 0;
+
 	while (waitingTasks > 0)
 	{
 		// Probe for incoming message
 		Communicator::Probe(Communicator::Source_Any, Communicator::Worker_Coordinator_Job, &status);
 
 		// Receive compressed tile
+		/*
 		Communicator::Receive(m_pRenderTile->GetTransferBuffer(), 
 			Communicator::GetSize(&status), status.MPI_SOURCE,
 			Communicator::Worker_Coordinator_Job);
+		*/
+
+		pRenderTile = m_renderTileBuffer[m_nProducerIndex++]; 
+
+		Communicator::Receive(pRenderTile->GetTransferBuffer(), 
+			Communicator::GetSize(&status), status.MPI_SOURCE,
+			Communicator::Worker_Coordinator_Job);
+
+		// Receive complete -> Inform consumer
+		AtomicInt32::Increment((Int32*)&m_nTilesPacked);
+		m_decompressionQueueCV.notify_one();
 
 		// Add frame size
 		framePackageSize += Communicator::GetSize(&status);
@@ -81,12 +99,13 @@ bool RenderTaskCoordinator::Compute(void)
 
 		subEventStart = Platform::GetTime();
 
+		/*
 		// Decompress current tile
-		m_pRenderTile->Unpackage();
+		pRenderTile->Unpackage();
 
 		// Get image data and copy to buffer
-		receivedTileID = m_pRenderTile->GetID();
-		pTileBuffer = m_pRenderTile->GetImageData()->GetBuffer(); 
+		receivedTileID = pRenderTile->GetID();
+		pTileBuffer = pRenderTile->GetImageData()->GetBuffer(); 
 
 		RenderTilePackets::Packet packet = m_renderTaskContext.TilePackets.GetPacket(receivedTileID);
 		int sx = packet.XStart,
@@ -103,6 +122,7 @@ bool RenderTaskCoordinator::Compute(void)
 				pTileBuffer++;
 			}
 		}
+		*/
 
 		subEventComplete = Platform::GetTime();
 		decompressionTime += Platform::ToSeconds(subEventComplete - subEventStart);
@@ -205,7 +225,7 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_pDiscontinuityBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
 	m_pReconstructionBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Reconstruction", "ReconstructionBuffer", "");
 	m_pDragoTone = m_pEngineKernel->GetPostProcessManager()->CreateInstance("GlobalTone", "GlobalTone", "");
-		//m_pEngineKernel->GetPostProcessManager()->CreateInstance("DragoTone", "DragoTone", "");
+				//m_pEngineKernel->GetPostProcessManager()->CreateInstance("DragoTone", "DragoTone", "");
 
 	// Accumulation buffer
 	m_pAccumulationBuffer = (AccumulationBuffer*)m_pEngineKernel->GetPostProcessManager()->CreateInstance("Accumulation", "AccumulationBuffer", "");
@@ -237,6 +257,12 @@ bool RenderTaskCoordinator::OnInitialise(void)
 			Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), 10000);
 	}
 
+	// Create receive buffers for each tile
+	for (int packetIndex = 0; packetIndex < m_renderTaskContext.TilePackets.GetPacketCount(); packetIndex++)
+	{
+		m_renderTileBuffer.push_back(new SerialisableRenderTile(-1, m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight));
+	}
+
 	// Update observer position
 	m_observerPosition = m_pEnvironment->GetCamera()->GetObserver();
 	m_moveFlag[0] = m_moveFlag[1] = m_moveFlag[2] = m_moveFlag[3];
@@ -244,6 +270,9 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	// kick off input thread
 	boost::thread inputThreadHandler = 
 		boost::thread(boost::bind(RenderTaskCoordinator::InputThreadHandler, this));
+
+	boost::thread decompressionThreadHandler =
+		boost::thread(boost::bind(RenderTaskCoordinator::DecompressionThreadHandler, this));
 
 	return true;
 }
@@ -267,6 +296,10 @@ void RenderTaskCoordinator::OnShutdown(void)
 
 	// Delete serialisable tile
 	delete m_pRenderTile;
+
+	for (std::vector<SerialisableRenderTile*>::iterator packetIterator = m_renderTileBuffer.begin();
+		 packetIterator != m_renderTileBuffer.end(); ++packetIterator)
+		 delete (*packetIterator);
 }
 //----------------------------------------------------------------------------------------------
 bool RenderTaskCoordinator::OnSynchronise(void) 
@@ -355,5 +388,57 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 		p_pCoordinator->m_observerPosition = observer;
 
 		boost::this_thread::sleep(boost::posix_time::millisec(20));
+	}
+}
+//----------------------------------------------------------------------------------------------
+void RenderTaskCoordinator::DecompressionThreadHandler(RenderTaskCoordinator *p_pCoordinator)
+{
+	std::cout << "Decompression Thread Handler" << std::endl;
+	/**/
+
+	int receivedTileID;
+	RadianceContext *pTileBuffer;
+	SerialisableRenderTile *pRenderTile;	
+
+	p_pCoordinator->m_nTilesPacked = 0;
+	p_pCoordinator->m_nConsumerIndex = 0;
+
+	boost::mutex bufferMutex;
+	boost::unique_lock<boost::mutex> bufferLock(bufferMutex);
+
+	while(p_pCoordinator->IsRunning())
+	{
+		while(p_pCoordinator->m_nTilesPacked == 0 && p_pCoordinator->IsRunning()) {
+			p_pCoordinator->m_decompressionQueueCV.wait(bufferLock);
+		}
+
+		// TODO: Check this shit out or it's going to blow in our faces. Goddamnit.
+		if (p_pCoordinator->IsRunning() == false) break;
+
+		pRenderTile = p_pCoordinator->m_renderTileBuffer[p_pCoordinator->m_nConsumerIndex++];
+		AtomicInt32::Decrement((Int32*)&(p_pCoordinator->m_nTilesPacked));
+
+		// Decompress current tile
+		pRenderTile->Unpackage();
+		
+		// Get image data and copy to buffer
+		receivedTileID = pRenderTile->GetID();
+		pTileBuffer = pRenderTile->GetImageData()->GetBuffer(); 
+
+		RenderTilePackets::Packet packet = p_pCoordinator->m_renderTaskContext.TilePackets.GetPacket(receivedTileID);
+		int sx = packet.XStart,
+			sy = packet.YStart,
+			sxe = sx + packet.XSize,
+			sye = sy + packet.YSize;
+		
+		for (int y = sy; y < sye; y++) 
+		{
+			for (int x = sx; x < sxe; x++) 
+			{
+				p_pCoordinator->m_pRadianceBuffer->Set(x, y, *pTileBuffer);
+				
+				pTileBuffer++;
+			}
+		}
 	}
 }

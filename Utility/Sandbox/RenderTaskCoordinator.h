@@ -38,11 +38,22 @@ protected:
 	AccumulationBuffer *m_pAccumulationBuffer;
 
 protected:
+	std::vector<SerialisableRenderTile*> m_renderTileBuffer;
+
+	boost::condition_variable m_decompressionQueueCV;
+
+	int m_nProducerIndex,
+		m_nConsumerIndex;
+
+	volatile int m_nTilesPacked;
+
+protected:
 	int m_moveFlag[4];
 	Vector3 m_observerPosition;
 
 protected:
 	static void InputThreadHandler(RenderTaskCoordinator *p_pCoordinator);
+	static void DecompressionThreadHandler(RenderTaskCoordinator *p_pCoordinator);
 
 public:
 	bool Compute(void);
