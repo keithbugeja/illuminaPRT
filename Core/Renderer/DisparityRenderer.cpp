@@ -119,9 +119,9 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 		context.SampleIndex = 0;
 
 		// Render tile
-		for (int srcY = p_nRegionY, dstY = p_nBufferY; srcY < regionYEnd; ++srcY, ++dstY)
+		for (int srcY = p_nRegionY, dstY = p_nBufferY, iY = 0; srcY < regionYEnd; ++srcY, ++dstY, iY++)
 		{
-			for (int srcX = p_nRegionX, dstX = p_nBufferX; srcX < regionXEnd; ++srcX, ++dstX)
+			for (int srcX = p_nRegionX, dstX = p_nBufferX, iX = 0; srcX < regionXEnd; ++srcX, ++dstX, iX++)
 			{
 				// Get radiance context
 				pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
@@ -137,12 +137,13 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 				// pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
 
 				// Get radiance
-				if (((srcX & indirectFrequency) | (srcY & indirectFrequency)) != 0)
+				if (((iX & indirectFrequency) | (iY & indirectFrequency)) != 0)
 				{
 					IIntegrator::Direct(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
 
-					pRadianceContext->Indirect = 
-						p_pRadianceBuffer->GetP(dstX & indirectFrequencyMask, dstY & indirectFrequencyMask)->Indirect;
+					pRadianceContext->Indirect =
+						p_pRadianceBuffer->GetP(p_nBufferX + (iX & indirectFrequencyMask), p_nBufferY + (iY & indirectFrequencyMask))->Indirect;
+					
 					pRadianceContext->Final = pRadianceContext->Indirect * pRadianceContext->Albedo + pRadianceContext->Direct;
 				}
 				else

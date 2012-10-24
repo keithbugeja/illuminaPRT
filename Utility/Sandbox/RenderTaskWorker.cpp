@@ -116,34 +116,53 @@ bool RenderTaskWorker::ComputeVariable(void)
 		//--------------------------------------------------
 		// consider const Packet &packet!
 		RenderTilePackets::Packet packet = m_renderTaskContext.TilePackets.GetPacket(tileID);
+
+		const int kernelSize = 6;
+
+		/*
+		packet.XSize += 8;
+		packet.YSize += 8;
+		packet.XStart = Maths::Max(0, packet.XStart - 4);
+		packet.YStart = Maths::Max(0, packet.YStart - 4);
+		*/
+
+		//std::cout << "Packet 0 : [" << packetO.XStart << ", " << packetO.YStart << ", " << packetO.XSize << ", " << packetO.YSize << "]" << std::endl;
+		//std::cout << "Packet 1 : [" << packet.XStart << ", " << packet.YStart << ", " << packet.XSize << ", " << packet.YSize << "]" << std::endl;
+
 		m_pRenderTile->Resize(packet.XSize, packet.YSize);
-
-		packet.XSize+=8;
-		packet.YSize+=8;
-		packet.XStart-= 4;
-		packet.YStart-= 4;
-
-		m_pRimmedRenderTile->Resize(packet.XSize, packet.YSize);
+		m_pRimmedRenderTile->Resize(packet.XSize + kernelSize, packet.YSize + kernelSize);
 		
+		/* */
 		m_pRenderer->RenderRegion(m_pRimmedRenderTile->GetImageData(),
-			packet.XStart, packet.YStart, packet.XSize, packet.YSize);
+			packet.XStart - (kernelSize >> 1), packet.YStart - (kernelSize >> 1), packet.XSize + kernelSize, packet.YSize + kernelSize);
+		/* */
 
-		pixelsRendered += packet.XSize * packet.YSize;
+		pixelsRendered += (packet.XSize + kernelSize) * (packet.YSize + kernelSize);
+
+		// Discontinuity Buffer
+		//m_pDiscontinuityBuffer->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+
+		// Bilateral Filter
+		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
 
 		RadianceContext *p1, *p2;
-
-		for (int y = 4; y < packet.YSize - 8; y++)
+		
+		for (int y = 0; y < packet.YSize; y++)
 		{
-			for (int x = 4; x < packet.XSize - 8; x++)
+			for (int x = 0; x < packet.XSize; x++)
 			{
-				p1 = m_pRimmedRenderTile->GetImageData()->GetP(x, y);
-				p2 = m_pRenderTile->GetImageData()->GetP(x - 4, y - 4);
+				p1 = m_pRimmedRenderTile->GetImageData()->GetP(x + (kernelSize >> 1), y + (kernelSize >> 1));
+				p2 = m_pRenderTile->GetImageData()->GetP(x, y);
 
-				p2->Direct = p1->Direct;
-				p2->Flags = RadianceContext::DF_Direct;
+				p2->Final = p1->Final; // p1->Indirect;
+				p2->Flags = RadianceContext::DF_Final | RadianceContext::DF_Computed;
 			}
 		}
-		
+
+		// Tone mapping moved to workers
+		m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRenderTile->GetImageData());
+
 		/*
 		m_pRenderTile->Resize(packet.XSize, packet.YSize);
 
@@ -253,7 +272,8 @@ bool RenderTaskWorker::OnInitialise(void)
 	m_pSpace = m_pEnvironment->GetSpace();
 
 	// Discontinuity, reconstruction and tone mapping
-	m_pDiscontinuityBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
+	m_pBilateralFilter = m_pEngineKernel->GetPostProcessManager()->CreateInstance("BilateralFilter", "BilateralFilter", "KernelSize=3;");
+	m_pDiscontinuityBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "KernelSize=3;");
 	m_pReconstructionBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Reconstruction", "ReconstructionBuffer", "");
 	m_pToneMapper = m_pEngineKernel->GetPostProcessManager()->CreateInstance("GlobalTone", "GlobalTone", "");
 
