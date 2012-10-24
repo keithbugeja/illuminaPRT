@@ -134,7 +134,9 @@ bool RenderTaskWorker::ComputeVariable(void)
 		
 		/* */
 		m_pRenderer->RenderRegion(m_pRimmedRenderTile->GetImageData(),
-			packet.XStart - (kernelSize >> 1), packet.YStart - (kernelSize >> 1), packet.XSize + kernelSize, packet.YSize + kernelSize);
+			Maths::Max(0, packet.XStart - (kernelSize >> 1)),
+			Maths::Max(0, packet.YStart - (kernelSize >> 1)), 
+			packet.XSize + kernelSize, packet.YSize + kernelSize);
 		/* */
 
 		pixelsRendered += (packet.XSize + kernelSize) * (packet.YSize + kernelSize);
@@ -143,8 +145,13 @@ bool RenderTaskWorker::ComputeVariable(void)
 		//m_pDiscontinuityBuffer->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
 
 		// Bilateral Filter
+		
+		/*
 		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
 		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		/**/
 
 		RadianceContext *p1, *p2;
 		
@@ -156,6 +163,7 @@ bool RenderTaskWorker::ComputeVariable(void)
 				p2 = m_pRenderTile->GetImageData()->GetP(x, y);
 
 				p2->Final = p1->Final; // p1->Indirect;
+				//p2->Final = p1->Indirect;// p1->Final; // p1->Indirect;
 				p2->Flags = RadianceContext::DF_Final | RadianceContext::DF_Computed;
 			}
 		}
@@ -252,7 +260,7 @@ bool RenderTaskWorker::OnInitialise(void)
 			<< m_renderTaskContext.TileHeight << "]" << std::endl;
 
 		m_pRimmedRenderTile = new SerialisableRenderTile(-1,
-			m_renderTaskContext.TileWidth + 8, m_renderTaskContext.TileHeight + 8);
+			m_renderTaskContext.TileWidth + 32, m_renderTaskContext.TileHeight + 32);
 	}
 
 	// Read adaptive tile settings
