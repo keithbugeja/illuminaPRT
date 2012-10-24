@@ -110,6 +110,10 @@ public:
 	// unsigned short Indirect[3];
 	// unsigned short Albedo[3];
 
+	// unsigned int Final;
+	unsigned char Final[3];
+	
+	/*
 	unsigned int Direct;
 	unsigned int Indirect;
 	unsigned int Albedo;
@@ -118,6 +122,7 @@ public:
 	unsigned short Distance;
 
 	unsigned short Flags;
+	*/
 };
 
 class CompressedRadianceBuffer
@@ -260,18 +265,23 @@ public:
 
 		for (int i = 0; i < p_pRadianceBuffer->GetArea(); i++)
 		{
-			pDst->Flags = pSrc->Flags;
+			// pDst->Flags = pSrc->Flags;
 
-			pDst->Distance = (pSrc->Distance);
+			// pDst->Distance = (pSrc->Distance);
 			
-			CompressSpectrum(&(pSrc->Direct), &(pDst->Direct));
-			
-			/* */
+			// CompressSpectrum(&(pSrc->Direct), &(pDst->Direct));
+
+			/*
 			CompressSpectrum(&(pSrc->Albedo), &(pDst->Albedo));
 			CompressSpectrum(&(pSrc->Indirect), &(pDst->Indirect));
 			CompressNormal(&(pSrc->Normal), pDst->Normal);
 			/* */
-			
+
+			// CompressSpectrum(&(pSrc->Final), &(pDst->Final));
+			pDst->Final[0] = (unsigned char)(pSrc->Final[0] * 255);
+			pDst->Final[1] = (unsigned char)(pSrc->Final[1] * 255);
+			pDst->Final[2] = (unsigned char)(pSrc->Final[2] * 255);
+
 			//CompressSpectrum(&(pSrc->Albedo), pDst->Albedo);
 			//CompressSpectrum(&(pSrc->Direct), pDst->Direct);
 			//CompressSpectrum(&(pSrc->Indirect), pDst->Indirect);
@@ -289,12 +299,18 @@ public:
 
 		for (int i = 0; i < p_pRadianceBuffer->GetArea(); i++)
 		{
-			pDst->Flags = pSrc->Flags;		
-			pDst->Distance = DecompressFloat(pSrc->Distance);
+			pDst->Final[0] = ((float)pSrc->Final[0]) / 255.0f;
+			pDst->Final[1] = ((float)pSrc->Final[1]) / 255.0f;
+			pDst->Final[2] = ((float)pSrc->Final[2]) / 255.0f;
 
-			DecompressSpectrum(&(pSrc->Direct), &(pDst->Direct));
+			// DecompressSpectrum(&(pSrc->Final), &(pDst->Final));
 
-			/* */
+			//pDst->Flags = pSrc->Flags;		
+			//pDst->Distance = DecompressFloat(pSrc->Distance);
+
+			//DecompressSpectrum(&(pSrc->Direct), &(pDst->Direct));
+
+			/*
 			DecompressSpectrum(&(pSrc->Albedo), &(pDst->Albedo));
 			DecompressSpectrum(&(pSrc->Indirect), &(pDst->Indirect));
 			DecompressNormal(pSrc->Normal, &(pDst->Normal));
@@ -311,7 +327,7 @@ public:
 			// pDst->Distance = 1.f;
 			// pDst->Flags = RadianceContext::DF_Direct;
 
-			pDst->Final = pDst->Direct + pDst->Indirect;
+			// pDst->Final = pDst->Direct + pDst->Indirect;
 			
 			pDst++; pSrc++;
 		}

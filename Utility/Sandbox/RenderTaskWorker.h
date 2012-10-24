@@ -26,7 +26,8 @@ class RenderTaskWorker
 	ICamera *m_pCamera;
 	ISpace *m_pSpace;
 
-	IPostProcess *m_pDiscontinuityBuffer,
+	IPostProcess *m_pBilateralFilter, 
+		*m_pDiscontinuityBuffer,
 		*m_pReconstructionBuffer,
 		*m_pToneMapper;		
 

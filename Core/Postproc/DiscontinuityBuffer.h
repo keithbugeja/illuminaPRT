@@ -52,7 +52,9 @@ namespace Illumina
 				int irradianceSamples;
 				//float irradianceSamples;
 
-				m_nKernelSize = 3;
+				// m_nKernelSize = 3;
+
+				// std::cout << "Discontinuity Buffer :: Kernel Size = " << m_nKernelSize << std::endl;
 
 				//----------------------------------------------------------------------------------------------
 				for (int y = p_nRegionY + m_nKernelSize; y < p_nRegionHeight - m_nKernelSize; ++y)

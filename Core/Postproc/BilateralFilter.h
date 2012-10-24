@@ -50,7 +50,8 @@ namespace Illumina
 				float sigmaS = 4.0f,
 					sigmaR = 0.5f;
 
-				m_nKernelSize = 3;
+				// m_nKernelSize = 3;
+				// std::cout << "Bilateral Filter :: Kernel Size = " << m_nKernelSize << std::endl;
 
 				float mean_s_PDF = Statistics::GaussianPDF(0, 0, sigmaS),
 					edge_s_PDF = Statistics::GaussianPDF(sigmaS, 0, sigmaS),
