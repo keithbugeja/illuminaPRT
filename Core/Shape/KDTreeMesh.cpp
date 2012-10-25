@@ -257,8 +257,10 @@ bool KDTreeMesh::Compile(void)
 
 		ftree.close();
 
+		/*
 		std::cout << "Average triangles per leaf node : " << (float)lic / (float)lc << std::endl;
 		int s = std::getchar();
+		*/
 	}
 	/* */
 	//----------------------------------------------------------------------------------------------

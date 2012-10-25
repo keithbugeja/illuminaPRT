@@ -152,6 +152,17 @@ bool RenderTaskCoordinator::Compute(void)
 	toneTime = Platform::ToSeconds(eventComplete - eventStart);
 	/**/
 
+	// Accumulation
+	eventStart = Platform::GetTime();
+	if (m_bResetAccumulationBuffer)
+	{
+		m_pAccumulationBuffer->Reset();
+		m_bResetAccumulationBuffer = false;
+	}
+	else 
+		m_pAccumulationBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	eventComplete = Platform::GetTime();
+
 	// Commit to device
 	eventStart = Platform::GetTime();
 	m_pRenderer->Commit(m_pRadianceBuffer);
@@ -369,6 +380,12 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 {
 	while(p_pCoordinator->IsRunning())
 	{
+		p_pCoordinator->m_bResetAccumulationBuffer |= 
+			(p_pCoordinator->m_moveFlag[0] |
+			 p_pCoordinator->m_moveFlag[1] |
+			 p_pCoordinator->m_moveFlag[2] |
+			 p_pCoordinator->m_moveFlag[3]);
+
 		const OrthonormalBasis &basis = p_pCoordinator->m_pCamera->GetFrame();
 		Vector3 observer = p_pCoordinator->m_pCamera->GetObserver();
 

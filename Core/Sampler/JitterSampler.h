@@ -26,6 +26,7 @@ namespace Illumina
 			JitterSampler(void) { }
 
 			void Reset(void);
+			void Reset(unsigned int p_unSeed);
 
 			void Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount);
 			void Get1DSamples(float *p_pSamples, int p_nSampleCount);

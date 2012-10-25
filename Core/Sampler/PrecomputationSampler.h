@@ -45,6 +45,7 @@ namespace Illumina
 
 		public:
 			void Reset(void) { m_nSampleIndex = 0; }
+			void Reset(unsigned int p_unSeed) { m_nSampleIndex = p_unSeed % TSequenceSize; }
 
 			PrecomputedSampler(const std::string &p_strName) : ISampler(p_strName) { GenerateSamples(); }
 			PrecomputedSampler(void) { GenerateSamples(); }

@@ -83,7 +83,9 @@ bool RenderTaskWorker::ComputeVariable(void)
 	// Start clocking job time
 	eventStart = Platform::GetTime();
 
-	m_pEnvironment->GetSampler()->Reset();
+	//if (m_bResetSampler) {
+		m_pEnvironment->GetSampler()->Reset(m_unSamplerSeed);
+	//}
 
 	// Prepare integrator
 	m_pIntegrator->Prepare(m_pEnvironment->GetScene());
@@ -142,15 +144,15 @@ bool RenderTaskWorker::ComputeVariable(void)
 		pixelsRendered += (packet.XSize + kernelSize) * (packet.YSize + kernelSize);
 
 		// Discontinuity Buffer
-		//m_pDiscontinuityBuffer->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		m_pDiscontinuityBuffer->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
 
 		// Bilateral Filter
 		
-		/*
+		/**/
 		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
-		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
-		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
-		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		//m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		//m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		//m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
 		/**/
 
 		RadianceContext *p1, *p2;
@@ -206,12 +208,14 @@ bool RenderTaskWorker::ComputeVariable(void)
 	eventComplete = Platform::GetTime();
 	jobTime = Platform::ToSeconds(eventComplete - eventStart);
 
+	/* 
 	int meid = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
 	std::cout << "---[" << meid << "] Job time = " << jobTime << "s" << std::endl;
 	std::cout << "---[" << meid << "] -- Computation time = " << jobTime - communicationTime << "s" << std::endl;
 	std::cout << "---[" << meid << "] -- Communication time = " << communicationTime << "s" << std::endl;
 	std::cout << "---[" << meid << "] -- Bytes transferred = " << bytesTransferred << std::endl;
 	std::cout << "---[" << meid << "] -- Pixels rendered = " << pixelsRendered << std::endl;
+	*/
 
 	return true;
 }
@@ -239,7 +243,9 @@ bool RenderTaskWorker::OnInitialise(void)
 	std::string strScriptName;
 	ArgumentMap *pArgumentMap = GetArgumentMap();
 
+	//----------------------------------------------------------------------------------------------
 	// Initialise sandbox environment
+	//----------------------------------------------------------------------------------------------
 	m_pSandbox = new SandboxEnvironment();
 	m_pSandbox->Initialise(false);
 
@@ -269,23 +275,31 @@ bool RenderTaskWorker::OnInitialise(void)
 	m_renderTaskContext.AdaptiveTiles = adaptiveTile == "false" ? false : true;
 	pArgumentMap->GetArgument("batchsize", m_renderTaskContext.TileBatchSize);
 
+	//----------------------------------------------------------------------------------------------
 	// Engine, environment
+	//----------------------------------------------------------------------------------------------
 	m_pEnvironment = m_pSandbox->GetEnvironment();
 	m_pEngineKernel = m_pSandbox->GetEngineKernel();
 
+	//----------------------------------------------------------------------------------------------
 	// Alias 
+	//----------------------------------------------------------------------------------------------
 	m_pIntegrator = m_pEnvironment->GetIntegrator();
 	m_pRenderer = m_pEnvironment->GetRenderer();
 	m_pCamera = m_pEnvironment->GetCamera();
 	m_pSpace = m_pEnvironment->GetSpace();
 
+	//----------------------------------------------------------------------------------------------
 	// Discontinuity, reconstruction and tone mapping
+	//----------------------------------------------------------------------------------------------
 	m_pBilateralFilter = m_pEngineKernel->GetPostProcessManager()->CreateInstance("BilateralFilter", "BilateralFilter", "KernelSize=3;");
 	m_pDiscontinuityBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "KernelSize=3;");
 	m_pReconstructionBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Reconstruction", "ReconstructionBuffer", "");
 	m_pToneMapper = m_pEngineKernel->GetPostProcessManager()->CreateInstance("GlobalTone", "GlobalTone", "");
 
+	//----------------------------------------------------------------------------------------------
 	// Set up context
+	//----------------------------------------------------------------------------------------------
 	m_renderTaskContext.FrameWidth = m_pRenderer->GetDevice()->GetWidth();
 	m_renderTaskContext.FrameHeight = m_pRenderer->GetDevice()->GetHeight();
 	m_renderTaskContext.TilesPerRow = m_renderTaskContext.FrameWidth / m_renderTaskContext.TileWidth;
@@ -306,6 +320,11 @@ bool RenderTaskWorker::OnInitialise(void)
 		m_renderTaskContext.TilePackets.GeneratePackets(m_renderTaskContext.FrameWidth, m_renderTaskContext.FrameHeight,
 			Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), 10000);
 	}
+
+	//----------------------------------------------------------------------------------------------
+	// Reset sampler
+	m_bResetSampler = true;
+	m_unSamplerSeed = 0x03170317;
 
 	return true;
 }
@@ -337,6 +356,12 @@ bool RenderTaskWorker::OnSynchronise(void)
 
 	Communicator::Receive(buffer, synchronisePacketSize, GetCoordinatorID(), Communicator::Coordinator_Worker_Job);
 	Vector3 *observer = (Vector3*)buffer;
+
+	if ((m_pCamera->GetObserver() != *observer))
+		m_unSamplerSeed = 0x03170317;
+	else
+		m_unSamplerSeed += 0x0101;
+
 	m_pCamera->MoveTo(*observer);
 
 	return true;

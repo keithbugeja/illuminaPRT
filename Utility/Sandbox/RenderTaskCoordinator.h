@@ -50,6 +50,7 @@ protected:
 protected:
 	int m_moveFlag[4];
 	Vector3 m_observerPosition;
+	bool m_bResetAccumulationBuffer;
 
 protected:
 	static void InputThreadHandler(RenderTaskCoordinator *p_pCoordinator);
