@@ -60,6 +60,7 @@ namespace Illumina
 
 		public:
 			virtual void Reset(void) = 0;
+			virtual void Reset(unsigned int p_unSeed) = 0;
 
 			virtual void Get2DSamples(Vector2* p_pSamples, int p_nSampleCount) = 0;
 			virtual void Get1DSamples(float* p_pSamples, int p_nSampleCount) = 0;

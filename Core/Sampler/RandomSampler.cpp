@@ -17,6 +17,11 @@ void RandomSampler::Reset(void)
 	m_random.Reset();
 }
 //----------------------------------------------------------------------------------------------
+void RandomSampler::Reset(unsigned int p_unSeed)
+{
+	m_random.Seed(p_unSeed);
+}
+//----------------------------------------------------------------------------------------------
 void RandomSampler::GetSample(Sample *p_pSample)
 {
 	Get1DSamples(p_pSample->GetSequence(), p_pSample->Size());

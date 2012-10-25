@@ -24,6 +24,7 @@ namespace Illumina
 			RandomSampler(const std::string &p_strName) : ISampler(p_strName) { }
 
 			void Reset(void);
+			void Reset(unsigned int p_unSeed);
 
 			void Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount);
 			void Get1DSamples(float *p_pSamples, int p_nSampleCount);

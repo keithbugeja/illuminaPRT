@@ -15,6 +15,11 @@ void MultijitterSampler::Reset(void)
 	m_random.Reset();
 }
 //----------------------------------------------------------------------------------------------
+void MultijitterSampler::Reset(unsigned int p_unSeed)
+{
+	m_random.Seed(p_unSeed);
+}
+//----------------------------------------------------------------------------------------------
 void MultijitterSampler::GetSample(Sample *p_pSample)
 {
 	Get1DSamples(p_pSample->GetSequence(), p_pSample->Size());

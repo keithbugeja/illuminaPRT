@@ -15,6 +15,11 @@ void JitterSampler::Reset(void)
 	m_random.Reset();
 }
 //----------------------------------------------------------------------------------------------
+void JitterSampler::Reset(unsigned int p_unSeed)
+{
+	m_random.Seed(p_unSeed);
+}
+//----------------------------------------------------------------------------------------------
 void JitterSampler::Get2DSamples(Vector2 *p_pSamples, int p_nSampleCount)
 {
 	int sqrtSampleCount = (int)Maths::Sqrt((float)p_nSampleCount);
