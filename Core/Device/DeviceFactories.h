@@ -202,10 +202,12 @@ namespace Illumina
 			// -- Height {Integer}
 			// -- Format {String}
 			// -- Filename {String}
+			// -- Timestamp {Integer}
 			Illumina::Core::IDevice *CreateInstance(ArgumentMap &p_argumentMap)
 			{
 				int width = 640,
-					height = 480;
+					height = 480,
+					timestamp = 0;
 
 				std::string format = "PPM",
 					filename = "result.ppm";
@@ -216,27 +218,28 @@ namespace Illumina
 				p_argumentMap.GetArgument("Height", height);
 				p_argumentMap.GetArgument("Format", format);
 				p_argumentMap.GetArgument("Filename", filename);
+				p_argumentMap.GetArgument("Timestamp", timestamp);
 
 				// So far only PPM is supported
 				// TODO: Destroy object when ready
 				ImagePPM *pImagePPM = new ImagePPM();
 
 				if (p_argumentMap.GetArgument("Id", strId))
-					return CreateInstance(strId, width, height, pImagePPM, filename);
+					return CreateInstance(strId, width, height, timestamp, pImagePPM, filename);
 
-				return CreateInstance(width, height, pImagePPM, filename);
+				return CreateInstance(width, height, timestamp, pImagePPM, filename);
 			}
 
 			Illumina::Core::IDevice *CreateInstance(const std::string &p_strId, 
-				int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename)
+				int p_nWidth, int p_nHeight, int p_nTimeStamp, IImageIO *p_pImageIO, const std::string &p_strFilename)
 			{
-				return new ImageDevice(p_strId, p_nWidth, p_nHeight, p_pImageIO, p_strFilename, true);
+				return new ImageDevice(p_strId, p_nWidth, p_nHeight, p_nTimeStamp != 0, p_pImageIO, p_strFilename, true);
 			}
 
 			Illumina::Core::IDevice *CreateInstance(int p_nWidth, int p_nHeight, 
-				IImageIO *p_pImageIO, const std::string &p_strFilename)
+				int p_nTimeStamp, IImageIO *p_pImageIO, const std::string &p_strFilename)
 			{
-				return new ImageDevice(p_nWidth, p_nHeight, p_pImageIO, p_strFilename, true);
+				return new ImageDevice(p_nWidth, p_nHeight, p_nTimeStamp != 0, p_pImageIO, p_strFilename, true);
 			}
 		};
 	}

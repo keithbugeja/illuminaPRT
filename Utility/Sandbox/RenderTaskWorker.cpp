@@ -119,7 +119,8 @@ bool RenderTaskWorker::ComputeVariable(void)
 		// consider const Packet &packet!
 		RenderTilePackets::Packet packet = m_renderTaskContext.TilePackets.GetPacket(tileID);
 
-		const int kernelSize = 6;
+		const int kernelSize = 8;
+		const int halfKernelSize = kernelSize >> 1;
 
 		/*
 		packet.XSize += 8;
@@ -133,39 +134,57 @@ bool RenderTaskWorker::ComputeVariable(void)
 
 		m_pRenderTile->Resize(packet.XSize, packet.YSize);
 		m_pRimmedRenderTile->Resize(packet.XSize + kernelSize, packet.YSize + kernelSize);
-		
+
 		/* */
+		m_pRenderer->RenderRegion(m_pRimmedRenderTile->GetImageData(),
+			packet.XStart - halfKernelSize,
+			packet.YStart - halfKernelSize,
+			packet.XSize + kernelSize, 
+			packet.YSize + kernelSize,
+			0, 0);
+
+		/*
 		m_pRenderer->RenderRegion(m_pRimmedRenderTile->GetImageData(),
 			Maths::Max(0, packet.XStart - (kernelSize >> 1)),
 			Maths::Max(0, packet.YStart - (kernelSize >> 1)), 
 			packet.XSize + kernelSize, packet.YSize + kernelSize);
-		/* */
+		*/
 
 		pixelsRendered += (packet.XSize + kernelSize) * (packet.YSize + kernelSize);
 
 		// Discontinuity Buffer
+		/* 
+		((DiscontinuityBuffer*)m_pDiscontinuityBuffer)->SetKernelSize(4);
 		m_pDiscontinuityBuffer->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		*/
 
 		// Bilateral Filter
-		
 		/**/
+		((BilateralFilter*)m_pBilateralFilter)->SetKernelSize(4);
 		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
-		//m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
-		//m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		
+		/*
+		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		*/
+
+		/**/
+		// m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		// m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
 		//m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
 		/**/
 
 		RadianceContext *p1, *p2;
 		
-		for (int y = 0; y < packet.YSize; y++)
+		for (int y = 0, ys = halfKernelSize; y < packet.YSize; y++, ys++)
 		{
-			for (int x = 0; x < packet.XSize; x++)
+			for (int x = 0, xs = halfKernelSize; x < packet.XSize; x++, xs++)
 			{
-				p1 = m_pRimmedRenderTile->GetImageData()->GetP(x + (kernelSize >> 1), y + (kernelSize >> 1));
+				p1 = m_pRimmedRenderTile->GetImageData()->GetP(xs, ys);
 				p2 = m_pRenderTile->GetImageData()->GetP(x, y);
 
-				p2->Final = p1->Final; // p1->Indirect;
-				//p2->Final = p1->Indirect;// p1->Final; // p1->Indirect;
+				p2->Final = p1->Final;
 				p2->Flags = RadianceContext::DF_Final | RadianceContext::DF_Computed;
 			}
 		}
