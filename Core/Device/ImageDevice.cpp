@@ -4,6 +4,12 @@
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
+#include <iomanip>
+#include <sstream>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
+
 #include "Device/ImageDevice.h"
 
 #include "Image/Image.h"
@@ -13,17 +19,21 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-ImageDevice::ImageDevice(int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit)
+ImageDevice::ImageDevice(int p_nWidth, int p_nHeight, bool p_bTimeStamp, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit)
 	: m_pImage(new Image(p_nWidth, p_nHeight))
 	, m_pImageIO(p_pImageIO)
+	, m_nFrameNumber(0)
+	, m_bTimeStamp(p_bTimeStamp)
 	, m_strFilename(p_strFilename)
 	, m_bKillFilterOnExit(p_bKillFilterOnExit)
 { }
 //----------------------------------------------------------------------------------------------
-ImageDevice::ImageDevice(const std::string &p_strName, int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit)
+ImageDevice::ImageDevice(const std::string &p_strName, int p_nWidth, int p_nHeight, bool p_bTimeStamp, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit)
 	: IDevice(p_strName) 
 	, m_pImage(new Image(p_nWidth, p_nHeight))
 	, m_pImageIO(p_pImageIO)
+	, m_nFrameNumber(0)
+	, m_bTimeStamp(p_bTimeStamp)
 	, m_strFilename(p_strFilename)
 	, m_bKillFilterOnExit(p_bKillFilterOnExit)
 { }
@@ -56,8 +66,37 @@ void ImageDevice::Close(void) { }
 //----------------------------------------------------------------------------------------------
 void ImageDevice::BeginFrame(void) { }
 //----------------------------------------------------------------------------------------------
-void ImageDevice::EndFrame(void)  {
-	m_pImageIO->Save(*m_pImage, m_strFilename);
+void ImageDevice::EndFrame(void)  
+{
+	if (m_bTimeStamp) 
+	{
+		m_nFrameNumber++;
+
+		boost::filesystem::path imagePath(m_strFilename);
+		
+		std::stringstream imageNameStream;
+		imageNameStream << std::setfill('0') << std::setw(5) << m_nFrameNumber;
+		std::string imageFilename = (imagePath.parent_path() / (imageNameStream.str() + imagePath.extension().string())).string();
+		std::string imageTimeStamp = boost::lexical_cast<std::string>(Platform::ToSeconds(Platform::GetTime()));
+
+		std::ofstream timestamps;
+		timestamps.open("timestamps.txt", std::ios::ate | std::ofstream::app);
+		timestamps << imageFilename << "\t" << imageTimeStamp << std::endl;
+		timestamps.close();
+
+		/*
+		boost::filesystem::path filenamePath(m_strFilename);
+		std::string timestampedFilename = m_strFilename + 
+			"[" + boost::lexical_cast<std::string>(Platform::ToSeconds(Platform::GetTime())) + "]" + filenamePath.extension().string();
+		*/
+
+		// std::string timestampedFilename = m_strFilename + "_" + ;
+		std::cout<<"Commit :: " << imageFilename << std::endl;
+		m_pImageIO->Save(*m_pImage, imageFilename);
+	} else {
+		std::cout<<"Commit :: " << m_strFilename << std::endl;
+		m_pImageIO->Save(*m_pImage, m_strFilename);
+	}
 }
 //----------------------------------------------------------------------------------------------
 void ImageDevice::Set(int p_nX, int p_nY, const Spectrum &p_spectrum) {

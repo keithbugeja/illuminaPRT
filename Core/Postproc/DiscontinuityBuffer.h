@@ -40,6 +40,8 @@ namespace Illumina
 				, m_fDistance(p_fDistance)
 			{ }
 
+			void SetKernelSize(int p_nKernelSize) { m_nKernelSize = p_nKernelSize; }
+
 			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight)
 			{
 				RadianceContext *pKernelContext,

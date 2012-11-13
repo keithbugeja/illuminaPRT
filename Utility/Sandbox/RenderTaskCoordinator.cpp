@@ -154,13 +154,7 @@ bool RenderTaskCoordinator::Compute(void)
 
 	// Accumulation
 	eventStart = Platform::GetTime();
-	if (m_bResetAccumulationBuffer)
-	{
-		m_pAccumulationBuffer->Reset();
-		m_bResetAccumulationBuffer = false;
-	}
-	else 
-		m_pAccumulationBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	m_pAccumulationBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 
 	// Commit to device
@@ -168,6 +162,12 @@ bool RenderTaskCoordinator::Compute(void)
 	m_pRenderer->Commit(m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 	commitTime = Platform::ToSeconds(eventComplete - eventStart);
+
+	if (m_bResetAccumulationBuffer)
+	{
+		m_pAccumulationBuffer->Reset();
+		m_bResetAccumulationBuffer = false;
+	}
 
 	std::cout << "---| Radiance Time : " << radianceTime << "s" << std::endl;
 	std::cout << "---| Decompression Time : " << decompressionTime << "s for " << framePackageSize / (1024 * 1024) << " MB" << std::endl;
@@ -277,6 +277,7 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	// Update observer position
 	m_observerPosition = m_pEnvironment->GetCamera()->GetObserver();
 	m_moveFlag[0] = m_moveFlag[1] = m_moveFlag[2] = m_moveFlag[3];
+	m_bResetAccumulationBuffer = true;
 
 	// kick off input thread
 	boost::thread inputThreadHandler = 

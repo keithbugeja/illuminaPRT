@@ -33,6 +33,8 @@ namespace Illumina
 				, m_nKernelSize(p_nKernelSize)
 			{ }
 
+			void SetKernelSize(int p_nKernelSize) { m_nKernelSize = p_nKernelSize; }
+
 			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight)
 			{
 				RadianceContext *pKernelContext,
@@ -47,7 +49,7 @@ namespace Illumina
 					intensityWeight, 
 					distanceWeight;
 
-				float sigmaS = 4.0f,
+				float sigmaS = m_nKernelSize,
 					sigmaR = 0.5f;
 
 				// m_nKernelSize = 3;
@@ -65,53 +67,48 @@ namespace Illumina
 					invSigmaR = 1.f / sigmaR;
 				*/
 
-				//----------------------------------------------------------------------------------------------
-				for (int y = p_nRegionY + m_nKernelSize; y < p_nRegionHeight - m_nKernelSize; ++y)
+				float gaussian[] = 
 				{
-					ys = y - m_nKernelSize;
-					ye = y + m_nKernelSize;
+					0.00000067,	0.00002292,	0.00019117,	0.00038771,	0.00019117,	0.00002292,	0.00000067,
+					0.00002292,	0.00078633,	0.00655965,	0.01330373,	0.00655965,	0.00078633,	0.00002292,
+					0.00019117,	0.00655965,	0.05472157,	0.11098164,	0.05472157,	0.00655965,	0.00019117,
+					0.00038771,	0.01330373,	0.11098164,	0.22508352,	0.11098164,	0.01330373,	0.00038771,
+					0.00019117,	0.00655965,	0.05472157,	0.11098164,	0.05472157,	0.00655965,	0.00019117,
+					0.00002292,	0.00078633,	0.00655965,	0.01330373,	0.00655965,	0.00078633,	0.00002292,
+					0.00000067,	0.00002292,	0.00019117,	0.00038771,	0.00019117,	0.00002292,	0.00000067
+				};
 
-					for (int x = p_nRegionX + m_nKernelSize; x < p_nRegionWidth - m_nKernelSize; ++x)
+				//----------------------------------------------------------------------------------------------
+				for (int y = p_nRegionY /*+ m_nKernelSize*/; y < p_nRegionHeight /*- m_nKernelSize*/; ++y)
+				{
+					ys = Maths::Max(0, y - m_nKernelSize);
+					ye = Maths::Min(p_nRegionHeight, y + m_nKernelSize);
+
+					// ys = y - m_nKernelSize;
+					// ye = y + m_nKernelSize;
+
+					for (int x = p_nRegionX /*+ m_nKernelSize*/; x < p_nRegionWidth /*- m_nKernelSize*/; ++x)
 					{
-						xs = x - m_nKernelSize;
-						xe = x + m_nKernelSize;
-
-						weight = 0; intensity = 0;
+						xs = Maths::Max(0, x - m_nKernelSize);
+						xe = Maths::Min(p_nRegionWidth, x + m_nKernelSize);
 
 						pKernelContext = p_pInput->GetP(x, y);
 						pOutputContext = p_pOutput->GetP(x, y);
 
+						weight = 0; intensity = 0;
+
 						for (int dy = ys; dy < ye; dy++)
 						{
-							pNeighbourContext = p_pInput->GetP(xs, dy);
-
 							for (int dx = xs; dx < xe; dx++)
 							{
-								distanceWeight = pKernelContext->Distance - pNeighbourContext->Distance;
-								
-								/* Gaussian */
-								//distanceWeight = Statistics::GaussianPDF(distanceWeight * distanceWeight);
+								pNeighbourContext = p_pInput->GetP(dx, dy);
+								distanceWeight = Statistics::GaussianPDF(Maths::Sqrt((dx - x) * (dx - x) + (dy - y) * (dy - y)), 0, 16.f);
+								intensityWeight = 1.0f;
+								//intensityWeight = gaussian[(dx - xs) + (dy - ys) * 7];
+								//intensityWeight = Statistics::GaussianPDF(pKernelContext->Distance - pNeighbourContext->Distance, 0, 32.f);
+								weight += intensityWeight * distanceWeight;
 
-								/* Gaussian approximation */
-								distanceWeight *= distanceWeight;
-								distanceWeight = distanceWeight > sigmaS ? 0.f : interval_s_PDF * (distanceWeight * invSigmaS) + mean_s_PDF;
-
-								/*
-								intensityWeight = (pKernelContext->Indirect[0] + pKernelContext->Indirect[1] + pKernelContext->Indirect[2]) * 0.33f - 
-									(pNeighbourContext->Indirect[0] + pNeighbourContext->Indirect[1] + pNeighbourContext->Indirect[2]) * 0.33f; 
-								intensityWeight *= intensityWeight;
-								intensityWeight = intensityWeight > sigmaR ? 0.f : interval_r_PDF * (intensityWeight * invSigmaR) + mean_r_PDF;
-								*/
-
-								/*
-								weight += distanceWeight * intensityWeight;
-								intensity += pNeighbourContext->Indirect * distanceWeight * intensityWeight;
-								*/
-
-								weight += distanceWeight;
-								intensity += pNeighbourContext->Indirect * distanceWeight;
-
-								pNeighbourContext++;
+								intensity += pNeighbourContext->Indirect * (distanceWeight * intensityWeight);
 							}
 						}
 
@@ -120,6 +117,46 @@ namespace Illumina
 							pOutputContext->Indirect = intensity / weight;
 							pOutputContext->Final = pKernelContext->Direct + pOutputContext->Indirect * pKernelContext->Albedo;
 						}
+
+						/*
+						for (int dy = ys; dy < ye; dy++)
+						{
+							pNeighbourContext = p_pInput->GetP(xs, dy);
+
+							for (int dx = xs; dx < xe; dx++)
+							{
+								distanceWeight = pKernelContext->Distance - pNeighbourContext->Distance;
+								
+								// Gaussian
+								//distanceWeight = Statistics::GaussianPDF(distanceWeight * distanceWeight);
+
+								// Gaussian approximation
+								distanceWeight *= distanceWeight;
+								distanceWeight = distanceWeight > sigmaS ? 0.f : interval_s_PDF * (distanceWeight * invSigmaS) + mean_s_PDF;
+
+								//intensityWeight = (pKernelContext->Indirect[0] + pKernelContext->Indirect[1] + pKernelContext->Indirect[2]) * 0.33f - 
+								//	(pNeighbourContext->Indirect[0] + pNeighbourContext->Indirect[1] + pNeighbourContext->Indirect[2]) * 0.33f; 
+								//intensityWeight *= intensityWeight;
+								//intensityWeight = intensityWeight > sigmaR ? 0.f : interval_r_PDF * (intensityWeight * invSigmaR) + mean_r_PDF;
+
+								//weight += distanceWeight * intensityWeight;
+								//intensity += pNeighbourContext->Indirect * distanceWeight * intensityWeight;
+
+								weight += distanceWeight;
+								intensity += pNeighbourContext->Indirect * distanceWeight;
+
+								pNeighbourContext++;
+							}
+						}
+		
+						if (weight > Maths::Epsilon)
+						{
+							pOutputContext->Indirect = intensity / weight;
+							pOutputContext->Final = pKernelContext->Direct + pOutputContext->Indirect * pKernelContext->Albedo;
+						}
+						*/
+
+						// pOutputContext->Final = pKernelContext->Direct + pKernelContext->Indirect * pKernelContext->Albedo;
 					}
 				}
 
