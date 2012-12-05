@@ -113,6 +113,7 @@ public:
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("Discontinuity", new DiscontinuityBufferFactory());
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("Reconstruction", new ReconstructionBufferFactory());
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("BilateralFilter", new BilateralFilterFactory());
+		m_engineKernel->GetPostProcessManager()->RegisterFactory("History", new HistoryBufferFactory());
 
 		//----------------------------------------------------------------------------------------------
 		// Renderer
@@ -348,6 +349,7 @@ public:
 			// Post processing
 			//----------------------------------------------------------------------------------------------
 			Logger::Message("Freeing and unregistering Post Processes...", p_bVerbose);
+			delete m_engineKernel->GetPostProcessManager()->RequestFactory("History");
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("AutoTone");
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("DragoTone");
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("GlobalTone");
@@ -356,6 +358,7 @@ public:
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("Reconstruction");
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("BilateralFilter");
 
+			m_engineKernel->GetPostProcessManager()->UnregisterFactory("History");
 			m_engineKernel->GetPostProcessManager()->UnregisterFactory("AutoTone");
 			m_engineKernel->GetPostProcessManager()->UnregisterFactory("DragoTone");
 			m_engineKernel->GetPostProcessManager()->UnregisterFactory("GlobalTone");

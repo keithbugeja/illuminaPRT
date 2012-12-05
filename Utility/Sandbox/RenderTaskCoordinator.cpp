@@ -154,7 +154,8 @@ bool RenderTaskCoordinator::Compute(void)
 
 	// Accumulation
 	eventStart = Platform::GetTime();
-	m_pAccumulationBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	// m_pAccumulationBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	m_pHistoryBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 
 	// Commit to device
@@ -165,7 +166,8 @@ bool RenderTaskCoordinator::Compute(void)
 
 	if (m_bResetAccumulationBuffer)
 	{
-		m_pAccumulationBuffer->Reset();
+		m_pHistoryBuffer->Reset();
+		// m_pAccumulationBuffer->Reset();
 		m_bResetAccumulationBuffer = false;
 	}
 
@@ -230,6 +232,7 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	// Radiance buffer and accumulation radiance buffer
 	m_pRadianceBuffer = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight()),
 	m_pRadianceAccumulationBuffer = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight());
+	m_pRadianceHistoryBuffer = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight());
 
 	// Discontinuity, reconstruction and tone mapping
 	m_pBilateralFilter = m_pEngineKernel->GetPostProcessManager()->CreateInstance("BilateralFilter", "BilateralFilter", "");
@@ -242,6 +245,11 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_pAccumulationBuffer = (AccumulationBuffer*)m_pEngineKernel->GetPostProcessManager()->CreateInstance("Accumulation", "AccumulationBuffer", "");
 	m_pAccumulationBuffer->SetAccumulationBuffer(m_pRadianceAccumulationBuffer);
 	m_pAccumulationBuffer->Reset();
+
+	// History buffer
+	m_pHistoryBuffer = (HistoryBuffer*)m_pEngineKernel->GetPostProcessManager()->CreateInstance("History", "History", "");
+	m_pHistoryBuffer->SetHistoryBuffer(m_pRadianceHistoryBuffer, m_pRadianceAccumulationBuffer, 6);
+	m_pHistoryBuffer->Reset();
 
 	// Open output device
 	m_pRenderer->GetDevice()->Open();

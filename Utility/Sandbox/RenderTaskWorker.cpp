@@ -139,7 +139,7 @@ bool RenderTaskWorker::ComputeVariable(void)
 		m_pRenderer->RenderRegion(m_pRimmedRenderTile->GetImageData(),
 			packet.XStart - halfKernelSize,
 			packet.YStart - halfKernelSize,
-			packet.XSize + kernelSize, 
+			packet.XSize + kernelSize,
 			packet.YSize + kernelSize,
 			0, 0);
 
@@ -160,8 +160,9 @@ bool RenderTaskWorker::ComputeVariable(void)
 
 		// Bilateral Filter
 		/**/
-		((BilateralFilter*)m_pBilateralFilter)->SetKernelSize(4);
-		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+
+		//((BilateralFilter*)m_pBilateralFilter)->SetKernelSize(4);
+		//m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
 		
 		/*
 		m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
