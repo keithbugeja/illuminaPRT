@@ -830,6 +830,12 @@
     <ClInclude Include="..\..\..\..\Core\Renderer\DisparityRenderer.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Postproc\HistoryBuffer.h">
+      <Filter>Header Files\Postproc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Geometry\Spline.h">
+      <Filter>Header Files\Geometry</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">

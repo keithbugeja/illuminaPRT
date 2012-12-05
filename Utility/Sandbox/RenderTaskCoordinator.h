@@ -28,7 +28,8 @@ protected:
 	ISpace *m_pSpace;
 
 	RadianceBuffer *m_pRadianceBuffer,
-		*m_pRadianceAccumulationBuffer;
+		*m_pRadianceAccumulationBuffer,
+		*m_pRadianceHistoryBuffer;
 
 	IPostProcess *m_pBilateralFilter, 
 		*m_pDiscontinuityBuffer,
@@ -36,6 +37,7 @@ protected:
 		*m_pDragoTone; 
 
 	AccumulationBuffer *m_pAccumulationBuffer;
+	HistoryBuffer *m_pHistoryBuffer;
 
 protected:
 	std::vector<SerialisableRenderTile*> m_renderTileBuffer;

@@ -15,6 +15,7 @@
 #include "Postproc/DragoTone.h"
 #include "Postproc/GlobalTone.h"
 #include "Postproc/BilateralFilter.h"
+#include "Postproc/HistoryBuffer.h"
 #include "Postproc/AccumulationBuffer.h"
 #include "Postproc/DiscontinuityBuffer.h"
 #include "Postproc/ReconstructionBuffer.h"
@@ -111,6 +112,36 @@ namespace Illumina
 			Illumina::Core::IPostProcess *CreateInstance(int dummy)
 			{
 				return new DragoTone();
+			}
+		};
+		
+		class HistoryBufferFactory : public Illumina::Core::Factory<Illumina::Core::IPostProcess>
+		{
+		public:
+			Illumina::Core::IPostProcess *CreateInstance(void)
+			{
+				return new HistoryBuffer();
+			}
+
+			// Arguments
+			// -- Id
+			Illumina::Core::IPostProcess *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strId;
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId);
+
+				return CreateInstance();
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(const std::string &p_strId)
+			{
+				return new HistoryBuffer(p_strId);
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(int dummy)
+			{
+				return new HistoryBuffer();
 			}
 		};
 
