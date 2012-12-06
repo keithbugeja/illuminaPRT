@@ -5,10 +5,53 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 //----------------------------------------------------------------------------------------------
+#include <Maths/Maths.h>
+#include <Geometry/Spline.h>
 #include "Coordinator.h"
 #include "Environment.h"
 
 #include "RenderTaskCommon.h"
+//----------------------------------------------------------------------------------------------
+class Path
+{
+protected:
+	std::vector<Vector3> m_vertexList;
+	float m_fTime;
+public:
+	void AddVertex(Vector3 &p_pVertex) { m_vertexList.push_back(p_pVertex); }
+	void Reset(void) { m_fTime = 0; }
+	void Move(float p_fDeltaT) { m_fTime += p_fDeltaT; }
+	Vector3 GetPosition(float p_fTime)
+	{
+		if (m_vertexList.size() < 4)
+			return Vector3::Zero;
+
+		int lbId = 1,
+			ubId = m_vertexList.size() - 2,
+			ptId[4];
+
+		ptId[1] = p_fTime * ubId + lbId;
+		ptId[0] = ptId[1] - 1;
+		ptId[2] = ptId[1] + 1;
+		ptId[3] = ptId[2] + 1;
+
+		float segment = 1.f/ubId;
+
+		float interval = Maths::Frac(p_fTime / segment);
+
+		std::cout << "Time: " << p_fTime << "Id : " << ptId[1] << ", Interval : " << interval << std::endl;
+
+		return Illumina::Core::Spline::Hermite(m_vertexList[ptId[1]], m_vertexList[ptId[2]], 
+			m_vertexList[ptId[1]] - m_vertexList[ptId[0]], m_vertexList[ptId[3]] - m_vertexList[ptId[2]],
+			interval);
+	}
+
+	Vector3 GetPosition(void) 
+	{
+		return GetPosition(m_fTime);
+	}
+};
+
 //----------------------------------------------------------------------------------------------
 class RenderTaskCoordinator
 	: public ICoordinator
@@ -38,6 +81,8 @@ protected:
 
 	AccumulationBuffer *m_pAccumulationBuffer;
 	HistoryBuffer *m_pHistoryBuffer;
+
+	Path m_cameraPath;
 
 protected:
 	std::vector<SerialisableRenderTile*> m_renderTileBuffer;
