@@ -282,6 +282,13 @@ bool RenderTaskCoordinator::OnInitialise(void)
 		m_renderTileBuffer.push_back(new SerialisableRenderTile(-1, m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight));
 	}
 
+	// Add verts
+	m_cameraPath.AddVertex(Vector3(-10.0, -13, 5));
+	m_cameraPath.AddVertex(Vector3(-17.0, -13.0, 0.0));
+	m_cameraPath.AddVertex(Vector3(5.0, -10.0, 0.0));
+	m_cameraPath.AddVertex(Vector3(-10.0, -13, 5));
+	m_cameraPath.AddVertex(Vector3(-17.0, -13.0, 0.0));
+
 	// Update observer position
 	m_observerPosition = m_pEnvironment->GetCamera()->GetObserver();
 	m_moveFlag[0] = m_moveFlag[1] = m_moveFlag[2] = m_moveFlag[3];
@@ -387,8 +394,19 @@ bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 //----------------------------------------------------------------------------------------------
 void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordinator)
 {
+	static float a=0.f;
+
 	while(p_pCoordinator->IsRunning())
 	{
+		a += 0.0001f;
+		if (a > 1.f) a -= 1.f; 
+		p_pCoordinator->m_observerPosition = p_pCoordinator->m_cameraPath.GetPosition(a);
+		p_pCoordinator->m_pCamera->MoveTo(p_pCoordinator->m_observerPosition);
+		p_pCoordinator->m_bResetAccumulationBuffer = true;
+
+		std::cout << p_pCoordinator->m_observerPosition.ToString() << std::endl;
+		
+		/*
 		p_pCoordinator->m_bResetAccumulationBuffer |= 
 			(p_pCoordinator->m_moveFlag[0] |
 			 p_pCoordinator->m_moveFlag[1] |
@@ -412,7 +430,7 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 
 		p_pCoordinator->m_pCamera->MoveTo(observer);
 		p_pCoordinator->m_observerPosition = observer;
-
+		*/
 		boost::this_thread::sleep(boost::posix_time::millisec(20));
 	}
 }
