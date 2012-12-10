@@ -118,6 +118,21 @@ bool TaskController::ProcessClientInput(void)
 
 		IController::WriteToSocket(m_pSocket, "OK", 2);
 	}
+	else if (strCommandName == "path")
+	{
+		std::stringstream pathCommandStream;
+
+		pathCommandStream << "command=" << strCommandName
+			<< ";vertices=" << argumentMap["vertices"] << ";";
+
+		if (m_task.HasCoordinator())
+		{
+			std::cout << "Sending [" << pathCommandStream.str() << "]" << std::endl;
+			Resource::Send(pathCommandStream.str(), m_task.GetCoordinatorID(), true);
+		}
+
+		IController::WriteToSocket(m_pSocket, "OK", 2);
+	}
 	else if (strCommandName == "move")
 	{
 		std::stringstream moveCommandStream;

@@ -282,12 +282,8 @@ bool RenderTaskCoordinator::OnInitialise(void)
 		m_renderTileBuffer.push_back(new SerialisableRenderTile(-1, m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight));
 	}
 
-	// Add verts
-	m_cameraPath.AddVertex(Vector3(-10.0, -13, 5));
-	m_cameraPath.AddVertex(Vector3(-17.0, -13.0, 0.0));
-	m_cameraPath.AddVertex(Vector3(5.0, -10.0, 0.0));
-	m_cameraPath.AddVertex(Vector3(-10.0, -13, 5));
-	m_cameraPath.AddVertex(Vector3(-17.0, -13.0, 0.0));
+	// Clear camera path to make sure it's empty
+	m_cameraPath.Clear();
 
 	// Update observer position
 	m_observerPosition = m_pEnvironment->GetCamera()->GetObserver();
@@ -388,49 +384,74 @@ bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 		else
 			m_moveFlag[direction] = 0;
 	}
+	else if (command == "path")
+	{
+		m_cameraPath.Reset();
+
+		std::vector<Vector3> pointList;
+		arg.GetArgument("vertices", pointList);
+	
+		for (std::vector<Vector3>::iterator it = pointList.begin(); 
+			 it != pointList.end(); it++)
+		{
+			m_cameraPath.AddVertex(*it);
+		}
+	}
 
 	return true; 
 }
 //----------------------------------------------------------------------------------------------
 void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordinator)
 {
-	static float a=0.f;
+	static float t = 0.f;
 
 	while(p_pCoordinator->IsRunning())
 	{
-		a += 0.0001f;
-		if (a > 1.f) a -= 1.f; 
-		p_pCoordinator->m_observerPosition = p_pCoordinator->m_cameraPath.GetPosition(a);
-		p_pCoordinator->m_pCamera->MoveTo(p_pCoordinator->m_observerPosition);
-		p_pCoordinator->m_bResetAccumulationBuffer = true;
+		if (p_pCoordinator->m_cameraPath.IsEmpty())
+		{
+			p_pCoordinator->m_bResetAccumulationBuffer |= 
+				(p_pCoordinator->m_moveFlag[0] |
+				 p_pCoordinator->m_moveFlag[1] |
+				 p_pCoordinator->m_moveFlag[2] |
+				 p_pCoordinator->m_moveFlag[3]);
 
-		std::cout << p_pCoordinator->m_observerPosition.ToString() << std::endl;
+			const OrthonormalBasis &basis = p_pCoordinator->m_pCamera->GetFrame();
+			Vector3 observer = p_pCoordinator->m_pCamera->GetObserver();
+
+			if (p_pCoordinator->m_moveFlag[0])
+				observer += basis.GetU() * 0.1f;
+
+			if (p_pCoordinator->m_moveFlag[1])
+				observer -= basis.GetU() * 0.1f;
 		
-		/*
-		p_pCoordinator->m_bResetAccumulationBuffer |= 
-			(p_pCoordinator->m_moveFlag[0] |
-			 p_pCoordinator->m_moveFlag[1] |
-			 p_pCoordinator->m_moveFlag[2] |
-			 p_pCoordinator->m_moveFlag[3]);
-
-		const OrthonormalBasis &basis = p_pCoordinator->m_pCamera->GetFrame();
-		Vector3 observer = p_pCoordinator->m_pCamera->GetObserver();
-
-		if (p_pCoordinator->m_moveFlag[0])
-			observer += basis.GetU() * 0.1f;
-
-		if (p_pCoordinator->m_moveFlag[1])
-			observer -= basis.GetU() * 0.1f;
+			if (p_pCoordinator->m_moveFlag[2])
+				observer += basis.GetW() * 0.1f;
 		
-		if (p_pCoordinator->m_moveFlag[2])
-			observer += basis.GetW() * 0.1f;
-		
-		if (p_pCoordinator->m_moveFlag[3])
-			observer -= basis.GetW() * 0.1f;
+			if (p_pCoordinator->m_moveFlag[3])
+				observer -= basis.GetW() * 0.1f;
 
-		p_pCoordinator->m_pCamera->MoveTo(observer);
-		p_pCoordinator->m_observerPosition = observer;
-		*/
+			p_pCoordinator->m_pCamera->MoveTo(observer);
+			p_pCoordinator->m_observerPosition = observer;
+		} 
+		else 
+		{
+			t += 0.0001f;
+
+			if (t > 1.f) 
+			{
+				t = 0;
+				p_pCoordinator->m_cameraPath.Clear(); 
+			}
+			else
+			{
+				p_pCoordinator->m_observerPosition = p_pCoordinator->m_cameraPath.GetPosition(t);
+				p_pCoordinator->m_pCamera->MoveTo(p_pCoordinator->m_observerPosition);
+				p_pCoordinator->m_bResetAccumulationBuffer = true;
+
+				std::cout << p_pCoordinator->m_observerPosition.ToString() << std::endl;
+			}
+		}
+
 		boost::this_thread::sleep(boost::posix_time::millisec(20));
 	}
 }

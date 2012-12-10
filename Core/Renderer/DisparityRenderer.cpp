@@ -346,9 +346,12 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 				int iXF = iX / indirectFrequencySpread,
 					iYF = iY / indirectFrequencySpread;
 
-				/*
-				float t0 = 1.f - (float)(iX % indirectFrequencySpread) / (float)indirectFrequencySpread;
-				float t1 = 1.f - (float)(iY % indirectFrequencySpread) / (float)indirectFrequencySpread;
+				/**/
+				//float t0 = 1.f - ((float)iX / indirectFrequencySpread) / (float)indirectFrequencySpread;
+				//float t1 = 1.f - ((float)iY / indirectFrequencySpread) / (float)indirectFrequencySpread;
+
+				float t0 = 1.f - Maths::Frac((float)iX / indirectFrequencySpread),
+					t1 = 1.f - Maths::Frac((float)iY / indirectFrequencySpread);
 
 				Spectrum i0 = m_pRadianceBuffer->GetP(iXF, iYF)->Indirect,
 					i1 = m_pRadianceBuffer->GetP(iXF + 1, iYF)->Indirect,
@@ -358,9 +361,9 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 				pRadianceContext->Indirect = 
 					(((i0 * t0) + (i1 * (1 - t0))) * t1) + 
 					(((i2 * t0) + (i3 * (1 - t0))) * (1 - t1)); 
-				*/
+				/**/
 
-				pRadianceContext->Indirect = m_pRadianceBuffer->GetP(iXF, iYF)->Indirect;
+				// pRadianceContext->Indirect = m_pRadianceBuffer->GetP(iXF, iYF)->Indirect;
 				pRadianceContext->Final = pRadianceContext->Indirect * pRadianceContext->Albedo + pRadianceContext->Direct;
 
 				// pRadianceContext->Indirect = m_pRadianceBuffer->GetP(iX >> 2, iY >> 2)->Indirect;
