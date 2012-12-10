@@ -19,6 +19,8 @@ protected:
 	float m_fTime;
 public:
 	void AddVertex(Vector3 &p_pVertex) { m_vertexList.push_back(p_pVertex); }
+	bool IsEmpty(void) { return m_vertexList.empty(); }
+	void Clear(void) { m_vertexList.clear(); Reset(); } 
 	void Reset(void) { m_fTime = 0; }
 	void Move(float p_fDeltaT) { m_fTime += p_fDeltaT; }
 	Vector3 GetPosition(float p_fTime)
@@ -42,8 +44,8 @@ public:
 		std::cout << "Time: " << p_fTime << "Id : " << ptId[1] << ", Interval : " << interval << std::endl;
 
 		return Illumina::Core::Spline::Hermite(m_vertexList[ptId[1]], m_vertexList[ptId[2]], 
-			m_vertexList[ptId[1]] - m_vertexList[ptId[0]], m_vertexList[ptId[3]] - m_vertexList[ptId[2]],
-			interval);
+			Vector3::Normalize(m_vertexList[ptId[1]] - m_vertexList[ptId[0]]), Vector3::Normalize(m_vertexList[ptId[3]] - m_vertexList[ptId[2]]),
+			3.0f, interval);
 	}
 
 	Vector3 GetPosition(void) 

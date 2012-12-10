@@ -85,6 +85,7 @@ public:
 	{
 		this->AddCommand("init|script|max|min|width|height|batchsize|useadaptive|fps|usefps|rtpaddr|rtpport|usertp");
 		this->AddCommand("move|action|direction");
+		this->AddCommand("path|vertices");
 		this->AddCommand("exit");
 	}
 };

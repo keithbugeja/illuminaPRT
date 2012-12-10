@@ -79,8 +79,10 @@ void ImageDevice::EndFrame(void)
 		std::string imageFilename = (imagePath.parent_path() / (imageNameStream.str() + imagePath.extension().string())).string();
 		std::string imageTimeStamp = boost::lexical_cast<std::string>(Platform::ToSeconds(Platform::GetTime()));
 
+		
 		std::ofstream timestamps;
-		timestamps.open("timestamps.txt", std::ios::ate | std::ofstream::app);
+		std::string timestampFilename = (imagePath.parent_path() / "timestamps.txt").string();
+		timestamps.open(timestampFilename.c_str(), std::ios::ate | std::ofstream::app);
 		timestamps << imageFilename << "\t" << imageTimeStamp << std::endl;
 		timestamps.close();
 
