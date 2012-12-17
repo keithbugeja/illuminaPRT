@@ -89,6 +89,10 @@ inline Vector3& Vector3::operator-=(const Vector3 &p_vector) {
 	return *this = *this - p_vector;
 }
 //----------------------------------------------------------------------------------------------
+inline bool Vector3::Equals(const Vector3 &p_vector) const {
+	return Maths::FAbs(X - p_vector.X) + Maths::FAbs(Y - p_vector.Y) + Maths::FAbs(Z - p_vector.Z) < Maths::Epsilon * 3.f;
+}
+//----------------------------------------------------------------------------------------------
 inline bool Vector3::IsOnes() const {
 	return (X == Y && Y == Z && Z == 1.0f);
 }

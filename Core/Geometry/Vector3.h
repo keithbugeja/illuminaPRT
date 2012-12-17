@@ -73,6 +73,8 @@ namespace Illumina
 			inline Vector3& operator+=(const Vector3 &p_vector);
 			inline Vector3& operator-=(const Vector3 &p_vector);
 
+			inline bool Equals(const Vector3 &p_vector) const;
+
 			inline bool IsOnes() const;
 			inline bool IsZero() const;
 
