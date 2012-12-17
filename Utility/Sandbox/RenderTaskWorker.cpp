@@ -122,33 +122,15 @@ bool RenderTaskWorker::ComputeVariable(void)
 		const int kernelSize = 8;
 		const int halfKernelSize = kernelSize >> 1;
 
-		/*
-		packet.XSize += 8;
-		packet.YSize += 8;
-		packet.XStart = Maths::Max(0, packet.XStart - 4);
-		packet.YStart = Maths::Max(0, packet.YStart - 4);
-		*/
-
-		//std::cout << "Packet 0 : [" << packetO.XStart << ", " << packetO.YStart << ", " << packetO.XSize << ", " << packetO.YSize << "]" << std::endl;
-		//std::cout << "Packet 1 : [" << packet.XStart << ", " << packet.YStart << ", " << packet.XSize << ", " << packet.YSize << "]" << std::endl;
-
 		m_pRenderTile->Resize(packet.XSize, packet.YSize);
 		m_pRimmedRenderTile->Resize(packet.XSize + kernelSize, packet.YSize + kernelSize);
 
-		/* */
 		m_pRenderer->RenderRegion(m_pRimmedRenderTile->GetImageData(),
 			packet.XStart - halfKernelSize,
 			packet.YStart - halfKernelSize,
 			packet.XSize + kernelSize,
 			packet.YSize + kernelSize,
 			0, 0);
-
-		/*
-		m_pRenderer->RenderRegion(m_pRimmedRenderTile->GetImageData(),
-			Maths::Max(0, packet.XStart - (kernelSize >> 1)),
-			Maths::Max(0, packet.YStart - (kernelSize >> 1)), 
-			packet.XSize + kernelSize, packet.YSize + kernelSize);
-		*/
 
 		pixelsRendered += (packet.XSize + kernelSize) * (packet.YSize + kernelSize);
 
@@ -176,34 +158,25 @@ bool RenderTaskWorker::ComputeVariable(void)
 		//m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
 		/**/
 
-		RadianceContext *p1, *p2;
+		RadianceContext *pSrc, *pDst;
 		
 		for (int y = 0, ys = halfKernelSize; y < packet.YSize; y++, ys++)
 		{
-			for (int x = 0, xs = halfKernelSize; x < packet.XSize; x++, xs++)
-			{
-				p1 = m_pRimmedRenderTile->GetImageData()->GetP(xs, ys);
-				p2 = m_pRenderTile->GetImageData()->GetP(x, y);
+			pSrc = m_pRimmedRenderTile->GetImageData()->GetP(halfKernelSize, ys);
+			pDst = m_pRenderTile->GetImageData()->GetP(0, y);
 
-				p2->Final = p1->Final;
-				p2->Flags = RadianceContext::DF_Final | RadianceContext::DF_Computed;
+			for (int x = 0; x < packet.XSize; x++)
+			{
+				pDst->Final = pSrc->Final;
+				pDst->Flags = RadianceContext::DF_Final | RadianceContext::DF_Computed;
+
+				pSrc++;
+				pDst++;
 			}
 		}
 
 		// Tone mapping moved to workers
 		m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRenderTile->GetImageData());
-
-		/*
-		m_pRenderTile->Resize(packet.XSize, packet.YSize);
-
-		m_pRenderer->RenderRegion(m_pRenderTile->GetImageData(), 
-			packet.XStart, packet.YStart, packet.XSize, packet.YSize);
-
-		pixelsRendered += packet.XSize * packet.YSize;
-		*/
-
-		// Tone mapping moved to workers
-		// m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRenderTile->GetImageData());
 
 		//--------------------------------------------------
 		// Package result
@@ -375,15 +348,20 @@ bool RenderTaskWorker::OnSynchronise(void)
 	char buffer[2048];
 
 	Communicator::Receive(buffer, synchronisePacketSize, GetCoordinatorID(), Communicator::Coordinator_Worker_Job);
-	Vector3 *observer = (Vector3*)buffer;
+	SynchronisePacket *packet = (SynchronisePacket*)buffer;
 
-	if ((m_pCamera->GetObserver() != *observer))
+	std::cout << "Worker got sync packet [0] : " << packet->observerPosition.ToString() << std::endl;
+	std::cout << "Worker got sync packet [1] : " << packet->observerTarget.ToString() << std::endl;
+	std::cout << "Worker get sync packet [2] : " << packet->resetSeed << std::endl;
+
+	if (packet->resetSeed != 0)
 		m_unSamplerSeed = 0x03170317;
 	else
 		m_unSamplerSeed += 0x0101;
 
-	m_pCamera->MoveTo(*observer);
-
+	m_pCamera->MoveTo(packet->observerPosition);
+	m_pCamera->LookAt(packet->observerTarget);
+	
 	return true;
 }
 //----------------------------------------------------------------------------------------------

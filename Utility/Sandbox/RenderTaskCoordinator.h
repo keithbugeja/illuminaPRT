@@ -41,11 +41,15 @@ public:
 
 		float interval = Maths::Frac(p_fTime / segment);
 
-		std::cout << "Time: " << p_fTime << "Id : " << ptId[1] << ", Interval : " << interval << std::endl;
+		// std::cout << "Time: " << p_fTime << "Id : " << ptId[1] << ", Interval : " << interval << std::endl;
 
+		// return ((m_vertexList[ptId[2]] - m_vertexList[ptId[1]]) * interval) + m_vertexList[ptId[1]];
+
+		/* */
 		return Illumina::Core::Spline::Hermite(m_vertexList[ptId[1]], m_vertexList[ptId[2]], 
 			Vector3::Normalize(m_vertexList[ptId[1]] - m_vertexList[ptId[0]]), Vector3::Normalize(m_vertexList[ptId[3]] - m_vertexList[ptId[2]]),
-			3.0f, interval);
+			2.0f, interval);
+		/* */
 	}
 
 	Vector3 GetPosition(void) 
@@ -98,8 +102,11 @@ protected:
 
 protected:
 	int m_moveFlag[4];
-	Vector3 m_observerPosition;
-	bool m_bResetAccumulationBuffer;
+	Vector3 m_observerPosition,
+		m_observerTarget;
+
+	bool m_bResetAccumulation,
+		m_bResetWorkerSeed;
 
 protected:
 	static void InputThreadHandler(RenderTaskCoordinator *p_pCoordinator);

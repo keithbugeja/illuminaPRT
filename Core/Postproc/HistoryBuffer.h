@@ -55,6 +55,8 @@ namespace Illumina
 				m_nAccumulationDelay = m_historyBufferList.size();			
 				m_pAccumulationBuffer->Clear();
 
+
+				std::cout << "HistoryBuffer :: Reset()" << std::endl;
 				/*
 				for (int y = 0; y < m_pAccumulationBuffer->GetHeight(); ++y)
 					for (int x = 0; x < m_pAccumulationBuffer->GetWidth(); ++x)
@@ -160,6 +162,8 @@ namespace Illumina
 						}
 					}
 					//----------------------------------------------------------------------------------------------			
+				
+					std::cout << "HistoryBuffer :: Using " << m_nSampleCount << " samples in accumulation buffer" << std::endl;
 				}
 
 				return true;

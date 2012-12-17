@@ -47,73 +47,15 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 	// Handle supersampling independently
 	if (m_nSampleCount > 1)
 	{
-		/*
-		// Get sample stream
-		Vector2 *pSampleBuffer = new Vector2[m_nSampleCount];
-
-		// Render tile
-		for (int srcY = p_nRegionY, dstY = p_nBufferY; srcY < regionYEnd; ++srcY, ++dstY)
-		{
-			for (int srcX = p_nRegionX, dstX = p_nBufferX; srcX < regionXEnd; ++srcX, ++dstX)
-			{
-				// Get radiance context
-				pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
-
-				// Reset accumulator
-				accumulator.Final = 
-					accumulator.Indirect =
-					accumulator.Direct = 
-					accumulator.Albedo = 0.f;
-
-				// Get samples and filter them
-				m_pScene->GetSampler()->Get2DSamples(pSampleBuffer, m_nSampleCount);
-				(*m_pFilter)(pSampleBuffer, m_nSampleCount);
-
-				// Set context (used in IGI interleaved sampling)
-				context.SurfacePosition.Set(srcX, srcY);
-				context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
-
-				// Super sample
-				for (context.SampleIndex = 0; context.SampleIndex < m_nSampleCount; context.SampleIndex++)
-				{
-					// Fetch a ray from camera (should use ray differentials to speed this up)
-					m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 
-						pSampleBuffer[context.SampleIndex].U * rcpWidth, pSampleBuffer[context.SampleIndex].V * rcpHeight, pRadianceContext->ViewRay);
-				
-					// Get radiance
-					accumulator.Final += m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
-
-					// Accumulate components
-					accumulator.Direct += pRadianceContext->Direct;
-					accumulator.Indirect += pRadianceContext->Indirect;
-					accumulator.Albedo += pRadianceContext->Albedo;
-				}
-
-				// Set final values
-				pRadianceContext->Final = accumulator.Final * rcpSampleCount;
-				pRadianceContext->Direct = accumulator.Direct * rcpSampleCount;
-				pRadianceContext->Indirect = accumulator.Indirect * rcpSampleCount;
-				pRadianceContext->Albedo = accumulator.Albedo * rcpSampleCount;
-				
-				//pRadianceContext->Final.Set(Maths::Abs(pRadianceContext->Normal.Element[0]),
-				//	Maths::Abs(pRadianceContext->Normal.Element[1]), 
-				//	Maths::Abs(pRadianceContext->Normal.Element[2]));
-				
-			}
-		}
-
-		delete[] pSampleBuffer;
-		*/
 	}
 	else
 	{
+		// Set kernel, half-kernel and indirect half-kernel
 		const int kernelSize = 8; //6;
 		const int halfKernelSize = 4; //3;
-		
-		// const int indirectKernelSize = 4;
 		const int indirectHalfKernelSize = 1;
-
 		const int indirectFrequency = 0x04; //0x03; // /**/ 0x03; /* 0x01; /**/
+		const int indirectFrequencySpread = indirectFrequency; //(indirectFrequency * Maths::Pow(2, maxlevels));
 
 		// Compute tile bounds
 		int regionXEnd = p_nRegionX + p_nRegionWidth,
@@ -153,7 +95,8 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 				// context.SurfacePosition.Y = (int)(srcY * QuasiRandomSequence::Sobol2(context.SurfacePosition.Y));
 				// std::cout << "[" << context.SurfacePosition.X << ", " << context.SurfacePosition.Y << "]" << std::endl;
 
-				context.SurfacePosition.Set(srcX / indirectFrequency, srcY / indirectFrequency); // = context.SurfacePosition / indirectFrequency;
+				// Compute Radiance
+				context.SurfacePosition.Set(srcX / indirectFrequency, srcY / indirectFrequency);
 				pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
 			}
 		}
@@ -266,7 +209,6 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 		}
 
 		*/
-		int indirectFrequencySpread = indirectFrequency; //(indirectFrequency * Maths::Pow(2, maxlevels));
 
 		/*
 		for (int y = 0; y < regionHeight; y++)
@@ -325,15 +267,20 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 
 		// Direct
 		/* */
-		for (int srcY = p_nRegionY, dstY = p_nBufferY, iY = indirectFrequency; 
-			srcY < regionYEnd; ++srcY, ++dstY, iY++)
-		{
-			for (int srcX = p_nRegionX, dstX = p_nBufferX, iX = indirectFrequency; 
-				srcX < regionXEnd; ++srcX, ++dstX, iX++)
-			{
-				// Get radiance context
-				pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
+		RadianceContext *rad00, *rad01;
+		Spectrum i0, i1, i2, i3;
+		int pixelX, pixelY;
+		float t0, t1;
 
+		for (int srcY = p_nRegionY, dstY = p_nBufferY, iY = 0; 
+			 srcY < regionYEnd; ++srcY, ++dstY, ++iY)
+		{
+			// Get radiance context
+			pRadianceContext = p_pRadianceBuffer->GetP(p_nBufferX, dstY);
+
+			for (int srcX = p_nRegionX, iX = 0; 
+				 srcX < regionXEnd; ++srcX, ++iX)
+			{
 				// Set integrator context
 				context.SurfacePosition.Set((float)srcX, (float)srcY);
 				context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
@@ -341,35 +288,51 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 				// Get ray from camera
 				m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, sample.U * rcpWidth, sample.V * rcpHeight, pRadianceContext->ViewRay);
 
-				IIntegrator::Direct(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
+				// Get pixel coordinates	
+				pixelX = iX / indirectFrequencySpread;
+				pixelY = iY / indirectFrequencySpread;
+
+				// If we haven't drawn this
+				if (iX % indirectFrequencySpread != 0 || iY % indirectFrequencySpread != 0)
+				{
+					// Compute direct lighting
+					IIntegrator::Direct(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
 				
-				int iXF = iX / indirectFrequencySpread,
-					iYF = iY / indirectFrequencySpread;
-
-				/**/
-				//float t0 = 1.f - ((float)iX / indirectFrequencySpread) / (float)indirectFrequencySpread;
-				//float t1 = 1.f - ((float)iY / indirectFrequencySpread) / (float)indirectFrequencySpread;
-
-				float t0 = 1.f - Maths::Frac((float)iX / indirectFrequencySpread),
+					// Bilinear interpolation of indirect lighting (upscale)
+					t0 = 1.f - Maths::Frac((float)iX / indirectFrequencySpread);
 					t1 = 1.f - Maths::Frac((float)iY / indirectFrequencySpread);
 
-				Spectrum i0 = m_pRadianceBuffer->GetP(iXF, iYF)->Indirect,
-					i1 = m_pRadianceBuffer->GetP(iXF + 1, iYF)->Indirect,
-					i2 = m_pRadianceBuffer->GetP(iXF, iYF + 1)->Indirect,
-					i3 = m_pRadianceBuffer->GetP(iXF + 1, iYF + 1)->Indirect;
+					rad00 = m_pRadianceBuffer->GetP(pixelX, pixelY);
+					rad01 = m_pRadianceBuffer->GetP(pixelX, pixelY + 1);
 
-				pRadianceContext->Indirect = 
-					(((i0 * t0) + (i1 * (1 - t0))) * t1) + 
-					(((i2 * t0) + (i3 * (1 - t0))) * (1 - t1)); 
-				/**/
+					i0 = rad00->Indirect; rad00++;
+					i1 = rad00->Indirect;
+					i2 = rad01->Indirect; rad01++;
+					i3 = rad01->Indirect;
 
-				// pRadianceContext->Indirect = m_pRadianceBuffer->GetP(iXF, iYF)->Indirect;
+					pRadianceContext->Indirect = 
+						(((i0 * t0) + (i1 * (1 - t0))) * t1) + 
+						(((i2 * t0) + (i3 * (1 - t0))) * (1 - t1)); 
+				}
+				else
+				{
+					// Use values from precomputed buffer
+					rad00 = m_pRadianceBuffer->GetP(pixelX, pixelY);
+
+					pRadianceContext->Albedo = rad00->Albedo;
+					pRadianceContext->Direct = rad00->Direct;
+					pRadianceContext->Indirect = rad00->Indirect;
+					pRadianceContext->Distance = rad00->Distance;
+				}
+
+				// Compute final radiance value
 				pRadianceContext->Final = pRadianceContext->Indirect * pRadianceContext->Albedo + pRadianceContext->Direct;
-
-				// pRadianceContext->Indirect = m_pRadianceBuffer->GetP(iX >> 2, iY >> 2)->Indirect;
-				// pRadianceContext->Final = pRadianceContext->Indirect * pRadianceContext->Albedo; // + pRadianceContext->Direct;				
+				
+				// Move to adjacent radiance texel
+				pRadianceContext++;
 			}
 		}
+
 		/* */
 
 		/*
