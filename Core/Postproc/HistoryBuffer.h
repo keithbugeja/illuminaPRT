@@ -121,10 +121,12 @@ namespace Illumina
 
 						for (int x = p_nRegionX; x < p_nRegionWidth; ++x)
 						{
-							pHistoryContext->Final = pHistoryContext->Final - pDiscardContext->Final + pInputContext->Final;
+							// pHistoryContext->Final = pHistoryContext->Final - pDiscardContext->Final + pInputContext->Final;
+							pHistoryContext->Final = (pHistoryContext->Final + pInputContext->Final) * 0.5;
 							pDiscardContext->Final = pInputContext->Final;
 
-							pOutputContext->Final = pHistoryContext->Final * countInv;
+							// pOutputContext->Final = pHistoryContext->Final * countInv;
+							pOutputContext->Final = pHistoryContext->Final;
 							pOutputContext->Flags |= RadianceContext::DF_Accumulated;
 
 							pInputContext++; pOutputContext++; pDiscardContext++; pHistoryContext++;
@@ -136,7 +138,8 @@ namespace Illumina
 				{
 					m_nSampleCount++;
 					
-					float countInv = 1.f / (m_historyBufferList.size() + m_nSampleCount);
+					// float countInv = 1.f / (m_historyBufferList.size() + m_nSampleCount);
+					float countInv = 1.f / (1 + m_nSampleCount);
 
 					//----------------------------------------------------------------------------------------------			
 					for (int y = p_nRegionY; y < p_nRegionHeight; ++y)
@@ -152,7 +155,8 @@ namespace Illumina
 						for (int x = p_nRegionX; x < p_nRegionWidth; ++x)
 						{
 							pAccumulatorContext->Final += pDiscardContext->Final;
-							pHistoryContext->Final = pHistoryContext->Final - pDiscardContext->Final + pInputContext->Final;
+							// pHistoryContext->Final = pHistoryContext->Final - pDiscardContext->Final + pInputContext->Final;
+							pHistoryContext->Final = (pHistoryContext->Final + pInputContext->Final) * 0.5;
 							pDiscardContext->Final = pInputContext->Final;
 						
 							pOutputContext->Final = (pHistoryContext->Final + pAccumulatorContext->Final) * countInv;
