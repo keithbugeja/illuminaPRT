@@ -46,6 +46,8 @@ public:
 		// return ((m_vertexList[ptId[2]] - m_vertexList[ptId[1]]) * interval) + m_vertexList[ptId[1]];
 
 		/* */
+		return Illumina::Core::Spline::LaGrange(m_vertexList, p_fTime);
+
 		return Illumina::Core::Spline::Hermite(m_vertexList[ptId[1]], m_vertexList[ptId[2]], 
 			Vector3::Normalize(m_vertexList[ptId[1]] - m_vertexList[ptId[0]]), Vector3::Normalize(m_vertexList[ptId[3]] - m_vertexList[ptId[2]]),
 			2.0f, interval);

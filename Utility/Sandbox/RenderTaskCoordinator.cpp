@@ -400,8 +400,8 @@ bool RenderTaskCoordinator::Compute(void)
 
 	// Accumulation
 	eventStart = Platform::GetTime();
-	// m_pAccumulationBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-	m_pHistoryBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	m_pAccumulationBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	// m_pHistoryBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 	accumulationTime = Platform::ToSeconds(eventComplete - eventStart);
 
@@ -417,8 +417,8 @@ bool RenderTaskCoordinator::Compute(void)
 	{
 		std::cout << "<< Reset Accumulation Buffer >>" << std::endl;
 
-		//m_pAccumulationBuffer->Reset();
-		m_pHistoryBuffer->Reset();
+		m_pAccumulationBuffer->Reset();
+		// m_pHistoryBuffer->Reset();
 		m_bResetAccumulation = false;
 	}
 	eventComplete = Platform::GetTime();
