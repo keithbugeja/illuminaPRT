@@ -400,8 +400,8 @@ bool RenderTaskCoordinator::Compute(void)
 
 	// Accumulation
 	eventStart = Platform::GetTime();
-	m_pAccumulationBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-	// m_pHistoryBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	// m_pAccumulationBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	m_pHistoryBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 	accumulationTime = Platform::ToSeconds(eventComplete - eventStart);
 
@@ -417,8 +417,8 @@ bool RenderTaskCoordinator::Compute(void)
 	{
 		std::cout << "<< Reset Accumulation Buffer >>" << std::endl;
 
-		m_pAccumulationBuffer->Reset();
-		// m_pHistoryBuffer->Reset();
+		// m_pAccumulationBuffer->Reset();
+		m_pHistoryBuffer->Reset();
 		m_bResetAccumulation = false;
 	}
 	eventComplete = Platform::GetTime();
@@ -476,9 +476,9 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 		} 
 		else 
 		{
-			t += 0.00005f;
+			t += 0.0005f;
 
-			if (t > 1.f) 
+			if (t >= 1.f) 
 			{
 				t = 0;
 				p_pCoordinator->m_cameraPath.Clear(); 
