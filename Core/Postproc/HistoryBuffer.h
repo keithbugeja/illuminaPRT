@@ -109,7 +109,7 @@ namespace Illumina
 				{
 					m_nAccumulationDelay--;
 
-					float countInv = 1.f / m_historyBufferList.size();
+					// float countInv = 1.f / m_historyBufferList.size();
 
 					//----------------------------------------------------------------------------------------------			
 					for (int y = p_nRegionY; y < p_nRegionHeight; ++y)
@@ -118,12 +118,19 @@ namespace Illumina
 						pOutputContext = p_pOutput->GetP(p_nRegionX, y);
 						pDiscardContext = pFrameOut->GetP(p_nRegionX, y);
 						pHistoryContext = m_pHistoryBuffer->GetP(p_nRegionX, y);
-
+						
 						for (int x = p_nRegionX; x < p_nRegionWidth; ++x)
 						{
-							// pHistoryContext->Final = pHistoryContext->Final - pDiscardContext->Final + pInputContext->Final;
-							pHistoryContext->Final = (pHistoryContext->Final + pInputContext->Final) * 0.5;
 							pDiscardContext->Final = pInputContext->Final;
+
+							// Uniform temporal weighting
+							// pHistoryContext->Final = pHistoryContext->Final - pDiscardContext->Final + pInputContext->Final;
+							// Uniform temporal weighting
+							
+							// Exponentially averaged weighting
+							// pHistoryContext->Final = (pHistoryContext->Final + pInputContext->Final) * 0.5;
+							pHistoryContext->Final = pHistoryContext->Final * 0.4f + pInputContext->Final * 0.6f;
+							// Exponentially averaged weighting
 
 							// pOutputContext->Final = pHistoryContext->Final * countInv;
 							pOutputContext->Final = pHistoryContext->Final;
@@ -135,11 +142,36 @@ namespace Illumina
 					//----------------------------------------------------------------------------------------------			
 				}
 				else
-				{
+				{					
+					//if (m_nSampleCount == 0)
+					//{
+					//	for (int y = p_nRegionY; y < p_nRegionHeight; ++y)
+					//	{
+					//		pHistoryContext = m_pHistoryBuffer->GetP(p_nRegionX, y);
+
+					//		for (int x = p_nRegionX; x < p_nRegionWidth; ++x)
+					//		{
+					//			pHistoryContext->Final = 0.f;
+
+					//			for (int t = 0; t < m_historyBufferList.size(); ++t)
+					//			{
+					//				pHistoryContext->Final += m_historyBufferList[t]->GetP(x,y)->Final; 
+					//			}
+
+					//			pHistoryContext++;
+					//		}
+					//	}
+					//}
+					
 					m_nSampleCount++;
 					
-					// float countInv = 1.f / (m_historyBufferList.size() + m_nSampleCount);
-					float countInv = 1.f / (1 + m_nSampleCount);
+					// Uniform temporal weighting
+					float countInv = 1.f / (m_historyBufferList.size() + m_nSampleCount);
+					// Uniform temporal weighting
+
+					// Exponentially averaged weighting
+					// float countInv = 1.f / (1 + m_nSampleCount);
+					// Exponentially averaged weighting
 
 					//----------------------------------------------------------------------------------------------			
 					for (int y = p_nRegionY; y < p_nRegionHeight; ++y)
@@ -154,9 +186,15 @@ namespace Illumina
 
 						for (int x = p_nRegionX; x < p_nRegionWidth; ++x)
 						{
+							// Uniform temporal weighting
+							pHistoryContext->Final = pHistoryContext->Final - pDiscardContext->Final + pInputContext->Final;
+							// Uniform temporal weighting
+
+							// Exponentially averaged weighting
+							// pHistoryContext->Final = (pHistoryContext->Final + pInputContext->Final) * 0.5;
+							// Exponentially averaged weighting
+
 							pAccumulatorContext->Final += pDiscardContext->Final;
-							// pHistoryContext->Final = pHistoryContext->Final - pDiscardContext->Final + pInputContext->Final;
-							pHistoryContext->Final = (pHistoryContext->Final + pInputContext->Final) * 0.5;
 							pDiscardContext->Final = pInputContext->Final;
 						
 							pOutputContext->Final = (pHistoryContext->Final + pAccumulatorContext->Final) * countInv;

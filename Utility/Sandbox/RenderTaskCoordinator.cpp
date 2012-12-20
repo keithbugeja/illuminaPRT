@@ -54,7 +54,6 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	if (pArgumentMap->GetArgument("min", m_renderTaskContext.WorkersRequired))
 		std::cout << "Workers required [" << m_renderTaskContext.WorkersRequired << "]" << std::endl;
 
-
 	//----------------------------------------------------------------------------------------------
 	// Initialise engine and environment
 	//----------------------------------------------------------------------------------------------
@@ -251,6 +250,8 @@ bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 		{
 			m_cameraPath.AddVertex(*it);
 		}
+
+		m_cameraPath.PreparePath();
 	}
 
 	return true; 

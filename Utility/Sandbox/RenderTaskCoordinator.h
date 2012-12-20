@@ -16,42 +16,30 @@ class Path
 {
 protected:
 	std::vector<Vector3> m_vertexList;
+	std::vector<float> m_pivotList;
 	float m_fTime;
 public:
-	void AddVertex(Vector3 &p_pVertex) { m_vertexList.push_back(p_pVertex); }
 	bool IsEmpty(void) { return m_vertexList.empty(); }
-	void Clear(void) { m_vertexList.clear(); Reset(); } 
+	void Clear(void) { m_vertexList.clear(); m_pivotList.clear(); Reset(); } 
 	void Reset(void) { m_fTime = 0; }
 	void Move(float p_fDeltaT) { m_fTime += p_fDeltaT; }
+
+	void AddVertex(const Vector3 &p_pVertex) 
+	{ 
+		m_vertexList.push_back(p_pVertex); 
+	}
+
+	void PreparePath(void)
+	{
+		Illumina::Core::Interpolator::ComputePivots(m_vertexList, m_pivotList);
+	}
+
 	Vector3 GetPosition(float p_fTime)
 	{
-		if (m_vertexList.size() < 4)
+		if (m_vertexList.size() <= 2)
 			return Vector3::Zero;
 
-		int lbId = 1,
-			ubId = m_vertexList.size() - 2,
-			ptId[4];
-
-		ptId[1] = p_fTime * ubId + lbId;
-		ptId[0] = ptId[1] - 1;
-		ptId[2] = ptId[1] + 1;
-		ptId[3] = ptId[2] + 1;
-
-		float segment = 1.f/ubId;
-
-		float interval = Maths::Frac(p_fTime / segment);
-
-		// std::cout << "Time: " << p_fTime << "Id : " << ptId[1] << ", Interval : " << interval << std::endl;
-
-		// return ((m_vertexList[ptId[2]] - m_vertexList[ptId[1]]) * interval) + m_vertexList[ptId[1]];
-
-		/* */
-		return Illumina::Core::Spline::LaGrange(m_vertexList, p_fTime);
-
-		return Illumina::Core::Spline::Hermite(m_vertexList[ptId[1]], m_vertexList[ptId[2]], 
-			Vector3::Normalize(m_vertexList[ptId[1]] - m_vertexList[ptId[0]]), Vector3::Normalize(m_vertexList[ptId[3]] - m_vertexList[ptId[2]]),
-			2.0f, interval);
-		/* */
+		return Illumina::Core::Interpolator::Lagrange(m_vertexList, m_pivotList, p_fTime);
 	}
 
 	Vector3 GetPosition(void) 
