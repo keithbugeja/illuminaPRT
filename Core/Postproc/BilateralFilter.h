@@ -49,7 +49,7 @@ namespace Illumina
 					intensityWeight, 
 					distanceWeight;
 
-				float sigmaS = m_nKernelSize,
+				float sigmaS = (float)m_nKernelSize,
 					sigmaR = 0.5f;
 
 				// m_nKernelSize = 3;
@@ -93,7 +93,7 @@ namespace Illumina
 							for (int dx = xs; dx < xe; dx++)
 							{
 								pNeighbourContext = p_pInput->GetP(dx, dy);
-								distanceWeight = Statistics::GaussianPDF(Maths::Sqrt((dx - x) * (dx - x) + (dy - y) * (dy - y)), 0, 16.f);
+								distanceWeight = Statistics::GaussianPDF(Maths::Sqrt((float)((dx - x) * (dx - x) + (dy - y) * (dy - y))), 0, 16.f);
 								intensityWeight = 1.0f;
 								//intensityWeight = gaussian[(dx - xs) + (dy - ys) * 7];
 								//intensityWeight = Statistics::GaussianPDF(pKernelContext->Distance - pNeighbourContext->Distance, 0, 32.f);

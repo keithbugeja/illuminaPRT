@@ -96,8 +96,8 @@ namespace Illumina
 
 						for(totalIndirectWeight = totalDirectWeight = 0; remainingSamples-- > 0;)
 						{
-							sx = xs + m_nKernelSize * QuasiRandomSequence::VanDerCorput(maxSamples - remainingSamples);
-							sy = ys + m_nKernelSize * QuasiRandomSequence::Sobol2(maxSamples - remainingSamples);
+							sx = (int)(xs + m_nKernelSize * QuasiRandomSequence::VanDerCorput(maxSamples - remainingSamples));
+							sy = (int)(ys + m_nKernelSize * QuasiRandomSequence::Sobol2(maxSamples - remainingSamples));
 
 							// sx = xs + remainingSamples % m_nKernelSize;
 							// sy = ys + remainingSamples / m_nKernelSize;
@@ -106,7 +106,7 @@ namespace Illumina
 
 							// if (pNeighbourContext->Flags & RadianceContext::DF_Direct)
 							{
-								float s = (sx - x) * (sx - x) + (sy - y) * (sy - y);
+								float s = (float)((sx - x) * (sx - x) + (sy - y) * (sy - y));
 								weight = Maths::Exp(-0.5f * (s*s) / (m_nKernelSize * m_nKernelSize));
 
 								directWeight = weight * (pNeighbourContext->Flags & RadianceContext::DF_Direct) / RadianceContext::DF_Direct;

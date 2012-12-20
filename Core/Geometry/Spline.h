@@ -16,62 +16,60 @@ namespace Illumina
 {
 	namespace Core
 	{
-		class Spline
+		class Interpolator
 		{
-		public:
-			static float LaGrangePolynomial(int p_j, float p_t, std::vector<float> &p_points)
+		private:
+			static float LagrangePolynomial(int p_j, float p_t, std::vector<float> &p_points)
 			{
-				float product = 1,
-					part;
+				float product = 1;
 
 				for (int m = 0; m < p_points.size(); m++)
 				{
 					if (m == p_j) continue;
-					part = (p_t - p_points[m]) / (p_points[p_j] - p_points[m]); 
-					product *= part;
-					// std::cout << "LGP : [" << m << " : " << p_j << " :[" << p_points[p_j] << " : " << p_points[m] << "]:" << product << " : " << part << "]" << std::endl;
+					product *= (p_t - p_points[m]) / (p_points[p_j] - p_points[m]); 
 				}
 
 				return product;
 			}
 
-			static Vector3 LaGrange(std::vector<Vector3> &p_points, float p_t)
+		public:
+			static void ComputePivots(std::vector<Vector3> &p_points, std::vector<float> &p_pivotList)
+			{
+				float totalDistance = 0;
+				p_pivotList.clear();
+				p_pivotList.push_back(0);
+
+				// Compute Euclidean distance between points
+				for (int j = 1; j < p_points.size(); j++)
+				{
+					totalDistance += (p_points[j] - p_points[j - 1]).Length();
+					p_pivotList.push_back(totalDistance);			
+				}
+
+				// Scale in the range [0 .. 1)
+				for (int j = 1; j < p_points.size(); j++)
+				{
+					p_pivotList[j] = p_pivotList[j] / totalDistance;
+				}
+			}
+
+			static Vector3 Lagrange(std::vector<Vector3> &p_pointList, std::vector<float> &p_pivotList, float p_t)
 			{
 				// O(N^2) : Not very efficient for large paths!
-
 				Vector3 finalPoint = 0.f;
 
-				float totalDistance, distance;
-				std::vector<float> functionPoints;
-				
-				totalDistance = 0;
-				functionPoints.push_back(totalDistance);
-
-				for (int j = 1; j < p_points.size(); j++)
+				for (int j = 0; j < p_pointList.size(); j++)
 				{
-					distance = (p_points[j] - p_points[j - 1]).Length();
-					totalDistance += distance;
-					functionPoints.push_back(totalDistance);			
-				}
-
-				// std::cout << "Total Distance : " << totalDistance << std::endl; 
-
-				for (int j = 1; j < p_points.size(); j++)
-				{
-					functionPoints[j] = functionPoints[j] / totalDistance;
-				}
-
-				for (int j = 0; j < p_points.size(); j++)
-				{
-					float l = LaGrangePolynomial(j, p_t, functionPoints);
-
-					finalPoint += p_points[j] * l; 
-					// std::cout << "[" << j << " : " << l << " : " << finalPoint.ToString() << "]" << std::endl;
+					finalPoint += p_pointList[j] * LagrangePolynomial(j, p_t, p_pivotList);
 				}
 
 				return finalPoint;
 			}
+		};
 
+		class Spline
+		{
+		public:
 			template <class T>
 			static T Hermite(const T &p_x0, const T &p_x1, const T &p_m0, const T &p_m1, float p_t)
 			{
