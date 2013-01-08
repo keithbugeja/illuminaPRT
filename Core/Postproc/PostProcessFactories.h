@@ -114,7 +114,37 @@ namespace Illumina
 				return new DragoTone();
 			}
 		};
-		
+
+		class MotionBlurFactory : public Illumina::Core::Factory<Illumina::Core::IPostProcess>
+		{
+		public:
+			Illumina::Core::IPostProcess *CreateInstance(void)
+			{
+				return new MotionBlur();
+			}
+
+			// Arguments
+			// -- Id
+			Illumina::Core::IPostProcess *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strId;
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId);
+
+				return CreateInstance();
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(const std::string &p_strId)
+			{
+				return new MotionBlur(p_strId);
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(int dummy)
+			{
+				return new MotionBlur();
+			}
+		};
+
 		class HistoryBufferFactory : public Illumina::Core::Factory<Illumina::Core::IPostProcess>
 		{
 		public:

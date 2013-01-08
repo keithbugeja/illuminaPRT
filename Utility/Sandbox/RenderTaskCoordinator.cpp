@@ -89,6 +89,11 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_pHistoryBuffer->SetHistoryBuffer(m_pRadianceHistoryBuffer, m_pRadianceAccumulationBuffer, 6);
 	m_pHistoryBuffer->Reset();
 
+	// Motion blur filter
+	m_pMotionBlurFilter = (MotionBlur*)m_pEngineKernel->GetPostProcessManager()->CreateInstance("MotionBlur", "MotionBlur", "");
+	m_pMotionBlurFilter->SetExternalBuffer(m_pRadianceBuffer, 6);
+	m_pMotionBlurFilter->Reset();
+
 	// Open rendering device for output
 	m_pRenderer->GetDevice()->Open();
 
@@ -402,7 +407,8 @@ bool RenderTaskCoordinator::Compute(void)
 	// Accumulation
 	eventStart = Platform::GetTime();
 	// m_pAccumulationBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-	m_pHistoryBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	// m_pHistoryBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	m_pMotionBlurFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 	accumulationTime = Platform::ToSeconds(eventComplete - eventStart);
 
@@ -419,7 +425,8 @@ bool RenderTaskCoordinator::Compute(void)
 		std::cout << "<< Reset Accumulation Buffer >>" << std::endl;
 
 		// m_pAccumulationBuffer->Reset();
-		m_pHistoryBuffer->Reset();
+		// m_pHistoryBuffer->Reset();
+		m_pMotionBlurFilter->Reset();
 		m_bResetAccumulation = false;
 	}
 	eventComplete = Platform::GetTime();
@@ -438,7 +445,7 @@ bool RenderTaskCoordinator::Compute(void)
 //----------------------------------------------------------------------------------------------
 void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordinator)
 {
-	static float t = 0.f;
+	static float time = 0.f;
 
 	while(p_pCoordinator->IsRunning())
 	{
@@ -477,17 +484,20 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 		} 
 		else 
 		{
-			t += 0.0005f;
+			time += 0.0005f;
 
-			if (t >= 1.f) 
+			if (time >= 1.f) 
 			{
-				t = 0;
+				time = 0; 
+
 				p_pCoordinator->m_cameraPath.Clear(); 
+				p_pCoordinator->m_bResetWorkerSeed = true;
+				p_pCoordinator->m_bResetAccumulation = true;
 			}
 			else
 			{
-				p_pCoordinator->m_observerPosition = p_pCoordinator->m_cameraPath.GetPosition(t - 0.001f);
-				p_pCoordinator->m_observerTarget = p_pCoordinator->m_cameraPath.GetPosition(t + 0.001f);
+				p_pCoordinator->m_observerPosition = p_pCoordinator->m_cameraPath.GetPosition(time - 0.001f);
+				p_pCoordinator->m_observerTarget = p_pCoordinator->m_cameraPath.GetPosition(time + 0.001f);
 				p_pCoordinator->m_pCamera->MoveTo(p_pCoordinator->m_observerPosition);
 				p_pCoordinator->m_pCamera->LookAt(p_pCoordinator->m_observerTarget);
 

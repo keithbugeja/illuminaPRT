@@ -75,6 +75,7 @@ protected:
 		*m_pReconstructionBuffer,
 		*m_pDragoTone; 
 
+	MotionBlur *m_pMotionBlurFilter;
 	AccumulationBuffer *m_pAccumulationBuffer;
 	HistoryBuffer *m_pHistoryBuffer;
 
