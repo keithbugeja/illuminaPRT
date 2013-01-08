@@ -10,7 +10,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 
-#include "Device/ImageDevice.h"
+#include "Device/BufferedImageDevice.h"
 
 #include "Image/Image.h"
 #include "Image/ImageIO.h"
@@ -19,121 +19,168 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-ImageDevice::ImageDevice(int p_nWidth, int p_nHeight, bool p_bTimeStamp, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit)
-	: m_pImage(new Image(p_nWidth, p_nHeight))
+BufferedImageDevice::BufferedImageDevice(int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, int p_nBufferSize, bool p_bKillFilterOnExit)
+	: m_pImage(NULL)
 	, m_pImageIO(p_pImageIO)
-	, m_nFrameNumber(0)
-	, m_bTimeStamp(p_bTimeStamp)
+	, m_nImageCacheBaseFrame(0)
+	, m_nImageCacheIndex(0)
 	, m_strFilename(p_strFilename)
 	, m_bKillFilterOnExit(p_bKillFilterOnExit)
-{ }
+{ 
+	ImageCache imageCache;
+
+	for (int frame = 0; frame < p_nBufferSize; frame++)
+	{
+		imageCache.m_dfTimeStamp = 0;
+		imageCache.m_pImage = new Image(p_nWidth, p_nHeight);
+
+		m_imageCacheList.push_back(imageCache);
+	}
+	
+	m_pImage = m_imageCacheList[0].m_pImage;
+}
 //----------------------------------------------------------------------------------------------
-ImageDevice::ImageDevice(const std::string &p_strName, int p_nWidth, int p_nHeight, bool p_bTimeStamp, IImageIO *p_pImageIO, const std::string &p_strFilename, bool p_bKillFilterOnExit)
+BufferedImageDevice::BufferedImageDevice(const std::string &p_strName, int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, int p_nBufferSize, bool p_bKillFilterOnExit)
 	: IDevice(p_strName) 
-	, m_pImage(new Image(p_nWidth, p_nHeight))
+	, m_pImage(NULL)
 	, m_pImageIO(p_pImageIO)
-	, m_nFrameNumber(0)
-	, m_bTimeStamp(p_bTimeStamp)
+	, m_nImageCacheBaseFrame(0)
+	, m_nImageCacheIndex(0)
 	, m_strFilename(p_strFilename)
 	, m_bKillFilterOnExit(p_bKillFilterOnExit)
-{ }
+{ 
+	ImageCache imageCache;
+
+	for (int frame = 0; frame < p_nBufferSize; frame++)
+	{
+		imageCache.m_dfTimeStamp = 0;
+		imageCache.m_pImage = new Image(p_nWidth, p_nHeight);
+
+		m_imageCacheList.push_back(imageCache);
+	}
+	
+	m_pImage = m_imageCacheList[0].m_pImage;
+}
 //----------------------------------------------------------------------------------------------
-ImageDevice::~ImageDevice() 
+BufferedImageDevice::~BufferedImageDevice() 
 {
-	delete m_pImage;
+	for (std::vector<ImageCache>::iterator imageIterator = m_imageCacheList.begin(); 
+		 imageIterator != m_imageCacheList.end(); imageIterator++)
+	{
+		delete (*imageIterator).m_pImage;
+	}
+
+	m_imageCacheList.clear();
 
 	if (m_bKillFilterOnExit)
 		delete m_pImageIO;
 }
 //----------------------------------------------------------------------------------------------
-int ImageDevice::GetWidth(void) const { 
+int BufferedImageDevice::GetWidth(void) const { 
 	return m_pImage->GetWidth(); 
 }
 //----------------------------------------------------------------------------------------------
-int ImageDevice::GetHeight(void) const { 
+int BufferedImageDevice::GetHeight(void) const { 
 	return m_pImage->GetHeight(); 
 }
 //----------------------------------------------------------------------------------------------
-IDevice::AccessType ImageDevice::GetAccessType(void) const {
+IDevice::AccessType BufferedImageDevice::GetAccessType(void) const {
 	return IDevice::ReadWrite;
 }
 //----------------------------------------------------------------------------------------------
-bool ImageDevice::Open(void) { 
+bool BufferedImageDevice::Open(void)
+{ 
+	m_nImageCacheBaseFrame = 0;
+	m_nImageCacheIndex = 0;
+
 	return true; 
 }
 //----------------------------------------------------------------------------------------------
-void ImageDevice::Close(void) { }
+void BufferedImageDevice::Close(void) { }
 //----------------------------------------------------------------------------------------------
-void ImageDevice::BeginFrame(void) { }
-//----------------------------------------------------------------------------------------------
-void ImageDevice::EndFrame(void)  
+void BufferedImageDevice::BeginFrame(void) 
 {
-	if (m_bTimeStamp) 
+}
+//----------------------------------------------------------------------------------------------
+void BufferedImageDevice::EndFrame(void)  
+{
+	std::cout << "BufferedImage : [" << m_nImageCacheIndex << " of " << m_imageCacheList.size() << "]" << std::endl;
+
+	m_imageCacheList[m_nImageCacheIndex].m_dfTimeStamp = Platform::ToSeconds(Platform::GetTime());
+
+	// Next frame
+	if (++m_nImageCacheIndex == m_imageCacheList.size())
 	{
-		m_nFrameNumber++;
-
+		// Commit
 		boost::filesystem::path imagePath(m_strFilename);
-		
-		std::stringstream imageNameStream;
-		imageNameStream << std::setfill('0') << std::setw(5) << m_nFrameNumber;
-		std::string imageFilename = (imagePath.parent_path() / (imageNameStream.str() + imagePath.extension().string())).string();
-		std::string imageTimeStamp = boost::lexical_cast<std::string>(Platform::ToSeconds(Platform::GetTime()));
 
-		
+		// Open timestamps file
 		std::ofstream timestamps;
 		std::string timestampFilename = (imagePath.parent_path() / "timestamps.txt").string();
 		timestamps.open(timestampFilename.c_str(), std::ios::ate | std::ofstream::app);
-		timestamps << imageFilename << "\t" << imageTimeStamp << std::endl;
+
+		for (int frame = 0; frame < m_imageCacheList.size(); frame++)
+		{
+			std::stringstream imageNameStream;
+			imageNameStream << std::setfill('0') << std::setw(5) << (frame + m_nImageCacheBaseFrame);
+			std::string imageFilename = (imagePath.parent_path() / (imageNameStream.str() + imagePath.extension().string())).string();
+			std::string imageTimeStamp = boost::lexical_cast<std::string>(m_imageCacheList[frame].m_dfTimeStamp);
+			
+			std::cout << "Persisting : " << imageFilename << " at " << imageTimeStamp << std::endl;
+
+			// Save image
+			m_pImageIO->Save(*(m_imageCacheList[frame].m_pImage), imageFilename);
+
+			// Write timestamp
+			timestamps << imageFilename << "\t" << imageTimeStamp << std::endl;
+		}
+
+		// Close timestamps
 		timestamps.close();
 
-		/*
-		boost::filesystem::path filenamePath(m_strFilename);
-		std::string timestampedFilename = m_strFilename + 
-			"[" + boost::lexical_cast<std::string>(Platform::ToSeconds(Platform::GetTime())) + "]" + filenamePath.extension().string();
-		*/
-
-		std::cout<<"Commit :: " << imageFilename << std::endl;
-		m_pImageIO->Save(*m_pImage, imageFilename);
-	} else {
-		std::cout<<"Commit :: " << m_strFilename << std::endl;
-		m_pImageIO->Save(*m_pImage, m_strFilename);
+		// Next round
+		m_nImageCacheIndex = 0;
+		m_nImageCacheBaseFrame += m_imageCacheList.size();
 	}
+
+	// Assign next slot in buffer
+	m_pImage = m_imageCacheList[m_nImageCacheIndex].m_pImage;
 }
 //----------------------------------------------------------------------------------------------
-void ImageDevice::Set(int p_nX, int p_nY, const Spectrum &p_spectrum) {
+void BufferedImageDevice::Set(int p_nX, int p_nY, const Spectrum &p_spectrum) {
 	m_pImage->Set(p_nX, p_nY, RGBPixel(p_spectrum[0], p_spectrum[1], p_spectrum[2]));
 }
 //----------------------------------------------------------------------------------------------
-void ImageDevice::Set(float p_fX, float p_fY, const Spectrum &p_spectrum) {
+void BufferedImageDevice::Set(float p_fX, float p_fY, const Spectrum &p_spectrum) {
 	Set((int)p_fX, (int)p_fY, p_spectrum); 
 }
 //----------------------------------------------------------------------------------------------
-void ImageDevice::Get(int p_nX, int p_nY, Spectrum &p_spectrum) const
+void BufferedImageDevice::Get(int p_nX, int p_nY, Spectrum &p_spectrum) const
 {
 	const RGBPixel pixel = m_pImage->Get(p_nX, p_nY);
 	p_spectrum.Set(pixel.R, pixel.G, pixel.B);
 }
 //----------------------------------------------------------------------------------------------
-void ImageDevice::Get(float p_fX, float p_fY, Spectrum &p_spectrum) const
+void BufferedImageDevice::Get(float p_fX, float p_fY, Spectrum &p_spectrum) const
 {
 	// TODO: Provide option to enable bilinear interpolation
 	const RGBPixel pixel = m_pImage->Get((int)p_fX, (int)p_fY);
 	p_spectrum.Set(pixel.R, pixel.G, pixel.B);
 }
 //----------------------------------------------------------------------------------------------
-Spectrum ImageDevice::Get(int p_nX, int p_nY) const
+Spectrum BufferedImageDevice::Get(int p_nX, int p_nY) const
 {
 	const RGBPixel pixel = m_pImage->Get(p_nX, p_nY);
 	return Spectrum(pixel.R, pixel.G, pixel.B);
 }
 //----------------------------------------------------------------------------------------------
-Spectrum ImageDevice::Get(float p_fX, float p_fY) const
+Spectrum BufferedImageDevice::Get(float p_fX, float p_fY) const
 {
 	const RGBPixel pixel = m_pImage->Get((int)p_fX, (int)p_fY);
 	return Spectrum(pixel.R, pixel.G, pixel.B);
 }
 //----------------------------------------------------------------------------------------------
-void ImageDevice::WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, 
+void BufferedImageDevice::WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, 
 	RadianceBuffer *p_pRadianceBuffer, int p_nDeviceX, int p_nDeviceY)
 {
 	int width = m_pImage->GetWidth(),
@@ -148,23 +195,23 @@ void ImageDevice::WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, in
 	}
 }
 //----------------------------------------------------------------------------------------------
-std::string ImageDevice::GetFilename(void) const {
+std::string BufferedImageDevice::GetFilename(void) const {
 	return m_strFilename;
 }
 //----------------------------------------------------------------------------------------------
-void ImageDevice::SetFilename(const std::string &p_strFilename) {
+void BufferedImageDevice::SetFilename(const std::string &p_strFilename) {
 	m_strFilename = p_strFilename;
 }
 //----------------------------------------------------------------------------------------------
-IImageIO *ImageDevice::GetImageWriter(void) const {
+IImageIO *BufferedImageDevice::GetImageWriter(void) const {
 	return m_pImageIO;
 }
 //----------------------------------------------------------------------------------------------
-void ImageDevice::SetImageWriter(IImageIO *p_pImageIO) {
+void BufferedImageDevice::SetImageWriter(IImageIO *p_pImageIO) {
 	m_pImageIO = p_pImageIO;
 }
 //----------------------------------------------------------------------------------------------
-Image *ImageDevice::GetImage(void) const {
+Image *BufferedImageDevice::GetImage(void) const {
 	return m_pImage;
 }
 //----------------------------------------------------------------------------------------------

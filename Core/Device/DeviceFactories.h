@@ -12,6 +12,7 @@
 
 #include "Device/Device.h"
 #include "Device/ImageDevice.h"
+#include "Device/BufferedImageDevice.h"
 #include "Device/DisplayDevice.h"
 #include "Device/VideoDevice.h"
 #include "Device/RTPDevice.h"
@@ -184,6 +185,62 @@ namespace Illumina
 				int p_nFrameRate, IVideoStream::VideoCodec p_videoCodec, const std::string &p_strFilename)
 			{
 				return new VideoDevice(p_nWidth, p_nHeight, p_strFilename, p_nFrameRate, p_videoCodec);
+			}
+		};
+
+
+		class BufferedImageDeviceFactory : public Illumina::Core::Factory<Illumina::Core::IDevice>
+		{
+		public:
+			Illumina::Core::IDevice *CreateInstance(void)
+			{
+				throw new Exception("Method not supported!");
+			}
+
+			// Arguments
+			// -- Id {String}
+			// -- Width {Integer}
+			// -- Height {Integer}
+			// -- Format {String}
+			// -- Filename {String}
+			// -- BufferSize {Integer}
+			Illumina::Core::IDevice *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				int width = 640,
+					height = 480,
+					buffersize = 32;
+
+				std::string format = "PPM",
+					filename = "result.ppm";
+
+				std::string strId;
+
+				p_argumentMap.GetArgument("Width", width);
+				p_argumentMap.GetArgument("Height", height);
+				p_argumentMap.GetArgument("Format", format);
+				p_argumentMap.GetArgument("Filename", filename);
+				p_argumentMap.GetArgument("BufferSize", buffersize);
+
+				// So far only PPM is supported
+				// TODO: Destroy object when ready
+				ImagePPM *pImagePPM = new ImagePPM();
+
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId, width, height, pImagePPM, filename, buffersize);
+
+				return CreateInstance(width, height, pImagePPM, filename, buffersize);
+			}
+
+			Illumina::Core::IDevice *CreateInstance(const std::string &p_strId, 
+				int p_nWidth, int p_nHeight, IImageIO *p_pImageIO, const std::string &p_strFilename, int p_nBufferSize)
+			{
+				return new BufferedImageDevice(p_strId, p_nWidth, p_nHeight, p_pImageIO, p_strFilename, p_nBufferSize, true);
+			}
+
+			Illumina::Core::IDevice *CreateInstance(int p_nWidth, int p_nHeight, 
+				IImageIO *p_pImageIO, const std::string &p_strFilename, int p_nBufferSize)
+			{
+				return new BufferedImageDevice(p_nWidth, p_nHeight, p_pImageIO, p_strFilename, p_nBufferSize, true);
 			}
 		};
 

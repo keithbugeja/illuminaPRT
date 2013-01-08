@@ -138,6 +138,7 @@
     <ClCompile Include="..\..\..\..\Core\Camera\Camera.cpp" />
     <ClCompile Include="..\..\..\..\Core\Camera\PerspectiveCamera.cpp" />
     <ClCompile Include="..\..\..\..\Core\Camera\ThinLensCamera.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Device\BufferedImageDevice.cpp" />
     <ClCompile Include="..\..\..\..\Core\Device\DisplayDevice.cpp" />
     <ClCompile Include="..\..\..\..\Core\Device\ImageDevice.cpp" />
     <ClCompile Include="..\..\..\..\Core\Device\RTPDevice.cpp" />
@@ -222,6 +223,7 @@
     <ClInclude Include="..\..\..\..\Core\Camera\CameraFactories.h" />
     <ClInclude Include="..\..\..\..\Core\Camera\PerspectiveCamera.h" />
     <ClInclude Include="..\..\..\..\Core\Camera\ThinLensCamera.h" />
+    <ClInclude Include="..\..\..\..\Core\Device\BufferedImageDevice.h" />
     <ClInclude Include="..\..\..\..\Core\Device\Device.h" />
     <ClInclude Include="..\..\..\..\Core\Device\DeviceFactories.h" />
     <ClInclude Include="..\..\..\..\Core\Device\DisplayDevice.h" />

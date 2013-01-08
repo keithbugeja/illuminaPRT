@@ -113,6 +113,7 @@ public:
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("Discontinuity", new DiscontinuityBufferFactory());
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("Reconstruction", new ReconstructionBufferFactory());
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("BilateralFilter", new BilateralFilterFactory());
+		m_engineKernel->GetPostProcessManager()->RegisterFactory("MotionBlur", new MotionBlurFactory());
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("History", new HistoryBufferFactory());
 
 		//----------------------------------------------------------------------------------------------
@@ -128,6 +129,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		Logger::Message("Registering Devices...", p_bVerbose);
 		m_engineKernel->GetDeviceManager()->RegisterFactory("Display", new DisplayDeviceFactory());
+		m_engineKernel->GetDeviceManager()->RegisterFactory("BufferedImage", new BufferedImageDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("Image", new ImageDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("Video", new VideoDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("RTP", new RTPDeviceFactory());
@@ -268,11 +270,13 @@ public:
 			//----------------------------------------------------------------------------------------------
 			Logger::Message("Freeing and unregistering Devices...", p_bVerbose);
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Display");
+			delete m_engineKernel->GetDeviceManager()->RequestFactory("BufferedImage");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Image");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Video");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("RTP");
 
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("Display");
+			m_engineKernel->GetDeviceManager()->UnregisterFactory("BufferedImage");
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("Image");
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("Video");
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("RTP");
@@ -350,6 +354,7 @@ public:
 			//----------------------------------------------------------------------------------------------
 			Logger::Message("Freeing and unregistering Post Processes...", p_bVerbose);
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("History");
+			delete m_engineKernel->GetPostProcessManager()->RequestFactory("MotionBlur");
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("AutoTone");
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("DragoTone");
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("GlobalTone");
@@ -359,6 +364,7 @@ public:
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("BilateralFilter");
 
 			m_engineKernel->GetPostProcessManager()->UnregisterFactory("History");
+			m_engineKernel->GetPostProcessManager()->UnregisterFactory("MotionBlur");
 			m_engineKernel->GetPostProcessManager()->UnregisterFactory("AutoTone");
 			m_engineKernel->GetPostProcessManager()->UnregisterFactory("DragoTone");
 			m_engineKernel->GetPostProcessManager()->UnregisterFactory("GlobalTone");

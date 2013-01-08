@@ -14,6 +14,184 @@ namespace Illumina
 {
 	namespace Core
 	{
+		class MotionBlur
+			: public IPostProcess
+		{
+		protected:
+			std::vector<RadianceBuffer*> m_framebufferHistoryList;
+	
+			RadianceBuffer *m_pRestFrameBuffer,
+				*m_pMotionFrameBuffer;
+
+			int m_nRestBufferSamples,
+				m_nRestFrameDelay,
+				m_nMotionBlurFrames;
+
+		public:
+			MotionBlur(void)
+				: IPostProcess()
+				, m_pRestFrameBuffer(NULL)
+				, m_pMotionFrameBuffer(NULL)
+				, m_nRestBufferSamples(0)
+				, m_nRestFrameDelay(0)
+				, m_nMotionBlurFrames(0)
+			{ }
+
+			MotionBlur(const std::string &p_strName)
+				: IPostProcess(p_strName)
+				, m_pRestFrameBuffer(NULL)
+				, m_pMotionFrameBuffer(NULL)
+				, m_nRestBufferSamples(0)
+				, m_nRestFrameDelay(0)
+				, m_nMotionBlurFrames(0)
+			{ }
+
+			~MotionBlur(void)
+			{
+				Safe_Delete(m_pRestFrameBuffer);
+				Safe_Delete(m_pMotionFrameBuffer);
+			}
+
+			void Reset(void)
+			{
+				m_nRestFrameDelay = m_nMotionBlurFrames;
+			}
+
+			void SetExternalBuffer(RadianceBuffer *p_pFrameBuffer, int p_nMotionBlurSize)
+			{
+				BOOST_ASSERT(p_nMotionBlurSize > 0);
+
+				// Motion, rest and final buffers
+				Safe_Delete(m_pRestFrameBuffer);
+				Safe_Delete(m_pMotionFrameBuffer);
+
+				// Allocate buffers
+				int width = p_pFrameBuffer->GetWidth(),
+					height = p_pFrameBuffer->GetHeight();
+
+				m_pRestFrameBuffer = new RadianceBuffer(width, height); m_pRestFrameBuffer->Clear();
+				m_pMotionFrameBuffer = new RadianceBuffer(width, height); m_pMotionFrameBuffer->Clear();
+
+				// Reset counters
+				m_nMotionBlurFrames = p_nMotionBlurSize;
+				m_nRestFrameDelay = 0;
+				m_nRestBufferSamples = 0;
+			}
+
+			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight)
+			{
+				static const float actual = 0.65f;
+				static const float history = 0.35f;
+
+				RadianceContext
+					*pRestContext,
+					*pMotionContext,
+					*pInputContext,
+					*pOutputContext;				
+
+				// If accumulation is enabled
+				if (m_nRestFrameDelay == m_nMotionBlurFrames)
+				{
+					m_nRestFrameDelay--;
+					m_nRestBufferSamples = 0;
+
+					//----------------------------------------------------------------------------------------------			
+					for (int y = p_nRegionY; y < p_nRegionHeight; ++y)
+					{
+						pInputContext = p_pInput->GetP(p_nRegionX, y);
+						pOutputContext = p_pOutput->GetP(p_nRegionX, y);
+
+						pRestContext = m_pRestFrameBuffer->GetP(p_nRegionX, y);
+						pMotionContext = m_pMotionFrameBuffer->GetP(p_nRegionX, y);
+
+						for (int x = p_nRegionX; x < p_nRegionWidth; ++x)
+						{
+							pMotionContext->Final = pInputContext->Final * actual + pMotionContext->Final * history;
+							pRestContext->Final = 0.f;
+
+							pOutputContext->Final = pMotionContext->Final;
+							pOutputContext->Flags |= RadianceContext::DF_Accumulated;
+
+							pInputContext++; pOutputContext++;
+							pRestContext++; pMotionContext++;
+						}
+					}
+					//----------------------------------------------------------------------------------------------
+					//std::cout << "MotionBlur :: Moving camera..." << std::endl;
+				} 
+				else if (m_nRestFrameDelay > 0)
+				{
+					m_nRestFrameDelay--;
+					m_nRestBufferSamples++;
+				
+					float fSamplesRcp = 1.f / (m_nRestBufferSamples + 1);
+
+					//----------------------------------------------------------------------------------------------			
+					for (int y = p_nRegionY; y < p_nRegionHeight; ++y)
+					{
+						pInputContext = p_pInput->GetP(p_nRegionX, y);
+						pOutputContext = p_pOutput->GetP(p_nRegionX, y);
+
+						pRestContext = m_pRestFrameBuffer->GetP(p_nRegionX, y);
+						pMotionContext = m_pMotionFrameBuffer->GetP(p_nRegionX, y);
+						
+						for (int x = p_nRegionX; x < p_nRegionWidth; ++x)
+						{
+							pRestContext->Final += pInputContext->Final;
+							pMotionContext->Final = pInputContext->Final * actual + pMotionContext->Final * history;
+
+							pOutputContext->Final = (pMotionContext->Final + pRestContext->Final) * fSamplesRcp;
+							pOutputContext->Flags |= RadianceContext::DF_Accumulated;
+
+							pInputContext++; pOutputContext++;
+							pMotionContext++; pRestContext++;
+						}
+					}
+					//----------------------------------------------------------------------------------------------			
+					//std::cout << "MotionBlur :: Stabilising camera..." << std::endl;
+				}
+				else if (m_nRestFrameDelay == 0)
+				{
+					// Add a sample to the rest framebuffer
+					m_nRestBufferSamples++;
+
+					//----------------------------------------------------------------------------------------------			
+					for (int y = p_nRegionY; y < p_nRegionHeight; ++y)
+					{
+						pInputContext = p_pInput->GetP(p_nRegionX, y);
+						pOutputContext = p_pOutput->GetP(p_nRegionX, y);
+
+						pRestContext = m_pRestFrameBuffer->GetP(p_nRegionX, y);
+						pMotionContext = m_pMotionFrameBuffer->GetP(p_nRegionX, y);
+						
+						for (int x = p_nRegionX; x < p_nRegionWidth; ++x)
+						{
+							pRestContext->Final += pInputContext->Final;
+
+							pOutputContext->Final = pMotionContext->Final = pRestContext->Final / m_nRestBufferSamples;
+							pOutputContext->Flags |= RadianceContext::DF_Accumulated;
+
+							pInputContext++; pOutputContext++;
+							pMotionContext++; pRestContext++;
+						}
+					}
+					//----------------------------------------------------------------------------------------------			
+					//std::cout << "MotionBlur :: Still camera..." << std::endl;
+				}
+
+				//std::cout << "MotionBlur :: Samples = [" << m_nRestBufferSamples << "], rest delay = [" << m_nRestFrameDelay << "]" << std::endl;
+				return true;
+			}
+
+			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput)
+			{
+				return Apply(p_pInput, p_pOutput, 0, 0, p_pInput->GetWidth(), p_pInput->GetHeight());
+			}
+
+			std::string ToString(void) const { return "[MotionBlur]"; }
+		};
+
+
 		//----------------------------------------------------------------------------------------------
 		//----------------------------------------------------------------------------------------------
 		class HistoryBuffer
