@@ -73,6 +73,8 @@ bool RenderTaskWorker::ComputeUniform(void)
 //----------------------------------------------------------------------------------------------
 bool RenderTaskWorker::ComputeVariable(void)
 {
+	return true;
+
 	double eventStart, eventComplete,
 		communicationStart, communicationComplete,
 		jobTime, communicationTime;
@@ -324,6 +326,8 @@ bool RenderTaskWorker::OnInitialise(void)
 //----------------------------------------------------------------------------------------------
 void RenderTaskWorker::OnShutdown(void) 
 {
+	std::cout << "RenderTaskWorker::OnShutdown()" << std::endl;
+
 	// Shutdown renderer, integrator
 	m_pRenderer->Shutdown();
 	m_pIntegrator->Shutdown();
@@ -350,9 +354,11 @@ bool RenderTaskWorker::OnSynchronise(void)
 	Communicator::Receive(buffer, synchronisePacketSize, GetCoordinatorID(), Communicator::Coordinator_Worker_Job);
 	SynchronisePacket *packet = (SynchronisePacket*)buffer;
 
+	/*
 	std::cout << "Worker got sync packet [0] : " << packet->observerPosition.ToString() << std::endl;
 	std::cout << "Worker got sync packet [1] : " << packet->observerTarget.ToString() << std::endl;
 	std::cout << "Worker get sync packet [2] : " << packet->resetSeed << std::endl;
+	*/
 
 	if (packet->resetSeed != 0)
 		m_unSamplerSeed = 0x03170317;

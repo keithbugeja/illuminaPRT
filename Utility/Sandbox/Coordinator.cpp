@@ -263,7 +263,7 @@ bool ICoordinator::Synchronise(void)
 	{
 		std::stringstream message;
 		message << "Synchronise found [" << m_ready.size() << "] workers ready.";
-		Logger::Message(message.str(), true);
+		//Logger::Message(message.str(), true);
 	}
 
 	return OnSynchronise();

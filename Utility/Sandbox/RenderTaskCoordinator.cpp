@@ -153,6 +153,12 @@ bool RenderTaskCoordinator::OnInitialise(void)
 //----------------------------------------------------------------------------------------------
 void RenderTaskCoordinator::OnShutdown(void)
 {
+	std::cout << "RenderTaskCoordinator::OnShutdown()" << std::endl;
+
+	// Wake up decompression thread, if sleeping due to no tiles available
+	m_nTilesPacked = 0;
+	m_decompressionQueueCV.notify_all();
+
 	// Close device
 	m_pRenderer->GetDevice()->Close();
 
@@ -264,6 +270,8 @@ bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 //----------------------------------------------------------------------------------------------
 bool RenderTaskCoordinator::Compute(void) 
 {
+	return true;
+
 	RadianceContext *pTileBuffer;
 	
 	int receivedTileID,
@@ -304,9 +312,8 @@ bool RenderTaskCoordinator::Compute(void)
 	}
 
 	// Wait for results and send 
-	Communicator::Status status;
-
 	SerialisableRenderTile *pRenderTile = NULL;
+	Communicator::Status status;
 
 	m_nProducerIndex = 0;
 	m_nConsumerIndex = 0;
@@ -318,11 +325,6 @@ bool RenderTaskCoordinator::Compute(void)
 		Communicator::Probe(Communicator::Source_Any, Communicator::Worker_Coordinator_Job, &status);
 
 		// Receive compressed tile
-		/*
-		Communicator::Receive(m_pRenderTile->GetTransferBuffer(), 
-			Communicator::GetSize(&status), status.MPI_SOURCE,
-			Communicator::Worker_Coordinator_Job);
-		*/
 		pRenderTile = m_renderTileBuffer[m_nProducerIndex++]; 
 
 		Communicator::Receive(pRenderTile->GetTransferBuffer(), 
@@ -351,9 +353,9 @@ bool RenderTaskCoordinator::Compute(void)
 			waitingTasks--;
 		}
 
+		/*
 		subEventStart = Platform::GetTime();
 
-		/*
 		// Decompress current tile
 		pRenderTile->Unpackage();
 
@@ -376,38 +378,41 @@ bool RenderTaskCoordinator::Compute(void)
 				pTileBuffer++;
 			}
 		}
-		*/
 
 		subEventComplete = Platform::GetTime();
 		decompressionTime += Platform::ToSeconds(subEventComplete - subEventStart);
+		*/
 	}
 
 	eventComplete = Platform::GetTime();
 	radianceTime = Platform::ToSeconds(eventComplete - eventStart);
 
-	// Discontinuity buffer
+	// Bilateral filter
 	/*
 	eventStart = Platform::GetTime();
 	m_pBilateralFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 	bilateralTime = Platform::ToSeconds(eventComplete - eventStart);
-	
+	*/
+
+	// Discontinuity buffer
+	/*
 	eventStart = Platform::GetTime();
 	m_pDiscontinuityBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 	discontinuityTime = Platform::ToSeconds(eventComplete - eventStart);
+	*/
 
-	// Tone mapping (moved to server)
+	// Tone mapping (moved to worker)
+	/*
 	eventStart = Platform::GetTime();
 	m_pDragoTone->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 	toneTime = Platform::ToSeconds(eventComplete - eventStart);
-	/**/
+	*/
 
-	// Accumulation
+	// Accumulation and motion blur
 	eventStart = Platform::GetTime();
-	// m_pAccumulationBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-	// m_pHistoryBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	m_pMotionBlurFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	eventComplete = Platform::GetTime();
 	accumulationTime = Platform::ToSeconds(eventComplete - eventStart);
@@ -422,10 +427,6 @@ bool RenderTaskCoordinator::Compute(void)
 	eventStart = Platform::GetTime();
 	if (m_bResetAccumulation)
 	{
-		std::cout << "<< Reset Accumulation Buffer >>" << std::endl;
-
-		// m_pAccumulationBuffer->Reset();
-		// m_pHistoryBuffer->Reset();
 		m_pMotionBlurFilter->Reset();
 		m_bResetAccumulation = false;
 	}
@@ -433,10 +434,10 @@ bool RenderTaskCoordinator::Compute(void)
 	accumulationTime += Platform::ToSeconds(eventComplete - eventStart);
 
 	std::cout << "---| Radiance Time : " << radianceTime << "s" << std::endl;
-	std::cout << "---| Decompression Time : " << decompressionTime << "s for " << framePackageSize / (1024 * 1024) << " MB" << std::endl;
-	std::cout << "---| Bilateral Time : " << bilateralTime << "s" << std::endl;
-	std::cout << "---| Discontinuity Time : " << discontinuityTime << "s" << std::endl;
-	std::cout << "---| Tonemapping Time : " << toneTime << "s" << std::endl;
+	//std::cout << "---| Decompression Time : " << decompressionTime << "s for " << framePackageSize / (1024 * 1024) << " MB" << std::endl;
+	//std::cout << "---| Bilateral Time : " << bilateralTime << "s" << std::endl;
+	//std::cout << "---| Discontinuity Time : " << discontinuityTime << "s" << std::endl;
+	//std::cout << "---| Tonemapping Time : " << toneTime << "s" << std::endl;
 	std::cout << "---| Accumulation Time : " << accumulationTime << "s" << std::endl;
 	std::cout << "---| Commit Time : " << commitTime << "s" << std::endl;
 
@@ -516,7 +517,7 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 //----------------------------------------------------------------------------------------------
 void RenderTaskCoordinator::DecompressionThreadHandler(RenderTaskCoordinator *p_pCoordinator)
 {
-	std::cout << "Decompression Thread Handler" << std::endl;
+	std::cout << "Run Thread :: Decompression Thread Handler" << std::endl;
 	/**/
 
 	int receivedTileID;
@@ -531,12 +532,18 @@ void RenderTaskCoordinator::DecompressionThreadHandler(RenderTaskCoordinator *p_
 
 	while(p_pCoordinator->IsRunning())
 	{
+		std::cout << "[xxx0] Decompression Thread ... " << std::endl;
+
 		while(p_pCoordinator->m_nTilesPacked == 0 && p_pCoordinator->IsRunning()) {
 			p_pCoordinator->m_decompressionQueueCV.wait(bufferLock);
 		}
 
+		std::cout << "[xxx1] Decompression Thread ... " << std::endl;
+
 		// TODO: Check this shit out or it's going to blow in our faces. Goddamnit.
 		if (p_pCoordinator->IsRunning() == false) break;
+
+		std::cout << "[xxx2] Decompression Thread ... " << std::endl;
 
 		pRenderTile = p_pCoordinator->m_renderTileBuffer[p_pCoordinator->m_nConsumerIndex++];
 		AtomicInt32::Decrement((Int32*)&(p_pCoordinator->m_nTilesPacked));
@@ -563,5 +570,10 @@ void RenderTaskCoordinator::DecompressionThreadHandler(RenderTaskCoordinator *p_
 				pTileBuffer++;
 			}
 		}
+
+		std::cout << "[xxx3] Decompression Thread ... " << std::endl;
 	}
+
+	/**/
+	std::cout << "Join Thread :: Decompression Thread Handler" << std::endl;
 }
