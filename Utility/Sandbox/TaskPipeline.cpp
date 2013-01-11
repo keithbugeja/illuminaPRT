@@ -67,16 +67,16 @@ void ITaskPipeline::Execute(ICoordinator *p_pCoordinator)
 		if (bSynchronise)
 		//if (p_pCoordinator->Synchronise())
 		{
-			std::cout << "Message queue evaluation time [" << evaluateQueue - start << "s]" << std::endl;
-			std::cout << "Synchronisation time [" << synchronise - evaluateQueue << "s]" << std::endl;
+			//std::cout << "Message queue evaluation time [" << evaluateQueue - start << "s]" << std::endl;
+			//std::cout << "Synchronisation time [" << synchronise - evaluateQueue << "s]" << std::endl;
 
 			p_pCoordinator->Compute();
 			double compute = Platform::ToSeconds(Platform::GetTime());
-			std::cout << "Compute time [" << compute - synchronise << "s]" << std::endl;
+			//std::cout << "Compute time [" << compute - synchronise << "s]" << std::endl;
 			
 			// output computation time
 			double end = Platform::ToSeconds(Platform::GetTime());
-			std::cout << "Total time [" << end - start << "s]" << std::endl;
+			//std::cout << "Total time [" << end - start << "s]" << std::endl;
 		}
 	}
 
