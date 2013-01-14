@@ -66,18 +66,14 @@ protected:
 	ICamera *m_pCamera;
 	ISpace *m_pSpace;
 
-	RadianceBuffer *m_pRadianceBuffer,
-		*m_pRadianceAccumulationBuffer,
-		*m_pRadianceHistoryBuffer;
+	RadianceBuffer *m_pRadianceBuffer;
 
 	IPostProcess *m_pBilateralFilter, 
 		*m_pDiscontinuityBuffer,
 		*m_pReconstructionBuffer,
-		*m_pDragoTone; 
+		*m_pTonemapFilter; 
 
 	MotionBlur *m_pMotionBlurFilter;
-	AccumulationBuffer *m_pAccumulationBuffer;
-	HistoryBuffer *m_pHistoryBuffer;
 
 	Path m_cameraPath;
 
@@ -92,9 +88,11 @@ protected:
 	volatile int m_nTilesPacked;
 
 protected:
-	int m_moveFlag[4];
 	Vector3 m_observerPosition,
 		m_observerTarget;
+
+	int m_moveFlag[4],
+		m_seed;
 
 	bool m_bResetAccumulation,
 		m_bResetWorkerSeed;

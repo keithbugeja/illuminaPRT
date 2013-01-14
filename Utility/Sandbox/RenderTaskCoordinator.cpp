@@ -8,6 +8,9 @@
 #include "RenderTaskCoordinator.h"
 #include "Communicator.h"
 //----------------------------------------------------------------------------------------------
+static const int ____seed = 9843;
+static const int ____seed_inc = 137;
+//----------------------------------------------------------------------------------------------
 bool RenderTaskCoordinator::OnInitialise(void) 
 {
 	std::cout << "RenderTaskCoordinator::OnInitialise()" << std::endl;
@@ -70,24 +73,12 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	// Initialise radiance buffers and post-processing filters
 	//----------------------------------------------------------------------------------------------
 	m_pRadianceBuffer = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight()),
-	m_pRadianceAccumulationBuffer = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight());
-	m_pRadianceHistoryBuffer = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight());
 
 	// Discontinuity, reconstruction and tone mapping
 	m_pBilateralFilter = m_pEngineKernel->GetPostProcessManager()->CreateInstance("BilateralFilter", "BilateralFilter", "");
 	m_pDiscontinuityBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
 	m_pReconstructionBuffer = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Reconstruction", "ReconstructionBuffer", "");
-	m_pDragoTone = m_pEngineKernel->GetPostProcessManager()->CreateInstance("GlobalTone", "GlobalTone", "");
-
-	// Accumulation buffer
-	m_pAccumulationBuffer = (AccumulationBuffer*)m_pEngineKernel->GetPostProcessManager()->CreateInstance("Accumulation", "AccumulationBuffer", "");
-	m_pAccumulationBuffer->SetAccumulationBuffer(m_pRadianceAccumulationBuffer);
-	m_pAccumulationBuffer->Reset();
-
-	// History buffer
-	m_pHistoryBuffer = (HistoryBuffer*)m_pEngineKernel->GetPostProcessManager()->CreateInstance("History", "History", "");
-	m_pHistoryBuffer->SetHistoryBuffer(m_pRadianceHistoryBuffer, m_pRadianceAccumulationBuffer, 6);
-	m_pHistoryBuffer->Reset();
+	m_pTonemapFilter = m_pEngineKernel->GetPostProcessManager()->CreateInstance("GlobalTone", "GlobalTone", "");
 
 	// Motion blur filter
 	m_pMotionBlurFilter = (MotionBlur*)m_pEngineKernel->GetPostProcessManager()->CreateInstance("MotionBlur", "MotionBlur", "");
@@ -122,10 +113,11 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	}
 
 	// Create receive buffers for each tile
+	m_renderTileBuffer.clear();
+
 	for (int packetIndex = 0; packetIndex < m_renderTaskContext.TilePackets.GetPacketCount(); packetIndex++)
-	{
-		m_renderTileBuffer.push_back(new SerialisableRenderTile(-1, m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight));
-	}
+		m_renderTileBuffer.push_back(
+			new SerialisableRenderTile(-1, m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight));
 
 	//----------------------------------------------------------------------------------------------
 	// Camera and observer details 
@@ -134,10 +126,12 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_cameraPath.Clear();
 
 	// update observer position
-	m_observerPosition = m_pEnvironment->GetCamera()->GetObserver();
-	m_observerTarget = m_pEnvironment->GetCamera()->GetFrame().GetW();
+	m_observerPosition	= m_pEnvironment->GetCamera()->GetObserver();
+	m_observerTarget	= m_pEnvironment->GetCamera()->GetFrame().GetW();
 	m_moveFlag[0] = m_moveFlag[1] = m_moveFlag[2] = m_moveFlag[3] = 0;
-	m_bResetAccumulation = m_bResetWorkerSeed = true;
+	
+	m_bResetAccumulation = m_bResetWorkerSeed = false;
+	m_seed = ____seed;
 
 	//----------------------------------------------------------------------------------------------
 	// kick off input thread
@@ -151,46 +145,72 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	return true;
 }
 //----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 void RenderTaskCoordinator::OnShutdown(void)
 {
 	std::cout << "RenderTaskCoordinator::OnShutdown()" << std::endl;
+	
+	//----------------------------------------------------------------------------------------------
+	// Wake up decompression thread, if sleeping and force quit (set packed tiles to zero)
+	//----------------------------------------------------------------------------------------------
+	m_nTilesPacked = 0; m_decompressionQueueCV.notify_all();
 
-	// Wake up decompression thread, if sleeping due to no tiles available
-	m_nTilesPacked = 0;
-	m_decompressionQueueCV.notify_all();
-
-	// Close device
+	//----------------------------------------------------------------------------------------------
+	// Close rendering device
+	//----------------------------------------------------------------------------------------------
 	m_pRenderer->GetDevice()->Close();
 
+	//----------------------------------------------------------------------------------------------
 	// Shutdown renderer, integrator
+	//----------------------------------------------------------------------------------------------
 	m_pRenderer->Shutdown();
 	m_pIntegrator->Shutdown();
 
+	//----------------------------------------------------------------------------------------------
 	// Delete radiance buffers
+	//----------------------------------------------------------------------------------------------
 	delete m_pRadianceBuffer;
-	delete m_pRadianceAccumulationBuffer;
 
+	//----------------------------------------------------------------------------------------------
 	// Shutdown and delete sandbox
+	//----------------------------------------------------------------------------------------------
 	m_pSandbox->Shutdown(false);
 	delete m_pSandbox;
 
+	//----------------------------------------------------------------------------------------------
 	// Delete serialisable tile
+	//----------------------------------------------------------------------------------------------
 	delete m_pRenderTile;
 
+	//----------------------------------------------------------------------------------------------
+	// Clear tile buffer
+	//----------------------------------------------------------------------------------------------
 	for (std::vector<SerialisableRenderTile*>::iterator packetIterator = m_renderTileBuffer.begin();
 		 packetIterator != m_renderTileBuffer.end(); ++packetIterator)
 		 delete (*packetIterator);
+
+	m_renderTileBuffer.clear();
 }
+//----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 bool RenderTaskCoordinator::OnSynchronise(void) 
 {
 	SynchronisePacket syncPacket;
 
-	syncPacket.resetSeed = m_bResetWorkerSeed ? 1 : 0; m_bResetWorkerSeed = 0;
+	// Phased out seed as a flag
+	//syncPacket.resetSeed = m_bResetWorkerSeed ? 1 : 0; m_bResetWorkerSeed = 0;
+
+	// Actual seed is now passed instead of reset flag
+	if (m_bResetWorkerSeed) {
+		m_seed = ____seed;
+		m_bResetWorkerSeed = false;
+	} else {
+		m_seed += ____seed_inc;
+	}
+
+	syncPacket.seed = m_seed;
 	syncPacket.observerPosition = m_observerPosition;
 	syncPacket.observerTarget = m_observerTarget;
-
-	// std::cout << "Send sync packet position : " << m_observerPosition.ToString() << "." << std::endl;
 
 	int synchronisePacketSize = sizeof(SynchronisePacket);
 
@@ -209,6 +229,7 @@ bool RenderTaskCoordinator::OnSynchronise(void)
 	return true;
 }
 //----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 bool RenderTaskCoordinator::OnSynchroniseAbort(void)
 {
 	int abortSignal = -1;
@@ -226,6 +247,7 @@ bool RenderTaskCoordinator::OnSynchroniseAbort(void)
 
 	return true;
 }
+//----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage) 
 {
@@ -268,36 +290,47 @@ bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 	return true; 
 }
 //----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 bool RenderTaskCoordinator::Compute(void) 
 {
-	return true;
-
+	SerialisableRenderTile *pRenderTile = NULL;
 	RadianceContext *pTileBuffer;
-	
-	int receivedTileID,
-		waitingTasks = 0;
-
-	int tileID = m_renderTaskContext.TilePackets.GetPacketCount() - 1;
+	Communicator::Status status;
 
 	double eventStart, eventComplete, 
-		subEventStart, subEventComplete,
-		radianceTime,
+		subEventStart, subEventComplete;
+
+	double radianceTime,
 		bilateralTime,
 		discontinuityTime,
 		toneTime,
 		commitTime,
 		accumulationTime,
-		decompressionTime,
 		framePackageSize;
+	
+	int receivedTileID, tileID,
+		waitingTasks;
 
-	decompressionTime = 
-		framePackageSize = 0;
+	//----------------------------------------------------------------------------------------------
+	// Initialise
+	//----------------------------------------------------------------------------------------------
+	tileID = m_renderTaskContext.TilePackets.GetPacketCount() - 1;
 
-	// Get list of available workers
+	framePackageSize = 0;
+	waitingTasks = 0;
+
+	// Initialise asynchronous decompression variables
+	m_nProducerIndex = 0;
+	m_nConsumerIndex = 0;
+	m_nTilesPacked = 0;
+
+	//----------------------------------------------------------------------------------------------
+	// Get list of available workers for this frame and send the initial job batch
+	//----------------------------------------------------------------------------------------------
+	eventStart = Platform::GetTime();
+
 	std::vector<int> &workerList 
 		= GetAvailableWorkerList();
-
-	eventStart = Platform::GetTime();
 
 	// Send first batch of jobs
 	for (std::vector<int>::iterator workerIterator = workerList.begin();
@@ -311,14 +344,9 @@ bool RenderTaskCoordinator::Compute(void)
 			break;
 	}
 
-	// Wait for results and send 
-	SerialisableRenderTile *pRenderTile = NULL;
-	Communicator::Status status;
-
-	m_nProducerIndex = 0;
-	m_nConsumerIndex = 0;
-	m_nTilesPacked = 0;
-
+	//----------------------------------------------------------------------------------------------
+	// Wait for results and send new task, if available
+	//----------------------------------------------------------------------------------------------
 	while (waitingTasks > 0)
 	{
 		// Probe for incoming message
@@ -352,40 +380,15 @@ bool RenderTaskCoordinator::Compute(void)
 			Communicator::Send(&finalTaskID, sizeof(int), status.MPI_SOURCE, Communicator::Coordinator_Worker_Job);
 			waitingTasks--;
 		}
-
-		/*
-		subEventStart = Platform::GetTime();
-
-		// Decompress current tile
-		pRenderTile->Unpackage();
-
-		// Get image data and copy to buffer
-		receivedTileID = pRenderTile->GetID();
-		pTileBuffer = pRenderTile->GetImageData()->GetBuffer(); 
-
-		RenderTilePackets::Packet packet = m_renderTaskContext.TilePackets.GetPacket(receivedTileID);
-		int sx = packet.XStart,
-			sy = packet.YStart,
-			sxe = sx + packet.XSize,
-			sye = sy + packet.YSize;
-		
-		for (int y = sy; y < sye; y++) 
-		{
-			for (int x = sx; x < sxe; x++) 
-			{
-				m_pRadianceBuffer->Set(x, y, *pTileBuffer);
-				
-				pTileBuffer++;
-			}
-		}
-
-		subEventComplete = Platform::GetTime();
-		decompressionTime += Platform::ToSeconds(subEventComplete - subEventStart);
-		*/
 	}
 
+	// Compute time elapsed for radiance computation (communication + rendering)
 	eventComplete = Platform::GetTime();
 	radianceTime = Platform::ToSeconds(eventComplete - eventStart);
+
+	//----------------------------------------------------------------------------------------------
+	// Additional post-processing filters
+	//----------------------------------------------------------------------------------------------
 
 	// Bilateral filter
 	/*
@@ -414,6 +417,12 @@ bool RenderTaskCoordinator::Compute(void)
 	// Accumulation and motion blur
 	eventStart = Platform::GetTime();
 	m_pMotionBlurFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+
+	if (m_bResetAccumulation) {
+		m_pMotionBlurFilter->Reset();
+		m_bResetAccumulation = false;
+	}
+
 	eventComplete = Platform::GetTime();
 	accumulationTime = Platform::ToSeconds(eventComplete - eventStart);
 
@@ -423,16 +432,9 @@ bool RenderTaskCoordinator::Compute(void)
 	eventComplete = Platform::GetTime();
 	commitTime = Platform::ToSeconds(eventComplete - eventStart);
 
-	// Reset
-	eventStart = Platform::GetTime();
-	if (m_bResetAccumulation)
-	{
-		m_pMotionBlurFilter->Reset();
-		m_bResetAccumulation = false;
-	}
-	eventComplete = Platform::GetTime();
-	accumulationTime += Platform::ToSeconds(eventComplete - eventStart);
-
+	//----------------------------------------------------------------------------------------------
+	// Show frame time breakdown  
+	//----------------------------------------------------------------------------------------------
 	std::cout << "---| Radiance Time : " << radianceTime << "s" << std::endl;
 	//std::cout << "---| Decompression Time : " << decompressionTime << "s for " << framePackageSize / (1024 * 1024) << " MB" << std::endl;
 	//std::cout << "---| Bilateral Time : " << bilateralTime << "s" << std::endl;
@@ -443,6 +445,7 @@ bool RenderTaskCoordinator::Compute(void)
 
 	return true;
 }
+//----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordinator)
 {
@@ -515,6 +518,7 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 	}
 }
 //----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 void RenderTaskCoordinator::DecompressionThreadHandler(RenderTaskCoordinator *p_pCoordinator)
 {
 	std::cout << "Run Thread :: Decompression Thread Handler" << std::endl;
@@ -532,18 +536,12 @@ void RenderTaskCoordinator::DecompressionThreadHandler(RenderTaskCoordinator *p_
 
 	while(p_pCoordinator->IsRunning())
 	{
-		std::cout << "[xxx0] Decompression Thread ... " << std::endl;
-
 		while(p_pCoordinator->m_nTilesPacked == 0 && p_pCoordinator->IsRunning()) {
 			p_pCoordinator->m_decompressionQueueCV.wait(bufferLock);
 		}
 
-		std::cout << "[xxx1] Decompression Thread ... " << std::endl;
-
 		// TODO: Check this shit out or it's going to blow in our faces. Goddamnit.
 		if (p_pCoordinator->IsRunning() == false) break;
-
-		std::cout << "[xxx2] Decompression Thread ... " << std::endl;
 
 		pRenderTile = p_pCoordinator->m_renderTileBuffer[p_pCoordinator->m_nConsumerIndex++];
 		AtomicInt32::Decrement((Int32*)&(p_pCoordinator->m_nTilesPacked));
@@ -570,8 +568,6 @@ void RenderTaskCoordinator::DecompressionThreadHandler(RenderTaskCoordinator *p_
 				pTileBuffer++;
 			}
 		}
-
-		std::cout << "[xxx3] Decompression Thread ... " << std::endl;
 	}
 
 	/**/

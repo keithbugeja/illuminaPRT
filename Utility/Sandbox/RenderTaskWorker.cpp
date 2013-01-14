@@ -73,8 +73,6 @@ bool RenderTaskWorker::ComputeUniform(void)
 //----------------------------------------------------------------------------------------------
 bool RenderTaskWorker::ComputeVariable(void)
 {
-	return true;
-
 	double eventStart, eventComplete,
 		communicationStart, communicationComplete,
 		jobTime, communicationTime;
@@ -82,12 +80,13 @@ bool RenderTaskWorker::ComputeVariable(void)
 	int pixelsRendered = 0;
 	size_t bytesTransferred = 0;
 	
+	//----------------------------------------------------------------------------------------------
 	// Start clocking job time
+	//----------------------------------------------------------------------------------------------
 	eventStart = Platform::GetTime();
 
-	//if (m_bResetSampler) {
-		m_pEnvironment->GetSampler()->Reset(m_unSamplerSeed);
-	//}
+	// Set seed
+	m_pEnvironment->GetSampler()->Reset(m_unSamplerSeed);
 
 	// Prepare integrator
 	m_pIntegrator->Prepare(m_pEnvironment->GetScene());
@@ -360,10 +359,14 @@ bool RenderTaskWorker::OnSynchronise(void)
 	std::cout << "Worker get sync packet [2] : " << packet->resetSeed << std::endl;
 	*/
 
+	m_unSamplerSeed = packet->seed;
+
+	/*
 	if (packet->resetSeed != 0)
 		m_unSamplerSeed = 0x03170317;
 	else
 		m_unSamplerSeed += 0x0101;
+	*/
 
 	m_pCamera->MoveTo(packet->observerPosition);
 	m_pCamera->LookAt(packet->observerTarget);
