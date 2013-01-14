@@ -17,7 +17,7 @@ struct SynchronisePacket
 {
 	Vector3		observerPosition;
 	Vector3		observerTarget;
-	int			resetSeed;
+	int			seed;
 };
 
 class RenderTilePackets
