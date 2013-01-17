@@ -205,6 +205,7 @@
     <ClCompile Include="..\..\..\..\Core\Shape\IndexedTriangle.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\KDTreeMesh.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\PersistentMesh.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\Quad.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Sphere.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\TreeMesh.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Triangle.cpp" />
@@ -332,6 +333,7 @@
     <ClInclude Include="..\..\..\..\Core\Shape\IndexedTriangle.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\KDTreeMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\PersistentMesh.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\Quad.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\Shape.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\ShapeForge.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\ShapeFactories.h" />

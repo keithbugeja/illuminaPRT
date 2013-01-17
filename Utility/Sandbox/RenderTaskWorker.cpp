@@ -85,11 +85,15 @@ bool RenderTaskWorker::ComputeVariable(void)
 	//----------------------------------------------------------------------------------------------
 	eventStart = Platform::GetTime();
 
-	// Set seed
+	// Set seed 
+	// Note: We need to reset this on a tile-by-tile basis
 	m_pEnvironment->GetSampler()->Reset(m_unSamplerSeed);
 
 	// Prepare integrator
+	//int meid = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
+	//std::cout << "---[" << meid << "] Getting pre-sample : [" << m_pEnvironment->GetSampler()->Get1DSample() << "] for seed [" << m_unSamplerSeed << "]" << std::endl;
 	m_pIntegrator->Prepare(m_pEnvironment->GetScene());
+	//std::cout << "---[" << meid << "] Getting post-sample : [" << m_pEnvironment->GetSampler()->Get1DSample() << "] for seed [" << m_unSamplerSeed << "]" << std::endl;
 
 	// Update space
 	m_pSpace->Update();
@@ -99,6 +103,12 @@ bool RenderTaskWorker::ComputeVariable(void)
 
 	for (communicationTime = 0, jobTime = 0;;)
 	{
+		////--------------------------------------------------
+		//// Reset seed, otherwise tiling will be apparent in 
+		//// pseudorandom sequence based sampling!
+		////--------------------------------------------------
+		//m_pEnvironment->GetSampler()->Reset(m_unSamplerSeed);
+
 		//--------------------------------------------------
 		// Receive tile
 		//--------------------------------------------------
@@ -315,11 +325,6 @@ bool RenderTaskWorker::OnInitialise(void)
 			Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), 10000);
 	}
 
-	//----------------------------------------------------------------------------------------------
-	// Reset sampler
-	m_bResetSampler = true;
-	m_unSamplerSeed = 0x03170317;
-
 	return true;
 }
 //----------------------------------------------------------------------------------------------
@@ -359,7 +364,10 @@ bool RenderTaskWorker::OnSynchronise(void)
 	std::cout << "Worker get sync packet [2] : " << packet->resetSeed << std::endl;
 	*/
 
-	m_unSamplerSeed = packet->seed;
+	m_unSamplerSeed = (unsigned int)packet->seed;
+
+	int meid = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
+	std::cout << "---[" << meid << "] Seed = " << m_unSamplerSeed << "s" << std::endl;
 
 	/*
 	if (packet->resetSeed != 0)

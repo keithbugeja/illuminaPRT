@@ -336,6 +336,9 @@
     <ClCompile Include="..\..\..\..\Core\Device\BufferedImageDevice.cpp">
       <Filter>Header Files\Device</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Shape\Quad.cpp">
+      <Filter>Header Files\Shape</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -841,6 +844,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Device\BufferedImageDevice.h">
       <Filter>Header Files\Device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\Quad.h">
+      <Filter>Header Files\Shape</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -5,8 +5,29 @@
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 #include "Shape/Triangle.h"
+#include "Maths/Montecarlo.h"
 
 using namespace Illumina::Core;
+//----------------------------------------------------------------------------------------------
+// Definitions for Muller-Trumbore intersection
+#define EPSILON 1e-5
+
+#define CROSS(dest, v1, v2) \
+	dest[0] = v1[1]*v2[2]-v1[2]*v2[1]; \
+	dest[1] = v1[2]*v2[0]-v1[0]*v2[2]; \
+	dest[2] = v1[0]*v2[1]-v1[1]*v2[0];
+
+#define DOT(v1,v2) (v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2])
+
+#define SUB(dest, v1, v2) \
+	dest[0] = v1[0]-v2[0]; \
+	dest[1] = v1[1]-v2[1]; \
+	dest[2] = v1[2]-v2[2];
+
+#define DET(c1, c2, c3) \
+	(c1[0] * (c2[1]*c3[2] - c3[1]*c2[2]) - \
+	 c1[1] * (c2[0]*c3[2] - c3[0]*c2[2]) + \
+	 c1[2] * (c2[0]*c3[1] - c3[0]*c2[1])) 
 //----------------------------------------------------------------------------------------------
 Triangle::Triangle(const std::string &p_strName, const Vector3 &p_vertex1, 
 				   const Vector3 &p_vertex2, const Vector3 &p_vertex3)
@@ -30,8 +51,8 @@ Triangle::Triangle(const std::string &p_strName, const Vector3 &p_vertex1, const
 	Vertex[2] = p_vertex3;
 
 	UV[0] = p_uv1;
-	UV[0] = p_uv2;
-	UV[0] = p_uv3;
+	UV[1] = p_uv2;
+	UV[2] = p_uv3;
 }
 //----------------------------------------------------------------------------------------------
 Triangle::Triangle(const Vector3 &p_vertex1, const Vector3 &p_vertex2, const Vector3 &p_vertex3)
@@ -55,8 +76,8 @@ Triangle::Triangle(const Vector3 &p_vertex1, const Vector3 &p_vertex2, const Vec
 	Vertex[2] = p_vertex3;
 
 	UV[0] = p_uv1;
-	UV[0] = p_uv2;
-	UV[0] = p_uv3;
+	UV[1] = p_uv2;
+	UV[2] = p_uv3;
 }
 //----------------------------------------------------------------------------------------------
 Triangle::Triangle(const Triangle &p_triangle)
@@ -85,89 +106,97 @@ bool Triangle::IsBounded(void) const {
 //----------------------------------------------------------------------------------------------
 bool Triangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surface)
 {
-	const Vector3 &OA = p_ray.Origin - Vertex[0],
-		&BA = Vertex[1] - Vertex[0],
-		&CA = Vertex[2] - Vertex[0],
-		&D = -p_ray.Direction;
+	//----------------------------------------------------------------------------------------------
+	// Shirley's
+	//----------------------------------------------------------------------------------------------
+	float te1xte2[3], 
+		edge2[3], 
+		interm[3];
 
-	// Use Cramer's Rule to solve for beta, gamma and t:
-	// Since Xi = det(Ai)/det(A), find det(A):
-	Matrix3x3 A(BA, CA, D, false);
-	float detA = A.Determinant();
+	Vector3 edge[2];
+	
+	edge[0] = Vertex[1] - Vertex[0];
+	edge[1] = Vertex[2] - Vertex[0];
 
-	// Find beta
-	A.SetColumn(0, OA);
-	float beta = A.Determinant() / detA;
-	if (beta < 0.0f || beta > 1.0f) 
+	const float *te1 = edge[0].Element;
+	const float *te2 = edge[1].Element;
+
+	CROSS(te1xte2, te1, te2);
+
+	const float rcp = 1.0f / DOT(te1xte2, p_ray.Direction.Element);
+	SUB(edge2, Vertex[0], p_ray.Origin.Element);
+
+	const float t = DOT(te1xte2, edge2) * rcp;
+
+	if (t > p_ray.Max - 1e-5 || t < 1e-5)
 		return false;
 
-	// Find gamma
-	A.SetColumn(0, BA);
-	A.SetColumn(1, OA);
-	float gamma = A.Determinant() / detA;
-	if (gamma < 0.0f || gamma > 1.0f) 
+	CROSS(interm, p_ray.Direction.Element, edge2);
+	
+	const float beta = DOT( interm, te2) * -rcp;
+	if ( beta < 0.0f)
 		return false;
 
-	// alpha = 1 - (beta + gamma)
-	float alpha = 1 - beta - gamma;
-	if (alpha < 0.0f || alpha > 1.0f) 
+	const float gamma = DOT( interm, te1) * rcp;
+	if ( beta + gamma > 1.0f || gamma < 0.0f )
 		return false;
 
-	// Find t
-	A.SetColumn(1, CA);
-	A.SetColumn(2, OA);
-	float t = A.Determinant() / detA;
-	if (t < p_ray.Min || t > p_ray.Max)
-		return false;
-
-	// Populate 
+	const float alpha = 1.f - beta - gamma;
+	
+	//----------------------------------------------------------------------------------------------
+	// Populate differential surface
 	p_surface.SetShape(this);
 	p_surface.Distance = t;
 	p_surface.Point = p_ray.PointAlongRay(t);
-	p_surface.PointUV.Set(
-		UV[0].U * alpha + UV[1].U * beta + UV[2].U * gamma, 
+	
+	// Set 2d parametric surface representation
+	p_surface.PointUV.Set (
+		UV[0].U * alpha + UV[1].U * beta + UV[2].U * gamma,
 		UV[0].V * alpha + UV[1].V * beta + UV[2].V * gamma);
 
-	Vector3::Cross(BA, CA, p_surface.GeometryNormal);
+	// Set shading normal
+	Vector3::Cross(edge[0], edge[1], p_surface.GeometryNormal);	
+	p_surface.GeometryNormal.Normalize();
+	p_surface.ShadingNormal = p_surface.GeometryNormal;
 
 	return true;
 }
 //----------------------------------------------------------------------------------------------
 bool Triangle::Intersects(const Ray &p_ray)
 {
-	const Vector3 &OA = p_ray.Origin - Vertex[0],
-		&BA = Vertex[1] - Vertex[0],
-		&CA = Vertex[2] - Vertex[0],
-		&D = -p_ray.Direction;
+	//----------------------------------------------------------------------------------------------
+	// Shirley's
+	//----------------------------------------------------------------------------------------------
+	float te1xte2[3], 
+		edge2[3], 
+		interm[3];
 
-	// Use Cramer's Rule to solve for beta, gamma and t:
-	// Since Xi = det(Ai)/det(A), find det(A):
-	Matrix3x3 A(BA, CA, D, false);
-	float detA = A.Determinant();
+	Vector3 edge[2];
+	
+	edge[0] = Vertex[1] - Vertex[0];
+	edge[1] = Vertex[2] - Vertex[0];
 
-	// Find beta
-	A.SetColumn(0, OA);
-	float beta = A.Determinant() / detA;
-	if (beta < 0.0f || beta > 1.0f) 
+	const float *te1 = edge[0].Element;
+	const float *te2 = edge[1].Element;
+
+	CROSS(te1xte2, te1, te2);
+
+	const float rcp = 1.0f / DOT(te1xte2, p_ray.Direction.Element);
+	SUB(edge2, Vertex[0], p_ray.Origin.Element);
+
+	const float toverd = DOT(te1xte2, edge2) * rcp;
+
+	if (toverd > p_ray.Max - 1e-5 || toverd < 1e-5)
 		return false;
 
-	// Find gamma
-	A.SetColumn(0, BA);
-	A.SetColumn(1, OA);
-	float gamma = A.Determinant() / detA;
-	if (gamma < 0.0f || gamma > 1.0f) 
+	CROSS(interm, p_ray.Direction.Element, edge2);
+	
+	const float uoverd = DOT( interm, te2) * -rcp;
+	if ( uoverd < 0.0f)
 		return false;
 
-	// alpha = 1 - (beta + gamma)
-	float alpha = 1 - beta - gamma;
-	if (alpha < 0.0f || alpha > 1.0f) 
-		return false;
-
-	// Find t
-	A.SetColumn(1, CA);
-	A.SetColumn(2, OA);
-	float t = A.Determinant() / detA;
-	if (t < p_ray.Min || t > p_ray.Max)
+	const float voverd = DOT( interm, te1) * rcp;
+	if ( uoverd + voverd > 1.0f || voverd < 0.0f )
 		return false;
 
 	return true;
@@ -185,11 +214,12 @@ float Triangle::GetPdf(const Vector3 &p_point) const
 //----------------------------------------------------------------------------------------------
 Vector3 Triangle::SamplePoint(float p_u, float p_v, Vector3 &p_normal)
 {
-	float temp = Maths::Sqrt(1.0f - p_u);
-	float beta = 1.0f - temp;
-	float gamma = temp * p_v;
-
-	p_normal = Vector3::Cross(Vertex[1] - Vertex[0], Vertex[2] - Vertex[0]);
-	return (1.0f - beta - gamma) * Vertex[0] + beta * Vertex[1] + gamma * Vertex[2];
+	float b1, b2;
+	Montecarlo::UniformSampleTriangle(p_u, p_v, &b1, &b2);
+	
+	Vector3 p = b1 * Vertex[0] + b2 * Vertex[1] + (1.f - b1 - b2) * Vertex[2];
+	Vector3 n = Vector3::Cross(Vertex[2]-Vertex[0], Vertex[1]-Vertex[0]);
+	p_normal = Vector3::Normalize(n);
+	return p;
 }
 //----------------------------------------------------------------------------------------------

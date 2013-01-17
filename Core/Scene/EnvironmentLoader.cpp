@@ -26,13 +26,13 @@ using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 ParseNode::ParseNode(const std::string &p_strName, const std::string &p_strValue)
 	: Type(ParseNode::Leaf)
-    , Name(p_strName)
+	, Name(p_strName)
 	, Value(p_strValue)
 { }
 //----------------------------------------------------------------------------------------------
 ParseNode::ParseNode(const std::string &p_strName)
 	: Type(ParseNode::Internal)
-    , Name(p_strName)
+	, Name(p_strName)
 { }
 //----------------------------------------------------------------------------------------------
 ParseNode::ParseNode(ParseNode::NodeType p_type)

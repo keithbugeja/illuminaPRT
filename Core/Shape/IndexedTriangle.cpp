@@ -241,7 +241,7 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 	p_surface.GeometryNormal = p_surface.ShadingNormal;
 
 	/* Sanity check */
-    /*
+	/*
 	if (p_surface.ShadingNormal.X != p_surface.ShadingNormal.X)
 		std::cerr << "Warning : Indeterminate normal computation!" << std::endl;
 	 */

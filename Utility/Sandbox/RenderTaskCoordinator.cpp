@@ -130,8 +130,8 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_observerTarget	= m_pEnvironment->GetCamera()->GetFrame().GetW();
 	m_moveFlag[0] = m_moveFlag[1] = m_moveFlag[2] = m_moveFlag[3] = 0;
 	
-	m_bResetAccumulation = m_bResetWorkerSeed = false;
-	m_seed = ____seed;
+	m_bResetAccumulation = false;
+	m_bResetWorkerSeed = true;
 
 	//----------------------------------------------------------------------------------------------
 	// kick off input thread

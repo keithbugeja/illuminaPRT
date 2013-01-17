@@ -74,7 +74,7 @@ Spectrum DiffuseAreaLight::SampleRadiance(const Scene *p_pScene, float p_u, floa
 	Vector3 normal;
 
 	p_ray.Direction = Montecarlo::UniformSampleSphere(p_w, p_x);
-	p_ray.Origin = SamplePoint(p_u, p_v, normal, p_pdf); normal = -normal;
+	p_ray.Origin = SamplePoint(p_u, p_v, normal, p_pdf); // normal = -normal;
 
 	if (Vector3::Dot(p_ray.Direction, normal) < 0.f) 
 		p_ray.Direction *= -1.f;
