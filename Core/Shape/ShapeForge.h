@@ -146,8 +146,6 @@ namespace Illumina
 
 				p_pMesh->AddIndexedTriangle(0, 2, 1);
 				p_pMesh->AddIndexedTriangle(1, 2, 3);
-
-				return true;
 			}
 
 			template<class TMesh>

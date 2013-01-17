@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	Triangle.h
+//	Filename:	Quad.h
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
@@ -8,35 +8,36 @@
 #pragma once
 
 #include "Shape/Shape.h"
+#include "Shape/Triangle.h"
 #include "Geometry/BoundingBox.h"
 
 namespace Illumina 
 {
 	namespace Core
 	{
-		class Triangle 
+		class Quad 
 			: public IShape
 		{
 		protected:
 			AxisAlignedBoundingBox	m_boundingBox;
+			Triangle m_tesselatedQuad[2];
 
 		public:
-			Vector3 Vertex[3];
-			Vector2 UV[3];
-
-		public:
-			Triangle(const std::string &p_strName, const Vector3 &p_vertex1, 
-				const Vector3 &p_vertex2, const Vector3 &p_vertex3);
-			Triangle(const std::string &p_strName, const Vector3 &p_vertex1, const Vector3 &p_vertex2, 
-				const Vector3 &p_vertex3, const Vector2 &p_uv1, const Vector2 &p_uv2, const Vector2 &p_uv3);
-			Triangle(const Vector3 &p_vertex1, 
-				const Vector3 &p_vertex2, const Vector3 &p_vertex3);
-			Triangle(const Vector3 &p_vertex1, const Vector3 &p_vertex2, const Vector3 &p_vertex3,
-				const Vector2 &p_uv1, const Vector2 &p_uv2, const Vector2 &p_uv3);
-			Triangle(const Triangle &p_triangle);
-			
-			Triangle(const std::string &p_strName) : IShape(p_strName) { }
-			Triangle(void) { };
+			Quad(const std::string &p_strName, 
+				const Vector3 &p_vertex1, const Vector3 &p_vertex2, 
+				const Vector3 &p_vertex3, const Vector3 &p_vertex4);
+			Quad(const std::string &p_strName, 
+				const Vector3 &p_vertex1, const Vector3 &p_vertex2, 
+				const Vector3 &p_vertex3, const Vector3 &p_vertex4, 
+				const Vector2 &p_uv1, const Vector2 &p_uv2, 
+				const Vector2 &p_uv3, const Vector2 &p_uv4);
+			Quad(const Vector3 &p_vertex1, const Vector3 &p_vertex2, 
+				const Vector3 &p_vertex3, const Vector3 &p_vertex4);
+			Quad(const Vector3 &p_vertex1, const Vector3 &p_vertex2, 
+				const Vector3 &p_vertex3, const Vector3 &p_vertex4, 
+				const Vector2 &p_uv1, const Vector2 &p_uv2, 
+				const Vector2 &p_uv3, const Vector2 &p_uv4);
+			Quad(const Quad &p_quad);
 			
 			bool IsBounded(void) const;
 			void ComputeBoundingVolume(void);

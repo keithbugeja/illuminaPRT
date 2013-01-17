@@ -31,7 +31,6 @@ class RenderTaskWorker
 		*m_pReconstructionBuffer,
 		*m_pToneMapper;		
 
-	bool m_bResetSampler;
 	unsigned int m_unSamplerSeed;
 
 protected:
