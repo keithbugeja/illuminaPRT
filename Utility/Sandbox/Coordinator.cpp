@@ -173,7 +173,7 @@ bool ICoordinator::EvaluateMessageQueue(ResourceMessageQueue *p_pMessageQueue)
 			{
 				std::stringstream message;
 				message << "Unrecognised command [" << pMessage->Command << "] received from [" << pMessage->OriginID << "]";
-				Logger::Message(message.str(), ServiceManager::GetInstance()->IsVerbose());
+				ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 			}
 		}
 	}
@@ -263,7 +263,7 @@ bool ICoordinator::Synchronise(void)
 	{
 		std::stringstream message;
 		message << "Synchronise found [" << m_ready.size() << "] workers ready.";
-		//Logger::Message(message.str(), true);
+		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 	}
 
 	return OnSynchronise();

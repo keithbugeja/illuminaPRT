@@ -28,6 +28,7 @@ class ServiceManager
 	: public TSingleton<ServiceManager>
 {
 protected:
+	Logger m_logger;
 	ResourceManager m_resourceManager;
 
 	AdminCommandParser m_adminCommandParser;
@@ -43,6 +44,7 @@ protected:
 
 public:
 	ResourceManager *GetResourceManager(void);
+	Logger *GetLogger(void);
 
 public:
 	bool IsVerbose(void) const;

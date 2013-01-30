@@ -32,7 +32,7 @@
 #include <Sampler/SamplerDiagnostics.h>
 
 //----------------------------------------------------------------------------------------------
-#include "Logger.h"
+#include "ServiceManager.h"
 //----------------------------------------------------------------------------------------------
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -42,13 +42,13 @@ class SandboxEnvironment
 protected:
 	Environment *m_environment;
 	EngineKernel *m_engineKernel;
-		
+
 public:
 	//----------------------------------------------------------------------------------------------
 	SandboxEnvironment(void)
 		: m_environment(NULL)				
 		, m_engineKernel(NULL)
-	{  }
+	{ }
 
 	//----------------------------------------------------------------------------------------------
 	~SandboxEnvironment(void)
@@ -60,18 +60,20 @@ public:
 
 	//----------------------------------------------------------------------------------------------
 	//----------------------------------------------------------------------------------------------
-	bool Initialise(bool p_bVerbose)
+	bool Initialise(void)
 	{
+		Logger *logger = ServiceManager::GetInstance()->GetLogger();
+
 		//----------------------------------------------------------------------------------------------
 		// Engine Kernel
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("\nInitialising EngineKernel...", p_bVerbose);
+		logger->Write("\nInitialise EngineKernel...", LL_Info);
 		m_engineKernel = new EngineKernel();
 
 		//----------------------------------------------------------------------------------------------
 		// Sampler
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Registering Samplers...", p_bVerbose);
+		logger->Write("Registering Samplers...", LL_Info);
 		m_engineKernel->GetSamplerManager()->RegisterFactory("Random", new RandomSamplerFactory());
 		m_engineKernel->GetSamplerManager()->RegisterFactory("Jitter", new JitterSamplerFactory());
 		m_engineKernel->GetSamplerManager()->RegisterFactory("Multijitter", new MultijitterSamplerFactory());
@@ -82,20 +84,20 @@ public:
 		//----------------------------------------------------------------------------------------------
 		// Filter
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Registering Filters...", p_bVerbose);
+		logger->Write("Registering Filters...", LL_Info);
 		m_engineKernel->GetFilterManager()->RegisterFactory("Box", new BoxFilterFactory());
 		m_engineKernel->GetFilterManager()->RegisterFactory("Tent", new TentFilterFactory());
 
 		//----------------------------------------------------------------------------------------------
 		// Space
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Registering Spaces...", p_bVerbose);
+		logger->Write("Registering Spaces...", LL_Info);
 		m_engineKernel->GetSpaceManager()->RegisterFactory("Basic", new BasicSpaceFactory());
 
 		//----------------------------------------------------------------------------------------------
 		// Integrator
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Registering Integrators...", p_bVerbose);
+		logger->Write("Registering Integrators...", LL_Info);
 		m_engineKernel->GetIntegratorManager()->RegisterFactory("PathTracing", new PathIntegratorFactory());
 		m_engineKernel->GetIntegratorManager()->RegisterFactory("IGI", new IGIIntegratorFactory());
 		m_engineKernel->GetIntegratorManager()->RegisterFactory("Whitted", new WhittedIntegratorFactory());
@@ -105,7 +107,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		// Post processing
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Registering Post Processes...", p_bVerbose);
+		logger->Write("Registering Post Processes...", LL_Info);
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("AutoTone", new AutoToneFactory());
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("DragoTone", new DragoToneFactory());
 		m_engineKernel->GetPostProcessManager()->RegisterFactory("GlobalTone", new GlobalToneFactory());
@@ -119,7 +121,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		// Renderer
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Registering Renderers...", p_bVerbose);
+		logger->Write("Registering Renderers...", LL_Info);
 		m_engineKernel->GetRendererManager()->RegisterFactory("Basic", new BasicRendererFactory());
 		m_engineKernel->GetRendererManager()->RegisterFactory("Disparity", new DisparityRendererFactory());
 		m_engineKernel->GetRendererManager()->RegisterFactory("TimeConstrained", new TimeConstrainedRendererFactory());
@@ -127,7 +129,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		// Device
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Registering Devices...", p_bVerbose);
+		logger->Write("Registering Devices...", LL_Info);
 		m_engineKernel->GetDeviceManager()->RegisterFactory("Display", new DisplayDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("BufferedImage", new BufferedImageDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("Image", new ImageDeviceFactory());
@@ -137,14 +139,14 @@ public:
 		//----------------------------------------------------------------------------------------------
 		// Cameras
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Registering Cameras...", p_bVerbose);
+		logger->Write("Registering Cameras...", LL_Info);
 		m_engineKernel->GetCameraManager()->RegisterFactory("Perspective", new PerspectiveCameraFactory());
 		m_engineKernel->GetCameraManager()->RegisterFactory("ThinLens", new ThinLensCameraFactory());
 
 		//----------------------------------------------------------------------------------------------
 		// Lights
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Registering Lights...", p_bVerbose);
+		logger->Write("Registering Lights...", LL_Info);
 		m_engineKernel->GetLightManager()->RegisterFactory("Point", new PointLightFactory());
 		m_engineKernel->GetLightManager()->RegisterFactory("DiffuseArea", new DiffuseAreaLightFactory());
 		m_engineKernel->GetLightManager()->RegisterFactory("InfiniteArea", new InfiniteAreaLightFactory());
@@ -152,7 +154,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		// Shapes
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Registering Shapes...", p_bVerbose);
+		logger->Write("Registering Shapes...", LL_Info);
 		m_engineKernel->GetShapeManager()->RegisterFactory("PersistentMesh", new PersistentMeshShapeFactory());
 		m_engineKernel->GetShapeManager()->RegisterFactory("KDTreeMesh", new KDTreeMeshShapeFactory());
 		m_engineKernel->GetShapeManager()->RegisterFactory("BVHMesh", new BVHMeshShapeFactory());
@@ -163,7 +165,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		// Textures
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Registering Textures...", p_bVerbose);
+		logger->Write("Registering Textures...", LL_Info);
 		m_engineKernel->GetTextureManager()->RegisterFactory("MappedFile", new MemoryMappedTextureFactory());
 		m_engineKernel->GetTextureManager()->RegisterFactory("Image", new ImageTextureFactory());
 		m_engineKernel->GetTextureManager()->RegisterFactory("Noise", new NoiseTextureFactory());
@@ -172,7 +174,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		// Materials
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Registering Materials...", p_bVerbose);
+		logger->Write("Registering Materials...", LL_Info);
 		m_engineKernel->GetMaterialManager()->RegisterFactory("Matte", new MatteMaterialFactory());
 		m_engineKernel->GetMaterialManager()->RegisterFactory("Mirror", new MirrorMaterialFactory());
 		m_engineKernel->GetMaterialManager()->RegisterFactory("Glass", new GlassMaterialFactory());
@@ -181,7 +183,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		// Environment
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Initialising Environment...", p_bVerbose);
+		logger->Write("Initialising Environment...", LL_Info);
 		m_environment = new Environment(m_engineKernel);
 
 		return true;
@@ -189,12 +191,13 @@ public:
 
 	//----------------------------------------------------------------------------------------------
 	//----------------------------------------------------------------------------------------------
-	bool Shutdown(bool p_bVerbose)
+	bool Shutdown(void)
 	{
 		//----------------------------------------------------------------------------------------------
 		// Environment
 		//----------------------------------------------------------------------------------------------
-		Logger::Message("Shutting down Environment...", p_bVerbose);
+		Logger *logger = ServiceManager::GetInstance()->GetLogger();
+		logger->Write("Shutting down Environment...", LL_Info);
 		Safe_Delete(m_environment);
 
 		//----------------------------------------------------------------------------------------------
@@ -205,7 +208,8 @@ public:
 			//----------------------------------------------------------------------------------------------
 			// Sampler
 			//----------------------------------------------------------------------------------------------
-			Logger::Message("Freeing and unregistering Samplers...", p_bVerbose);
+			logger->Write("Freeing and unregistering Samplers...", LL_Info);
+
 			delete m_engineKernel->GetSamplerManager()->RequestFactory("Random");
 			delete m_engineKernel->GetSamplerManager()->RequestFactory("Jitter");
 			delete m_engineKernel->GetSamplerManager()->RequestFactory("Multijitter");
@@ -223,7 +227,8 @@ public:
 			//----------------------------------------------------------------------------------------------
 			// Filter
 			//----------------------------------------------------------------------------------------------
-			Logger::Message("Freeing and unregistering Filters...", p_bVerbose);
+			logger->Write("Freeing and unregistering Filters...", LL_Info);
+
 			delete m_engineKernel->GetFilterManager()->RequestFactory("Box");
 			delete m_engineKernel->GetFilterManager()->RequestFactory("Tent");
 
@@ -233,14 +238,16 @@ public:
 			//----------------------------------------------------------------------------------------------
 			// Space
 			//----------------------------------------------------------------------------------------------
-			Logger::Message("Freeing and unregistering Spaces...", p_bVerbose);
+			logger->Write("Freeing and unregistering Spaces...", LL_Info);
+			//Logger::Message("Freeing and unregistering Spaces...", p_bVerbose);
 			delete m_engineKernel->GetSpaceManager()->RequestFactory("Basic");
 			m_engineKernel->GetSpaceManager()->UnregisterFactory("Basic");
 
 			//----------------------------------------------------------------------------------------------
 			// Integrator
 			//----------------------------------------------------------------------------------------------
-			Logger::Message("Freeing and unregistering Integrators...", p_bVerbose);
+			logger->Write("Freeing and unregistering Integrators...", LL_Info);
+
 			delete m_engineKernel->GetIntegratorManager()->RequestFactory("PathTracing");
 			delete m_engineKernel->GetIntegratorManager()->RequestFactory("IGI");
 			delete m_engineKernel->GetIntegratorManager()->RequestFactory("Whitted");
@@ -256,7 +263,8 @@ public:
 			//----------------------------------------------------------------------------------------------
 			// Renderer
 			//----------------------------------------------------------------------------------------------
-			Logger::Message("Freeing and unregistering Renderers...", p_bVerbose);
+			logger->Write("Freeing and unregistering Renderers...", LL_Info);
+
 			delete m_engineKernel->GetRendererManager()->RequestFactory("Basic");
 			delete m_engineKernel->GetRendererManager()->RequestFactory("Disparity");
 			delete m_engineKernel->GetRendererManager()->RequestFactory("TimeConstrained");
@@ -268,7 +276,8 @@ public:
 			//----------------------------------------------------------------------------------------------
 			// Device
 			//----------------------------------------------------------------------------------------------
-			Logger::Message("Freeing and unregistering Devices...", p_bVerbose);
+			logger->Write("Freeing and unregistering Devices...", LL_Info);
+
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Display");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("BufferedImage");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Image");
@@ -284,7 +293,8 @@ public:
 			//----------------------------------------------------------------------------------------------
 			// Cameras
 			//----------------------------------------------------------------------------------------------
-			Logger::Message("Freeing and unregistering Cameras...", p_bVerbose);
+			logger->Write("Freeing and unregistering Cameras...", LL_Info);
+
 			delete m_engineKernel->GetCameraManager()->RequestFactory("Perspective");
 			delete m_engineKernel->GetCameraManager()->RequestFactory("ThinLens");
 
@@ -294,7 +304,8 @@ public:
 			//----------------------------------------------------------------------------------------------
 			// Lights
 			//----------------------------------------------------------------------------------------------
-			Logger::Message("Freeing and unregistering Lights...", p_bVerbose);
+			logger->Write("Freeing and unregistering Lights...", LL_Info);
+
 			delete m_engineKernel->GetLightManager()->RequestFactory("Point");
 			delete m_engineKernel->GetLightManager()->RequestFactory("DiffuseArea");
 			delete m_engineKernel->GetLightManager()->RequestFactory("InfiniteArea");
@@ -306,7 +317,8 @@ public:
 			//----------------------------------------------------------------------------------------------
 			// Shapes
 			//----------------------------------------------------------------------------------------------
-			Logger::Message("Freeing and unregistering Shapes...", p_bVerbose);
+			logger->Write("Freeing and unregistering Shapes...", LL_Info);
+
 			delete m_engineKernel->GetShapeManager()->RequestFactory("PersistentMesh");
 			delete m_engineKernel->GetShapeManager()->RequestFactory("KDTreeMesh");
 			delete m_engineKernel->GetShapeManager()->RequestFactory("BVHMesh");
@@ -324,7 +336,8 @@ public:
 			//----------------------------------------------------------------------------------------------
 			// Textures
 			//----------------------------------------------------------------------------------------------
-			Logger::Message("Freeing and unregistering Textures...", p_bVerbose);
+			logger->Write("Freeing and unregistering Textures...", LL_Info);
+
 			delete m_engineKernel->GetTextureManager()->RequestFactory("MappedFile");
 			delete m_engineKernel->GetTextureManager()->RequestFactory("Image");
 			delete m_engineKernel->GetTextureManager()->RequestFactory("Noise");
@@ -338,7 +351,8 @@ public:
 			//----------------------------------------------------------------------------------------------
 			// Materials
 			//----------------------------------------------------------------------------------------------
-			Logger::Message("Freeing and unregistering Materials...", p_bVerbose);
+			logger->Write("Freeing and unregistering Materials...", LL_Info);
+
 			delete m_engineKernel->GetMaterialManager()->RequestFactory("Matte");
 			delete m_engineKernel->GetMaterialManager()->RequestFactory("Mirror");
 			delete m_engineKernel->GetMaterialManager()->RequestFactory("Glass");
@@ -352,7 +366,8 @@ public:
 			//----------------------------------------------------------------------------------------------
 			// Post processing
 			//----------------------------------------------------------------------------------------------
-			Logger::Message("Freeing and unregistering Post Processes...", p_bVerbose);
+			logger->Write("Freeing and unregistering Post Processes...", LL_Info);
+
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("History");
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("MotionBlur");
 			delete m_engineKernel->GetPostProcessManager()->RequestFactory("AutoTone");
@@ -376,7 +391,7 @@ public:
 			//----------------------------------------------------------------------------------------------
 			// Engine Kernel
 			//----------------------------------------------------------------------------------------------
-			Logger::Message("Shutting down Engine Kernel...", p_bVerbose);
+			logger->Write("Shutting down EngineKernel...", LL_Info);
 			Safe_Delete(m_engineKernel);
 		}
 				
@@ -385,17 +400,22 @@ public:
 
 	//----------------------------------------------------------------------------------------------
 	//----------------------------------------------------------------------------------------------
-	bool LoadScene(const std::string &p_strScript, bool p_bVerbose)
+	bool LoadScene(const std::string &p_strScript)
 	{
+		// Logger instance
+		Logger *logger = ServiceManager::GetInstance()->GetLogger();
+
 		if (m_environment == NULL)
 			return false;
 
 		// Load environment script
-		Logger::Message("Loading Environment script...", p_bVerbose);
+		logger->Write("Loading Environment script...", LL_Info);
+		// Logger::Message("Loading Environment script...", p_bVerbose);
 	
 		if (!m_environment->Load(p_strScript))
 		{
-			Logger::Message("Unable to load Environment script.", true, Logger::Critical);
+			logger->Write("Unable to load Environment script!", LL_Critical);
+			// Logger::Message("Unable to load Environment script.", true, Logger::Critical);
 			return false;
 		}
 
