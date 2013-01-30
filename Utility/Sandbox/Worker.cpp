@@ -45,9 +45,6 @@ bool IWorker::CoordinatorMessages(void)
 //----------------------------------------------------------------------------------------------
 bool IWorker::Synchronise(void) 
 {
-	bool bVerbose = 
-		ServiceManager::GetInstance()->IsVerbose();
-
 	// Ready message to signal availability in next computation cycle
 	Message_Worker_Coordinator_Ready readyMessage;
 	readyMessage.MessageID = MessageIdentifiers::ID_Worker_Ready;
@@ -60,9 +57,8 @@ bool IWorker::Synchronise(void)
 	// If ordered to unregister, exit immediately.
 	if (syncMessage.Unregister)
 	{
-		std::stringstream message;
-		message << "Synchronise :: Releasing worker [" << ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID() << "]";
-		Logger::Message(message.str(), bVerbose);
+		std::stringstream message; message << "Synchronise :: Releasing worker [" << ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID() << "]";
+		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 
 		m_bIsRunning = false;
 		return false;
@@ -79,8 +75,8 @@ bool IWorker::Compute(void)
 //----------------------------------------------------------------------------------------------
 bool IWorker::Register(void) 
 {
-	bool bVerbose = 
-		ServiceManager::GetInstance()->IsVerbose();
+	Logger *logger = 
+		ServiceManager::GetInstance()->GetLogger();
 
 	// Send registration message to coordinator (on standard comm-worker channel)
 	Message_Worker_Coordinator_Register message;
@@ -88,7 +84,7 @@ bool IWorker::Register(void)
 
 	if (!Communicator::Send(&message, sizeof(Message_Worker_Coordinator_Register), GetCoordinatorID(), Communicator::Worker_Coordinator))
 	{
-		Logger::Message("Register :: Failed sending registration message!", bVerbose, Logger::Error);
+		logger->Write("Register :: Failed sending registration message!", LL_Error);
 		return false;
 	}
 
@@ -101,7 +97,7 @@ bool IWorker::Register(void)
 
 	if (pCommandBuffer[0] != MessageIdentifiers::ID_Coordinator_Accept)
 	{
-		Logger::Message("Register :: Coordinator rejected registration message!", bVerbose, Logger::Error);
+		logger->Write("Register :: Coordinator rejected registration message!", LL_Error);
 		return false;
 	}
 
@@ -111,9 +107,8 @@ bool IWorker::Register(void)
 	m_argumentMap.Initialise(argumentString);
 
 	{
-		std::stringstream message;
-		message << "Registration complete. Initialising Worker with [" << argumentString << "]";
-		Logger::Message(message.str(), bVerbose);
+		std::stringstream message; message << "Registration complete. Initialising Worker with [" << argumentString << "]";
+		logger->Write(message.str(), LL_Info);
 	}
 
 	return true; 

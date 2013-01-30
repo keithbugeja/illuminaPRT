@@ -14,7 +14,7 @@ class ResourceManager
 {
 protected:
 	// Unique ID for controller
-	UniqueID m_uniqueID;
+	::UniqueID m_uniqueID;
 
 	// Controller directory
 	std::vector<IResourceController*> m_controllerList;

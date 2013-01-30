@@ -21,9 +21,8 @@ void ITaskPipeline::Execute(const std::string &p_strArguments, int p_nResourceID
 
 	if (p_nCoordinatorID == p_nResourceID)
 	{
-		std::stringstream message;
-		message << "Task Pipeline executing coordinator with arguments [" << p_strArguments << "]";
-		Logger::Message(message.str(), bVerbose);
+		std::stringstream message; message << "Task Pipeline executing coordinator with arguments [" << p_strArguments << "]";
+		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 
 		m_pCoordinator->SetArguments(p_strArguments);
 		
@@ -33,7 +32,7 @@ void ITaskPipeline::Execute(const std::string &p_strArguments, int p_nResourceID
 	{
 		std::stringstream message;
 		message << "Task Pipeline executing worker for coordinator [" << p_nCoordinatorID << "]";
-		Logger::Message(message.str(), bVerbose);
+		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 
 		m_pWorker->SetCoordinatorID(p_nCoordinatorID);
 

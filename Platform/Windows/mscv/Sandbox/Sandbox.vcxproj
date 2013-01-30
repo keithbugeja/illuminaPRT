@@ -164,6 +164,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\AdminController.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\Controller.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Coordinator.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Half.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\main.cpp" />

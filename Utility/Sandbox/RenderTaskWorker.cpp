@@ -251,13 +251,13 @@ bool RenderTaskWorker::OnInitialise(void)
 	// Initialise sandbox environment
 	//----------------------------------------------------------------------------------------------
 	m_pSandbox = new SandboxEnvironment();
-	m_pSandbox->Initialise(false);
+	m_pSandbox->Initialise();
 
 	// Read environment script
 	if (!pArgumentMap->GetArgument("script", strScriptName))
 		return false;
 
-	if (m_pSandbox->LoadScene(strScriptName, true))
+	if (m_pSandbox->LoadScene(strScriptName))
 		std::cout << "Scene [" << strScriptName << "] loaded." << std::endl;
 
 	// Read tile width and height arugments;
@@ -337,7 +337,7 @@ void RenderTaskWorker::OnShutdown(void)
 	m_pIntegrator->Shutdown();
 
 	// Shutdown and delete sandbox
-	m_pSandbox->Shutdown(false);
+	m_pSandbox->Shutdown();
 	delete m_pSandbox;
 
 	// Delete serialisable tile

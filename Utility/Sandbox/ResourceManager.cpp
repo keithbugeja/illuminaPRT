@@ -47,7 +47,7 @@ bool ResourceManager::AllocateResources(void)
 	{
 		std::stringstream message;
 		message << "Resource Manager allocating " << m_nResourceCount << " resources for use." << std::endl;
-		Logger::Message(message.str(), ServiceManager::GetInstance()->IsVerbose());
+		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 	}
 
 	return true;
@@ -112,12 +112,12 @@ void ResourceManager::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 bool ResourceManager::RequestResources(int p_nTaskID, int p_nResourceCount)
 {
+	Logger *logger = ServiceManager::GetInstance()->GetLogger();
+
 	// Cannot allocate more resources than available!
 	if (p_nResourceCount > m_resourceFreeList.size())
 	{
-		Logger::Message("ResourceManager::RequestResources : Not enough free resources to satisfy allocation request!", 
-			ServiceManager::GetInstance()->IsVerbose(), Logger::Error);
-
+		logger->Write("ResourceManager::RequestResources : Not enough free resources to satisfy allocation request!", LL_Error);
 		return false;
 	}
 
@@ -125,9 +125,7 @@ bool ResourceManager::RequestResources(int p_nTaskID, int p_nResourceCount)
 	IResourceController *pController = GetInstance(p_nTaskID);
 	if (pController == NULL)
 	{
-		Logger::Message("ResourceManager::RequestResources : Unknown Task ID!", 
-			ServiceManager::GetInstance()->IsVerbose(), Logger::Error);
-
+		logger->Write("ResourceManager::RequestResources : Unknown Task ID!", LL_Error);
 		return false;
 	}
 
@@ -157,22 +155,21 @@ bool ResourceManager::RequestResources(int p_nTaskID, int p_nResourceCount)
 //----------------------------------------------------------------------------------------------
 bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 {
+	std::stringstream message;
+	Logger *logger = ServiceManager::GetInstance()->GetLogger();
+
 	// Check if Task ID is valid.
 	IResourceController *pController = GetInstance(p_nTaskID);
 	if (pController == NULL)
 	{
-		Logger::Message("ResourceManager::ReleaseResources : Unknown Task ID!", 
-			ServiceManager::GetInstance()->IsVerbose(), Logger::Error);
-
+		logger->Write("ResourceManager::ReleaseResources : Unknown Task ID!", LL_Error);
 		return false;
 	}
 	
 	// Check if task has the requested number of allocated resources
 	if (p_nResourceCount > pController->GetResourceCount())
 	{
-		Logger::Message("ResourceManager::ReleaseResources : Unable to release the requested number of resources!", 
-			ServiceManager::GetInstance()->IsVerbose(), Logger::Error);
-
+		logger->Write("ResourceManager::ReleaseResources : Unable to release the requested number of resources!", LL_Error);
 		return false;
 	}
 
@@ -198,10 +195,14 @@ bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 			m_resourceFreeList.push_back(pResource);
 		}
 		else
-			std::cerr << "Unable to delete resource [" << pResource->GetID() << "]. Resource not in allocation list!" << std::endl;
+		{
+			message.clear(); message << "Unable to delete resource [" << pResource->GetID() << "]. Resource not in allocation list!";
+			logger->Write(message.str(), LL_Error);
+		}
 	}
 
-	std::cout << "Freed [" << resourceList.size() << "] resources." << std::endl;
+	message.clear(); message << "Freed [" << resourceList.size() << "] resources.";
+	logger->Write(message.str(), LL_Info);
 
 	return true;
 }
