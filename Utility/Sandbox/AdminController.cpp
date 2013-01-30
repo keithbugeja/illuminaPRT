@@ -106,12 +106,35 @@ bool AdminController::ProcessClientInput(void)
 	}
 	else if (strCommandName == "set")
 	{
+		bool bSuccess = false;
+
 		int id = boost::lexical_cast<int>(argumentMap["id"]);
 		int count = boost::lexical_cast<int>(argumentMap["count"]);
 
 		std::cout << "Admin :: Setting resource count to [" << count << "] for Task Group [" << id << "]" << std::endl;
 
-		IController::WriteToSocket(m_pSocket, "OK", 2);
+		IResourceController *pController = ServiceManager::GetInstance()->GetResourceManager()->GetInstance(id);
+
+		if (pController)
+		{
+			int countDifference = count - pController->GetResourceCount();
+			
+			if (countDifference < 0)
+			{
+				std::cout << "Admin :: Yielding [" << -countDifference << "] resources from Task Group [" << id << "]" << std::endl;
+				bSuccess = ServiceManager::GetInstance()->GetResourceManager()->ReleaseResources(id, -countDifference);
+			}
+			else if (countDifference > 0)
+			{
+				std::cout << "Admin :: Request [" << countDifference << "] resources for Task Group [" << id << "]" << std::endl;
+				bSuccess = ServiceManager::GetInstance()->GetResourceManager()->RequestResources(id, countDifference);
+			}
+		}
+
+		if (bSuccess)
+			IController::WriteToSocket(m_pSocket, "OK", 2);
+		else
+			IController::WriteToSocket(m_pSocket, "KO", 2);
 	}
 	else if (strCommandName == "exit")
 	{
