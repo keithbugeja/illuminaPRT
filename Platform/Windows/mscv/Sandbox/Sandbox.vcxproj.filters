@@ -66,6 +66,9 @@
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Controller.cpp">
       <Filter>Source Files\server</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\CommandParser.cpp">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\defs.h">

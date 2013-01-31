@@ -12,7 +12,6 @@
 #include <boost/thread.hpp>
 //----------------------------------------------------------------------------------------------
 #include "ServiceManager.h"
-#include "Logger.h"
 //----------------------------------------------------------------------------------------------
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -28,6 +27,9 @@ bool AdminController::ProcessClientInput(void)
 	std::string strCommandName, strCommand;
 	std::map<std::string, std::string> argumentMap;
 
+	// Get logger instance
+	Logger *logger = ServiceManager::GetInstance()->GetLogger();
+
 	// Read from socket
 	IController::ReadFromSocket(m_pSocket, m_pCommandBuffer, 1024);
 
@@ -36,7 +38,7 @@ bool AdminController::ProcessClientInput(void)
 
 	// Parse command
 	m_pCommandParser->Parse(strCommand, strCommandName, argumentMap);
-	m_pCommandParser->DisplayCommand(strCommandName, argumentMap);
+	m_pCommandParser->Display(strCommandName, argumentMap);
 
 	// Process commands
 	if (strCommandName == "count")
@@ -85,7 +87,10 @@ bool AdminController::ProcessClientInput(void)
 		int id = boost::lexical_cast<int>(argumentMap["id"]);
 		int count = boost::lexical_cast<int>(argumentMap["count"]);
 
-		std::cout << "Admin :: Request [" << count << "] resources for Task Group [" << id << "]" << std::endl;
+		{
+			std::stringstream message; message << "AdminController :: Request [" << count << "] resources for Task Group [" << id << "]";
+			logger->Write(message.str(), LL_Info);
+		}
 		
 		if (ServiceManager::GetInstance()->GetResourceManager()->RequestResources(id, count))
 			IController::WriteToSocket(m_pSocket, "OK", 2);
@@ -97,7 +102,10 @@ bool AdminController::ProcessClientInput(void)
 		int id = boost::lexical_cast<int>(argumentMap["id"]);
 		int count = boost::lexical_cast<int>(argumentMap["count"]);
 
-		std::cout << "Admin :: Yielding [" << count << "] resources from Task Group [" << id << "]" << std::endl;
+		{
+			std::stringstream message; message << "AdminController :: Yielding [" << count << "] resources from Task Group [" << id << "]"; 
+			logger->Write(message.str(), LL_Info);
+		}
 
 		if (ServiceManager::GetInstance()->GetResourceManager()->ReleaseResources(id, count))
 			IController::WriteToSocket(m_pSocket, "OK", 2);
@@ -111,7 +119,10 @@ bool AdminController::ProcessClientInput(void)
 		int id = boost::lexical_cast<int>(argumentMap["id"]);
 		int count = boost::lexical_cast<int>(argumentMap["count"]);
 
-		std::cout << "Admin :: Setting resource count to [" << count << "] for Task Group [" << id << "]" << std::endl;
+		{
+			std::stringstream message; message << "AdminController :: Setting resource count to [" << count << "] for Task Group [" << id << "]";
+			logger->Write(message.str(), LL_Info);
+		}
 
 		IResourceController *pController = ServiceManager::GetInstance()->GetResourceManager()->GetInstance(id);
 
@@ -121,12 +132,20 @@ bool AdminController::ProcessClientInput(void)
 			
 			if (countDifference < 0)
 			{
-				std::cout << "Admin :: Yielding [" << -countDifference << "] resources from Task Group [" << id << "]" << std::endl;
+				{
+					std::stringstream message; message << "AdminController :: Yielding [" << -countDifference << "] resources from Task Group [" << id << "]";
+					logger->Write(message.str(), LL_Info);
+				}
+
 				bSuccess = ServiceManager::GetInstance()->GetResourceManager()->ReleaseResources(id, -countDifference);
 			}
 			else if (countDifference > 0)
 			{
-				std::cout << "Admin :: Request [" << countDifference << "] resources for Task Group [" << id << "]" << std::endl;
+				{
+					std::stringstream message; message << "AdminController :: Request [" << countDifference << "] resources for Task Group [" << id << "]";
+					logger->Write(message.str(), LL_Info);
+				}
+
 				bSuccess = ServiceManager::GetInstance()->GetResourceManager()->RequestResources(id, countDifference);
 			}
 		}

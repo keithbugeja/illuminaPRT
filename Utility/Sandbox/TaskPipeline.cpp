@@ -16,13 +16,13 @@ ITaskPipeline::ITaskPipeline(ICoordinator *p_pCoordinator, IWorker *p_pWorker)
 //----------------------------------------------------------------------------------------------
 void ITaskPipeline::Execute(const std::string &p_strArguments, int p_nResourceID, int p_nCoordinatorID)
 {
-	bool bVerbose = 
-		ServiceManager::GetInstance()->IsVerbose();
+	std::stringstream messageLog;
+	Logger *logger = ServiceManager::GetInstance()->GetLogger();
 
 	if (p_nCoordinatorID == p_nResourceID)
 	{
-		std::stringstream message; message << "Task Pipeline executing coordinator with arguments [" << p_strArguments << "]";
-		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
+		messageLog << "TaskPipeline :: Starting coordinator with arguments [" << p_strArguments << "].";
+		logger->Write(messageLog.str(), LL_Info);
 
 		m_pCoordinator->SetArguments(p_strArguments);
 		
@@ -30,9 +30,8 @@ void ITaskPipeline::Execute(const std::string &p_strArguments, int p_nResourceID
 	}
 	else
 	{
-		std::stringstream message;
-		message << "Task Pipeline executing worker for coordinator [" << p_nCoordinatorID << "]";
-		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
+		messageLog << "TaskPipeline :: Starting new worker for coordinator [" << p_nCoordinatorID << "].";
+		logger->Write(messageLog.str(), LL_Info);
 
 		m_pWorker->SetCoordinatorID(p_nCoordinatorID);
 

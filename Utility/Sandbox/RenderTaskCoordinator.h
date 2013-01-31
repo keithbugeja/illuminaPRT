@@ -5,49 +5,9 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 //----------------------------------------------------------------------------------------------
-#include <Maths/Maths.h>
-#include <Geometry/Spline.h>
-#include "Coordinator.h"
 #include "Environment.h"
-
+#include "Coordinator.h"
 #include "RenderTaskCommon.h"
-//----------------------------------------------------------------------------------------------
-class Path
-{
-protected:
-	std::vector<Vector3> m_vertexList;
-	std::vector<float> m_pivotList;
-	float m_fTime;
-public:
-	bool IsEmpty(void) { return m_vertexList.empty(); }
-	void Clear(void) { m_vertexList.clear(); m_pivotList.clear(); Reset(); } 
-	void Reset(void) { m_fTime = 0; }
-	void Move(float p_fDeltaT) { m_fTime += p_fDeltaT; }
-
-	void AddVertex(const Vector3 &p_pVertex) 
-	{ 
-		m_vertexList.push_back(p_pVertex); 
-	}
-
-	void PreparePath(void)
-	{
-		Illumina::Core::Interpolator::ComputePivots(m_vertexList, m_pivotList);
-	}
-
-	Vector3 GetPosition(float p_fTime)
-	{
-		if (m_vertexList.size() <= 2)
-			return Vector3::Zero;
-
-		return Illumina::Core::Interpolator::Lagrange(m_vertexList, m_pivotList, p_fTime);
-	}
-
-	Vector3 GetPosition(void) 
-	{
-		return GetPosition(m_fTime);
-	}
-};
-
 //----------------------------------------------------------------------------------------------
 class RenderTaskCoordinator
 	: public ICoordinator
@@ -75,25 +35,40 @@ protected:
 
 	MotionBlur *m_pMotionBlurFilter;
 
-	Path m_cameraPath;
-
 protected:
+	// Tile buffer to store results from workers
 	std::vector<SerialisableRenderTile*> m_renderTileBuffer;
 
+	// Condition variable to synchronise with decompression thread
 	boost::condition_variable m_decompressionQueueCV;
 
+	// Number of packed tiles waiting for decompression
+	volatile int m_nTilesPacked;
+
+	// Producer/consumer indices for tile decompression
 	int m_nProducerIndex,
 		m_nConsumerIndex;
 
-	volatile int m_nTilesPacked;
+	// Unique task identifier within system
+	int m_nTaskId;
+
+	// User name and job name
+	std::string m_strUserName,
+		m_strJobName;
 
 protected:
+	// Current camera path
+	Path m_cameraPath;
+
+	// Camera parameters : observer position and target
 	Vector3 m_observerPosition,
 		m_observerTarget;
 
+	// Move flags (one flag for each compass direction)
 	int m_moveFlag[4],
 		m_seed;
 
+	// Flags for resetting accumulation buffer
 	bool m_bResetAccumulation,
 		m_bResetWorkerSeed;
 

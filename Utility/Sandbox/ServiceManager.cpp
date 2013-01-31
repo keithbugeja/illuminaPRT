@@ -38,10 +38,16 @@ void ServiceManager::Stop(void) { }
 //----------------------------------------------------------------------------------------------
 void ServiceManager::Start(void) 
 {
+	// Set working directory
 	try {
 		boost::filesystem::current_path(m_cwdPath);
-		std::cout << "Working directory [" << m_cwdPath.string() << "]" << std::endl;;
-	} catch (...) { std::cerr << "Error : Unable to set working directory to " << m_cwdPath.string() << std::endl; }
+		std::stringstream message; message << "ServiceManager :: Working directory [" << m_cwdPath.string() << "]";
+		GetLogger()->Write(message.str(), LL_Info);
+	} catch (...) { 
+		std::stringstream message; message << "ServiceManager :: Unable to set working directory to [" << m_cwdPath.string() << "]";
+		GetLogger()->Write(message.str(), LL_Critical);
+		return;
+	}
 
 	// Initialise resource manager and run process according to rank/id
 	m_resourceManager.Initialise();
@@ -59,22 +65,21 @@ void ServiceManager::RunAsResource(void)
 	RenderTaskPipeline pipeline;
 
 	// Start resource
-	ServiceManager::GetInstance()->GetResourceManager()->Me()->Start(&pipeline);
+	m_resourceManager.Me()->Start(&pipeline);
+	// ServiceManager::GetInstance()->GetResourceManager()->Me()->Start(&pipeline);
 }
 //----------------------------------------------------------------------------------------------
 void ServiceManager::RunAsMaster(void)
 {
-	Logger *logger = ServiceManager::GetInstance()->GetLogger();
-	logger->Write("Starting Illumina PRT Service Manager...", LL_Info);
-		
 	// Kick admin service thread
 	boost::thread adminThread(
 			boost::bind(&ServiceManager::AdminService, this));
 
 	// Client thread
 	std::stringstream message;
-	message << "Service :: Listening for connections on port " << m_nServicePort << "...";
-	logger->Write(message.str(), LL_Info);
+	message << "ServiceManager :: Listening for client connections on port " << m_nServicePort << "..." << std::endl;
+	message << "ServiceManager :: Started";
+	m_logger.Write(message.str(), LL_Info);
 
 	// Start server listening
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), m_nServicePort);
@@ -94,7 +99,7 @@ void ServiceManager::RunAsMaster(void)
 //----------------------------------------------------------------------------------------------
 void ServiceManager::AdminService(void)
 {
-	std::stringstream message; message << "Admin :: Listening for connections on port " << m_nAdminPort << "...";
+	std::stringstream message; message << "ServiceManager :: Listening for admin connections on port " << m_nAdminPort << "...";
 	ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 
 	// Start server listening
@@ -116,7 +121,7 @@ void ServiceManager::AdminService(void)
 void ServiceManager::AcceptConnection(boost::asio::ip::tcp::socket *p_pSocket, bool p_bIsAdmin)
 {
 	{
-		std::stringstream message; message << "Master :: Accepting connection from [" << p_pSocket->remote_endpoint().address().to_string() << "]";
+		std::stringstream message; message << "ServiceManager :: Accepting connection from [" << p_pSocket->remote_endpoint().address().to_string() << "]";
 		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 	}
 
@@ -141,7 +146,7 @@ void ServiceManager::AcceptConnection(boost::asio::ip::tcp::socket *p_pSocket, b
 	}
 
 	{
-		std::stringstream message; message << "Closing connection from [" << p_pSocket->remote_endpoint().address().to_string() << "]";
+		std::stringstream message; message << "ServiceManager :: Closing connection from [" << p_pSocket->remote_endpoint().address().to_string() << "]";
 		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 	}
 

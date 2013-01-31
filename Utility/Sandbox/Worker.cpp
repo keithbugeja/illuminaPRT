@@ -57,7 +57,7 @@ bool IWorker::Synchronise(void)
 	// If ordered to unregister, exit immediately.
 	if (syncMessage.Unregister)
 	{
-		std::stringstream message; message << "Synchronise :: Releasing worker [" << ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID() << "]";
+		std::stringstream message; message << "Worker :: Releasing worker [" << ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID() << "] on event [Synchronise].";
 		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 
 		m_bIsRunning = false;
@@ -84,7 +84,7 @@ bool IWorker::Register(void)
 
 	if (!Communicator::Send(&message, sizeof(Message_Worker_Coordinator_Register), GetCoordinatorID(), Communicator::Worker_Coordinator))
 	{
-		logger->Write("Register :: Failed sending registration message!", LL_Error);
+		logger->Write("Worker :: Unable to complete regstration: Failed sending registration message!", LL_Error);
 		return false;
 	}
 
@@ -97,7 +97,7 @@ bool IWorker::Register(void)
 
 	if (pCommandBuffer[0] != MessageIdentifiers::ID_Coordinator_Accept)
 	{
-		logger->Write("Register :: Coordinator rejected registration message!", LL_Error);
+		logger->Write("Worker :: Unable to complete registration: Coordinator rejected registration message!", LL_Error);
 		return false;
 	}
 
@@ -107,8 +107,10 @@ bool IWorker::Register(void)
 	m_argumentMap.Initialise(argumentString);
 
 	{
-		std::stringstream message; message << "Registration complete. Initialising Worker with [" << argumentString << "]";
-		logger->Write(message.str(), LL_Info);
+		std::stringstream messageLog; messageLog << "Worker :: Registration complete for worker [" 
+			<< ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID() << "]. Initialising with argument list [" 
+			<< argumentString << "].";
+		logger->Write(messageLog.str(), LL_Info);
 	}
 
 	return true; 

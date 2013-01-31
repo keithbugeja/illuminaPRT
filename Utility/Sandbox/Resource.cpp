@@ -60,8 +60,6 @@ void Resource::Unregister(int p_nCoordinatorID, std::vector<Resource*> p_resourc
 
 	unregisterMessage.Size = p_resourceList.size();
 
-	std::cout << "Unregister Message size = [" << unregisterMessage.Size << "]" << std::endl;
-
 	Communicator::Send(&unregisterMessage, sizeof(Message_Controller_Resource_Unregister), p_nCoordinatorID, Communicator::Controller_Coordinator);
 }
 //----------------------------------------------------------------------------------------------
@@ -98,7 +96,11 @@ void Resource::Send(const std::string &p_strMessage, int p_nCoordinatorID, bool 
 //----------------------------------------------------------------------------------------------
 void Resource::Start(ITaskPipeline *p_pTaskPipeline)
 {
-	std::cout << "Resource [" << GetID() << "] online." << std::endl;
+	std::stringstream messageLog;
+	Logger *logger = ServiceManager::GetInstance()->GetLogger();
+
+	messageLog << "Resource :: Resource [" << GetID() << "] online.";
+	logger->Write(messageLog.str(), LL_Info);
 
 	// Resource starts in idle state
 	m_resourceState = Resource::ST_Idle;
@@ -113,12 +115,15 @@ void Resource::Start(ITaskPipeline *p_pTaskPipeline)
 		Communicator::Probe(Communicator::Controller_Rank, Communicator::Controller_Task, &status);
 		Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), Communicator::Controller_Rank, Communicator::Controller_Task, &status);
 
+		// Clear message log
+		messageLog.str(std::string());
+
 		// ASSERT : *pCommandBuffer = ID_Resource_Register || *pCommandBuffer = ID_Resource_Terminate
 		switch (*pCommandBuffer)
 		{
 			case MessageIdentifiers::ID_Resource_Register:
 			{
-				std::cerr << "[Resource " << GetID() << "] : Received register command [" << *pCommandBuffer << "]." << std::endl;
+				messageLog << "Resource :: Resource [" << GetID() << "] received register command [" << *pCommandBuffer << "]." << std::endl;
 
 				Message_Controller_Resource_Register *pMessage = (Message_Controller_Resource_Register*)pCommandBuffer;
 				
@@ -140,13 +145,22 @@ void Resource::Start(ITaskPipeline *p_pTaskPipeline)
 			}
 
 			case MessageIdentifiers::ID_Resource_Terminate:
+			{
+				messageLog << "Resource :: Resource [" << GetID() << "] received termination command.";
+
 				bRunning = false;
 				break;
-
+			}
+			
 			default:
-				std::cerr << "[Resource " << GetID() << "] : Received unrecognised command [" << *pCommandBuffer << "]." << std::endl;
+			{
+				messageLog << "Resource :: Resource [" << GetID() << "] received generic command [" << *pCommandBuffer << "].";
 				break;
+			}
 		}
+
+		// Output message log
+		logger->Write(messageLog.str(), LL_Info);
 	}
 
 	delete[] pCommandBuffer;

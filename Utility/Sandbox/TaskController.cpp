@@ -9,7 +9,7 @@
 #include <boost/thread.hpp>
 //----------------------------------------------------------------------------------------------
 #include "TaskController.h"
-#include "Logger.h"
+#include "ServiceManager.h"
 //----------------------------------------------------------------------------------------------
 TaskController::TaskController(int p_nControllerId)
 	: IResourceController(p_nControllerId)
@@ -85,6 +85,9 @@ bool TaskController::ProcessClientInput(void)
 	std::string strCommandName, strCommand;
 	std::map<std::string, std::string> argumentMap;
 
+	// Get logger instance
+	Logger *logger = ServiceManager::GetInstance()->GetLogger();
+
 	// Read from socket
 	IController::ReadFromSocket(m_pSocket, m_pCommandBuffer, 1024);
 
@@ -93,14 +96,17 @@ bool TaskController::ProcessClientInput(void)
 
 	// Parse command
 	m_pCommandParser->Parse(strCommand, strCommandName, argumentMap);
-	m_pCommandParser->DisplayCommand(strCommandName, argumentMap);
+	m_pCommandParser->Display(strCommandName, argumentMap);
 
 	// Process commands
 	if (strCommandName == "init")
 	{
 		// Need to push them to local structure too
 		std::stringstream argumentStream;
-		argumentStream << "script=" << argumentMap["script"] 
+		argumentStream << "taskid=" << GetID()
+		<< ";username=" << argumentMap["username"]
+		<< ";jobname=" << argumentMap["jobname"]
+		<< ";script=" << argumentMap["script"] 
 		<< ";min=" << argumentMap["min"] 
 		<< ";max=" << argumentMap["max"]
 		<< ";width=" << argumentMap["width"]
@@ -127,7 +133,9 @@ bool TaskController::ProcessClientInput(void)
 
 		if (m_task.HasCoordinator())
 		{
-			std::cout << "Sending [" << pathCommandStream.str() << "]" << std::endl;
+			std::stringstream message; message << "TaskController :: Sending [" << pathCommandStream.str() << "]" << std::endl;
+			logger->Write(message.str(), LL_Info);
+
 			Resource::Send(pathCommandStream.str(), m_task.GetCoordinatorID(), true);
 		}
 
@@ -144,7 +152,9 @@ bool TaskController::ProcessClientInput(void)
 
 		if (m_task.HasCoordinator())
 		{
-			std::cout << "Sending [" << moveCommandStream.str() << "]" << std::endl;
+			std::stringstream message; message << "TaskController :: Sending [" << moveCommandStream.str() << "]" << std::endl;
+			logger->Write(message.str(), LL_Info);
+
 			Resource::Send(moveCommandStream.str(), m_task.GetCoordinatorID(), true);
 		}
 		
@@ -171,8 +181,8 @@ void TaskController::GetControllerInfo(ResourceControllerInfo &p_info)
 {
 	p_info.ID = GetID();
 	p_info.Allocation = m_task.Size();
-	p_info.Description = "No Description yet. Need to implement TASK PIPELINE";
-	p_info.Load = 0.5;
+	p_info.Description = m_strArguments;
+	p_info.Load =  ((float)GetResourceCount()) / (float)(ServiceManager::GetInstance()->GetResourceManager()->GetResourceCount());
 }
 //----------------------------------------------------------------------------------------------
 int TaskController::GetResourceCount(void) const

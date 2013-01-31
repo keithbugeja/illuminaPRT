@@ -6,12 +6,15 @@
 #pragma once
 //----------------------------------------------------------------------------------------------
 #include <boost/asio.hpp>
-#include <External/Compression/Compression.h>
+
 #include <Maths/Maths.h>
+#include <Geometry/Spline.h>
+#include <External/Compression/Compression.h>
 
 #include "Half.h"
 //----------------------------------------------------------------------------------------------
 
+//----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 struct SynchronisePacket
 {
@@ -19,7 +22,8 @@ struct SynchronisePacket
 	Vector3		observerTarget;
 	int			seed;
 };
-
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 class RenderTilePackets
 {
 public:
@@ -90,7 +94,9 @@ public:
 	}
 };
 //----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 
+//----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 struct RenderTaskContext
 {
@@ -109,7 +115,10 @@ struct RenderTaskContext
 	RenderTilePackets TilePackets;
 };
 //----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 class CompressedRadianceContext
 {
 public:
@@ -131,7 +140,8 @@ public:
 	unsigned short Flags;
 	*/
 };
-
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 class CompressedRadianceBuffer
 	: public Buffer2D<CompressedRadianceContext>
 { 
@@ -340,7 +350,7 @@ public:
 		}
 	}
 };
-
+//----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 class SerialisableRenderTile
 {
@@ -522,133 +532,42 @@ public:
 
 	inline RadianceBuffer* GetImageData(void) { return m_pRadianceBuffer; }	
 };
-
-/*
-class SerialisableRenderTile
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+class Path
 {
-private:
-	enum Uncompressed 
-	{
-		ucHdr_id = 0,
-		ucHdr_width = 1,
-		ucHdr_height = 2,
-		ucHdr_count = 3
-	};
-
-	enum Compressed
-	{
-		cHdr_size = 0,
-		cHdr_count = 1
-	};
-
 protected:
-	int *m_pBuffer,
-		*m_pCompressableBuffer,
-		*m_pImageBuffer;
-	
-	size_t m_nCompressableSize;
-
-	char *m_pCompressedBuffer;
-	size_t m_nCompressedSize;
-
-	int *m_pTransferBuffer;
-	size_t m_nTransferSize;
-
-	RadianceBuffer *m_pRadianceBuffer;
-
+	std::vector<Vector3> m_vertexList;
+	std::vector<float> m_pivotList;
+	float m_fTime;
 public:
-	SerialisableRenderTile(int p_nID, int p_nMaxWidth, int p_nMaxHeight)
+	bool IsEmpty(void) { return m_vertexList.empty(); }
+	void Clear(void) { m_vertexList.clear(); m_pivotList.clear(); Reset(); } 
+	void Reset(void) { m_fTime = 0; }
+	void Move(float p_fDeltaT) { m_fTime += p_fDeltaT; }
+
+	void AddVertex(const Vector3 &p_pVertex) 
+	{ 
+		m_vertexList.push_back(p_pVertex); 
+	}
+
+	void PreparePath(void)
 	{
-		// Buffer, id, width, height
-		m_nCompressableSize = p_nMaxWidth * p_nMaxHeight * sizeof(RadianceContext) +
-			sizeof(int) * ucHdr_count;
-
-		// Initialise unknown quantities
-		m_nCompressedSize = 
-			m_nTransferSize = 0;
-
-		// Buffer allocations
-		m_pBuffer = (int*)new char[m_nCompressableSize];
-		m_pBuffer[ucHdr_id] = -1;
-		m_pBuffer[ucHdr_width] = p_nMaxWidth;
-		m_pBuffer[ucHdr_height] = p_nMaxHeight;
-
-		m_pImageBuffer = m_pBuffer + ucHdr_count; 
-
-		m_pTransferBuffer = (int*)new char[m_nCompressableSize * 2 + sizeof(int)];
-		m_pCompressedBuffer = (char*)(m_pTransferBuffer + 1);
-
-		m_pRadianceBuffer = new RadianceBuffer(p_nMaxWidth, p_nMaxHeight, (RadianceContext*)m_pImageBuffer);
+		Illumina::Core::Interpolator::ComputePivots(m_vertexList, m_pivotList);
 	}
 
-	~SerialisableRenderTile(void) 
+	Vector3 GetPosition(float p_fTime)
 	{
-		delete[] m_pBuffer;
-		delete[] m_pTransferBuffer;
-		delete m_pRadianceBuffer;
+		if (m_vertexList.size() <= 2)
+			return Vector3::Zero;
+
+		return Illumina::Core::Interpolator::Lagrange(m_vertexList, m_pivotList, p_fTime);
 	}
 
-	inline void Resize(int p_nWidth, int p_nHeight)
+	Vector3 GetPosition(void) 
 	{
-		m_pBuffer[ucHdr_width] = p_nWidth;
-		m_pBuffer[ucHdr_height] = p_nHeight;
-
-		Reinterpret();
+		return GetPosition(m_fTime);
 	}
-
-	inline void Reinterpret(void) 
-	{
-		int width = m_pBuffer[ucHdr_width],
-			height = m_pBuffer[ucHdr_height];
-
-		m_nCompressableSize = width * height * sizeof(RadianceContext) +
-			sizeof(int) * ucHdr_count;
-
-		Safe_Delete(m_pRadianceBuffer);
-
-		m_pRadianceBuffer = new RadianceBuffer(width, height, (RadianceContext*)m_pImageBuffer);
-	}
-
-	inline int GetID(void) const { return m_pBuffer[ucHdr_id]; }
-	inline void SetID(int p_nID) { m_pBuffer[ucHdr_id] = p_nID; }
-
-	inline int GetWidth(void) const { return m_pBuffer[ucHdr_width]; }
-	inline int GetHeight(void) const { return m_pBuffer[ucHdr_height]; }
-
-	inline void Package(void) 
-	{
-		m_nCompressedSize = Compress();
-		m_pTransferBuffer[cHdr_size] = m_nCompressableSize;
-		m_nTransferSize = m_nCompressedSize + sizeof(int);
-	}
-
-	inline void Unpackage(void)
-	{
-		m_nCompressableSize = m_pTransferBuffer[cHdr_size];
-		Decompress();
-		Reinterpret();
-	}
-
-	inline size_t Compress(void) 
-	{
-		m_nCompressedSize = Illumina::Core::Compressor::Compress((char*)m_pBuffer, m_nCompressableSize, m_pCompressedBuffer);
-		return m_nCompressedSize;
-	}
-
-	inline void Decompress(void) 
-	{
-		Illumina::Core::Compressor::Decompress(m_pCompressedBuffer, m_nCompressableSize, (char*)m_pBuffer);
-	}
-
-	inline char* GetTransferBuffer(void) const {
-		return (char*)m_pTransferBuffer;
-	}
-
-	inline size_t GetTransferBufferSize(void) const {
-		return m_nTransferSize;
-	}
-
-	inline RadianceBuffer* GetImageData(void) { return m_pRadianceBuffer; }	
 };
-*/
+//----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------

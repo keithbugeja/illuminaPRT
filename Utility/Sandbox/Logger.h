@@ -221,11 +221,14 @@ public:
 	{
 		std::vector<ILoggerChannel*>::iterator channelIterator;
 
-		for (channelIterator = m_defaultGroup.begin();
-			 channelIterator != m_defaultGroup.end(); 
-			 channelIterator++)
+		if (p_filter & m_nLoggingFilter)
 		{
-			(*channelIterator)->Write(p_strMessage, p_filter);
+			for (channelIterator = m_defaultGroup.begin();
+				 channelIterator != m_defaultGroup.end(); 
+				 channelIterator++)
+			{
+				(*channelIterator)->Write(p_strMessage, p_filter);
+			}
 		}
 	}
 };

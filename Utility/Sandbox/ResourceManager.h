@@ -75,33 +75,15 @@ public:
 		return pController;
 	}
 
-	IResourceController* GetInstance(int p_nResourceControllerID)
-	{
-		std::map<int, IResourceController*>::iterator controllerIterator 
-			= m_controllerMap.find(p_nResourceControllerID);
-
-		if (controllerIterator == m_controllerMap.end())
-			return NULL;
-
-		return (*controllerIterator).second;
-	}
-
-	void DestroyInstance(IResourceController *p_pController)
-	{
-		std::vector<IResourceController*>::iterator controllerIterator = std::find(m_controllerList.begin(), m_controllerList.end(), p_pController);
-		
-		if (controllerIterator != m_controllerList.end())
-			m_controllerList.erase(controllerIterator);
-
-		m_controllerMap.erase(p_pController->GetID());
-	}
+	IResourceController* GetInstance(int p_nResourceControllerID);
+	void DestroyInstance(IResourceController *p_pController);
 
 	void Initialise(void);
 	void Shutdown(void);
 
+	int GetResourceCount(void) const;
 	bool RequestResources(int p_nTaskID, int p_nResourceCount);
 	bool ReleaseResources(int p_nTaskID, int p_nResourceCount);
 
-	// void GetResourceInfo(std::vector<ResourceInfo> &p_resourceInfoList);
 	void GetControllerInfo(std::vector<ResourceControllerInfo> &p_controllerInfoList);
 };
