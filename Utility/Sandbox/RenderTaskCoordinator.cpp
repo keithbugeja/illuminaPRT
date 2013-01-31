@@ -13,7 +13,10 @@ static const int ____seed_inc = 137;
 //----------------------------------------------------------------------------------------------
 bool RenderTaskCoordinator::OnInitialise(void) 
 {
-	std::cout << "RenderTaskCoordinator::OnInitialise()" << std::endl;
+	// Get logger instance
+	std::stringstream messageLog;
+	Logger *logger = ServiceManager::GetInstance()->GetLogger();
+	logger->Write("RenderTaskCoordinator :: Handling event [OnInitialise].", LL_Info);
 
 	//----------------------------------------------------------------------------------------------
 	// Initialise and load sandbox environment
@@ -24,12 +27,33 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_pSandbox = new SandboxEnvironment();
 	m_pSandbox->Initialise();
 
-	if (!pArgumentMap->GetArgument("script", strScriptName))
+	if (!pArgumentMap->GetArgument("taskid", m_nTaskId))
+	{
+		logger->Write("RenderTaskCoordinator :: Unable to determine task id [taskid] from argument list.", LL_Error);
 		return false;
+	}
 
-	if (m_pSandbox->LoadScene(strScriptName))
-		std::cout << "Scene [" << strScriptName << "] loaded." << std::endl;
+	if (!pArgumentMap->GetArgument("username", m_strUserName) || !pArgumentMap->GetArgument("jobname", m_strJobName))
+	{
+		logger->Write("RenderTaskCoordinator :: Unable to determine task details ([username] or [jobname]) from argument list.", LL_Error);
+		return false;
+	}
 
+	if (!pArgumentMap->GetArgument("script", strScriptName))
+	{
+		logger->Write("RenderTaskCoordinator :: Unable to find [script] entry in argument list.", LL_Error);
+		return false;
+	}
+
+	if (!m_pSandbox->LoadScene(strScriptName))
+	{
+		messageLog << "RenderTaskCoordinator :: Unable to load scene script [" << strScriptName << "].";
+		logger->Write(messageLog.str(), LL_Error);
+		return false;
+	}
+		
+	messageLog << "RenderTaskCoordinator :: Scene script [" << strScriptName << "] loaded.";
+	
 	//----------------------------------------------------------------------------------------------
 	// Initialise render task
 	//----------------------------------------------------------------------------------------------
@@ -38,9 +62,9 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	{
 		m_pRenderTile = new SerialisableRenderTile(-1, m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight);
 		
-		std::cout << "Tile size [" 
+		messageLog << std::endl << "RenderTaskCoordinator :: Maximum tile size set to [" 
 			<< m_renderTaskContext.TileWidth << " x " 
-			<< m_renderTaskContext.TileHeight << "]" << std::endl;
+			<< m_renderTaskContext.TileHeight << "]";
 	}
 
 	//----------------------------------------------------------------------------------------------
@@ -49,13 +73,13 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	// Enable adaptive tile sizes
 	std::string adaptiveTile; pArgumentMap->GetArgument("useadaptive", adaptiveTile); boost::to_lower(adaptiveTile);
 	m_renderTaskContext.AdaptiveTiles = adaptiveTile == "false" ? false : true;
-	
+
 	// Enable batch size
 	pArgumentMap->GetArgument("batchsize", m_renderTaskContext.TileBatchSize);
 
 	// Read the minimum number of required workers
 	if (pArgumentMap->GetArgument("min", m_renderTaskContext.WorkersRequired))
-		std::cout << "Workers required [" << m_renderTaskContext.WorkersRequired << "]" << std::endl;
+		messageLog << std::endl << "RenderTaskCoordinator :: Workers required [" << m_renderTaskContext.WorkersRequired << "]";
 
 	//----------------------------------------------------------------------------------------------
 	// Initialise engine and environment
@@ -86,6 +110,7 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_pMotionBlurFilter->Reset();
 
 	// Open rendering device for output
+	m_pRenderer->GetDevice()->SetTag(m_strUserName + "_" + m_strJobName + "_");
 	m_pRenderer->GetDevice()->Open();
 
 	//----------------------------------------------------------------------------------------------
@@ -99,14 +124,14 @@ bool RenderTaskCoordinator::OnInitialise(void)
 		
 	if (m_renderTaskContext.AdaptiveTiles)
 	{
-		std::cout << "Adaptive tiling enabled: Tile Batch [" << m_renderTaskContext.TileBatchSize << "]" << std::endl;
+		messageLog << std::endl << "RenderTaskCoordinator :: Adaptive tiling enabled with batch size [" << m_renderTaskContext.TileBatchSize << "]";
 
 		m_renderTaskContext.TilePackets.GeneratePackets(m_renderTaskContext.FrameWidth, m_renderTaskContext.FrameHeight,
 			Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), m_renderTaskContext.TileBatchSize);
 	} 
 	else
 	{
-		std::cout << "Adaptive tiling disabled." << std::endl;
+		messageLog << std::endl << "RenderTaskCoordinator :: Adaptive tiling disabled.";
 
 		m_renderTaskContext.TilePackets.GeneratePackets(m_renderTaskContext.FrameWidth, m_renderTaskContext.FrameHeight,
 			Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), 10000);
@@ -142,13 +167,16 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	boost::thread decompressionThreadHandler =
 		boost::thread(boost::bind(RenderTaskCoordinator::DecompressionThreadHandler, this));
 
+	// Log accumulated messages
+	logger->Write(messageLog.str(), LL_Info);
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 void RenderTaskCoordinator::OnShutdown(void)
 {
-	std::cout << "RenderTaskCoordinator::OnShutdown()" << std::endl;
+	ServiceManager::GetInstance()->GetLogger()->Write("RenderTaskCoordinator :: Handling event [OnShutdown].", LL_Info);
 	
 	//----------------------------------------------------------------------------------------------
 	// Wake up decompression thread, if sleeping and force quit (set packed tiles to zero)
@@ -196,9 +224,6 @@ void RenderTaskCoordinator::OnShutdown(void)
 bool RenderTaskCoordinator::OnSynchronise(void) 
 {
 	SynchronisePacket syncPacket;
-
-	// Phased out seed as a flag
-	//syncPacket.resetSeed = m_bResetWorkerSeed ? 1 : 0; m_bResetWorkerSeed = 0;
 
 	// Actual seed is now passed instead of reset flag
 	if (m_bResetWorkerSeed) {
@@ -251,9 +276,10 @@ bool RenderTaskCoordinator::OnSynchroniseAbort(void)
 //----------------------------------------------------------------------------------------------
 bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage) 
 {
+	// Generic message 
 	Message_Controller_Resource_Generic *pMessage = (Message_Controller_Resource_Generic*)p_pMessage->Content;
-	// std::cout << "Received a generic message : [" << pMessage->String << "]" << std::endl;
 
+	// Transform to argument map
 	std::string command, action;
 	ArgumentMap arg(pMessage->String);
 	arg.GetArgument("command", command);
@@ -435,13 +461,18 @@ bool RenderTaskCoordinator::Compute(void)
 	//----------------------------------------------------------------------------------------------
 	// Show frame time breakdown  
 	//----------------------------------------------------------------------------------------------
-	std::cout << "---| Radiance Time : " << radianceTime << "s" << std::endl;
-	//std::cout << "---| Decompression Time : " << decompressionTime << "s for " << framePackageSize / (1024 * 1024) << " MB" << std::endl;
-	//std::cout << "---| Bilateral Time : " << bilateralTime << "s" << std::endl;
-	//std::cout << "---| Discontinuity Time : " << discontinuityTime << "s" << std::endl;
-	//std::cout << "---| Tonemapping Time : " << toneTime << "s" << std::endl;
-	std::cout << "---| Accumulation Time : " << accumulationTime << "s" << std::endl;
-	std::cout << "---| Commit Time : " << commitTime << "s" << std::endl;
+	std::stringstream statistics;
+
+	statistics << "RenderTaskCoordinator :: Computation statistics for task [" << m_nTaskId << "] : " 
+		<< std::endl << "\t---| Radiance Time : " << radianceTime << "s"
+		<< std::endl << "\t---| Accumulation Time : " << accumulationTime << "s"
+		//<< std::endl << "\t---| Decompression Time : " << decompressionTime << "s for " << framePackageSize / (1024 * 1024) << " MB"
+		//<< std::endl << "\t---| Bilateral Time : " << bilateralTime << "s"
+		//<< std::endl << "\t---| Discontinuity Time : " << discontinuityTime << "s"
+		//<< std::endl << "\t---| Tonemapping Time : " << toneTime << "s"
+		<< std::endl << "\t---| Commit Time : " << commitTime << "s";
+
+	ServiceManager::GetInstance()->GetLogger()->Write(statistics.str(), LL_Info);
 
 	return true;
 }

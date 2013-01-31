@@ -69,6 +69,7 @@ bool RenderTaskWorker::ComputeUniform(void)
 	*/
 	return true;
 }
+
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 bool RenderTaskWorker::ComputeVariable(void)
@@ -86,14 +87,10 @@ bool RenderTaskWorker::ComputeVariable(void)
 	eventStart = Platform::GetTime();
 
 	// Set seed 
-	// Note: We need to reset this on a tile-by-tile basis
 	m_pEnvironment->GetSampler()->Reset(m_unSamplerSeed);
 
 	// Prepare integrator
-	//int meid = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
-	//std::cout << "---[" << meid << "] Getting pre-sample : [" << m_pEnvironment->GetSampler()->Get1DSample() << "] for seed [" << m_unSamplerSeed << "]" << std::endl;
 	m_pIntegrator->Prepare(m_pEnvironment->GetScene());
-	//std::cout << "---[" << meid << "] Getting post-sample : [" << m_pEnvironment->GetSampler()->Get1DSample() << "] for seed [" << m_unSamplerSeed << "]" << std::endl;
 
 	// Update space
 	m_pSpace->Update();
@@ -103,19 +100,13 @@ bool RenderTaskWorker::ComputeVariable(void)
 
 	for (communicationTime = 0, jobTime = 0;;)
 	{
-		////--------------------------------------------------
-		//// Reset seed, otherwise tiling will be apparent in 
-		//// pseudorandom sequence based sampling!
-		////--------------------------------------------------
-		//m_pEnvironment->GetSampler()->Reset(m_unSamplerSeed);
-
 		//--------------------------------------------------
 		// Receive tile
 		//--------------------------------------------------
 		communicationStart = Platform::GetTime();
 
 		Communicator::Receive(&tileID, sizeof(int), GetCoordinatorID(), Communicator::Coordinator_Worker_Job);
-		
+
 		communicationComplete = Platform::GetTime();
 		communicationTime += Platform::ToSeconds(communicationComplete - communicationStart);
 
@@ -242,42 +233,68 @@ bool RenderTaskWorker::OnCoordinatorMessages(void *p_pMessage)
 //----------------------------------------------------------------------------------------------
 bool RenderTaskWorker::OnInitialise(void) 
 {
-	std::cout << "RenderTaskWorker::OnInitialise()" << std::endl;
+		// Get logger instance
+	std::stringstream messageLog;
+	Logger *logger = ServiceManager::GetInstance()->GetLogger();
+	logger->Write("RenderTaskWorker :: Handling event [OnInitialise].", LL_Info);
 
+	//----------------------------------------------------------------------------------------------
+	// Initialise and load sandbox environment
+	//----------------------------------------------------------------------------------------------
 	std::string strScriptName;
 	ArgumentMap *pArgumentMap = GetArgumentMap();
 
-	//----------------------------------------------------------------------------------------------
-	// Initialise sandbox environment
-	//----------------------------------------------------------------------------------------------
 	m_pSandbox = new SandboxEnvironment();
 	m_pSandbox->Initialise();
 
-	// Read environment script
-	if (!pArgumentMap->GetArgument("script", strScriptName))
+	if (!pArgumentMap->GetArgument("taskid", m_nTaskId))
+	{
+		logger->Write("RenderTaskWorker :: Unable to determine task id [taskid] from argument list.", LL_Error);
 		return false;
+	}
 
-	if (m_pSandbox->LoadScene(strScriptName))
-		std::cout << "Scene [" << strScriptName << "] loaded." << std::endl;
+	if (!pArgumentMap->GetArgument("script", strScriptName))
+	{
+		logger->Write("RenderTaskWorker :: Unable to find [script] entry in argument list.", LL_Error);
+		return false;
+	}
 
-	// Read tile width and height arugments;
+	if (!m_pSandbox->LoadScene(strScriptName))
+	{
+		messageLog << "RenderTaskWorker :: Unable to load scene script [" << strScriptName << "].";
+		logger->Write(messageLog.str(), LL_Error);
+		return false;
+	}
+		
+	messageLog << "RenderTaskWorker :: Scene script [" << strScriptName << "] loaded.";
+	
+	//----------------------------------------------------------------------------------------------
+	// Initialise render task
+	//----------------------------------------------------------------------------------------------
 	if (pArgumentMap->GetArgument("width", m_renderTaskContext.TileWidth) &&
 		pArgumentMap->GetArgument("height", m_renderTaskContext.TileHeight))
 	{
-		m_pRenderTile = new SerialisableRenderTile(-1, 
-			m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight);
-		std::cout << "Tile size[" << m_renderTaskContext.TileWidth << " x " 
-			<< m_renderTaskContext.TileHeight << "]" << std::endl;
+		m_pRenderTile = new SerialisableRenderTile(-1, m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight);
+		m_pRimmedRenderTile = new SerialisableRenderTile(-1, m_renderTaskContext.TileWidth + 32, m_renderTaskContext.TileHeight + 32);
 
-		m_pRimmedRenderTile = new SerialisableRenderTile(-1,
-			m_renderTaskContext.TileWidth + 32, m_renderTaskContext.TileHeight + 32);
+		messageLog << std::endl << "RenderTaskWorker :: Maximum tile size set to [" 
+			<< m_renderTaskContext.TileWidth << " x " 
+			<< m_renderTaskContext.TileHeight << "], border [+32 x +32]";
 	}
 
-	// Read adaptive tile settings
-	std::string adaptiveTile;
-	pArgumentMap->GetArgument("useadaptive", adaptiveTile); boost::to_lower(adaptiveTile);
+	//----------------------------------------------------------------------------------------------
+	// Initialise render parameters
+	//----------------------------------------------------------------------------------------------
+	// Enable adaptive tile sizes
+	std::string adaptiveTile; pArgumentMap->GetArgument("useadaptive", adaptiveTile); boost::to_lower(adaptiveTile);
 	m_renderTaskContext.AdaptiveTiles = adaptiveTile == "false" ? false : true;
+
+	// Enable batch size
 	pArgumentMap->GetArgument("batchsize", m_renderTaskContext.TileBatchSize);
+
+	// Read the minimum number of required workers
+	if (pArgumentMap->GetArgument("min", m_renderTaskContext.WorkersRequired))
+		messageLog << std::endl << "RenderTaskWorker :: Workers required [" << m_renderTaskContext.WorkersRequired << "]";
 
 	//----------------------------------------------------------------------------------------------
 	// Engine, environment
@@ -309,28 +326,32 @@ bool RenderTaskWorker::OnInitialise(void)
 	m_renderTaskContext.TilesPerRow = m_renderTaskContext.FrameWidth / m_renderTaskContext.TileWidth;
 	m_renderTaskContext.TilesPerColumn = m_renderTaskContext.FrameHeight / m_renderTaskContext.TileHeight;
 	m_renderTaskContext.TotalTiles = m_renderTaskContext.TilesPerColumn * m_renderTaskContext.TilesPerRow;
-
+		
 	if (m_renderTaskContext.AdaptiveTiles)
 	{
-		std::cout << "Adaptive tiling enabled: Tile Batch [" << m_renderTaskContext.TileBatchSize << "]" << std::endl;
+		messageLog << std::endl << "RenderTaskWorker :: Adaptive tiling enabled with batch size [" << m_renderTaskContext.TileBatchSize << "]";
 
 		m_renderTaskContext.TilePackets.GeneratePackets(m_renderTaskContext.FrameWidth, m_renderTaskContext.FrameHeight,
 			Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), m_renderTaskContext.TileBatchSize);
 	} 
 	else
 	{
-		std::cout << "Adaptive tiling disabled." << std::endl;
+		messageLog << std::endl << "RenderTaskWorker :: Adaptive tiling disabled.";
 
 		m_renderTaskContext.TilePackets.GeneratePackets(m_renderTaskContext.FrameWidth, m_renderTaskContext.FrameHeight,
 			Maths::Max(m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight), 10000);
 	}
 
+	// Log accumulated messages
+	logger->Write(messageLog.str(), LL_Info);
+
 	return true;
 }
+
 //----------------------------------------------------------------------------------------------
 void RenderTaskWorker::OnShutdown(void) 
 {
-	std::cout << "RenderTaskWorker::OnShutdown()" << std::endl;
+	ServiceManager::GetInstance()->GetLogger()->Write("RenderTaskWorker :: Handling event [OnShutdown].", LL_Info);
 
 	// Shutdown renderer, integrator
 	m_pRenderer->Shutdown();
@@ -366,8 +387,10 @@ bool RenderTaskWorker::OnSynchronise(void)
 
 	m_unSamplerSeed = (unsigned int)packet->seed;
 
+	/*
 	int meid = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
 	std::cout << "---[" << meid << "] Seed = " << m_unSamplerSeed << "s" << std::endl;
+	*/
 
 	/*
 	if (packet->resetSeed != 0)

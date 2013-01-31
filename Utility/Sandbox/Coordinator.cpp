@@ -172,7 +172,7 @@ bool ICoordinator::EvaluateMessageQueue(ResourceMessageQueue *p_pMessageQueue)
 			default:
 			{
 				std::stringstream message;
-				message << "Unrecognised command [" << pMessage->Command << "] received from [" << pMessage->OriginID << "]";
+				message << "Coordinator :: Unrecognised command [" << pMessage->Command << "] received from [" << pMessage->OriginID << "].";
 				ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 			}
 		}
@@ -262,7 +262,7 @@ bool ICoordinator::Synchronise(void)
 	if (ServiceManager::GetInstance()->IsVerbose())
 	{
 		std::stringstream message;
-		message << "Synchronise found [" << m_ready.size() << "] workers ready.";
+		message << "Coordinator :: Synchronise found [" << m_ready.size() << "] workers ready.";
 		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 	}
 

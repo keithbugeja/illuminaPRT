@@ -23,7 +23,7 @@
 //----------------------------------------------------------------------------------------------
 //	Set Illumina PRT version
 //----------------------------------------------------------------------------------------------
-namespace Illumina { namespace Core { const int Major = 0; const int Minor = 5; const int Build = 0; } }
+namespace Illumina { namespace Core { const int Major = 0; const int Minor = 6; const int Build = 0; } }
 
 using namespace Illumina::Core;
 
@@ -792,8 +792,12 @@ int main(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-	std::cout << "Illumina PRT : Version " << Major << "." << Minor << "." << Build << " http://www.illuminaprt.codeplex.com " << std::endl;
-	std::cout << "Copyright (C) 2010-2012 Keith Bugeja" << std::endl << std::endl;
+	std::cout << std::endl
+		<< "-----------------------------------------------------------" << std::endl
+		<< "-- Illumina PRT (http://www.illuminaprt.codeplex.com)" << std::endl 
+		<< "--   Version " << Major << "." << Minor << "." << Build << std::endl
+		<< "--   Copyright (C) 2010-2013 Keith Bugeja" << std::endl 
+		<< "-----------------------------------------------------------" << std::endl;
 
 	// default options
 	int nPort = 6660,
@@ -870,6 +874,8 @@ int main(int argc, char** argv)
 	{
 		strPath = variableMap["workdir"].as<std::string>();
 	}
+	
+	std::cout << "-----------------------------------------------------------" << std::endl << std::endl;
 
 	// -- start service
 	ServiceManager *pServiceManager = ServiceManager::GetInstance();

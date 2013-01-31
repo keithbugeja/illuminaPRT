@@ -58,6 +58,9 @@ namespace Illumina
 			virtual void WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, 
 				RadianceBuffer *p_pRadianceBuffer, int p_nDeviceX, int p_nDeviceY) = 0;
 
+			/* Provisionally accepted */
+			virtual void SetTag(const std::string &p_strTag) { };
+
 			std::string ToString(void) const { return "IDevice"; }
 		};
 

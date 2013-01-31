@@ -25,6 +25,7 @@ BufferedImageDevice::BufferedImageDevice(int p_nWidth, int p_nHeight, IImageIO *
 	, m_nImageCacheBaseFrame(0)
 	, m_nImageCacheIndex(0)
 	, m_strFilename(p_strFilename)
+	, m_strTag()
 	, m_bKillFilterOnExit(p_bKillFilterOnExit)
 { 
 	ImageCache imageCache;
@@ -47,6 +48,7 @@ BufferedImageDevice::BufferedImageDevice(const std::string &p_strName, int p_nWi
 	, m_nImageCacheBaseFrame(0)
 	, m_nImageCacheIndex(0)
 	, m_strFilename(p_strFilename)
+	, m_strTag()
 	, m_bKillFilterOnExit(p_bKillFilterOnExit)
 { 
 	ImageCache imageCache;
@@ -104,7 +106,7 @@ void BufferedImageDevice::BeginFrame(void)
 //----------------------------------------------------------------------------------------------
 void BufferedImageDevice::EndFrame(void)  
 {
-	std::cout << "BufferedImage : [" << m_nImageCacheIndex << " of " << m_imageCacheList.size() << "]" << std::endl;
+	// std::cout << "BufferedImage : [" << m_nImageCacheIndex << " of " << m_imageCacheList.size() << "]" << std::endl;
 
 	m_imageCacheList[m_nImageCacheIndex].m_dfTimeStamp = Platform::ToSeconds(Platform::GetTime());
 
@@ -116,17 +118,17 @@ void BufferedImageDevice::EndFrame(void)
 
 		// Open timestamps file
 		std::ofstream timestamps;
-		std::string timestampFilename = (imagePath.parent_path() / "timestamps.txt").string();
+		std::string timestampFilename = (imagePath.parent_path() / (m_strTag + "timestamps.txt")).string();
 		timestamps.open(timestampFilename.c_str(), std::ios::ate | std::ofstream::app);
 
 		for (int frame = 0; frame < m_imageCacheList.size(); frame++)
 		{
 			std::stringstream imageNameStream;
-			imageNameStream << std::setfill('0') << std::setw(5) << (frame + m_nImageCacheBaseFrame);
+			imageNameStream << m_strTag << std::setfill('0') << std::setw(5) << (frame + m_nImageCacheBaseFrame);
 			std::string imageFilename = (imagePath.parent_path() / (imageNameStream.str() + imagePath.extension().string())).string();
 			std::string imageTimeStamp = boost::lexical_cast<std::string>(m_imageCacheList[frame].m_dfTimeStamp);
 			
-			std::cout << "Persisting : " << imageFilename << " at " << imageTimeStamp << std::endl;
+			// std::cout << "Persisting : " << imageFilename << " at " << imageTimeStamp << std::endl;
 
 			// Save image
 			m_pImageIO->Save(*(m_imageCacheList[frame].m_pImage), imageFilename);
@@ -193,6 +195,10 @@ void BufferedImageDevice::WriteRadianceBufferToDevice(int p_nRegionX, int p_nReg
 			this->Set(width - (dstX + 1), height - (dstY + 1), p_pRadianceBuffer->Get(srcX, srcY).Final);
 		}
 	}
+}
+//----------------------------------------------------------------------------------------------
+void BufferedImageDevice::SetTag(const std::string &p_strTag) {
+	m_strTag = p_strTag;
 }
 //----------------------------------------------------------------------------------------------
 std::string BufferedImageDevice::GetFilename(void) const {

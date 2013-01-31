@@ -4,11 +4,9 @@
 //	Date:		27/07/2012
 //----------------------------------------------------------------------------------------------
 #include <mpi.h>
-
 //----------------------------------------------------------------------------------------------
 #include "ResourceManager.h"
 #include "ServiceManager.h"
-#include "Logger.h"
 //----------------------------------------------------------------------------------------------
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -46,7 +44,7 @@ bool ResourceManager::AllocateResources(void)
 	if (WhoAmI() == Master)
 	{
 		std::stringstream message;
-		message << "Resource Manager allocating " << m_nResourceCount << " resources for use." << std::endl;
+		message << "ResourceManager :: Allocating [" << m_nResourceCount << "] resources for use.";
 		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 	}
 
@@ -110,14 +108,20 @@ void ResourceManager::Shutdown(void)
 	MPI_Finalize();
 }
 //----------------------------------------------------------------------------------------------
+int ResourceManager::GetResourceCount(void) const {
+	return m_nResourceCount;
+}
+//----------------------------------------------------------------------------------------------
 bool ResourceManager::RequestResources(int p_nTaskID, int p_nResourceCount)
 {
 	Logger *logger = ServiceManager::GetInstance()->GetLogger();
+	std::stringstream message;
 
 	// Cannot allocate more resources than available!
 	if (p_nResourceCount > m_resourceFreeList.size())
 	{
-		logger->Write("ResourceManager::RequestResources : Not enough free resources to satisfy allocation request!", LL_Error);
+		message.str(std::string()); message << "ResourceManager :: Unable to allocate resources: Not enough free resources [" << m_resourceFreeList.size() << "] to satisfy allocation request [" << p_nResourceCount << "]!";
+		logger->Write(message.str(), LL_Error);
 		return false;
 	}
 
@@ -125,7 +129,8 @@ bool ResourceManager::RequestResources(int p_nTaskID, int p_nResourceCount)
 	IResourceController *pController = GetInstance(p_nTaskID);
 	if (pController == NULL)
 	{
-		logger->Write("ResourceManager::RequestResources : Unknown Task ID!", LL_Error);
+		message.str(std::string()); message << "ResourceManager :: Unable to allocate resources: Task Id [" << p_nTaskID << "] unknown!";
+		logger->Write(message.str(), LL_Error);
 		return false;
 	}
 
@@ -162,14 +167,16 @@ bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 	IResourceController *pController = GetInstance(p_nTaskID);
 	if (pController == NULL)
 	{
-		logger->Write("ResourceManager::ReleaseResources : Unknown Task ID!", LL_Error);
+		message.str(std::string()); message << "ResourceManager :: Unable to release resources: Task Id [" << p_nTaskID << "] unknown!";
+		logger->Write(message.str(), LL_Error);
 		return false;
 	}
 	
 	// Check if task has the requested number of allocated resources
 	if (p_nResourceCount > pController->GetResourceCount())
 	{
-		logger->Write("ResourceManager::ReleaseResources : Unable to release the requested number of resources!", LL_Error);
+		message.str(std::string()); message << "ResourceManager :: Unable to release resources: Request [" << p_nResourceCount << "] exceeds task resources [" << pController->GetResourceCount() << "]!";
+		logger->Write(message.str(), LL_Error);
 		return false;
 	}
 
@@ -196,15 +203,36 @@ bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 		}
 		else
 		{
-			message.clear(); message << "Unable to delete resource [" << pResource->GetID() << "]. Resource not in allocation list!";
+			message.str(std::string()); message << "ResourceManager :: Unable to move resource [" << pResource->GetID() << "] to the free list: Resource not on allocation list.";
 			logger->Write(message.str(), LL_Error);
 		}
 	}
 
-	message.clear(); message << "Freed [" << resourceList.size() << "] resources.";
+	message.str(std::string()); message << "ResourceManager :: Freed [" << resourceList.size() << "] resources.";
 	logger->Write(message.str(), LL_Info);
 
 	return true;
+}
+//----------------------------------------------------------------------------------------------
+IResourceController* ResourceManager::GetInstance(int p_nResourceControllerID)
+{
+	std::map<int, IResourceController*>::iterator controllerIterator 
+		= m_controllerMap.find(p_nResourceControllerID);
+
+	if (controllerIterator == m_controllerMap.end())
+		return NULL;
+
+	return (*controllerIterator).second;
+}
+//----------------------------------------------------------------------------------------------
+void ResourceManager::DestroyInstance(IResourceController *p_pController)
+{
+	std::vector<IResourceController*>::iterator controllerIterator = std::find(m_controllerList.begin(), m_controllerList.end(), p_pController);
+		
+	if (controllerIterator != m_controllerList.end())
+		m_controllerList.erase(controllerIterator);
+
+	m_controllerMap.erase(p_pController->GetID());
 }
 //----------------------------------------------------------------------------------------------
 void ResourceManager::GetControllerInfo(std::vector<ResourceControllerInfo> &p_controllerInfoList)
@@ -218,3 +246,4 @@ void ResourceManager::GetControllerInfo(std::vector<ResourceControllerInfo> &p_c
 		p_controllerInfoList.push_back(info);
 	}
 }
+//----------------------------------------------------------------------------------------------

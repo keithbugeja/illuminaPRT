@@ -18,7 +18,7 @@ FactoryManager<T>::~FactoryManager(void)
 	
 	for (instanceIterator = m_instanceMap.begin(); instanceIterator != m_instanceMap.end(); ++instanceIterator)
 	{
-		std::cout << "Disposing of [" << (*instanceIterator).first << "]" << std::endl;
+		// std::cout << "Disposing of [" << (*instanceIterator).first << "]" << std::endl;
 
 		m_instanceMap.erase((*instanceIterator).first);
 		Safe_Delete((*instanceIterator).second);

@@ -33,6 +33,8 @@ class RenderTaskWorker
 
 	unsigned int m_unSamplerSeed;
 
+	int m_nTaskId;
+
 protected:
 	bool ComputeUniform(void);
 	bool ComputeVariable(void);

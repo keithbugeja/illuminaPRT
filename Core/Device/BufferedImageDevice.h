@@ -30,6 +30,7 @@ namespace Illumina
 
 			Image *m_pImage;
 			IImageIO *m_pImageIO;
+			std::string m_strTag;
 			std::string m_strFilename;
 
 			bool m_bKillFilterOnExit;
@@ -65,6 +66,7 @@ namespace Illumina
 			void WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, 
 				RadianceBuffer *p_pRadianceBuffer, int p_nDeviceX, int p_nDeviceY);
 
+			void SetTag(const std::string &p_strTag);
 			//----------------------------------------------------------------------------------------------
 			// Type-specific methods
 			//----------------------------------------------------------------------------------------------
