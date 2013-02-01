@@ -181,7 +181,7 @@ void TaskController::GetControllerInfo(ResourceControllerInfo &p_info)
 {
 	p_info.ID = GetID();
 	p_info.Allocation = m_task.Size();
-	p_info.Description = m_strArguments;
+	p_info.Description = "None";
 	p_info.Load =  ((float)GetResourceCount()) / (float)(ServiceManager::GetInstance()->GetResourceManager()->GetResourceCount());
 }
 //----------------------------------------------------------------------------------------------

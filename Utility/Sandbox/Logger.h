@@ -6,9 +6,13 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+#include <boost/thread.hpp>
+#include <boost/thread/condition_variable.hpp>
+
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <queue>
 #include <map>
 
 //----------------------------------------------------------------------------------------------
@@ -107,6 +111,92 @@ public:
 	int Write(const std::string &p_strMessage)
 	{
 		m_fileStream << p_strMessage;
+		return p_strMessage.length();
+	}
+};
+
+//----------------------------------------------------------------------------------------------
+/*
+ * Asynchronous File Logger Sink
+ * Produces file output
+ */
+//----------------------------------------------------------------------------------------------
+class AsynchronousFileSink
+	: public ILoggerSink
+{
+protected:
+	std::string m_strFilename;
+	std::fstream m_fileStream;
+
+	std::queue<std::string> m_outputQueue;
+
+	boost::thread m_sinkThread;
+	boost::condition_variable m_sinkThreadConditionVariable;
+
+	bool m_bFileStreamOpen;
+
+protected:
+	static void OutputThreadHandler(AsynchronousFileSink *p_pLoggerSink)
+	{
+		boost::mutex bufferMutex;
+		boost::unique_lock<boost::mutex> bufferLock(bufferMutex);
+
+		while(p_pLoggerSink->m_bFileStreamOpen)
+		{
+			if (p_pLoggerSink->m_outputQueue.empty())
+				p_pLoggerSink->m_sinkThreadConditionVariable.wait(bufferLock);
+
+			while(!p_pLoggerSink->m_outputQueue.empty()) 
+			{
+				p_pLoggerSink->m_fileStream << p_pLoggerSink->m_outputQueue.front();
+				p_pLoggerSink->m_outputQueue.pop();
+			}
+		}
+
+		p_pLoggerSink->m_fileStream.close();
+	}
+
+public:
+	AsynchronousFileSink(const std::string &p_strFilename)
+		: m_strFilename(p_strFilename)
+	{ }
+
+	bool IsOpen(void) {
+		return m_fileStream.is_open();
+	}
+
+	bool Open(void) 
+	{
+		// Open file stream
+		m_fileStream.open(m_strFilename, std::fstream::out);
+		
+		// On success set open flag, otherwise return error
+		if (!(m_bFileStreamOpen = m_fileStream.is_open()))
+			return false;
+
+		boost::thread decompressionThreadHandler =
+			boost::thread(boost::bind(AsynchronousFileSink::OutputThreadHandler, this));
+
+		return false;
+	}
+
+	void Close(void) 
+	{
+		// Signal thread to close
+		m_bFileStreamOpen = false;
+		m_sinkThreadConditionVariable.notify_all();
+	}
+
+	void Flush(void) 
+	{
+		// Flush file stream
+		m_fileStream.flush();
+	}
+
+	int Write(const std::string &p_strMessage)
+	{
+		m_outputQueue.push_back(p_strMessage);
+		m_sinkThreadConditionVariable.notify_all();
 		return p_strMessage.length();
 	}
 };

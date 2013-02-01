@@ -170,6 +170,11 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	// Log accumulated messages
 	logger->Write(messageLog.str(), LL_Info);
 
+	// Add custom channel to logger
+	// m_pSink = new AsynchronousFileSink("");
+	// m_pChannel = new LoggerChannel("timings");
+	// logger->AddChannel("timings", m_channel, false);
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------

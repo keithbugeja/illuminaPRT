@@ -124,7 +124,7 @@ void BufferedImageDevice::EndFrame(void)
 		for (int frame = 0; frame < m_imageCacheList.size(); frame++)
 		{
 			std::stringstream imageNameStream;
-			imageNameStream << m_strTag << std::setfill('0') << std::setw(5) << (frame + m_nImageCacheBaseFrame);
+			imageNameStream << m_strTag << std::setfill('0') << std::setw(6) << (frame + m_nImageCacheBaseFrame);
 			std::string imageFilename = (imagePath.parent_path() / (imageNameStream.str() + imagePath.extension().string())).string();
 			std::string imageTimeStamp = boost::lexical_cast<std::string>(m_imageCacheList[frame].m_dfTimeStamp);
 			
@@ -134,7 +134,7 @@ void BufferedImageDevice::EndFrame(void)
 			m_pImageIO->Save(*(m_imageCacheList[frame].m_pImage), imageFilename);
 
 			// Write timestamp
-			timestamps << imageFilename << "\t" << imageTimeStamp << std::endl;
+			// timestamps << imageFilename << "\t" << imageTimeStamp << std::endl;
 		}
 
 		// Close timestamps

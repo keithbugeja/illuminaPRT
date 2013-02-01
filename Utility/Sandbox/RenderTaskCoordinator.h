@@ -73,6 +73,10 @@ protected:
 		m_bResetWorkerSeed;
 
 protected:
+	AsynchronousFileSink *m_pSink;
+	LoggerChannel *m_pChannel;
+
+protected:
 	static void InputThreadHandler(RenderTaskCoordinator *p_pCoordinator);
 	static void DecompressionThreadHandler(RenderTaskCoordinator *p_pCoordinator);
 
