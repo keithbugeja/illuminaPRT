@@ -174,8 +174,7 @@ public:
 		if (!(m_bFileStreamOpen = m_fileStream.is_open()))
 			return false;
 
-		boost::thread decompressionThreadHandler =
-			boost::thread(boost::bind(AsynchronousFileSink::OutputThreadHandler, this));
+		m_sinkThread = boost::thread(boost::bind(AsynchronousFileSink::OutputThreadHandler, this));
 
 		return false;
 	}
@@ -195,7 +194,7 @@ public:
 
 	int Write(const std::string &p_strMessage)
 	{
-		m_outputQueue.push_back(p_strMessage);
+		m_outputQueue.push(p_strMessage);
 		m_sinkThreadConditionVariable.notify_all();
 		return p_strMessage.length();
 	}
