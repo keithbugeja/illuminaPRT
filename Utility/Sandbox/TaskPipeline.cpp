@@ -54,6 +54,10 @@ void ITaskPipeline::Execute(ICoordinator *p_pCoordinator)
 
 	while(p_pCoordinator->IsRunning())
 	{
+		/* Uncomment if timings for the various synchronisation / 
+		 * computation stages are required.
+		 */
+		/* 
 		double start = Platform::ToSeconds(Platform::GetTime());
 
 		p_pCoordinator->EvaluateMessageQueue(&messageQueue);
@@ -63,19 +67,24 @@ void ITaskPipeline::Execute(ICoordinator *p_pCoordinator)
 		double synchronise = Platform::ToSeconds(Platform::GetTime());
 
 		if (bSynchronise)
-		//if (p_pCoordinator->Synchronise())
 		{
-			//std::cout << "Message queue evaluation time [" << evaluateQueue - start << "s]" << std::endl;
-			//std::cout << "Synchronisation time [" << synchronise - evaluateQueue << "s]" << std::endl;
+			std::cout << "Message queue evaluation time [" << evaluateQueue - start << "s]" << std::endl;
+			std::cout << "Synchronisation time [" << synchronise - evaluateQueue << "s]" << std::endl;
 
 			p_pCoordinator->Compute();
 			double compute = Platform::ToSeconds(Platform::GetTime());
-			//std::cout << "Compute time [" << compute - synchronise << "s]" << std::endl;
+			std::cout << "Compute time [" << compute - synchronise << "s]" << std::endl;
 			
 			// output computation time
 			double end = Platform::ToSeconds(Platform::GetTime());
-			//std::cout << "Total time [" << end - start << "s]" << std::endl;
+			std::cout << "Total time [" << end - start << "s]" << std::endl;
 		}
+		*/
+
+		p_pCoordinator->EvaluateMessageQueue(&messageQueue);
+
+		if (p_pCoordinator->Synchronise())
+			p_pCoordinator->Compute();
 	}
 
 	// join to threads

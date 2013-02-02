@@ -43,9 +43,10 @@ namespace Illumina
 
 				m_nSampleCount = 0;
 				
-				for (int y = 0; y < m_pAccumulationBuffer->GetHeight(); ++y)
-					for (int x = 0; x < m_pAccumulationBuffer->GetWidth(); ++x)
-						m_pAccumulationBuffer->GetP(x,y)->Final = 0.f;
+				/* TODO: Optimise! */
+				for (uint32_t y = 0; y < m_pAccumulationBuffer->GetHeight(); ++y)
+					for (uint32_t x = 0; x < m_pAccumulationBuffer->GetWidth(); ++x)
+						m_pAccumulationBuffer->GetP(x, y)->Final = 0.f;
 
 			}
 

@@ -49,16 +49,18 @@ namespace Illumina
 					intensityWeight, 
 					distanceWeight;
 
-				float sigmaS = (float)m_nKernelSize,
-					sigmaR = 0.5f;
+				float sigmaS = (float)m_nKernelSize
+					/*, sigmaR = 0.5f*/
+					;
 
 				// m_nKernelSize = 3;
 				// std::cout << "Bilateral Filter :: Kernel Size = " << m_nKernelSize << std::endl;
 
-				float mean_s_PDF = Statistics::GaussianPDF(0, 0, sigmaS),
-					edge_s_PDF = Statistics::GaussianPDF(sigmaS, 0, sigmaS),
-					interval_s_PDF = mean_s_PDF - edge_s_PDF,
-					invSigmaS = 1.f / sigmaS;
+				float mean_s_PDF = Statistics::GaussianPDF(0, 0, sigmaS)
+					, edge_s_PDF = Statistics::GaussianPDF(sigmaS, 0, sigmaS)
+					/*, interval_s_PDF = mean_s_PDF - edge_s_PDF
+					, invSigmaS = 1.f / sigmaS*/
+					;
 
 				/*
 				float mean_r_PDF = Statistics::GaussianPDF(0, 0, sigmaR),
