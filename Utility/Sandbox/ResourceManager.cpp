@@ -118,7 +118,7 @@ bool ResourceManager::RequestResources(int p_nTaskID, int p_nResourceCount)
 	std::stringstream message;
 
 	// Cannot allocate more resources than available!
-	if (p_nResourceCount > m_resourceFreeList.size())
+	if ((unsigned int)p_nResourceCount > m_resourceFreeList.size())
 	{
 		message.str(std::string()); message << "ResourceManager :: Unable to allocate resources: Not enough free resources [" << m_resourceFreeList.size() << "] to satisfy allocation request [" << p_nResourceCount << "]!";
 		logger->Write(message.str(), LL_Error);

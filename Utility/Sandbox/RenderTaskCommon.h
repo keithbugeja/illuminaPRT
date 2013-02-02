@@ -292,7 +292,7 @@ public:
 			CompressSpectrum(&(pSrc->Albedo), &(pDst->Albedo));
 			CompressSpectrum(&(pSrc->Indirect), &(pDst->Indirect));
 			CompressNormal(&(pSrc->Normal), pDst->Normal);
-			/* */
+			*/
 
 			// CompressSpectrum(&(pSrc->Final), &(pDst->Final));
 			pDst->Final[0] = (unsigned char)(pSrc->Final[0] * 255);
@@ -331,7 +331,7 @@ public:
 			DecompressSpectrum(&(pSrc->Albedo), &(pDst->Albedo));
 			DecompressSpectrum(&(pSrc->Indirect), &(pDst->Indirect));
 			DecompressNormal(pSrc->Normal, &(pDst->Normal));
-			/* */
+			*/
 
 			//DecompressSpectrum(pSrc->Albedo, &(pDst->Albedo));
 			//DecompressSpectrum(pSrc->Direct, &(pDst->Direct));

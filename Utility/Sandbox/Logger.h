@@ -96,7 +96,7 @@ public:
 
 	bool Open(void) 
 	{
-		m_fileStream.open(m_strFilename, std::fstream::out);
+		m_fileStream.open(m_strFilename.c_str(), std::fstream::out);
 		return m_fileStream.is_open();
 	}
 
@@ -168,7 +168,7 @@ public:
 	bool Open(void) 
 	{
 		// Open file stream
-		m_fileStream.open(m_strFilename, std::fstream::out);
+		m_fileStream.open(m_strFilename.c_str(), std::fstream::out);
 		
 		// On success set open flag, otherwise return error
 		if (!(m_bFileStreamOpen = m_fileStream.is_open()))
@@ -217,8 +217,8 @@ protected:
 
 protected:
 	ILoggerChannel(const std::string p_strChannelName)
-		: m_channelName(p_strChannelName)
-		, m_nLoggingFilter(LoggingLevel::LL_All)
+		: m_nLoggingFilter(LL_All)
+		, m_channelName(p_strChannelName)
 	{ }
 
 public:
@@ -285,7 +285,7 @@ protected:
 public:
 	Logger(void)
 		: m_loggerChannel("Debug")
-		, m_nLoggingFilter(LoggingLevel::LL_All)
+		, m_nLoggingFilter(LL_All)
 	{
 		m_loggerChannel.AddSink(&m_consoleLoggerSink);
 		AddChannel("Debug", &m_loggerChannel);

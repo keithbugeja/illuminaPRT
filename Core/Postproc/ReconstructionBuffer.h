@@ -77,7 +77,7 @@ namespace Illumina
 						pKernelContext = p_pInput->GetP(x, y);
 						pOutputContext = p_pOutput->GetP(x, y);
 
-						if (pKernelContext->Flags & RadianceContext::DF_Computed != 0)
+						if ((pKernelContext->Flags & RadianceContext::DF_Computed) != 0)
 						{
 							pOutputContext->Direct = pKernelContext->Direct;
 							pOutputContext->Indirect = pKernelContext->Indirect;
@@ -174,7 +174,7 @@ namespace Illumina
 
 							pOutputContext->Final = (pOutputContext->Direct + pOutputContext->Indirect) * pOutputContext->Albedo;
 						}
-						/* */
+						*/
 					}
 				}
 

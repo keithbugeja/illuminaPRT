@@ -106,6 +106,9 @@ namespace Illumina
 			static bool CreateQuad(const Vector3 &p_v0, const Vector3 &p_v1, 
 				const Vector3 &p_v2, const Vector3 &p_v3, ITriangleMesh *p_pMesh)
 			{
+				if (p_pMesh == NULL)
+					return false;
+
 				Vertex vertex[4];
 
 				// If vertex has position, initialise
@@ -146,6 +149,8 @@ namespace Illumina
 
 				p_pMesh->AddIndexedTriangle(0, 2, 1);
 				p_pMesh->AddIndexedTriangle(1, 2, 3);
+
+				return true;
 			}
 
 			template<class TMesh>
