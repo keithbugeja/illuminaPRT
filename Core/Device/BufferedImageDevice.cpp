@@ -134,7 +134,7 @@ void BufferedImageDevice::EndFrame(void)
 			m_pImageIO->Save(*(m_imageCacheList[frame].m_pImage), imageFilename);
 
 			// Write timestamp
-			// timestamps << imageFilename << "\t" << imageTimeStamp << std::endl;
+			timestamps << imageFilename << "\t" << imageTimeStamp << std::endl;
 		}
 
 		// Close timestamps

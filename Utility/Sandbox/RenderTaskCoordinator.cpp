@@ -171,10 +171,14 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	logger->Write(messageLog.str(), LL_Info);
 
 	// Add custom channel to logger
-	// m_pSink = new AsynchronousFileSink("");
-	// m_pChannel = new LoggerChannel("timings");
-	// logger->AddChannel("timings", m_channel, false);
+	m_pSink = new AsynchronousFileSink(m_strUserName + "_" + m_strJobName + "_timings.txt");
+	m_pChannel = new LoggerChannel("data_collection");
+	m_pChannel->AddSink(m_pSink);
+	logger->AddChannel("data_collection", m_pChannel, false);
 
+	// Add header to log file
+	(*logger)["data_collection"]->Write("Time \t Radiance \t Accumulation \t Commit \t Total \t Frame \t Workers \n", LL_All);
+	
 	return true;
 }
 //----------------------------------------------------------------------------------------------
@@ -183,6 +187,12 @@ void RenderTaskCoordinator::OnShutdown(void)
 {
 	ServiceManager::GetInstance()->GetLogger()->Write("RenderTaskCoordinator :: Handling event [OnShutdown].", LL_Info);
 	
+	//----------------------------------------------------------------------------------------------
+	// Delete channel and sink
+	//----------------------------------------------------------------------------------------------
+	delete m_pSink;
+	delete m_pChannel;
+
 	//----------------------------------------------------------------------------------------------
 	// Wake up decompression thread, if sleeping and force quit (set packed tiles to zero)
 	//----------------------------------------------------------------------------------------------
@@ -479,6 +489,16 @@ bool RenderTaskCoordinator::Compute(void)
 
 	ServiceManager::GetInstance()->GetLogger()->Write(statistics.str(), LL_Info);
 
+	// Log output to data collection channel (asynchronous file-output channel)
+	statistics.str(std::string(""));
+	statistics << Platform::ToSeconds(eventComplete) << '\t'
+			<< radianceTime << '\t' << accumulationTime << '\t' << commitTime << '\t' 
+			<< radianceTime + accumulationTime + commitTime << '\t' 
+			<< 1.f / (radianceTime + accumulationTime + commitTime) << '\t' 
+			<< workerList.size() << std::endl;
+
+	(*ServiceManager::GetInstance()->GetLogger())["data_collection"]->Write(statistics.str(), LL_All);
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------
@@ -557,8 +577,8 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 //----------------------------------------------------------------------------------------------
 void RenderTaskCoordinator::DecompressionThreadHandler(RenderTaskCoordinator *p_pCoordinator)
 {
-	std::cout << "Run Thread :: Decompression Thread Handler" << std::endl;
-	/**/
+	ServiceManager::GetInstance()->GetLogger()->Write("RenderTaskCoordinator :: Decompression thread started.", LL_Info);
+	/* */
 
 	int receivedTileID;
 	RadianceContext *pTileBuffer;
@@ -606,6 +626,6 @@ void RenderTaskCoordinator::DecompressionThreadHandler(RenderTaskCoordinator *p_
 		}
 	}
 
-	/**/
-	std::cout << "Join Thread :: Decompression Thread Handler" << std::endl;
+	/* */
+	ServiceManager::GetInstance()->GetLogger()->Write("RenderTaskCoordinator :: Decompression thread completed.", LL_Info);
 }
