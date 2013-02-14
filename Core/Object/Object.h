@@ -3,6 +3,10 @@
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
+//  TODO : Consider adding a generic property table interface to objects.
+//		   e.g. Set(string name, <T> value) and <T> Get(name)
+//		   possibly use ArgumentMap as a base implementation and let property
+//		   hardwiring be applied at derived-class level.
 //----------------------------------------------------------------------------------------------
 #pragma once
 

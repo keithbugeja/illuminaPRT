@@ -19,7 +19,7 @@ void RTPDeviceStream(RTPDevice *p_pRTPDevice)
 	/**/
 	double frameBudget = 0.05; // 1.f / p_pRTPDevice->GetFrameRate();
 	double nextDeadline = Platform::ToSeconds(Platform::GetTime());
-	
+
 	while(p_pRTPDevice->IsStreaming())
 	{
 		if ((nextDeadline) <= Platform::ToSeconds(Platform::GetTime()))
@@ -39,16 +39,16 @@ void RTPDeviceStream(RTPDevice *p_pRTPDevice)
 
 //----------------------------------------------------------------------------------------------
 RTPDevice::RTPDevice(const std::string &p_strName, 
-	int p_nWidth, int p_nHeight, const std::string &p_strAddress, int p_nPort, 
-	int p_nFramesPerSecond, int p_nBitRate, IVideoStream::VideoCodec p_videoCodec)	
-	: IDevice(p_strName) 
-	, m_nActiveBuffer(0)
-    , m_videoCodec(p_videoCodec)
-    , m_nFramesPerSecond(p_nFramesPerSecond)
-	, m_nBitRate(p_nBitRate)
-    , m_strAddress(p_strAddress)
-    , m_nPort(p_nPort)
-    , m_bIsOpen(false)
+					 int p_nWidth, int p_nHeight, const std::string &p_strAddress, int p_nPort,
+					 int p_nFramesPerSecond, int p_nBitRate, IVideoStream::VideoCodec p_videoCodec)
+					 : IDevice(p_strName) 
+					 , m_nActiveBuffer(0)
+					 , m_videoCodec(p_videoCodec)
+					 , m_nFramesPerSecond(p_nFramesPerSecond)
+					 , m_nBitRate(p_nBitRate)
+					 , m_strAddress(p_strAddress)
+					 , m_nPort(p_nPort)
+					 , m_bIsOpen(false)
 {
 	m_pImage[0] = new Image(p_nWidth, p_nHeight);
 	m_pImage[1] = new Image(p_nWidth, p_nHeight);
@@ -57,17 +57,17 @@ RTPDevice::RTPDevice(const std::string &p_strName,
 	m_pBackBuffer = m_pImage[1 - m_nActiveBuffer];
 }
 //----------------------------------------------------------------------------------------------
-RTPDevice::RTPDevice(int p_nWidth, int p_nHeight, 
-	const std::string &p_strAddress, int p_nPort, 
-	int p_nFramesPerSecond, int p_nBitRate, 
-	IVideoStream::VideoCodec p_videoCodec)
-	: m_nActiveBuffer(0)
-    , m_videoCodec(p_videoCodec)
-    , m_nFramesPerSecond(p_nFramesPerSecond)
-    , m_nBitRate(p_nBitRate)
-    , m_strAddress(p_strAddress)
-    , m_nPort(p_nPort)
-    , m_bIsOpen(false)
+RTPDevice::RTPDevice(int p_nWidth, int p_nHeight,
+					 const std::string &p_strAddress, int p_nPort,
+					 int p_nFramesPerSecond, int p_nBitRate,
+					 IVideoStream::VideoCodec p_videoCodec)
+					 : m_nActiveBuffer(0)
+					 , m_videoCodec(p_videoCodec)
+					 , m_nFramesPerSecond(p_nFramesPerSecond)
+					 , m_nBitRate(p_nBitRate)
+					 , m_strAddress(p_strAddress)
+					 , m_nPort(p_nPort)
+					 , m_bIsOpen(false)
 {
 	m_pImage[0] = new Image(p_nWidth, p_nHeight);
 	m_pImage[1] = new Image(p_nWidth, p_nHeight);
@@ -82,19 +82,19 @@ RTPDevice::~RTPDevice()
 	Safe_Delete(m_pImage[1]);
 }
 //----------------------------------------------------------------------------------------------
-int RTPDevice::GetWidth(void) const { 
-	return m_pBackBuffer->GetWidth(); 
+int RTPDevice::GetWidth(void) const {
+	return m_pBackBuffer->GetWidth();
 }
 //----------------------------------------------------------------------------------------------
-int RTPDevice::GetHeight(void) const { 
-	return m_pBackBuffer->GetHeight(); 
+int RTPDevice::GetHeight(void) const {
+	return m_pBackBuffer->GetHeight();
 }
 //----------------------------------------------------------------------------------------------
 IDevice::AccessType RTPDevice::GetAccessType(void) const {
 	return IDevice::ReadWrite;
 }
 //----------------------------------------------------------------------------------------------
-bool RTPDevice::Open(void) 
+bool RTPDevice::Open(void)
 {
 	// If device is already open, return error
 	if (m_bIsOpen) return false;
@@ -104,7 +104,7 @@ bool RTPDevice::Open(void)
 	m_networkVideoStream.SetPortNumber(m_nPort);
 
 	// Initialise network stream
-	m_networkVideoStream.Initialise(m_pFrontBuffer->GetWidth(), m_pFrontBuffer->GetHeight(), 
+	m_networkVideoStream.Initialise(m_pFrontBuffer->GetWidth(), m_pFrontBuffer->GetHeight(),
 		m_nFramesPerSecond, m_nBitRate, m_videoCodec);
 
 	// Start streaming feed
@@ -112,8 +112,8 @@ bool RTPDevice::Open(void)
 
 	/*
 	m_streamingThread = boost::thread(
-		boost::bind(RTPDeviceStream, this)
-	);	
+	boost::bind(RTPDeviceStream, this)
+	);
 	*/
 
 	// Device is open
@@ -130,8 +130,8 @@ void RTPDevice::Stream(void) {
 	m_networkVideoStream.Stream(m_pFrontBuffer);
 }
 //----------------------------------------------------------------------------------------------
-void RTPDevice::Close(void) 
-{ 
+void RTPDevice::Close(void)
+{
 	// Cannot close device if not open!
 	if (m_bIsOpen)
 	{
@@ -149,7 +149,7 @@ void RTPDevice::Close(void)
 //----------------------------------------------------------------------------------------------
 void RTPDevice::BeginFrame(void) { }
 //----------------------------------------------------------------------------------------------
-void RTPDevice::EndFrame(void)  
+void RTPDevice::EndFrame(void)
 {
 	// Double buffering swap
 	m_nActiveBuffer = 1 - m_nActiveBuffer;
@@ -165,7 +165,7 @@ void RTPDevice::Set(int p_nX, int p_nY, const Spectrum &p_spectrum) {
 }
 //----------------------------------------------------------------------------------------------
 void RTPDevice::Set(float p_fX, float p_fY, const Spectrum &p_spectrum) {
-	Set((int)p_fX, (int)p_fY, p_spectrum); 
+	Set((int)p_fX, (int)p_fY, p_spectrum);
 }
 //----------------------------------------------------------------------------------------------
 void RTPDevice::Get(int p_nX, int p_nY, Spectrum &p_spectrum) const
@@ -192,8 +192,8 @@ Spectrum RTPDevice::Get(float p_fX, float p_fY) const
 	return Spectrum(pixel.R, pixel.G, pixel.B);
 }
 //----------------------------------------------------------------------------------------------
-void RTPDevice::WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, 
-	RadianceBuffer *p_pRadianceBuffer, int p_nDeviceX, int p_nDeviceY)
+void RTPDevice::WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight,
+											RadianceBuffer *p_pRadianceBuffer, int p_nDeviceX, int p_nDeviceY)
 {
 	int width = m_pBackBuffer->GetWidth(),
 		height = m_pBackBuffer->GetHeight();
@@ -205,6 +205,21 @@ void RTPDevice::WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int 
 			this->Set(width - (dstX + 1), height - (dstY + 1), p_pRadianceBuffer->Get(srcX, srcY).Final);
 		}
 	}
+}
+//----------------------------------------------------------------------------------------------
+void RTPDevice::SetTag(const std::string p_strTag)
+{
+	// Expected tag <xxx.xxx.xxx.xxx:xxxxx>
+	size_t colonIndex;
+	
+	if ((colonIndex = p_strTag.find_last_of(':')) != std::string::npos)
+	{
+		std::string port = p_strTag.substr(colonIndex+1);
+		std::string ip = p_strTag.substr(0, colonIndex);
+
+		std::cout << "IP : " << ip << ", Port : " << port << std::endl;
+	}
+
 }
 //----------------------------------------------------------------------------------------------
 IVideoStream::VideoCodec RTPDevice::GetCodec(void) const {
@@ -251,7 +266,7 @@ std::string RTPDevice::GetAddress(void) const {
 	return m_strAddress;
 }
 //----------------------------------------------------------------------------------------------
-void RTPDevice::SetAddress(const std::string &p_strAddress) 
+void RTPDevice::SetAddress(const std::string &p_strAddress)
 {
 	BOOST_ASSERT(!m_bIsOpen);
 	m_strAddress = p_strAddress;
