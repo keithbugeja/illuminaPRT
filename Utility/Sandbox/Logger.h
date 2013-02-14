@@ -43,6 +43,8 @@ enum LoggingLevel
 class ILoggerSink
 {
 public:
+	virtual ~ILoggerSink(void) { }
+
 	virtual bool IsOpen(void) { return true; }
 	virtual bool Open(void) { return true; }
 	virtual void Close(void) { };
@@ -133,7 +135,8 @@ protected:
 	boost::thread m_sinkThread;
 	boost::condition_variable m_sinkThreadConditionVariable;
 
-	bool m_bFileStreamOpen;
+	bool m_bFileStreamOpen,
+		m_bFlushPending;
 
 protected:
 	static void OutputThreadHandler(AsynchronousFileSink *p_pLoggerSink)
@@ -151,6 +154,12 @@ protected:
 				p_pLoggerSink->m_fileStream << p_pLoggerSink->m_outputQueue.front();
 				p_pLoggerSink->m_outputQueue.pop();
 			}
+
+			if (p_pLoggerSink->m_bFlushPending) 
+			{
+				p_pLoggerSink->m_fileStream.flush();
+				p_pLoggerSink->m_bFlushPending = false;
+			}
 		}
 
 		p_pLoggerSink->m_fileStream.close();
@@ -159,7 +168,14 @@ protected:
 public:
 	AsynchronousFileSink(const std::string &p_strFilename)
 		: m_strFilename(p_strFilename)
+		, m_bFileStreamOpen(false)
+		, m_bFlushPending(false)
 	{ }
+
+	~AsynchronousFileSink(void) 
+	{
+		if (m_bFileStreamOpen) Close();
+	}
 
 	bool IsOpen(void) {
 		return m_fileStream.is_open();
@@ -174,22 +190,42 @@ public:
 		if (!(m_bFileStreamOpen = m_fileStream.is_open()))
 			return false;
 
+		// Launch new output thread handler
 		m_sinkThread = boost::thread(boost::bind(AsynchronousFileSink::OutputThreadHandler, this));
+
+		/* 
+		 * std::cout << "Logger :: Opened Asynchronous Stream" << std::endl;
+		 */
 
 		return false;
 	}
 
 	void Close(void) 
 	{
-		// Signal thread to close
+		// Output thread handler may now close
 		m_bFileStreamOpen = false;
-		m_sinkThreadConditionVariable.notify_all();
+
+		// Signal output thread handler
+		Flush();
+
+		/*
+		 * std::cout << "Logger :: Joining to main thread" << std::endl;
+		 */
+
+		// Join to main thread (avoid main thread running ahead and 
+		// launching a new Output Thread Handler before the current has 
+		// properly terminated.)
+		m_sinkThread.join();
+
+		/*
+		 * std::cout << "Logger :: Closed Asynchronous Stream" << std::endl;
+		 */
 	}
 
 	void Flush(void) 
 	{
-		// Flush file stream
-		m_fileStream.flush();
+		m_bFlushPending = true;
+		m_sinkThreadConditionVariable.notify_all();
 	}
 
 	int Write(const std::string &p_strMessage)

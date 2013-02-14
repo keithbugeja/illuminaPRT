@@ -190,8 +190,8 @@ void RenderTaskCoordinator::OnShutdown(void)
 	//----------------------------------------------------------------------------------------------
 	// Delete channel and sink
 	//----------------------------------------------------------------------------------------------
-	delete m_pSink;
 	delete m_pChannel;
+	delete m_pSink;
 
 	//----------------------------------------------------------------------------------------------
 	// Wake up decompression thread, if sleeping and force quit (set packed tiles to zero)

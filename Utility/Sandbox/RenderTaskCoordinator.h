@@ -57,6 +57,12 @@ protected:
 		m_strJobName;
 
 protected:
+	// Video streaming override
+	bool m_bOverrideStream;
+	std::string m_strIP, 
+		m_strPort;
+
+protected:
 	// Current camera path
 	Path m_cameraPath;
 
