@@ -5,37 +5,6 @@
 //----------------------------------------------------------------------------------------------
 #include <boost/algorithm/string.hpp> 
 
-//----------------------------------------------------------------------------------------------
-#define __TaskID "taskid"
-#define __Job_Name "job_name"
-#define __Job_User "job_user"
-#define __Tile_Distribution_Adaptive "tile_distribution_adaptive"
-#define __Tile_Distribution_Batchsize "tile_distribution_batchsize"
-#define __Tile_Height "tile_height"
-#define __Tile_Width "tile_width"
-#define __Device_Override "device_override"
-#define __Device_Height "device_height"
-#define __Device_Width "device_width"
-#define __Device_Type "device_type"
-#define __Device_Stream_IP "device_stream_ip"
-#define __Device_Stream_Port "device_stream_port"
-#define __Device_Stream_Bitrate "device_stream_bitrate"
-#define __Device_Stream_Codec "device_stream_codec"
-#define __Device_Stream_Framerate "device_stream_framerate"
-#define __Device_Sequence_BufferedFrames "device_sequence_bufferedframes"
-#define __Device_Sequence_Details "device_sequence_details"
-#define __Device_Sequence_Format "device_sequence_format"
-#define __Device_Sequence_Prefix "device_sequence_prefix"
-#define __Device_Image_Prefix "device_image_prefix"
-#define __Device_Image_Format "device_image_format"
-#define __Device_Image_Timestamp "device_image_timestamp"
-#define __Resource_Cap_Max "resource_cap_max"
-#define __Resource_Cap_Min "resource_cap_min"
-#define __Resource_Deadline_Enabled "resource_deadline_enabled"
-#define __Resource_Deadline_Framerate "resource_deadline_fps"
-#define __Script_Name "script_name"
-//----------------------------------------------------------------------------------------------
-
 #include "RenderTaskCoordinator.h"
 #include "Communicator.h"
 //----------------------------------------------------------------------------------------------
@@ -237,7 +206,7 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_pMotionBlurFilter->Reset();
 
 	// Open rendering device for output
-	m_pRenderer->GetDevice()->SetTag(m_strUserName + "_" + m_strJobName + "_");
+	//	m_pRenderer->GetDevice()->SetTag(m_strUserName + "_" + m_strJobName + "_");
 	m_pRenderer->GetDevice()->Open();
 
 	//----------------------------------------------------------------------------------------------

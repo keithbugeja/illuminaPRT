@@ -247,15 +247,15 @@ bool RenderTaskWorker::OnInitialise(void)
 	m_pSandbox = new SandboxEnvironment();
 	m_pSandbox->Initialise();
 
-	if (!pArgumentMap->GetArgument("taskid", m_nTaskId))
+	if (!pArgumentMap->GetArgument(__TaskID, m_nTaskId))
 	{
-		logger->Write("RenderTaskWorker :: Unable to determine task id [taskid] from argument list.", LL_Error);
+		logger->Write("RenderTaskWorker :: Unable to determine task id ["__TaskID"] from argument list.", LL_Error);
 		return false;
 	}
 
-	if (!pArgumentMap->GetArgument("script", strScriptName))
+	if (!pArgumentMap->GetArgument(__Script_Name, strScriptName))
 	{
-		logger->Write("RenderTaskWorker :: Unable to find [script] entry in argument list.", LL_Error);
+		logger->Write("RenderTaskWorker :: Unable to find ["__Script_Name"] entry in argument list.", LL_Error);
 		return false;
 	}
 
@@ -271,8 +271,8 @@ bool RenderTaskWorker::OnInitialise(void)
 	//----------------------------------------------------------------------------------------------
 	// Initialise render task
 	//----------------------------------------------------------------------------------------------
-	if (pArgumentMap->GetArgument("width", m_renderTaskContext.TileWidth) &&
-		pArgumentMap->GetArgument("height", m_renderTaskContext.TileHeight))
+	if (pArgumentMap->GetArgument(__Tile_Width, m_renderTaskContext.TileWidth) &&
+		pArgumentMap->GetArgument(__Tile_Height, m_renderTaskContext.TileHeight))
 	{
 		m_pRenderTile = new SerialisableRenderTile(-1, m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight);
 		m_pRimmedRenderTile = new SerialisableRenderTile(-1, m_renderTaskContext.TileWidth + 32, m_renderTaskContext.TileHeight + 32);
@@ -286,14 +286,14 @@ bool RenderTaskWorker::OnInitialise(void)
 	// Initialise render parameters
 	//----------------------------------------------------------------------------------------------
 	// Enable adaptive tile sizes
-	std::string adaptiveTile; pArgumentMap->GetArgument("useadaptive", adaptiveTile); boost::to_lower(adaptiveTile);
+	std::string adaptiveTile; pArgumentMap->GetArgument(__Tile_Distribution_Adaptive, adaptiveTile); boost::to_lower(adaptiveTile);
 	m_renderTaskContext.AdaptiveTiles = adaptiveTile == "false" ? false : true;
 
 	// Enable batch size
-	pArgumentMap->GetArgument("batchsize", m_renderTaskContext.TileBatchSize);
+	pArgumentMap->GetArgument(__Tile_Distribution_Batchsize, m_renderTaskContext.TileBatchSize);
 
 	// Read the minimum number of required workers
-	if (pArgumentMap->GetArgument("min", m_renderTaskContext.WorkersRequired))
+	if (pArgumentMap->GetArgument(__Resource_Cap_Min, m_renderTaskContext.WorkersRequired))
 		messageLog << std::endl << "RenderTaskWorker :: Workers required [" << m_renderTaskContext.WorkersRequired << "]";
 
 	//----------------------------------------------------------------------------------------------
@@ -321,8 +321,22 @@ bool RenderTaskWorker::OnInitialise(void)
 	//----------------------------------------------------------------------------------------------
 	// Set up context
 	//----------------------------------------------------------------------------------------------
-	m_renderTaskContext.FrameWidth = m_pRenderer->GetDevice()->GetWidth();
-	m_renderTaskContext.FrameHeight = m_pRenderer->GetDevice()->GetHeight();
+	std::string deviceOverride; pArgumentMap->GetArgument(__Device_Override, deviceOverride); boost::to_lower(deviceOverride);
+	if (deviceOverride == "true")
+	{
+		int width, height;
+		pArgumentMap->GetArgument(__Device_Width, width);
+		pArgumentMap->GetArgument(__Device_Height, height);
+
+		m_renderTaskContext.FrameWidth = width;
+		m_renderTaskContext.FrameHeight = height;
+	}
+	else
+	{
+		m_renderTaskContext.FrameWidth = m_pRenderer->GetDevice()->GetWidth();
+		m_renderTaskContext.FrameHeight = m_pRenderer->GetDevice()->GetHeight();
+	}
+
 	m_renderTaskContext.TilesPerRow = m_renderTaskContext.FrameWidth / m_renderTaskContext.TileWidth;
 	m_renderTaskContext.TilesPerColumn = m_renderTaskContext.FrameHeight / m_renderTaskContext.TileHeight;
 	m_renderTaskContext.TotalTiles = m_renderTaskContext.TilesPerColumn * m_renderTaskContext.TilesPerRow;
