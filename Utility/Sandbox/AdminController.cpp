@@ -160,7 +160,11 @@ bool AdminController::ProcessClientInput(void)
 		IController::WriteToSocket(m_pSocket, "OK", 2);
 		return false;
 	}
-
+	else
+	{
+		IController::WriteToSocket(m_pSocket, "KO", 2);
+	}
+	
 	return true;
 }
 //----------------------------------------------------------------------------------------------

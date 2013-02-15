@@ -21,6 +21,7 @@ void ICoordinator::SetArguments(const std::string &p_strArguments)
 	m_argumentMap.Initialise(m_strArguments);
 }
 //----------------------------------------------------------------------------------------------
+
 std::string ICoordinator::GetArguments(void) const
 {
 	return m_strArguments;

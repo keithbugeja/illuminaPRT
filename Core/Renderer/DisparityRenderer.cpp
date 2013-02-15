@@ -37,11 +37,11 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 
 	Intersection intersection;
 	IntegratorContext context;
-    
+	
 	// Compute dimension reciprocals for normalisation
 	float rcpWidth = 1.f / m_pDevice->GetWidth(),
-        rcpHeight = 1.f / m_pDevice->GetHeight();
-    
+		rcpHeight = 1.f / m_pDevice->GetHeight();
+	
 	double startTime = Platform::GetTime();
 
 	// Handle supersampling independently

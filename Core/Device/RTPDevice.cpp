@@ -207,7 +207,7 @@ void RTPDevice::WriteRadianceBufferToDevice(int p_nRegionX, int p_nRegionY, int 
 	}
 }
 //----------------------------------------------------------------------------------------------
-void RTPDevice::SetTag(const std::string p_strTag)
+void RTPDevice::SetTag(const std::string &p_strTag)
 {
 	// Expected tag <xxx.xxx.xxx.xxx:xxxxx>
 	size_t colonIndex;

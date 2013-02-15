@@ -5,6 +5,37 @@
 //----------------------------------------------------------------------------------------------
 #include <boost/algorithm/string.hpp> 
 
+//----------------------------------------------------------------------------------------------
+#define __TaskID "taskid"
+#define __Job_Name "job_name"
+#define __Job_User "job_user"
+#define __Tile_Distribution_Adaptive "tile_distribution_adaptive"
+#define __Tile_Distribution_Batchsize "tile_distribution_batchsize"
+#define __Tile_Height "tile_height"
+#define __Tile_Width "tile_width"
+#define __Device_Override "device_override"
+#define __Device_Height "device_height"
+#define __Device_Width "device_width"
+#define __Device_Type "device_type"
+#define __Device_Stream_IP "device_stream_ip"
+#define __Device_Stream_Port "device_stream_port"
+#define __Device_Stream_Bitrate "device_stream_bitrate"
+#define __Device_Stream_Codec "device_stream_codec"
+#define __Device_Stream_Framerate "device_stream_framerate"
+#define __Device_Sequence_BufferedFrames "device_sequence_bufferedframes"
+#define __Device_Sequence_Details "device_sequence_details"
+#define __Device_Sequence_Format "device_sequence_format"
+#define __Device_Sequence_Prefix "device_sequence_prefix"
+#define __Device_Image_Prefix "device_image_prefix"
+#define __Device_Image_Format "device_image_format"
+#define __Device_Image_Timestamp "device_image_timestamp"
+#define __Resource_Cap_Max "resource_cap_max"
+#define __Resource_Cap_Min "resource_cap_min"
+#define __Resource_Deadline_Enabled "resource_deadline_enabled"
+#define __Resource_Deadline_Framerate "resource_deadline_fps"
+#define __Script_Name "script_name"
+//----------------------------------------------------------------------------------------------
+
 #include "RenderTaskCoordinator.h"
 #include "Communicator.h"
 //----------------------------------------------------------------------------------------------
@@ -27,21 +58,21 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_pSandbox = new SandboxEnvironment();
 	m_pSandbox->Initialise();
 
-	if (!pArgumentMap->GetArgument("taskid", m_nTaskId))
+	if (!pArgumentMap->GetArgument(__TaskID, m_nTaskId))
 	{
-		logger->Write("RenderTaskCoordinator :: Unable to determine task id [taskid] from argument list.", LL_Error);
+		logger->Write("RenderTaskCoordinator :: Unable to determine task id ["__TaskID"] from argument list.", LL_Error);
 		return false;
 	}
 
-	if (!pArgumentMap->GetArgument("username", m_strUserName) || !pArgumentMap->GetArgument("jobname", m_strJobName))
+	if (!pArgumentMap->GetArgument(__Job_User, m_strUserName) || !pArgumentMap->GetArgument(__Job_Name, m_strJobName))
 	{
-		logger->Write("RenderTaskCoordinator :: Unable to determine task details ([username] or [jobname]) from argument list.", LL_Error);
+		logger->Write("RenderTaskCoordinator :: Unable to determine task details (["__Job_User"] or ["__Job_Name"]) from argument list.", LL_Error);
 		return false;
 	}
 
-	if (!pArgumentMap->GetArgument("script", strScriptName))
+	if (!pArgumentMap->GetArgument(__Script_Name, strScriptName))
 	{
-		logger->Write("RenderTaskCoordinator :: Unable to find [script] entry in argument list.", LL_Error);
+		logger->Write("RenderTaskCoordinator :: Unable to find ["__Script_Name"] entry in argument list.", LL_Error);
 		return false;
 	}
 
@@ -57,8 +88,8 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	//----------------------------------------------------------------------------------------------
 	// Initialise render task
 	//----------------------------------------------------------------------------------------------
-	if (pArgumentMap->GetArgument("width", m_renderTaskContext.TileWidth) &&
-		pArgumentMap->GetArgument("height", m_renderTaskContext.TileHeight))
+	if (pArgumentMap->GetArgument(__Tile_Width, m_renderTaskContext.TileWidth) &&
+		pArgumentMap->GetArgument(__Tile_Height, m_renderTaskContext.TileHeight))
 	{
 		m_pRenderTile = new SerialisableRenderTile(-1, m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight);
 		
@@ -71,14 +102,14 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	// Initialise render parameters
 	//----------------------------------------------------------------------------------------------
 	// Enable adaptive tile sizes
-	std::string adaptiveTile; pArgumentMap->GetArgument("useadaptive", adaptiveTile); boost::to_lower(adaptiveTile);
+	std::string adaptiveTile; pArgumentMap->GetArgument(__Tile_Distribution_Adaptive, adaptiveTile); boost::to_lower(adaptiveTile);
 	m_renderTaskContext.AdaptiveTiles = adaptiveTile == "false" ? false : true;
 
 	// Enable batch size
-	pArgumentMap->GetArgument("batchsize", m_renderTaskContext.TileBatchSize);
+	pArgumentMap->GetArgument(__Tile_Distribution_Batchsize, m_renderTaskContext.TileBatchSize);
 
 	// Read the minimum number of required workers
-	if (pArgumentMap->GetArgument("min", m_renderTaskContext.WorkersRequired))
+	if (pArgumentMap->GetArgument(__Resource_Cap_Min, m_renderTaskContext.WorkersRequired))
 		messageLog << std::endl << "RenderTaskCoordinator :: Workers required [" << m_renderTaskContext.WorkersRequired << "]";
 
 	//----------------------------------------------------------------------------------------------
@@ -92,6 +123,102 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	m_pRenderer = m_pEnvironment->GetRenderer();
 	m_pCamera = m_pEnvironment->GetCamera();
 	m_pSpace = m_pEnvironment->GetSpace();
+
+	//----------------------------------------------------------------------------------------------
+	// Are we overriding the output device in the script file?
+	//----------------------------------------------------------------------------------------------
+	std::string deviceOverride; pArgumentMap->GetArgument(__Device_Override, deviceOverride); boost::to_lower(deviceOverride);
+	
+	if (deviceOverride == "true") {
+		std::string deviceType; pArgumentMap->GetArgument(__Device_Type, deviceType); boost::to_lower(deviceType);
+		
+		std::string deviceString, deviceTag,
+			deviceFactory, deviceId;
+
+		IDevice *pDevice;
+
+		// Is this a stream device we wish to override with?
+		if (deviceType == "stream") 
+		{
+			std::stringstream deviceArguments; std::string argument;
+			pArgumentMap->GetArgument(__Device_Width, argument);
+			deviceArguments << "Width=" << argument;
+			pArgumentMap->GetArgument(__Device_Height, argument);
+			deviceArguments << ";Height=" << argument;
+			pArgumentMap->GetArgument(__Device_Stream_IP, argument);
+			deviceArguments << ";Address=" << argument;
+			pArgumentMap->GetArgument(__Device_Stream_Port, argument);
+			deviceArguments << ";Port=" << argument;
+			pArgumentMap->GetArgument(__Device_Stream_Codec, argument);
+			deviceArguments << ";Format=" << argument;
+			pArgumentMap->GetArgument(__Device_Stream_Bitrate, argument);
+			deviceArguments << ";BitRate=" << argument;
+			pArgumentMap->GetArgument(__Device_Stream_Framerate, argument);
+			deviceArguments << ";FrameRate=" << argument;
+			deviceArguments << ";";
+
+			deviceId = "__Override_Coordinator_Stream_Device";
+			deviceFactory = "RTP";
+			deviceString = deviceArguments.str();
+		} 
+		else if (deviceType == "sequence") 
+		{
+			std::string prefix;
+
+			std::stringstream deviceArguments; std::string argument;
+			pArgumentMap->GetArgument(__Device_Width, argument);
+			deviceArguments << "Width=" << argument;
+			pArgumentMap->GetArgument(__Device_Height, argument);
+			deviceArguments << ";Height=" << argument;
+			pArgumentMap->GetArgument(__Device_Sequence_BufferedFrames, argument);
+			deviceArguments << ";BufferSize=" << argument;
+			pArgumentMap->GetArgument(__Device_Sequence_Prefix, prefix);
+			deviceArguments << ";Filename=" << prefix;
+			pArgumentMap->GetArgument(__Device_Sequence_Format, argument);
+			deviceArguments << "." << argument;
+			deviceArguments << ";Format=" << argument;
+			deviceArguments << ";";
+
+			deviceId = "__Override_Coordinator_Sequence_Device";
+			deviceFactory = "BufferedImage";
+			deviceString = deviceArguments.str();
+
+			// Set device tag
+			pArgumentMap->GetArgument(__Device_Sequence_Details, deviceTag); boost::to_lower(deviceTag);
+			
+			if (deviceTag == "false")
+				deviceTag = prefix;
+			else
+				deviceTag = prefix + m_strUserName + "_" + m_strJobName + "_";
+		} 
+		else if (deviceType == "image")
+		{
+			std::stringstream deviceArguments; std::string argument;
+			pArgumentMap->GetArgument(__Device_Width, argument);
+			deviceArguments << "Width=" << argument;
+			pArgumentMap->GetArgument(__Device_Height, argument);
+			deviceArguments << ";Height=" << argument;
+			pArgumentMap->GetArgument(__Device_Image_Timestamp, argument);
+			deviceArguments << ";Timestamp=" << argument;
+			pArgumentMap->GetArgument(__Device_Image_Prefix, deviceTag);
+			deviceArguments << ";Filename=" << deviceTag;
+			pArgumentMap->GetArgument(__Device_Image_Format, argument);
+			deviceArguments << "." << argument;
+			deviceArguments << ";Format=" << argument;
+			deviceArguments << ";";
+
+			deviceId = "__Override_Coordinator_Image_Device";
+			deviceFactory = "Image";
+			deviceString = deviceArguments.str();
+		}
+
+		// Create device and set tag
+		pDevice = m_pEngineKernel->GetDeviceManager()->CreateInstance(deviceFactory, deviceId, deviceString);
+		pDevice->SetTag(deviceTag);
+
+		// Associate device with renderer
+		m_pRenderer->SetDevice(pDevice);
+	}
 
 	//----------------------------------------------------------------------------------------------
 	// Initialise radiance buffers and post-processing filters
