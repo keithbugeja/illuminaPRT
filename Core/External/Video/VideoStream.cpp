@@ -493,8 +493,6 @@ bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 
 	std::string args = argStream.str();
 
-	std::cout << args << std::endl;
-	
 	boost::char_separator<char> separator(" ");
 	boost::tokenizer<boost::char_separator<char> > tokens(args, separator);
 
