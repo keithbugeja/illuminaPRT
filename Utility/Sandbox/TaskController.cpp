@@ -99,7 +99,44 @@ bool TaskController::ProcessClientInput(void)
 	m_pCommandParser->Display(strCommandName, argumentMap);
 
 	// Process commands
-	if (strCommandName == "init")
+	if (strCommandName == "init2")
+	{
+		std::stringstream argumentStream;
+		argumentStream << "taskid=" << GetID()
+		<< ";job_user=" << argumentMap["job_user"]
+		<< ";job_name=" << argumentMap["job_name"]
+		<< ";device_override=" << argumentMap["device_override"]
+		<< ";device_width=" << argumentMap["device_width"]
+		<< ";device_height=" << argumentMap["device_height"]
+		<< ";device_type=" << argumentMap["device_type"]
+		<< ";device_stream_ip=" << argumentMap["device_stream_ip"]
+		<< ";device_stream_port=" << argumentMap["device_stream_port"]
+		<< ";device_stream_codec=" << argumentMap["device_stream_codec"]
+		<< ";device_stream_bitrate=" << argumentMap["device_stream_bitrate"]
+		<< ";device_stream_framerate=" << argumentMap["device_stream_framerate"]
+		<< ";device_sequence_prefix=" << argumentMap["device_sequence_prefix"]
+		<< ";device_sequence_details=" << argumentMap["device_sequence_details"]
+		<< ";device_sequence_format=" << argumentMap["device_sequence_format"]
+		<< ";device_sequence_bufferedframes=" << argumentMap["device_sequence_bufferedframes"]
+		<< ";device_image_prefix=" << argumentMap["device_image_prefix"]
+		<< ";device_image_format=" << argumentMap["device_image_format"]
+		<< ";device_image_timestamp=" << argumentMap["device_image_timestamp"]
+		<< ";tile_distribution_adaptive=" << argumentMap["tile_distribution_adaptive"]
+		<< ";tile_distribution_batchsize=" << argumentMap["tile_distribution_batchsize"]
+		<< ";tile_width=" << argumentMap["tile_width"]
+		<< ";tile_height=" << argumentMap["tile_height"]
+		<< ";resource_cap_min=" << argumentMap["resource_cap_min"]
+		<< ";resource_cap_max=" << argumentMap["resource_cap_max"]
+		<< ";resource_deadline_fps=" << argumentMap["resource_deadline_fps"]
+		<< ";resource_deadline_enabled=" << argumentMap["resource_deadline_enabled"]
+		<< ";script_name=" << argumentMap["script_name"]
+		<< ";";
+
+		m_strArguments = argumentStream.str();
+
+		IController::WriteToSocket(m_pSocket, "OK", 2);
+	}
+	else if (strCommandName == "init")
 	{
 		// Need to push them to local structure too
 		std::stringstream argumentStream;
@@ -172,6 +209,10 @@ bool TaskController::ProcessClientInput(void)
 	{
 		IController::WriteToSocket(m_pSocket, "OK", 2);
 		return false;
+	} 
+	else
+	{
+		IController::WriteToSocket(m_pSocket, "KO", 2);
 	}
 
 	return true;

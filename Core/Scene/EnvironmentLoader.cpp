@@ -46,8 +46,8 @@ bool ParseNode::FindByName(const std::string& p_strName, std::vector<ParseNode*>
 	std::vector<ParseNode*>::iterator nodeIterator;
 
 	for (nodeIterator = Children.begin(); 
-		 nodeIterator != Children.end();
-		 ++nodeIterator)
+		nodeIterator != Children.end();
+		++nodeIterator)
 	{
 		if ((*nodeIterator)->Name == p_strName)
 			p_nodeList.push_back(*nodeIterator);
@@ -62,8 +62,8 @@ bool ParseNode::GetArgumentMap(ArgumentMap &p_argumentMap)
 	std::vector<ParseNode*>::iterator nodeIterator;
 
 	for (nodeIterator = Children.begin(); 
-		 nodeIterator != Children.end();
-		 ++nodeIterator)
+		nodeIterator != Children.end();
+		++nodeIterator)
 	{
 		if ((*nodeIterator)->Type == ParseNode::Leaf)
 			argumentMap[(*nodeIterator)->Name] = (*nodeIterator)->Value;
@@ -179,7 +179,7 @@ bool EnvironmentLoader::Parse(void)
 		{
 			if (!pLexer->ReadToken(valueToken))
 				return false;
-			
+
 			//std::cout << valueToken.Value << " ";
 
 			// Go deeper
@@ -225,7 +225,7 @@ bool EnvironmentLoader::GetNodeList(const std::string &p_strCategoryName, const 
 {
 	std::vector<ParseNode*> categoryNodes;
 	std::vector<ParseNode*>::iterator categoryIterator;
-	
+
 	std::vector<ParseNode*> instanceNodes;
 	std::vector<ParseNode*>::iterator instanceIterator;
 
@@ -236,8 +236,8 @@ bool EnvironmentLoader::GetNodeList(const std::string &p_strCategoryName, const 
 	p_nodeList.clear();
 
 	for (categoryIterator = categoryNodes.begin();
-		 categoryIterator != categoryNodes.end();
-		 ++categoryIterator)
+		categoryIterator != categoryNodes.end();
+		++categoryIterator)
 	{
 		ParseNode *pCategoryNode = *categoryIterator;
 
@@ -256,7 +256,7 @@ bool EnvironmentLoader::ParseCameras(void)
 	ICamera *pCamera;
 	ArgumentMap argumentMap;
 	std::string strType, strId;
-	
+
 	std::vector<ParseNode*> cameraNodes;
 	std::vector<ParseNode*>::iterator cameraNodesIterator;
 
@@ -264,8 +264,8 @@ bool EnvironmentLoader::ParseCameras(void)
 		return false;
 
 	for (cameraNodesIterator = cameraNodes.begin();
-			cameraNodesIterator != cameraNodes.end();
-			++cameraNodesIterator)
+		cameraNodesIterator != cameraNodes.end();
+		++cameraNodesIterator)
 	{
 		ParseNode *pCameraNode = *cameraNodesIterator;
 		pCameraNode->GetArgumentMap(argumentMap);
@@ -302,8 +302,8 @@ bool EnvironmentLoader::ParseTextures(void)
 		return false;
 
 	for (textureNodesIterator = textureNodes.begin();
-			textureNodesIterator != textureNodes.end();
-			++textureNodesIterator)
+		textureNodesIterator != textureNodes.end();
+		++textureNodesIterator)
 	{
 		ParseNode *pTextureNode = *textureNodesIterator;
 		pTextureNode->GetArgumentMap(argumentMap);
@@ -340,8 +340,8 @@ bool EnvironmentLoader::ParseLights(void)
 		return false;
 
 	for (lightNodesIterator = lightNodes.begin();
-			lightNodesIterator != lightNodes.end();
-			++lightNodesIterator)
+		lightNodesIterator != lightNodes.end();
+		++lightNodesIterator)
 	{
 		ParseNode *pLightNode = *lightNodesIterator;
 		pLightNode->GetArgumentMap(argumentMap);
@@ -378,7 +378,7 @@ bool EnvironmentLoader::ParseFilters(void)
 	IFilter *pFilter;
 	ArgumentMap argumentMap;
 	std::string strType, strId;
-	
+
 	std::vector<ParseNode*> filterNodes;
 	std::vector<ParseNode*>::iterator filterNodesIterator;
 
@@ -386,8 +386,8 @@ bool EnvironmentLoader::ParseFilters(void)
 		return false;
 
 	for (filterNodesIterator = filterNodes.begin();
-			filterNodesIterator != filterNodes.end();
-			++filterNodesIterator)
+		filterNodesIterator != filterNodes.end();
+		++filterNodesIterator)
 	{
 		ParseNode *pFilterNode = *filterNodesIterator;
 		pFilterNode->GetArgumentMap(argumentMap);
@@ -424,8 +424,8 @@ bool EnvironmentLoader::ParseSamplers(void)
 		return false;
 
 	for (samplerNodesIterator = samplerNodes.begin();
-			samplerNodesIterator != samplerNodes.end();
-			++samplerNodesIterator)
+		samplerNodesIterator != samplerNodes.end();
+		++samplerNodesIterator)
 	{
 		ParseNode *pSamplerNode = *samplerNodesIterator;
 		pSamplerNode->GetArgumentMap(argumentMap);
@@ -454,7 +454,7 @@ bool EnvironmentLoader::ParseDevices(void)
 	IDevice *pDevice;
 	ArgumentMap argumentMap;
 	std::string strType, strId;
-	
+
 	std::vector<ParseNode*> deviceNodes;
 	std::vector<ParseNode*>::iterator deviceNodesIterator;
 
@@ -462,8 +462,8 @@ bool EnvironmentLoader::ParseDevices(void)
 		return false;
 
 	for (deviceNodesIterator = deviceNodes.begin();
-			deviceNodesIterator != deviceNodes.end();
-			++deviceNodesIterator)
+		deviceNodesIterator != deviceNodes.end();
+		++deviceNodesIterator)
 	{
 		ParseNode *pDeviceNode = *deviceNodesIterator;
 		pDeviceNode->GetArgumentMap(argumentMap);
@@ -500,8 +500,8 @@ bool EnvironmentLoader::ParseIntegrators(void)
 		return false;
 
 	for (integratorNodesIterator = integratorNodes.begin();
-			integratorNodesIterator != integratorNodes.end();
-			++integratorNodesIterator)
+		integratorNodesIterator != integratorNodes.end();
+		++integratorNodesIterator)
 	{
 		ParseNode *pIntegratorNode = *integratorNodesIterator;
 		pIntegratorNode->GetArgumentMap(argumentMap);
@@ -536,10 +536,10 @@ bool EnvironmentLoader::ParseMaterials(void)
 
 	if (!GetNodeList("Materials", "Material", materialNodes))
 		return false;
-		
+
 	for (materialNodesIterator = materialNodes.begin();
-			materialNodesIterator != materialNodes.end();
-			++materialNodesIterator)
+		materialNodesIterator != materialNodes.end();
+		++materialNodesIterator)
 	{
 		ParseNode *pMaterialNode = *materialNodesIterator;
 		pMaterialNode->GetArgumentMap(argumentMap);
@@ -575,10 +575,10 @@ bool EnvironmentLoader::ParseShapes(void)
 	// No shape nodes found
 	if (!GetNodeList("Shapes", "Shape", shapeNodes))
 		return false;
-		
+
 	for (shapeNodesIterator = shapeNodes.begin();
-			shapeNodesIterator != shapeNodes.end();
-			++shapeNodesIterator)
+		shapeNodesIterator != shapeNodes.end();
+		++shapeNodesIterator)
 	{
 		ParseNode *pShapeNode = *shapeNodesIterator;
 		pShapeNode->GetArgumentMap(argumentMap);
@@ -638,7 +638,7 @@ bool EnvironmentLoader::ParseRenderers(void)
 {
 	IRenderer *pRenderer;
 	ArgumentMap argumentMap;
-	
+
 	std::string strType, strId, 
 		strFilter, strDevice, 
 		strIntegrator;
@@ -648,10 +648,10 @@ bool EnvironmentLoader::ParseRenderers(void)
 
 	if (!GetNodeList("Renderers", "Renderer", rendererNodes))
 		return false;
-		
+
 	for (rendererNodesIterator = rendererNodes.begin();
-			rendererNodesIterator != rendererNodes.end();
-			++rendererNodesIterator)
+		rendererNodesIterator != rendererNodes.end();
+		++rendererNodesIterator)
 	{
 		ParseNode *pRendererNode = *rendererNodesIterator;
 		pRendererNode->GetArgumentMap(argumentMap);
@@ -672,8 +672,8 @@ bool EnvironmentLoader::ParseRenderers(void)
 		catch (...) { std::cerr << "[Renderer] Error : Cannot create instance." << std::endl; }
 
 		/*
-		 * Now we need to do some binding operations on the renderer
-		 */
+		* Now we need to do some binding operations on the renderer
+		*/
 
 		try {
 			// Bind integrator
@@ -819,10 +819,10 @@ bool EnvironmentLoader::ParseEnvironment(void)
 
 	if (!primitives[0]->FindByName("Primitive", primitiveNodes))
 		return false;
-		
+
 	for (primitiveNodesIterator = primitiveNodes.begin();
-			primitiveNodesIterator != primitiveNodes.end();
-			++primitiveNodesIterator)
+		primitiveNodesIterator != primitiveNodes.end();
+		++primitiveNodesIterator)
 	{
 		ParseNode *primitiveNode = *primitiveNodesIterator;
 		primitiveNode->GetArgumentMap(argumentMap);

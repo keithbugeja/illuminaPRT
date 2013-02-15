@@ -39,7 +39,7 @@ namespace Illumina
 	{
 		struct VideoStreamState
 		{
-			#if (defined __VIDEOSTREAM_USE_FFMPEG__)				
+			#if (defined __VIDEOSTREAM_USE_FFMPEG__)
 			// FFMPEG Library objects
 			AVFormatContext *m_pFormatContext;
 			AVCodecContext *m_pCodecContext;
@@ -70,7 +70,7 @@ namespace Illumina
 				VideoStreamState()
 					: m_pFrame(NULL)
 					, m_pImage(NULL)
-                    , m_i64FrameTime(0)
+					, m_i64FrameTime(0)
 					, m_i64FrameNext(0)
 				{ }
 
@@ -101,7 +101,7 @@ int IMEMGetCallback (void *data, const char *cookie, int64_t *dts, int64_t *pts,
 }
 //----------------------------------------------------------------------------------------------
 // Callback method VLC uses to release data
-//-----------------------------------------s-----------------------------------------------------
+//----------------------------------------------------------------------------------------------
 int IMEMReleaseCallback (void *data, const char *cookie, size_t bufferSize, void * buffer)
 {
 	return 0;
@@ -216,7 +216,6 @@ void IVideoStream::ConvertImageToFrame(Image *p_pImage, void *p_pFrame)
 		pFrame[1] = (int)(pImagePixel->G * 255);
 		pFrame[2] = (int)(pImagePixel->R * 255);
 	}
-
 #endif
 }
 
@@ -236,7 +235,7 @@ IVideoStream::StreamType DisplayVideoStream::GetStreamType(void) const {
 }
 
 //----------------------------------------------------------------------------------------------
-bool DisplayVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPerSecond, int p_nBitRate, VideoCodec p_videoCodec) 
+bool DisplayVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPerSecond, int p_nBitRate, VideoCodec p_videoCodec)
 {
 #if (defined __VIDEOSTREAM_USE_VLC__)
 	std::vector<char*> arguments;
@@ -248,7 +247,7 @@ bool DisplayVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 		<< " --imem-cat=2"
 		<< " --imem-width=" << p_nWidth 
 		<< " --imem-height=" << p_nHeight
-		<< " --imem-codec=RV24" 
+		<< " --imem-codec=RV24"
 		<< " --imem-get=" << (long long int)IMEMGetCallback
 		<< " --imem-release=" << (long long int)IMEMReleaseCallback
 		<< " --imem-data=" << (long long int)m_pVideoStreamState
@@ -332,14 +331,14 @@ void DisplayVideoStream::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 NetworkVideoStream::NetworkVideoStream(const std::string &p_strNetworkAddress, int p_nPortNumber)
 	: m_pVideoStreamState(new VideoStreamState())
-    , m_nPort(p_nPortNumber)
-    , m_strAddress(p_strNetworkAddress)
+	, m_nPort(p_nPortNumber)
+	, m_strAddress(p_strNetworkAddress)
 { }
 //----------------------------------------------------------------------------------------------
 NetworkVideoStream::NetworkVideoStream(void)
 	: m_pVideoStreamState(new VideoStreamState())
-    , m_nPort(10000)
-    , m_strAddress("127.0.0.1")
+	, m_nPort(10000)
+	, m_strAddress("127.0.0.1")
 { }
 //----------------------------------------------------------------------------------------------
 NetworkVideoStream::~NetworkVideoStream(void)
@@ -368,7 +367,7 @@ IVideoStream::StreamType NetworkVideoStream::GetStreamType(void) const {
 }
 
 //----------------------------------------------------------------------------------------------
-bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPerSecond, int p_nBitRate, VideoCodec p_videoCodec) 
+bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPerSecond, int p_nBitRate, VideoCodec p_videoCodec)
 {
 #if (defined __VIDEOSTREAM_USE_FFMPEG__)
 
@@ -494,6 +493,8 @@ bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 
 	std::string args = argStream.str();
 
+	std::cout << args << std::endl;
+	
 	boost::char_separator<char> separator(" ");
 	boost::tokenizer<boost::char_separator<char> > tokens(args, separator);
 
@@ -524,10 +525,10 @@ bool NetworkVideoStream::Initialise(int p_nWidth, int p_nHeight, int p_nFramesPe
 	char *vlcOptions[] = {""},
 		pOutput[256];
 
-	sprintf(pOutput, "#transcode{vcodec=%s,fps=%d,vb=%d,acodec=none}:rtp{dst=%s,port=%d,mux=ts}", 
+	sprintf(pOutput, "#transcode{vcodec=%s,fps=%d,vb=%d,acodec=none}:rtp{dst=%s,port=%d,mux=ts}",
 		GetFourCC(p_videoCodec).c_str(), p_nFramesPerSecond, p_nBitRate, m_strAddress.c_str(), m_nPort);
 
-	libvlc_vlm_add_broadcast(m_pVideoStreamState->m_pInstance, 
+	libvlc_vlm_add_broadcast(m_pVideoStreamState->m_pInstance,
 		"illumina_stream", "imem://", pOutput,
 		0, vlcOptions, 1, 0);
 
@@ -638,12 +639,12 @@ void NetworkVideoStream::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 FileVideoStream::FileVideoStream(const std::string &p_strFilename)
-    : m_pVideoStreamState(new VideoStreamState())
+	: m_pVideoStreamState(new VideoStreamState())
 	, m_strFilename(p_strFilename)
 { }
 //----------------------------------------------------------------------------------------------
 FileVideoStream::FileVideoStream(void)
-    : m_pVideoStreamState(new VideoStreamState())
+	: m_pVideoStreamState(new VideoStreamState())
 	, m_strFilename("default.mpg")
 { }
 //----------------------------------------------------------------------------------------------
