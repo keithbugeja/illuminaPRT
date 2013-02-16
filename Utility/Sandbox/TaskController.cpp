@@ -99,7 +99,7 @@ bool TaskController::ProcessClientInput(void)
 	m_pCommandParser->Display(strCommandName, argumentMap);
 
 	// Process commands
-	if (strCommandName == "init2")
+	if (strCommandName == "init")
 	{
 		std::stringstream argumentStream;
 		argumentStream << "taskid=" << GetID()
@@ -131,31 +131,6 @@ bool TaskController::ProcessClientInput(void)
 		<< ";resource_deadline_enabled=" << argumentMap["resource_deadline_enabled"]
 		<< ";script_name=" << argumentMap["script_name"]
 		<< ";";
-
-		m_strArguments = argumentStream.str();
-
-		IController::WriteToSocket(m_pSocket, "OK", 2);
-	}
-	else if (strCommandName == "init")
-	{
-		// Need to push them to local structure too
-		std::stringstream argumentStream;
-		argumentStream << "taskid=" << GetID()
-		<< ";username=" << argumentMap["username"]
-		<< ";jobname=" << argumentMap["jobname"]
-		<< ";script=" << argumentMap["script"] 
-		<< ";min=" << argumentMap["min"] 
-		<< ";max=" << argumentMap["max"]
-		<< ";width=" << argumentMap["width"]
-		<< ";height=" << argumentMap["height"]
-		<< ";batchsize=" << argumentMap["batchsize"]
-		<< ";useadaptive=" << argumentMap["useadaptive"]
-		<< ";fps=" << argumentMap["fps"]
-		<< ";usefps=" << argumentMap["usefps"]
-		<< ";rtpaddr=" << argumentMap["rtpaddr"]
-		<< ";rtpport=" << argumentMap["rtpport"]
-		<< ";usertp=" << argumentMap["usertp"]
-		<< ";"; 
 
 		m_strArguments = argumentStream.str();
 

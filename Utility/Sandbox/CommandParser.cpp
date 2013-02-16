@@ -72,7 +72,7 @@ void ICommandParser::Display(const std::string &p_strCommandName, const std::map
 //----------------------------------------------------------------------------------------------
 ClientCommandParser::ClientCommandParser(void) 
 {
-	this->Add("init2|job_user|job_name"
+	this->Add("init|job_user|job_name"
 		  "|device_override|device_width|device_height|device_type"
 		  "|device_stream_ip|device_stream_port|device_stream_codec|device_stream_bitrate|device_stream_framerate"
 		  "|device_sequence_prefix|device_sequence_details|device_sequence_format|device_sequence_bufferedframes"
@@ -82,7 +82,6 @@ ClientCommandParser::ClientCommandParser(void)
 		  "|resource_cap_min|resource_cap_max|resource_deadline_fps|resource_deadline_enabled"
 		  "|script_name");
 
-	this->Add("init|username|jobname|script|max|min|width|height|batchsize|useadaptive|fps|usefps|rtpaddr|rtpport|usertp");
 	this->Add("move|action|direction");
 	this->Add("path|vertices");
 	this->Add("exit");
