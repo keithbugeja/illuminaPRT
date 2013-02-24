@@ -206,4 +206,3 @@ int TaskController::GetResourceCount(void) const
 	return m_task.Size();
 }
 //----------------------------------------------------------------------------------------------
-

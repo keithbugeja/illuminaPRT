@@ -152,6 +152,12 @@ void Resource::Start(ITaskPipeline *p_pTaskPipeline)
 				break;
 			}
 			
+			case MessageIdentifiers::ID_Resource_Ping:
+			{
+				messageLog << "Resource :: Resource [" << GetID() << "] received ping command.";
+				break;
+			}
+
 			default:
 			{
 				messageLog << "Resource :: Resource [" << GetID() << "] received generic command [" << *pCommandBuffer << "].";
