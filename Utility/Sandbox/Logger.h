@@ -130,6 +130,9 @@ protected:
 	std::string m_strFilename;
 	std::fstream m_fileStream;
 
+	int m_nBatchSize,
+		m_nBatchIndex;
+
 	std::queue<std::string> m_outputQueue;
 
 	boost::thread m_sinkThread;
@@ -170,6 +173,8 @@ public:
 		: m_strFilename(p_strFilename)
 		, m_bFileStreamOpen(false)
 		, m_bFlushPending(false)
+		, m_nBatchSize(256)
+		, m_nBatchIndex(0)
 	{ }
 
 	~AsynchronousFileSink(void) 
@@ -224,6 +229,7 @@ public:
 
 	void Flush(void) 
 	{
+		m_nBatchIndex = 0;
 		m_bFlushPending = true;
 		m_sinkThreadConditionVariable.notify_all();
 	}
@@ -231,7 +237,13 @@ public:
 	int Write(const std::string &p_strMessage)
 	{
 		m_outputQueue.push(p_strMessage);
-		m_sinkThreadConditionVariable.notify_all();
+		
+		if (m_nBatchIndex++ > m_nBatchSize)
+		{
+			m_nBatchIndex = 0;
+			m_sinkThreadConditionVariable.notify_all();
+		}
+
 		return p_strMessage.length();
 	}
 };
