@@ -10,27 +10,37 @@ public:
 
 	enum TagBase
 	{
+		// Controller -> Task channel
 		Controller_Task				= 0x00000100,
 
+		// Controller <-> Coordinator channels
 		Controller_Coordinator		= 0x00000200,
 		Coordinator_Controller		= 0x00000400,
 
+		// Coordinator <-> Worker channels
 		Coordinator_Worker			= 0x00001000,
 		Worker_Coordinator			= 0x00002000,
 
+		// Registration / Unregistration channel
 		//Coordinator_Worker_Unreg	= 0x00004000,
 		//Worker_Coordinator_Unreg	= 0x00004001,
 
 		Coordinator_Worker_Reg		= 0x00004002,
 		//Worker_Coordinator_Reg	= 0x00004003,
 
+		// Synch
 		Coordinator_Worker_Sync		= 0x00004004,
 		Worker_Coordinator_Sync		= 0x00004005,
 
+		// Job
 		Coordinator_Worker_Job		= 0x00010000,
-		Worker_Coordinator_Job		= 0x00020000
+		Worker_Coordinator_Job		= 0x00020000,
+
+		// Resource -> Manager channel
+		Resource_Manager			= 0x00100000
 	};
 
+	static const int Manager_Rank = 0;
 	static const int Controller_Rank = 0;
 	static const int Source_Any = MPI_ANY_SOURCE;
 	static const int Tag_Any	= MPI_ANY_TAG;
