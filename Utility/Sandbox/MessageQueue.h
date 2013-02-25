@@ -12,6 +12,7 @@ public:
 		ID_Resource_Unregister			= 0x0002,
 		ID_Resource_Terminate			= 0x0003,
 		ID_Resource_Ping				= 0x7001,
+		ID_Resource_Idle				= 0x7002,
 		ID_Worker_Register				= 0x0004,
 		ID_Worker_Ready					= 0x0005,
 		ID_Coordinator_Reject			= 0x0006,
@@ -72,6 +73,10 @@ typedef Message_Header Message_Worker_Coordinator_Register;
 typedef Message_Header Message_Worker_Coordinator_Ready;
 typedef Message_Header Message_Coordinator_Worker_Unregister;
 typedef Message_Header Message_Coordinator_Worker_Reject;
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+typedef Message_Header Message_Resource_Manager_Ready;
+
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 struct ResourceMessage

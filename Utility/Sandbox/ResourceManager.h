@@ -45,6 +45,14 @@ public:
 	};
 
 protected:
+	bool m_bIsRunning;
+
+	void StartService(void);
+	void StopService(void);
+
+	static void ServiceHandler(ResourceManager *p_pResourceManager);
+
+protected:
 	bool AllocateResources(void);
 	void FreeResources(void);
 
@@ -66,12 +74,6 @@ public:
 		m_controllerList.push_back(pController);
 		m_controllerMap[nID] = pController;
 
-		/*
-		std::stringstream message;
-		message << "ResourceManager::CreateInstance : Creating Controller with ID [" << nID << "]";
-		Logger::Message(message.str(), ServiceManager::GetInstance()->IsVerbose());
-		*/
-
 		return pController;
 	}
 
@@ -84,6 +86,8 @@ public:
 	int GetResourceCount(void) const;
 	bool RequestResources(int p_nTaskID, int p_nResourceCount);
 	bool ReleaseResources(int p_nTaskID, int p_nResourceCount);
+
+	void OnResourceFree(int p_nResourceID);
 
 	void GetControllerInfo(std::vector<ResourceControllerInfo> &p_controllerInfoList);
 };

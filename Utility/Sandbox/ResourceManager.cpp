@@ -3,10 +3,9 @@
 //	Author:		Keith Bugeja
 //	Date:		27/07/2012
 //----------------------------------------------------------------------------------------------
-#include <mpi.h>
-//----------------------------------------------------------------------------------------------
 #include "ResourceManager.h"
 #include "ServiceManager.h"
+#include "Communicator.h"
 //----------------------------------------------------------------------------------------------
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -92,20 +91,80 @@ int ResourceManager::WhoAmI(void)
 	return rank;
 }
 //----------------------------------------------------------------------------------------------
+void ResourceManager::StartService(void)
+{
+	// Install service handler only if Master
+	if (WhoAmI() == ResourceManager::Master)
+	{
+		m_bIsRunning = true;
+
+		boost::thread serviceHandler = 
+			boost::thread(boost::bind(ResourceManager::ServiceHandler, this));
+	}
+}
+//----------------------------------------------------------------------------------------------
+void ResourceManager::StopService(void)
+{
+	// Remove service handler
+	if (WhoAmI() == ResourceManager::Master)
+		m_bIsRunning = false;
+}
+//----------------------------------------------------------------------------------------------
 void ResourceManager::Initialise(void)
 {
 	// Initialise MPI with support for calls from multiple-threads
 	int provided; MPI_Init_thread(NULL, NULL, MPI_THREAD_MULTIPLE, &provided);
 
+	// Allocate required resources
 	AllocateResources();
+
+	// Start asynch service
+	StartService();
 }
 //----------------------------------------------------------------------------------------------
 void ResourceManager::Shutdown(void)
 {
+	// Stop service handler
+	StopService();
+
+	// Free allocated resources
 	FreeResources();
 
 	// Terminate application
 	MPI_Finalize();
+}
+//----------------------------------------------------------------------------------------------
+void ResourceManager::ServiceHandler(ResourceManager *p_pResourceManager)
+{
+	int *pCommandBuffer = new int[1024];
+	Communicator::Status status;
+	
+	/* IsRunning() */
+	// Why not synchronous send/receive??
+	while(p_pResourceManager->m_bIsRunning)
+	{
+		if (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Resource_Manager, &status))
+		{
+			Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), Communicator::Source_Any, Communicator::Resource_Manager, &status);
+
+			switch(*pCommandBuffer)
+			{
+				case MessageIdentifiers::ID_Resource_Idle:
+				{
+					std::cout << "ResourceManager :: Service Handler calling OnResourceFree for resource [" << status.MPI_SOURCE << "]" << std::endl;
+					p_pResourceManager->OnResourceFree(status.MPI_SOURCE);
+					break;
+				}
+
+				default:
+				{
+					std::cout << "ResourceManager :: Received unhandled message [" << *pCommandBuffer << "]" << std::endl;
+				}
+			}
+		}
+		else
+			boost::this_thread::sleep(boost::posix_time::microsec(1000));
+	}
 }
 //----------------------------------------------------------------------------------------------
 int ResourceManager::GetResourceCount(void) const {
@@ -183,13 +242,18 @@ bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 	// Call controller to populate released resource list
 	std::vector<Resource*> resourceList; pController->OnResourceRemove(p_nResourceCount, resourceList);
 
+	// This is prone to a number of problems:
+	// -- [1] Resources tagged as free are not necessarily so (yet).
+	// -- [2] Structures are not modified atomically.
+
 	// Now remove resources and put them back on free list
 	for (std::vector<Resource*>::iterator resourceIterator = resourceList.begin();
 		 resourceIterator != resourceList.end(); resourceIterator++)
 	{
 		Resource *pResource = *resourceIterator;
 
-		// Update resource allocation directory
+		// Update resource allocation directory	
+		// -- REQUIRES MUTEX ACCESS TO DS!
 		std::vector<Resource*>::iterator resourceFindIterator = 
 			std::find(m_resourceAllocationList.begin(), m_resourceAllocationList.end(), pResource);
 
@@ -198,8 +262,12 @@ bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 			m_resourceAllocationList.erase(resourceFindIterator);
 			m_resourceAllocationMap.erase(pResource->GetID());
 
-			// Update free list
+			/* Changing free list updates to asynch */
+
+			/* 
+			// Update free list 
 			m_resourceFreeList.push_back(pResource);
+			*/
 		}
 		else
 		{
@@ -208,10 +276,37 @@ bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 		}
 	}
 
+	/*
 	message.str(std::string()); message << "ResourceManager :: Freed [" << resourceList.size() << "] resources.";
+	logger->Write(message.str(), LL_Info);
+	*/
+
+	message.str(std::string()); message << "ResourceManager :: Issued free to [" << resourceList.size() << "] resources.";
 	logger->Write(message.str(), LL_Info);
 
 	return true;
+}
+//----------------------------------------------------------------------------------------------
+void ResourceManager::OnResourceFree(int p_nResourceID)
+{
+	std::map<int, Resource*>::iterator resourceIterator = m_resourceIndexMap.find(p_nResourceID);
+
+	if (resourceIterator != m_resourceIndexMap.end())
+	{
+		m_resourceFreeList.push_back(resourceIterator->second);
+		
+		std::stringstream message;
+		message.str(std::string()); message << "ResourceManager :: Moved resource [" << p_nResourceID << "] to free list.";
+		std::cout << message.str() << std::endl;
+		//logger->Write(message.str(), LL_Info);
+	}
+	else
+	{
+		std::stringstream message;
+		message.str(std::string()); message << "ResourceManager :: Cannot find resource [" << p_nResourceID << "]! Unable to move to free list.";
+		std::cout << message.str() << std::endl;
+		// logger->Write(message.str(), LL_Error);
+	}
 }
 //----------------------------------------------------------------------------------------------
 IResourceController* ResourceManager::GetInstance(int p_nResourceControllerID)

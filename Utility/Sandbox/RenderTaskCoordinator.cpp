@@ -8,6 +8,33 @@
 #include "RenderTaskCoordinator.h"
 #include "Communicator.h"
 //----------------------------------------------------------------------------------------------
+#define __JOB_TIMING_FINE		0
+#define __JOB_TIMING_COARSE		1
+
+#define __JOB_TIMING_METHOD __JOB_TIMING_FINE
+#define __JOB_TIMING
+//----------------------------------------------------------------------------------------------
+#if defined __JOB_TIMING
+	#define StartTimer(x) x = Platform::GetTime()
+	#define GetElapsed(x,y) Platform::ToSeconds((y = Platform::GetTime()) - x)
+	#define RestartTimer(x,y) x = y
+#else
+	#define StartTimer(x)
+	#define GetElapsed(x,y) 0
+	#define RestartTimer(x,y)
+#endif
+
+#if __JOB_TIMING_METHOD == _JOB_TIMING_FINE
+	#define StartTimerF(x) StartTimer(x)
+	#define GetElapsedF(x,y) GetElapsed(x,y)
+	#define RestartTimerF(x,y) RestartTimer(x,y)
+#else
+	#define StartTimerF(x)
+	#define GetElapsedF(x,y) 0
+	#define RestartTimerF(x,y)
+#endif
+
+//----------------------------------------------------------------------------------------------
 static const int ____seed = 9843;
 static const int ____seed_inc = 137;
 //----------------------------------------------------------------------------------------------
@@ -434,19 +461,22 @@ bool RenderTaskCoordinator::Compute(void)
 	RadianceContext *pTileBuffer;
 	Communicator::Status status;
 
+#if defined __JOB_TIMING
 	double eventStart, eventComplete, 
 		subEventStart, subEventComplete;
+
+	double frameTime;
 
 	double radianceTime,
 		bilateralTime,
 		discontinuityTime,
 		toneTime,
 		commitTime,
-		accumulationTime,
-		framePackageSize;
+		accumulationTime;
+#endif
 	
 	int receivedTileID, tileID,
-		waitingTasks;
+		framePackageSize, waitingTasks;
 
 	//----------------------------------------------------------------------------------------------
 	// Initialise
@@ -464,8 +494,8 @@ bool RenderTaskCoordinator::Compute(void)
 	//----------------------------------------------------------------------------------------------
 	// Get list of available workers for this frame and send the initial job batch
 	//----------------------------------------------------------------------------------------------
-	eventStart = Platform::GetTime();
-
+	StartTimer(eventStart);
+	
 	std::vector<int> &workerList 
 		= GetAvailableWorkerList();
 
@@ -520,80 +550,78 @@ bool RenderTaskCoordinator::Compute(void)
 	}
 
 	// Compute time elapsed for radiance computation (communication + rendering)
-	eventComplete = Platform::GetTime();
-	radianceTime = Platform::ToSeconds(eventComplete - eventStart);
+	radianceTime = GetElapsedF(eventStart, subEventComplete);	
 
 	//----------------------------------------------------------------------------------------------
 	// Additional post-processing filters
 	//----------------------------------------------------------------------------------------------
-
 	// Bilateral filter
-	/*
-	eventStart = Platform::GetTime();
-	m_pBilateralFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-	eventComplete = Platform::GetTime();
-	bilateralTime = Platform::ToSeconds(eventComplete - eventStart);
-	*/
+	RestartTimerF(subEventStart, subEventComplete);
+	//m_pBilateralFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	bilateralTime = GetElapsedF(subEventStart, subEventComplete);
 
 	// Discontinuity buffer
-	/*
-	eventStart = Platform::GetTime();
-	m_pDiscontinuityBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-	eventComplete = Platform::GetTime();
-	discontinuityTime = Platform::ToSeconds(eventComplete - eventStart);
-	*/
+	RestartTimerF(subEventStart, subEventComplete);
+	//m_pDiscontinuityBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	discontinuityTime = GetElapsedF(subEventStart, subEventComplete);
 
 	// Tone mapping (moved to worker)
-	/*
-	eventStart = Platform::GetTime();
-	m_pDragoTone->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-	eventComplete = Platform::GetTime();
-	toneTime = Platform::ToSeconds(eventComplete - eventStart);
-	*/
+	RestartTimerF(subEventStart, subEventComplete);
+	//m_pTonemapFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+	toneTime = GetElapsedF(subEventStart, subEventComplete);
 
 	// Accumulation and motion blur
-	eventStart = Platform::GetTime();
+	RestartTimerF(subEventStart, subEventComplete);
 	m_pMotionBlurFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-
-	if (m_bResetAccumulation) {
+	if (m_bResetAccumulation) 
+	{
 		m_pMotionBlurFilter->Reset();
 		m_bResetAccumulation = false;
 	}
-
-	eventComplete = Platform::GetTime();
-	accumulationTime = Platform::ToSeconds(eventComplete - eventStart);
+	accumulationTime = GetElapsedF(subEventStart, subEventComplete);
 
 	// Commit to device
-	eventStart = Platform::GetTime();
+	RestartTimerF(subEventStart, subEventComplete);
 	m_pRenderer->Commit(m_pRadianceBuffer);
-	eventComplete = Platform::GetTime();
-	commitTime = Platform::ToSeconds(eventComplete - eventStart);
+	commitTime = GetElapsedF(subEventStart, subEventComplete);
+
+	// Get frame time
+	frameTime = GetElapsed(eventStart, eventComplete);
 
 	//----------------------------------------------------------------------------------------------
 	// Show frame time breakdown  
 	//----------------------------------------------------------------------------------------------
-	std::stringstream statistics;
+	#if defined __JOB_TIMING
+		std::stringstream statistics;
 
-	statistics << "RenderTaskCoordinator :: Computation statistics for task [" << m_nTaskId << "] : " 
-		<< std::endl << "\t---| Radiance Time : " << radianceTime << "s"
-		<< std::endl << "\t---| Accumulation Time : " << accumulationTime << "s"
-		//<< std::endl << "\t---| Decompression Time : " << decompressionTime << "s for " << framePackageSize / (1024 * 1024) << " MB"
-		//<< std::endl << "\t---| Bilateral Time : " << bilateralTime << "s"
-		//<< std::endl << "\t---| Discontinuity Time : " << discontinuityTime << "s"
-		//<< std::endl << "\t---| Tonemapping Time : " << toneTime << "s"
-		<< std::endl << "\t---| Commit Time : " << commitTime << "s";
+		statistics << "RenderTaskCoordinator :: Computation statistics for task [" << m_nTaskId << "] : " 
+		#if __JOB_TIMING_METHOD == __JOB_TIMING_FINE
+			<< std::endl << "\t---| Radiance Time : " << radianceTime << "s"
+			<< std::endl << "\t---| Bilateral Time : " << bilateralTime << "s"
+			<< std::endl << "\t---| Discontinuity Time : " << discontinuityTime << "s"
+			<< std::endl << "\t---| Tonemapping Time : " << toneTime << "s"
+			<< std::endl << "\t---| Accumulation Time : " << accumulationTime << "s"
+			<< std::endl << "\t---| Commit Time : " << commitTime << "s"
+		#endif
+			<< std::endl << "\t---| Frame Time : " << frameTime << "s" 
+			<< std::endl << "\t---| Frame Rate : " << 1.0 / frameTime << "Hz"
+			<< std::endl;
 
-	ServiceManager::GetInstance()->GetLogger()->Write(statistics.str(), LL_Info);
+		ServiceManager::GetInstance()->GetLogger()->Write(statistics.str(), LL_Info);
 
-	// Log output to data collection channel (asynchronous file-output channel)
-	statistics.str(std::string(""));
-	statistics << Platform::ToSeconds(eventComplete) << '\t'
-			<< radianceTime << '\t' << accumulationTime << '\t' << commitTime << '\t' 
-			<< radianceTime + accumulationTime + commitTime << '\t' 
-			<< 1.f / (radianceTime + accumulationTime + commitTime) << '\t' 
-			<< workerList.size() << std::endl;
+		// Log output to data collection channel (asynchronous file-output channel)
+		statistics.str(std::string(""));
 
-	(*ServiceManager::GetInstance()->GetLogger())["data_collection"]->Write(statistics.str(), LL_All);
+		statistics << Platform::ToSeconds(eventComplete)
+		#if __JOB_TIMING_METHOD == __JOB_TIMING_FINE
+			<< '\t' << radianceTime << '\t' << accumulationTime << '\t' << commitTime
+		#endif
+			<< '\t' << frameTime << '\t' << 1.0 / frameTime
+			<< '\t' << workerList.size()
+			<< std::endl;
+
+		(*ServiceManager::GetInstance()->GetLogger())["data_collection"]->Write(statistics.str(), LL_All);
+	#endif
 
 	return true;
 }

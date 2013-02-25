@@ -138,6 +138,10 @@ void Resource::Start(ITaskPipeline *p_pTaskPipeline)
 				// Execite pipeline
 				p_pTaskPipeline->Execute(args, GetID(), pMessage->CoordinatorID);
 
+				// Notify that resource is idle
+				Message_Resource_Manager_Ready message; message.MessageID = MessageIdentifiers::ID_Resource_Idle;
+				Communicator::Send(&message, sizeof(Message_Resource_Manager_Ready), Communicator::Manager_Rank, Communicator::Resource_Manager);
+
 				// Set resource state back to idle
 				m_resourceState = ST_Idle;
 
