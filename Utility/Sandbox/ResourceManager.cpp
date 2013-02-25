@@ -136,6 +136,9 @@ void ResourceManager::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 void ResourceManager::ServiceHandler(ResourceManager *p_pResourceManager)
 {
+	Logger *logger = ServiceManager::GetInstance()->GetLogger();
+	std::stringstream message;
+
 	int *pCommandBuffer = new int[1024];
 	Communicator::Status status;
 	
@@ -143,7 +146,7 @@ void ResourceManager::ServiceHandler(ResourceManager *p_pResourceManager)
 	// Why not synchronous send/receive??
 	while(p_pResourceManager->m_bIsRunning)
 	{
-		if (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Resource_Manager, &status))
+		while (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Resource_Manager, &status))
 		{
 			Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), Communicator::Source_Any, Communicator::Resource_Manager, &status);
 
@@ -151,19 +154,23 @@ void ResourceManager::ServiceHandler(ResourceManager *p_pResourceManager)
 			{
 				case MessageIdentifiers::ID_Resource_Idle:
 				{
-					std::cout << "ResourceManager :: Service Handler calling OnResourceFree for resource [" << status.MPI_SOURCE << "]" << std::endl;
 					p_pResourceManager->OnResourceFree(status.MPI_SOURCE);
 					break;
 				}
 
 				default:
 				{
-					std::cout << "ResourceManager :: Received unhandled message [" << *pCommandBuffer << "]" << std::endl;
+					message.str(std::string()); message << "ResourceManager :: Received unhandled message [" << *pCommandBuffer << "]";
+					logger->Write(message.str(), LL_Error);
 				}
 			}
 		}
-		else
-			boost::this_thread::sleep(boost::posix_time::microsec(1000));
+
+		boost::this_thread::sleep(boost::posix_time::microsec(500));
+
+		//if (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Resource_Manager, &status))
+		//else
+		//	boost::this_thread::sleep(boost::posix_time::microsec(500));
 	}
 }
 //----------------------------------------------------------------------------------------------
@@ -243,7 +250,7 @@ bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 	std::vector<Resource*> resourceList; pController->OnResourceRemove(p_nResourceCount, resourceList);
 
 	// This is prone to a number of problems:
-	// -- [1] Resources tagged as free are not necessarily so (yet).
+	// -- [1] Resources tagged as free are not necessarily so (yet). [[FIXED]]
 	// -- [2] Structures are not modified atomically.
 
 	// Now remove resources and put them back on free list
@@ -262,12 +269,10 @@ bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 			m_resourceAllocationList.erase(resourceFindIterator);
 			m_resourceAllocationMap.erase(pResource->GetID());
 
-			/* Changing free list updates to asynch */
-
 			/* 
-			// Update free list 
-			m_resourceFreeList.push_back(pResource);
-			*/
+			 * Free operation is completed asynchronously by resource, which sends
+			 * a resource_idle message to the resource manager.
+			 */
 		}
 		else
 		{
@@ -275,11 +280,6 @@ bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 			logger->Write(message.str(), LL_Error);
 		}
 	}
-
-	/*
-	message.str(std::string()); message << "ResourceManager :: Freed [" << resourceList.size() << "] resources.";
-	logger->Write(message.str(), LL_Info);
-	*/
 
 	message.str(std::string()); message << "ResourceManager :: Issued free to [" << resourceList.size() << "] resources.";
 	logger->Write(message.str(), LL_Info);
@@ -289,6 +289,10 @@ bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 //----------------------------------------------------------------------------------------------
 void ResourceManager::OnResourceFree(int p_nResourceID)
 {
+	std::stringstream messageLog;
+	Logger *logger = ServiceManager::GetInstance()->GetLogger();
+	logger->Write("ResourceManager :: Handling event [OnResourceFree].", LL_Info);
+
 	std::map<int, Resource*>::iterator resourceIterator = m_resourceIndexMap.find(p_nResourceID);
 
 	if (resourceIterator != m_resourceIndexMap.end())
@@ -297,15 +301,13 @@ void ResourceManager::OnResourceFree(int p_nResourceID)
 		
 		std::stringstream message;
 		message.str(std::string()); message << "ResourceManager :: Moved resource [" << p_nResourceID << "] to free list.";
-		std::cout << message.str() << std::endl;
-		//logger->Write(message.str(), LL_Info);
+		logger->Write(message.str(), LL_Info);
 	}
 	else
 	{
 		std::stringstream message;
 		message.str(std::string()); message << "ResourceManager :: Cannot find resource [" << p_nResourceID << "]! Unable to move to free list.";
-		std::cout << message.str() << std::endl;
-		// logger->Write(message.str(), LL_Error);
+		logger->Write(message.str(), LL_Error);
 	}
 }
 //----------------------------------------------------------------------------------------------
