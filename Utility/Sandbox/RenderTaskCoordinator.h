@@ -56,6 +56,9 @@ protected:
 	std::string m_strUserName,
 		m_strJobName;
 
+	double m_bootTime,
+		m_checkPointTime;
+
 protected:
 	// Video streaming override
 	bool m_bOverrideStream;
