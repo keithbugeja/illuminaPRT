@@ -93,6 +93,8 @@ int ResourceManager::WhoAmI(void)
 //----------------------------------------------------------------------------------------------
 void ResourceManager::StartService(void)
 {
+	Logger *logger = ServiceManager::GetInstance()->GetLogger();
+
 	// Install service handler only if Master
 	if (WhoAmI() == ResourceManager::Master)
 	{
@@ -100,14 +102,22 @@ void ResourceManager::StartService(void)
 
 		boost::thread serviceHandler = 
 			boost::thread(boost::bind(ResourceManager::ServiceHandler, this));
+	
+		logger->Write("ResourceManager :: Service handler started.", LL_Info);
 	}
 }
 //----------------------------------------------------------------------------------------------
 void ResourceManager::StopService(void)
 {
+	Logger *logger = ServiceManager::GetInstance()->GetLogger();
+
 	// Remove service handler
 	if (WhoAmI() == ResourceManager::Master)
+	{
 		m_bIsRunning = false;
+
+		logger->Write("ResourceManager :: Server handler stopped.", LL_Error);
+	}
 }
 //----------------------------------------------------------------------------------------------
 void ResourceManager::Initialise(void)
@@ -146,7 +156,8 @@ void ResourceManager::ServiceHandler(ResourceManager *p_pResourceManager)
 	// Why not synchronous send/receive??
 	while(p_pResourceManager->m_bIsRunning)
 	{
-		while (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Resource_Manager, &status))
+		// while (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Resource_Manager, &status))
+		while(Communicator::Probe(Communicator::Source_Any, Communicator::Resource_Manager, &status))
 		{
 			Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), Communicator::Source_Any, Communicator::Resource_Manager, &status);
 
@@ -166,11 +177,7 @@ void ResourceManager::ServiceHandler(ResourceManager *p_pResourceManager)
 			}
 		}
 
-		boost::this_thread::sleep(boost::posix_time::microsec(500));
-
-		//if (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Resource_Manager, &status))
-		//else
-		//	boost::this_thread::sleep(boost::posix_time::microsec(500));
+		boost::this_thread::sleep(boost::posix_time::microsec(250));
 	}
 }
 //----------------------------------------------------------------------------------------------
@@ -178,18 +185,12 @@ int ResourceManager::GetResourceCount(void) const {
 	return m_nResourceCount;
 }
 //----------------------------------------------------------------------------------------------
+// Resource requests / releases implement coarse grained atomic semantics - could use some work
+//
 bool ResourceManager::RequestResources(int p_nTaskID, int p_nResourceCount)
 {
 	Logger *logger = ServiceManager::GetInstance()->GetLogger();
 	std::stringstream message;
-
-	// Cannot allocate more resources than available!
-	if ((unsigned int)p_nResourceCount > m_resourceFreeList.size())
-	{
-		message.str(std::string()); message << "ResourceManager :: Unable to allocate resources: Not enough free resources [" << m_resourceFreeList.size() << "] to satisfy allocation request [" << p_nResourceCount << "]!";
-		logger->Write(message.str(), LL_Error);
-		return false;
-	}
 
 	// Check if Task ID is valid.
 	IResourceController *pController = GetInstance(p_nTaskID);
@@ -200,7 +201,24 @@ bool ResourceManager::RequestResources(int p_nTaskID, int p_nResourceCount)
 		return false;
 	}
 
-	// -- REQUIRES MUTEX ACCESS TO DS!
+	/*
+	 * Begin critical section
+	 */
+	m_resourceMutex.lock();
+
+	// Cannot allocate more resources than available!
+	if ((unsigned int)p_nResourceCount > m_resourceFreeList.size())
+	{
+		/*
+		 * End critical section
+		 */
+		m_resourceMutex.unlock();
+
+		message.str(std::string()); message << "ResourceManager :: Unable to allocate resources: Not enough free resources [" << m_resourceFreeList.size() << "] to satisfy allocation request [" << p_nResourceCount << "]!";
+		logger->Write(message.str(), LL_Error);
+		return false;
+	}
+
 	// Choose resources from free list
 	std::vector<Resource*> resourceAllocation;
 
@@ -216,7 +234,11 @@ bool ResourceManager::RequestResources(int p_nTaskID, int p_nResourceCount)
 		m_resourceAllocationList.push_back(pResource);
 		m_resourceAllocationMap[pResource->GetID()] = p_nTaskID;
 	}
-	// -- REQUIRES MUTEX ACCESS TO DS!
+	
+	/*
+	 * End critical section
+	 */
+	m_resourceMutex.unlock();
 
 	// Trigger notification on controller
 	pController->OnResourceAdd(resourceAllocation);
@@ -249,18 +271,18 @@ bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 	// Call controller to populate released resource list
 	std::vector<Resource*> resourceList; pController->OnResourceRemove(p_nResourceCount, resourceList);
 
-	// This is prone to a number of problems:
-	// -- [1] Resources tagged as free are not necessarily so (yet). [[FIXED]]
-	// -- [2] Structures are not modified atomically.
+	/*
+	 * Begin critical section
+	 */
+	m_resourceMutex.lock();
 
-	// Now remove resources and put them back on free list
+	// Now remove resources and schedule them to go back on free list
 	for (std::vector<Resource*>::iterator resourceIterator = resourceList.begin();
 		 resourceIterator != resourceList.end(); resourceIterator++)
 	{
 		Resource *pResource = *resourceIterator;
 
-		// Update resource allocation directory	
-		// -- REQUIRES MUTEX ACCESS TO DS!
+		// Update resource allocation directory
 		std::vector<Resource*>::iterator resourceFindIterator = 
 			std::find(m_resourceAllocationList.begin(), m_resourceAllocationList.end(), pResource);
 
@@ -281,6 +303,11 @@ bool ResourceManager::ReleaseResources(int p_nTaskID, int p_nResourceCount)
 		}
 	}
 
+	/*
+	 * End critical section
+	 */
+	m_resourceMutex.unlock();
+
 	message.str(std::string()); message << "ResourceManager :: Issued free to [" << resourceList.size() << "] resources.";
 	logger->Write(message.str(), LL_Info);
 
@@ -293,18 +320,33 @@ void ResourceManager::OnResourceFree(int p_nResourceID)
 	Logger *logger = ServiceManager::GetInstance()->GetLogger();
 	logger->Write("ResourceManager :: Handling event [OnResourceFree].", LL_Info);
 
+	/*
+	 * Begin critical section
+	 */
+	m_resourceMutex.lock();
+
 	std::map<int, Resource*>::iterator resourceIterator = m_resourceIndexMap.find(p_nResourceID);
 
 	if (resourceIterator != m_resourceIndexMap.end())
 	{
 		m_resourceFreeList.push_back(resourceIterator->second);
 		
+		/*
+		 * End critical section
+		 */
+		m_resourceMutex.unlock();
+
 		std::stringstream message;
 		message.str(std::string()); message << "ResourceManager :: Moved resource [" << p_nResourceID << "] to free list.";
 		logger->Write(message.str(), LL_Info);
 	}
 	else
 	{
+		/*
+		 * End critical section
+		 */
+		m_resourceMutex.unlock();
+
 		std::stringstream message;
 		message.str(std::string()); message << "ResourceManager :: Cannot find resource [" << p_nResourceID << "]! Unable to move to free list.";
 		logger->Write(message.str(), LL_Error);

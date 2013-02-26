@@ -10,8 +10,8 @@
 using namespace Illumina::Core;
 
 #if (!defined(__COMPILER_APPLE_GCC__))
-    #include <boost/chrono.hpp>
-    using namespace boost::chrono;
+	#include <boost/chrono.hpp>
+	using namespace boost::chrono;
 #endif
 
 //----------------------------------------------------------------------------------------------
@@ -20,11 +20,11 @@ typedef boost::chrono::high_resolution_clock Clock;
 //----------------------------------------------------------------------------------------------
 double Platform::GetTime(void) 
 {
-    #if (defined(__COMPILER_APPLE_GCC__))
-        return m_timer.elapsed();
-    #else
-        return Clock::now().time_since_epoch().count();
-    #endif
+	#if (defined(__COMPILER_APPLE_GCC__))
+		return m_timer.elapsed();
+	#else
+		return Clock::now().time_since_epoch().count();
+	#endif
 }
 //----------------------------------------------------------------------------------------------
 long long int Platform::GetCycles(void)
@@ -42,11 +42,11 @@ long long int Platform::GetCycles(void)
 //----------------------------------------------------------------------------------------------
 double Platform::ToSeconds(double p_fTimelapse)
 {
-    #if (defined(__COMPILER_APPLE_GCC__))
-        return p_fTimelapse;
-    #else
-        return ((double)Clock::period::num / Clock::period::den) * p_fTimelapse;
-    #endif
+	#if (defined(__COMPILER_APPLE_GCC__))
+		return p_fTimelapse;
+	#else
+		return ((double)Clock::period::num / Clock::period::den) * p_fTimelapse;
+	#endif
 }
 //----------------------------------------------------------------------------------------------
 int Platform::GetProcessorCount(void) 

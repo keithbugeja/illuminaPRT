@@ -11,7 +11,7 @@
 #define __JOB_TIMING_FINE		0
 #define __JOB_TIMING_COARSE		1
 
-#define __JOB_TIMING_METHOD __JOB_TIMING_FINE
+#define __JOB_TIMING_METHOD __JOB_TIMING_COARSE
 #define __JOB_TIMING
 //----------------------------------------------------------------------------------------------
 #if defined __JOB_TIMING
@@ -300,8 +300,11 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	logger->AddChannel("data_collection", m_pChannel, false);
 
 	// Add header to log file
-	(*logger)["data_collection"]->Write("Time \t Radiance \t Accumulation \t Commit \t Total \t Frame \t Workers \n", LL_All);
+	(*logger)["data_collection"]->Write("Time \t Radiance \t Accumulation \t Commit \t Cycle Time \t Cycle Hz \t Frame Time \t Frame Hz \t Workers \n", LL_All);
 	
+	m_checkPointTime = 
+		m_bootTime = Platform::GetTime();
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------
@@ -594,6 +597,9 @@ bool RenderTaskCoordinator::Compute(void)
 	#if defined __JOB_TIMING
 		std::stringstream statistics;
 
+		double elapsedFromLastCheckpoint = Platform::ToSeconds(eventComplete - m_checkPointTime);
+		m_checkPointTime = eventComplete;
+
 		statistics << "RenderTaskCoordinator :: Computation statistics for task [" << m_nTaskId << "] : " 
 		#if __JOB_TIMING_METHOD == __JOB_TIMING_FINE
 			<< std::endl << "\t---| Radiance Time : " << radianceTime << "s"
@@ -612,10 +618,11 @@ bool RenderTaskCoordinator::Compute(void)
 		// Log output to data collection channel (asynchronous file-output channel)
 		statistics.str(std::string(""));
 
-		statistics << Platform::ToSeconds(eventComplete)
+		statistics << Platform::ToSeconds(eventComplete - m_bootTime)
 		#if __JOB_TIMING_METHOD == __JOB_TIMING_FINE
 			<< '\t' << radianceTime << '\t' << accumulationTime << '\t' << commitTime
 		#endif
+			<< '\t' << elapsedFromLastCheckpoint << '\t' << 1.0 / elapsedFromLastCheckpoint
 			<< '\t' << frameTime << '\t' << 1.0 / frameTime
 			<< '\t' << workerList.size()
 			<< std::endl;

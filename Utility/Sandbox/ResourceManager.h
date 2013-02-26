@@ -31,6 +31,10 @@ protected:
 	std::vector<Resource*> m_resourceAllocationList;
 	std::map<int, int> m_resourceAllocationMap;
 
+	// Mutexes for controlling access to data structures
+	boost::mutex m_controllerMutex;
+	boost::mutex m_resourceMutex;
+
 	// Resource count == |m_resourceIndexList|
 	int m_nResourceCount;
 

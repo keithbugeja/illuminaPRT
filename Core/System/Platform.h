@@ -119,7 +119,7 @@
 	// Aligned malloc and free call ordinary malloc and free functions
 	inline void* AlignedMalloc(size_t size, int boundary) 
 	{
-        return valloc(size);
+		return valloc(size);
 		/* void *memory;
 		posix_memalign(&memory, boundary, size);
 		return memory; */
