@@ -35,6 +35,9 @@ class RenderTaskWorker
 
 	int m_nTaskId;
 
+	int m_nBorderSize;
+	unsigned int m_uiFilterFlags;
+
 protected:
 	bool ComputeUniform(void);
 	bool ComputeVariable(void);

@@ -12,11 +12,35 @@
 //----------------------------------------------------------------------------------------------
 bool RenderTaskWorker::ComputeUniform(void)
 {
-	/*
-	double eventStart, eventComplete,
-		computationTime;
+	// Need following:
+	// 1) Overlap size
+	// 2) Post-process filters
 
-	eventStart = Platform::GetTime();
+	/* 
+	double eventStart, eventComplete,
+		communicationStart, communicationComplete,
+		jobTime, communicationTime;
+	*/
+
+	m_nBorderSize = 1;
+	m_uiFilterFlags = __PPF_BilateralFilter | 
+		__PPF_Discontinuity |
+		__PPF_Tonemapping;
+
+	size_t bytesTransferred = 0;
+	int pixelsRendered = 0, 
+		tileID;
+	
+	int overlap = 
+		m_nBorderSize << 1;
+
+	//----------------------------------------------------------------------------------------------
+	// Start clocking job time
+	//----------------------------------------------------------------------------------------------
+	// eventStart = Platform::GetTime();
+
+	// Set seed 
+	m_pEnvironment->GetSampler()->Reset(m_unSamplerSeed);
 
 	// Prepare integrator
 	m_pIntegrator->Prepare(m_pEnvironment->GetScene());
@@ -25,14 +49,18 @@ bool RenderTaskWorker::ComputeUniform(void)
 	m_pSpace->Update();
 
 	// Render
-	int tileID;
-
-	while (true)
+	// for (communicationTime = 0, jobTime = 0;;)
+	for(;;)
 	{
 		//--------------------------------------------------
 		// Receive tile
 		//--------------------------------------------------
+		// communicationStart = Platform::GetTime();
+
 		Communicator::Receive(&tileID, sizeof(int), GetCoordinatorID(), Communicator::Coordinator_Worker_Job);
+
+		// communicationComplete = Platform::GetTime();
+		// communicationTime += Platform::ToSeconds(communicationComplete - communicationStart);
 
 		//--------------------------------------------------
 		// If termination signal, stop
@@ -42,31 +70,92 @@ bool RenderTaskWorker::ComputeUniform(void)
 		//--------------------------------------------------
 		// We have task id - render
 		//--------------------------------------------------
-		int sx = (tileID % m_renderTaskContext.TilesPerRow) * m_renderTaskContext.TileWidth,
-			sy = (tileID / m_renderTaskContext.TilesPerRow) * m_renderTaskContext.TileHeight;
+		// consider const Packet &packet!
+		RenderTilePackets::Packet packet = m_renderTaskContext.TilePackets.GetPacket(tileID);
+
+		m_pRenderTile->Resize(packet.XSize, packet.YSize);
+		m_pRimmedRenderTile->Resize(packet.XSize + overlap, packet.YSize + overlap);
 		
-		m_pRenderer->RenderRegion(m_pRenderTile->GetImageData(), 
-			sx, sy, m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight); 
+		m_pRenderer->RenderRegion(m_pRimmedRenderTile->GetImageData(),
+			packet.XStart - m_nBorderSize,
+			packet.YStart - m_nBorderSize,
+			packet.XSize + overlap,
+			packet.YSize + overlap,
+			0, 0);
+
+		// pixelsRendered += (packet.XSize + overlap) * (packet.YSize + overlap);
+		/**/
+		// Discontinuity Buffer
+		if (m_uiFilterFlags & __PPF_Discontinuity)
+		{		
+			((DiscontinuityBuffer*)m_pDiscontinuityBuffer)->SetKernelSize(1 + overlap);
+			m_pDiscontinuityBuffer->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		}
+		/*
+		// Bilateral Filter
+		if (m_uiFilterFlags & __PPF_BilateralFilter)
+		{
+			((BilateralFilter*)m_pBilateralFilter)->SetKernelSize(1 + overlap);
+			m_pBilateralFilter->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+		}
+		*/
+
+		// Trim tile
+		RadianceContext *pSrc, *pDst;
+		
+		for (int y = 0, ys = m_nBorderSize; y < packet.YSize; y++, ys++)
+		{
+			pSrc = m_pRimmedRenderTile->GetImageData()->GetP(m_nBorderSize, ys);
+			pDst = m_pRenderTile->GetImageData()->GetP(0, y);
+
+			for (int x = 0; x < packet.XSize; x++)
+			{
+				pDst->Final = pSrc->Final;
+				pDst->Flags = RadianceContext::DF_Final | RadianceContext::DF_Computed;
+
+				pSrc++;
+				pDst++;
+			}
+		}
 
 		// Tone mapping moved to workers
-		m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRenderTile->GetImageData());
+		if (m_uiFilterFlags & __PPF_Tonemapping)
+		{
+			m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRenderTile->GetImageData());
+		}
+
+		//--------------------------------------------------
+		// Package result
+		//--------------------------------------------------
+		m_pRenderTile->SetID(tileID);
+		m_pRenderTile->Package();
+
+		// bytesTransferred += m_pRenderTile->GetTransferBufferSize();
 
 		//--------------------------------------------------
 		// Send back result
 		//--------------------------------------------------
-		m_pRenderTile->SetID(tileID);
-		m_pRenderTile->Compress();
+		// communicationStart = Platform::GetTime();
 
-		Communicator::Send(m_pRenderTile->GetCompressedBuffer(), m_pRenderTile->GetCompressedBufferSize(),
+		Communicator::Send(m_pRenderTile->GetTransferBuffer(), m_pRenderTile->GetTransferBufferSize(),
 			GetCoordinatorID(), Communicator::Worker_Coordinator_Job);
+
+		// communicationComplete = Platform::GetTime();
+		// communicationTime += Platform::ToSeconds(communicationComplete - communicationStart);
 	}
 
+	/* 
 	eventComplete = Platform::GetTime();
-	computationTime = Platform::ToSeconds(eventComplete - eventStart);
+	jobTime = Platform::ToSeconds(eventComplete - eventStart);
 
 	int meid = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
-	std::cout << "---[" << meid << "] Computation time = " << computationTime << "s" << std::endl;
+	std::cout << "---[" << meid << "] Job time = " << jobTime << "s" << std::endl;
+	std::cout << "---[" << meid << "] -- Computation time = " << jobTime - communicationTime << "s" << std::endl;
+	std::cout << "---[" << meid << "] -- Communication time = " << communicationTime << "s" << std::endl;
+	std::cout << "---[" << meid << "] -- Bytes transferred = " << bytesTransferred << std::endl;
+	std::cout << "---[" << meid << "] -- Pixels rendered = " << pixelsRendered << std::endl;
 	*/
+
 	return true;
 }
 
@@ -222,7 +311,8 @@ bool RenderTaskWorker::Compute(void)
 	 * Uniform tile sizes
 	 */
 
-	return ComputeVariable();
+	// return ComputeVariable();
+	return ComputeUniform();
 }
 //----------------------------------------------------------------------------------------------
 // User handlers for init, shutdown and sync events

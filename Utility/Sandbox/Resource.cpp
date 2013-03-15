@@ -124,7 +124,8 @@ void Resource::Start(ITaskPipeline *p_pTaskPipeline)
 			case MessageIdentifiers::ID_Resource_Register:
 			{
 				messageLog << "Resource :: Resource [" << GetID() << "] received register command [" << *pCommandBuffer << "]." << std::endl;
-
+				logger->Write(messageLog.str(), LL_Info);
+				
 				Message_Controller_Resource_Register *pMessage = (Message_Controller_Resource_Register*)pCommandBuffer;
 				
 				// Set resource state
@@ -145,12 +146,16 @@ void Resource::Start(ITaskPipeline *p_pTaskPipeline)
 				// Set resource state back to idle
 				m_resourceState = ST_Idle;
 
+				messageLog.str(std::string()); messageLog << "Resource :: Resource [" << GetID() << "] is switching back to idle state." << std::endl;
+				logger->Write(messageLog.str(), LL_Info);
+
 				break;
 			}
 
 			case MessageIdentifiers::ID_Resource_Terminate:
 			{
 				messageLog << "Resource :: Resource [" << GetID() << "] received termination command.";
+				logger->Write(messageLog.str(), LL_Info);
 
 				bRunning = false;
 				break;
@@ -159,18 +164,19 @@ void Resource::Start(ITaskPipeline *p_pTaskPipeline)
 			case MessageIdentifiers::ID_Resource_Ping:
 			{
 				messageLog << "Resource :: Resource [" << GetID() << "] received ping command.";
+				logger->Write(messageLog.str(), LL_Info);
+
 				break;
 			}
 
 			default:
 			{
 				messageLog << "Resource :: Resource [" << GetID() << "] received generic command [" << *pCommandBuffer << "].";
+				logger->Write(messageLog.str(), LL_Info);
+
 				break;
 			}
 		}
-
-		// Output message log
-		logger->Write(messageLog.str(), LL_Info);
 	}
 
 	delete[] pCommandBuffer;

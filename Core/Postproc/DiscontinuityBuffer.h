@@ -44,6 +44,124 @@ namespace Illumina
 
 			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight)
 			{
+				m_fDistance = 0.5f;
+				m_fAngle = 0.7f;
+/*
+				RadianceContext *pKernelContext,
+					*pNeighbourContext,
+					*pOutputContext;
+
+				Spectrum irradiance;
+				int irradianceSamples;
+
+				int horizontalModulo = p_pInput->GetWidth() - (m_nKernelSize + 1),
+					verticalScanLine;
+
+				int borderWidth = m_nKernelSize >> 1,
+					borderRegionY = p_nRegionY + borderWidth,
+					borderRegionX = p_nRegionX + borderWidth,
+					borderRegionHeight = p_nRegionHeight - borderWidth,
+					borderRegionWidth = p_nRegionWidth - borderWidth;
+
+				for (int y = borderRegionY; y < borderRegionHeight; ++y)
+				{
+					// Kernel Y Start
+					verticalScanLine = y - borderWidth;
+
+					// Pixel to convolve
+					pKernelContext = p_pInput->GetP(borderRegionX, y);
+					
+					// Output buffer
+					pOutputContext = p_pOutput->GetP(borderRegionX, y);
+
+					for (int x = borderRegionX; x < borderRegionWidth; ++x, ++pKernelContext, ++pOutputContext)
+					{
+						// Irradiance samples and value
+						irradiance = 0.f;
+						irradianceSamples = 0;
+
+						pNeighbourContext = p_pInput->GetP(x - borderWidth, verticalScanLine); 
+
+						for (int kernelY = 0; kernelY < m_nKernelSize; kernelY++, pNeighbourContext += horizontalModulo)
+						{
+							for (int kernelX = 0; kernelX < m_nKernelSize; kernelX++, pNeighbourContext++)
+							{
+								//float d = Maths::Max(0, m_fDistance - Maths::FAbs(pKernelContext->Distance - pNeighbourContext->Distance)); 
+								//float a = Maths::Max(0, Vector3::Dot(pKernelContext->Normal, pNeighbourContext->Normal) - m_fAngle);
+								//int b = a + d > 0 ? 1 : 0;
+								//irradiance = irradiance + pNeighbourContext->Indirect * b;
+								//irradianceSamples += b;
+								
+								if (Maths::FAbs(pKernelContext->Distance - pNeighbourContext->Distance) < m_fDistance)
+								{
+									if (Vector3::Dot(pKernelContext->Normal, pNeighbourContext->Normal) > m_fAngle)
+									{
+										irradiance = irradiance + pNeighbourContext->Indirect;
+										irradianceSamples++;
+									}
+								}
+							}
+						}
+
+						pOutputContext->Final = pKernelContext->Direct + (irradiance * pKernelContext->Albedo) / irradianceSamples;
+						pOutputContext->Flags |= RadianceContext::DF_Processed;
+					}
+				}
+				*/
+
+				RadianceContext *pKernelContext,
+					*pNeighbourContext,
+					*pOutputContext;
+
+				Spectrum Li, Ld;
+
+				int ys, ye, xs, xe;
+				int irradianceSamples;
+
+				// m_nKernelSize = 3;
+				int border = 1;
+
+				//----------------------------------------------------------------------------------------------
+				for (int y = p_nRegionY + border; y < p_nRegionHeight - border; ++y)
+				{
+					ys = y - border;
+					ye = y + border;
+
+					for (int x = p_nRegionX + border; x < p_nRegionWidth - border; ++x)
+					{
+						xs = x - border;
+						xe = x + border;
+
+						irradianceSamples = 0;
+						Li = 0.f;
+
+						pKernelContext = p_pInput->GetP(x, y);
+						pOutputContext = p_pOutput->GetP(x, y);
+
+						for (int dy = ys; dy <= ye; dy++)
+						{
+							pNeighbourContext = p_pInput->GetP(xs, dy);
+
+							for (int dx = xs; dx <= xe; dx++)
+							{
+								if (Vector3::Dot(pKernelContext->Normal, pNeighbourContext->Normal) > m_fAngle)
+								{
+									Li += pNeighbourContext->Indirect;
+									irradianceSamples++;
+								}
+
+								pNeighbourContext++;
+							}
+						}
+			
+						// Compute final colour
+						pOutputContext->Final = pKernelContext->Direct + (Li * pKernelContext->Albedo) / irradianceSamples;
+						pOutputContext->Flags |= RadianceContext::DF_Processed;
+					}
+				}
+				
+
+				/*
 				RadianceContext *pKernelContext,
 					*pNeighbourContext,
 					*pOutputContext;
@@ -75,11 +193,11 @@ namespace Illumina
 						pKernelContext = p_pInput->GetP(x, y);
 						pOutputContext = p_pOutput->GetP(x, y);
 
-						for (int dy = ys; dy < ye; dy++)
+						for (int dy = ys; dy <= ye; dy++)
 						{
 							pNeighbourContext = p_pInput->GetP(xs, dy);
 
-							for (int dx = xs; dx < xe; dx++)
+							for (int dx = xs; dx <= xe; dx++)
 							{
 								if (Vector3::Dot(pKernelContext->Normal, pNeighbourContext->Normal) > m_fAngle)
 								{
@@ -106,7 +224,8 @@ namespace Illumina
 						}
 					}
 				}
-
+				*/
+				
 				return true;
 			}
 
