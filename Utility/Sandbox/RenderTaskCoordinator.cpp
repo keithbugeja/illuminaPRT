@@ -8,6 +8,8 @@
 #include "RenderTaskCoordinator.h"
 #include "Communicator.h"
 //----------------------------------------------------------------------------------------------
+#define __POSTPROC_MOTIONBLUR
+//----------------------------------------------------------------------------------------------
 #define __JOB_TIMING_FINE		0
 #define __JOB_TIMING_COARSE		1
 
@@ -300,7 +302,18 @@ bool RenderTaskCoordinator::OnInitialise(void)
 	logger->AddChannel("data_collection", m_pChannel, false);
 
 	// Add header to log file
-	(*logger)["data_collection"]->Write("Time \t Radiance \t Accumulation \t Commit \t Cycle Time \t Cycle Hz \t Frame Time \t Frame Hz \t Workers \n", LL_All);
+	#if defined __JOB_TIMING
+		std::stringstream headerMessage;
+		headerMessage << "Time";
+
+		#if __JOB_TIMING_METHOD == __JOB_TIMING_FINE
+			headerMessage << "\t Radiance\tAccumulation\tCommit";
+		#endif
+
+		headerMessage << "\tCycle Time\tCycle Hz\tFrame Time\tFrame Hz\tWorkers\n";
+	
+		(*logger)["data_collection"]->Write(headerMessage.str(), LL_All);
+	#endif
 	
 	m_checkPointTime = 
 		m_bootTime = Platform::GetTime();
@@ -575,12 +588,14 @@ bool RenderTaskCoordinator::Compute(void)
 
 	// Accumulation and motion blur
 	RestartTimerF(subEventStart, subEventComplete);
+	#if defined __POSTPROC_MOTIONBLUR
 	m_pMotionBlurFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 	if (m_bResetAccumulation) 
 	{
 		m_pMotionBlurFilter->Reset();
 		m_bResetAccumulation = false;
 	}
+	#endif
 	accumulationTime = GetElapsedF(subEventStart, subEventComplete);
 
 	// Commit to device

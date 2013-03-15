@@ -181,15 +181,13 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 	// Visibility query
 	VisibilityQuery pointLightQuery(p_pScene);
 
-	int pointLightSetIndex = (int) Maths::FAbs(
-			(m_nTileWidth > 1) 
-			? (float)
-			  (((int)p_pContext->SurfacePosition.X % m_nTileWidth +
-			    (int)p_pContext->SurfacePosition.Y % m_nTileWidth) * m_nTileWidth) : 0.f);
+	int surfX = p_pContext->SurfacePosition.X,
+		surfY = p_pContext->SurfacePosition.Y,
+		pointLightSetIndex = 
+			Maths::FAbs(surfX % m_nTileWidth + (surfY % m_nTileWidth) * m_nTileWidth);
 
 	// Initialise point light set
-	std::vector<VirtualPointLight> &pointLightSet =
-		//VirtualPointLightSet[(m_nTileWidth > 1) ? (int)p_pContext->SurfacePosition.X % m_nTileWidth + ((int)(p_pContext->SurfacePosition.Y) % m_nTileWidth) * m_nTileWidth : 0];
+	std::vector<VirtualPointLight> &pointLightSet = 
 		VirtualPointLightSet[pointLightSetIndex];
 
 	std::vector<VirtualPointLight>::iterator pointLightIterator;
