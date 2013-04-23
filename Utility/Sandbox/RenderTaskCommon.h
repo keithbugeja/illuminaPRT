@@ -606,3 +606,70 @@ public:
 };
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
+struct PathVertexEx
+{
+	union {
+		struct {
+			Vector3 position;
+			Vector3 orientation;
+		};
+
+		float element[8];
+	};
+
+	size_t size(void) {return (sizeof(Vector3) + sizeof(Vector3)) / sizeof(float);}
+	float operator[](int index) const { return element[index]; }
+	float& operator[](int index) { return element[index]; }
+};
+
+class PathEx
+{
+protected:
+	// std::vector<PathVertexEx> m_vertexList;
+	std::vector<Vector3> m_positionList,
+		m_orientationList;
+	std::vector<float> m_pivotList;
+	float m_fTime;
+public:
+	bool IsEmpty(void) { return m_positionList.empty(); }
+	void Clear(void) { 
+		m_positionList.clear(); 
+		m_orientationList.clear(); 
+		m_pivotList.clear(); 
+		Reset(); 
+	} 
+	
+	void Reset(void) { m_fTime = 0; }
+	void Move(float p_fDeltaT) { m_fTime += p_fDeltaT; }
+
+	void AddVertex(const PathVertexEx &p_pVertex) 
+	{ 
+		m_positionList.push_back(p_pVertex.position);
+		m_orientationList.push_back(p_pVertex.orientation);
+	}
+
+	void PreparePath(void)
+	{
+		Illumina::Core::Interpolator::ComputePivots(m_orientationList, m_pivotList);
+	}
+
+	void Get(float p_fTime, Vector3 &p_position, Vector3 &p_lookat)
+	{
+		if (m_positionList.size() <= 2)
+		{
+			p_position = Vector3::Zero;
+			p_lookat = Vector3::UnitZPos;
+		} 
+		else
+		{
+			// PathVertexEx pathVertexEx = Illumina::Core::Interpolator::Lagrange(m_vertexList, m_pivotList, p_fTime);
+			p_position = Illumina::Core::Interpolator::Lagrange(m_positionList, m_pivotList, p_fTime);
+			p_lookat = Illumina::Core::Interpolator::Lagrange(m_orientationList, m_pivotList, p_fTime);
+		}
+	}
+
+	void Get(Vector3 &p_position, Vector3 &p_lookat)
+	{
+		Get(m_fTime, p_position, p_lookat);
+	}
+};

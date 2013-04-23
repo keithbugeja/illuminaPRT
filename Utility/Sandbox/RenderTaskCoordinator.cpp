@@ -466,8 +466,29 @@ bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 
 		m_cameraPath.PreparePath();
 	}
+	else if (command == "pathex")
+	{
+		m_cameraPathEx.Reset();
 
-	return true; 
+		std::vector<Vector3> vertexList;
+		arg.GetArgument("vertices", vertexList);
+	
+		PathVertexEx pathVertexEx;
+		
+		for (std::vector<Vector3>::iterator it = vertexList.begin();
+			 it != vertexList.end(); it++)
+		{
+			pathVertexEx.position = *it++;
+			pathVertexEx.orientation = pathVertexEx.position + 
+				OrthonormalBasis::FromSpherical(Vector2((*it).X / 360 * Maths::PiTwo, 0));
+			
+			m_cameraPathEx.AddVertex(pathVertexEx);
+		}
+
+		m_cameraPathEx.PreparePath();
+	}
+
+	return true;
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
@@ -655,7 +676,7 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 
 	while(p_pCoordinator->IsRunning())
 	{
-		if (p_pCoordinator->m_cameraPath.IsEmpty())
+		if (p_pCoordinator->m_cameraPath.IsEmpty() && p_pCoordinator->m_cameraPathEx.IsEmpty())
 		{
 			bool resetFlag = (p_pCoordinator->m_moveFlag[0] |
 				 p_pCoordinator->m_moveFlag[1] |
@@ -685,8 +706,6 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 
 			p_pCoordinator->m_pCamera->MoveTo(observer);
 			p_pCoordinator->m_pCamera->LookAt(p_pCoordinator->m_observerTarget);
-
-			// std::cout << "ITH::ResetAccum(A) = " << p_pCoordinator->m_bResetAccumulationBuffer << std::endl;
 		} 
 		else 
 		{
@@ -697,13 +716,23 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 				time = 0; 
 
 				p_pCoordinator->m_cameraPath.Clear(); 
+				p_pCoordinator->m_cameraPathEx.Clear();
 				p_pCoordinator->m_bResetWorkerSeed = true;
 				p_pCoordinator->m_bResetAccumulation = true;
 			}
 			else
 			{
-				p_pCoordinator->m_observerPosition = p_pCoordinator->m_cameraPath.GetPosition(time - 0.001f);
-				p_pCoordinator->m_observerTarget = p_pCoordinator->m_cameraPath.GetPosition(time + 0.001f);
+				if (!p_pCoordinator->m_cameraPath.IsEmpty())
+				{
+					p_pCoordinator->m_observerPosition = p_pCoordinator->m_cameraPath.GetPosition(time - 0.001f);
+					p_pCoordinator->m_observerTarget = p_pCoordinator->m_cameraPath.GetPosition(time + 0.001f);
+				}
+				else if (!p_pCoordinator->m_cameraPathEx.IsEmpty())
+				{
+					p_pCoordinator->m_cameraPathEx.Get(time, 
+						p_pCoordinator->m_observerPosition, p_pCoordinator->m_observerTarget);
+				}
+				
 				p_pCoordinator->m_pCamera->MoveTo(p_pCoordinator->m_observerPosition);
 				p_pCoordinator->m_pCamera->LookAt(p_pCoordinator->m_observerTarget);
 
