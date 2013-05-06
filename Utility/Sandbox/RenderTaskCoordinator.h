@@ -69,6 +69,8 @@ protected:
 	// Current camera path
 	Path m_cameraPath;
 	PathEx m_cameraPathEx;
+	float m_animationTime, 
+		m_animationTimeDelta;
 
 	// Camera parameters : observer position and target
 	Vector3 m_observerPosition,

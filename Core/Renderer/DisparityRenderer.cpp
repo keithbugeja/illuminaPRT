@@ -76,7 +76,7 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 			m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, sample.U * rcpWidth, sample.V * rcpHeight, pRadianceContext->ViewRay);
 
 			// Compute Radiance
-			context.SurfacePosition.Set(srcX / step, srcY / step);
+			context.SurfacePosition.Set((float)(srcX / step), (float)(srcY / step));
 			pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
 		}
 	}

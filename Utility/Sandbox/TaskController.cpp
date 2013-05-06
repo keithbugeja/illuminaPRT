@@ -141,7 +141,9 @@ bool TaskController::ProcessClientInput(void)
 		std::stringstream pathCommandStream;
 
 		pathCommandStream << "command=" << strCommandName
-			<< ";vertices=" << argumentMap["vertices"] << ";";
+			<< ";delta=" << argumentMap["delta"]
+			<< ";vertices=" << argumentMap["vertices"] 
+			<< ";";
 
 		if (m_task.HasCoordinator())
 		{
@@ -158,7 +160,9 @@ bool TaskController::ProcessClientInput(void)
 		std::stringstream pathCommandStream;
 
 		pathCommandStream << "command=" << strCommandName
-			<< ";vertices=" << argumentMap["vertices"] << ";";
+			<< ";delta=" << argumentMap["delta"]
+			<< ";vertices=" << argumentMap["vertices"] 
+			<< ";";
 
 		if (m_task.HasCoordinator())
 		{

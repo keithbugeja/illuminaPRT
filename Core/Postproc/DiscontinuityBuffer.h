@@ -45,7 +45,7 @@ namespace Illumina
 			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight)
 			{
 				m_fDistance = 0.5f;
-				m_fAngle = 0.7f;
+				m_fAngle = 0.5f;//7f;
 /*
 				RadianceContext *pKernelContext,
 					*pNeighbourContext,

@@ -25,9 +25,10 @@ namespace Illumina
 		struct IntegratorContext
 		{
 			int SampleIndex;
+			int SampleCount;
 
 			Vector2 SurfacePosition;
-			Vector2 NormalisedPosition;			
+			Vector2 NormalisedPosition;
 		};
 
 		//----------------------------------------------------------------------------------------------

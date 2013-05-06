@@ -29,6 +29,11 @@ namespace Illumina
 				return (p_value1 > p_value2) ? p_value1 : p_value2;
 			}
 
+			template<class T>
+			inline static T FAbs(const T& p_value) {
+				return (p_value < 0) ? -p_value : p_value;
+			}
+
 			inline static float Frac(float p_fValue) {
 				return fabs(p_fValue - floor(p_fValue));
 			}
