@@ -148,7 +148,6 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 bool IGIIntegrator::Prepare(Scene *p_pScene)
 {
 	VirtualPointLightSet.clear();
-	// p_pScene->GetSampler()->Reset();
 
 	for (int pointLightSet = m_nTileArea; pointLightSet != 0; --pointLightSet)
 	{
@@ -226,8 +225,6 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 				p_pRadianceContext->Albedo = pMaterial->Rho(wOut, p_intersection.Surface);
 				
 				/**/
-
-				/**/
 				for (samplesUsed = 1, pointLightIterator = pointLightSet.begin() + partitionStart; 
 					 pointLightIterator != pointLightSet.begin() + partitionEnd/*pointLightSet.end()*/; ++pointLightIterator)
 				{
@@ -273,7 +270,6 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 						samplesUsed++;
 					}
 				}
-				/**/
 
 				p_pRadianceContext->Indirect = p_pRadianceContext->Indirect / (int)pointLightSet.size(); //samplesUsed;
 			}

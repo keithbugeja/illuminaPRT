@@ -48,6 +48,7 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 		m_pScene->GetSampler()->Get2DSample();
 
 	// No supersampling
+	context.SampleCount = 1;
 	context.SampleIndex = 0;
 
 	// If radiance buffer is available and doesn't fit required dimensions, delete
