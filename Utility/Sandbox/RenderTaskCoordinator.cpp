@@ -454,9 +454,12 @@ bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 	else if (command == "path")
 	{
 		m_cameraPath.Reset();
+		m_cameraPathEx.Reset();
+		m_animationTime = 0.f;
 
 		std::vector<Vector3> pointList;
 		arg.GetArgument("vertices", pointList);
+		arg.GetArgument("delta", m_animationTimeDelta);
 	
 		for (std::vector<Vector3>::iterator it = pointList.begin(); 
 			 it != pointList.end(); it++)
@@ -468,10 +471,13 @@ bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 	}
 	else if (command == "pathex")
 	{
+		m_cameraPath.Reset();
 		m_cameraPathEx.Reset();
+		m_animationTime = 0.f;
 
 		std::vector<Vector3> vertexList;
 		arg.GetArgument("vertices", vertexList);
+		arg.GetArgument("delta", m_animationTimeDelta);
 	
 		PathVertexEx pathVertexEx;
 		
@@ -479,8 +485,13 @@ bool RenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 			 it != vertexList.end(); it++)
 		{
 			pathVertexEx.position = *it++;
+
+			float angle = (*it).X / 360 * Maths::PiTwo;
+
 			pathVertexEx.orientation = pathVertexEx.position + 
-				OrthonormalBasis::FromSpherical(Vector2((*it).X / 360 * Maths::PiTwo, 0));
+				Vector3(Maths::Sin(angle),0 , Maths::Cos(angle));
+				
+				//OrthonormalBasis::FromSpherical(Vector2((*it).X / 360 * Maths::PiTwo, 0));
 			
 			m_cameraPathEx.AddVertex(pathVertexEx);
 		}
@@ -672,8 +683,6 @@ bool RenderTaskCoordinator::Compute(void)
 //----------------------------------------------------------------------------------------------
 void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordinator)
 {
-	static float time = 0.f;
-
 	while(p_pCoordinator->IsRunning())
 	{
 		if (p_pCoordinator->m_cameraPath.IsEmpty() && p_pCoordinator->m_cameraPathEx.IsEmpty())
@@ -709,27 +718,33 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 		} 
 		else 
 		{
-			time += 0.0005f;
+			float lastAnimationTime = p_pCoordinator->m_animationTime;
+			p_pCoordinator->m_animationTime += p_pCoordinator->m_animationTimeDelta;
 
-			if (time >= 1.f) 
+			if (p_pCoordinator->m_animationTime >= 1.f) 
 			{
-				time = 0; 
+				std::cout << std::endl << "+++ Animation complete +++" << std::endl;
 
-				p_pCoordinator->m_cameraPath.Clear(); 
+				p_pCoordinator->m_animationTime = 0;
+
+				p_pCoordinator->m_cameraPath.Clear();
 				p_pCoordinator->m_cameraPathEx.Clear();
 				p_pCoordinator->m_bResetWorkerSeed = true;
 				p_pCoordinator->m_bResetAccumulation = true;
 			}
 			else
 			{
+				if ((int)p_pCoordinator->m_animationTime - (int)lastAnimationTime >= 1)
+					std::cout << std::endl << "Animation complete:" << p_pCoordinator->m_animationTime * 100.0f << "%" << std::endl;
+
 				if (!p_pCoordinator->m_cameraPath.IsEmpty())
 				{
-					p_pCoordinator->m_observerPosition = p_pCoordinator->m_cameraPath.GetPosition(time - 0.001f);
-					p_pCoordinator->m_observerTarget = p_pCoordinator->m_cameraPath.GetPosition(time + 0.001f);
+					p_pCoordinator->m_observerPosition = p_pCoordinator->m_cameraPath.GetPosition(p_pCoordinator->m_animationTime - 0.001f);
+					p_pCoordinator->m_observerTarget = p_pCoordinator->m_cameraPath.GetPosition(p_pCoordinator->m_animationTime + 0.001f);
 				}
 				else if (!p_pCoordinator->m_cameraPathEx.IsEmpty())
 				{
-					p_pCoordinator->m_cameraPathEx.Get(time, 
+					p_pCoordinator->m_cameraPathEx.Get(p_pCoordinator->m_animationTime, 
 						p_pCoordinator->m_observerPosition, p_pCoordinator->m_observerTarget);
 				}
 				
@@ -744,6 +759,8 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 
 			// std::cout << "ITH::ResetAccum(B) = " << p_pCoordinator->m_bResetAccumulationBuffer << std::endl;
 		}
+
+		// std::cout << "Animation time : " << p_pCoordinator->m_animationTime << ", animation delta: " << p_pCoordinator->m_animationTimeDelta << std::endl;
 
 		boost::this_thread::sleep(boost::posix_time::millisec(20));
 	}

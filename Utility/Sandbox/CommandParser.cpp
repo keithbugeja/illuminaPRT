@@ -83,8 +83,8 @@ ClientCommandParser::ClientCommandParser(void)
 		  "|script_name");
 
 	this->Add("move|action|direction");
-	this->Add("path|vertices");
-	this->Add("pathex|vertices");
+	this->Add("path|vertices|delta");
+	this->Add("pathex|vertices|delta");
 	this->Add("exit");
 }
 //----------------------------------------------------------------------------------------------

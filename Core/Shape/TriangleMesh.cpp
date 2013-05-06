@@ -142,7 +142,7 @@ float ITriangleMesh::GetPdf(const Vector3 &p_point) const {
 //----------------------------------------------------------------------------------------------
 Vector3 ITriangleMesh::SamplePoint(float p_u, float p_v, Vector3 &p_normal) 
 {
-	int triangleToSample = Maths::Min(TriangleList.Size() * m_random.NextFloat(), TriangleList.Size() - 1);
+	int triangleToSample = (int)Maths::Min(TriangleList.Size() * m_random.NextFloat(), TriangleList.Size() - 1);
 	return TriangleList[triangleToSample].SamplePoint(p_u, p_v, p_normal);
 }
 //----------------------------------------------------------------------------------------------

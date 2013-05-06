@@ -68,6 +68,9 @@ void BaseRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nRegion
 	Intersection intersection;
 	IntegratorContext context;
 
+	// Context sample count
+	context.SampleCount = m_nSampleCount;
+
 	// Compute tile bounds
 	int regionXEnd = p_nRegionX + p_nRegionWidth,
 		regionYEnd = p_nRegionY + p_nRegionHeight;

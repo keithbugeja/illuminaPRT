@@ -608,18 +608,12 @@ public:
 //----------------------------------------------------------------------------------------------
 struct PathVertexEx
 {
-	union {
-		struct {
-			Vector3 position;
-			Vector3 orientation;
-		};
+	Vector3 position;
+	Vector3 orientation;
 
-		float element[8];
-	};
-
-	size_t size(void) {return (sizeof(Vector3) + sizeof(Vector3)) / sizeof(float);}
-	float operator[](int index) const { return element[index]; }
-	float& operator[](int index) { return element[index]; }
+	// size_t size(void) {return 0x06;}
+	// float operator[](int index) const { return element[index]; }
+	// float& operator[](int index) { return element[index]; }
 };
 
 class PathEx

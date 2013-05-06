@@ -33,69 +33,6 @@ namespace Illumina
 			}
 
 		public:
-			/*
-			 * Temporary! For video recording of CGF paper!
-			 */
-			template <class T>
-			static void ComputePivots(std::vector<T> &p_vertexList, std::vector<float> &p_pivotList)
-			{
-				float totalDistance = 0;
-				p_pivotList.clear();
-				p_pivotList.push_back(0);
-
-				// Compute Euclidean distance between points
-				for (int j = 1; j < p_vertexList.size(); j++)
-				{
-					float t = 0, t2;
-
-					std::cout << "Elements :: ";
-
-					for (int i = 0; i < p_vertexList[j].size(); i++)
-					{
-						std::cout << p_vertexList[j][i] << ", ";
-
-						t2 = p_vertexList[j][i] - p_vertexList[j - 1][i];
-						t += t2 * t2;
-					}
-
-					totalDistance += Maths::Sqrt(t);
-					p_pivotList.push_back(totalDistance);
-
-					std::cout << std::endl << "Point [" << j << "] has t of " << t << "with a total distance of " << totalDistance << std::endl;
-				}
-
-				// Scale in the range [0 .. 1)
-				for (int j = 1; j < p_pivotList.size(); j++)
-				{
-					p_pivotList[j] = p_pivotList[j] / totalDistance;
-
-					std::cout << "Normalised distance for Point [" << j << "] is " << p_pivotList[j] << std::endl;
-				}
-			}
-
-			template <class T>
-			static T Lagrange(std::vector<T> &p_vertexList, std::vector<float> &p_pivotList, float p_t)
-			{
-				// O(N^2) : Not very efficient for large paths!
-				T finalPoint;
-				
-				for (int i = 0; i < finalPoint.size(); i++)
-					finalPoint[i] = 0.f;
-				
-				float lp;
-
-				for (int j = 0; j < p_vertexList.size(); j++)
-				{
-					lp = LagrangePolynomial(j, p_t, p_pivotList);
-
-					for (int i = 0; i < p_vertexList[j].size(); i++)
-						finalPoint[i] += p_vertexList[j][i] * lp;
-				}
-
-				return finalPoint;
-			}
-
-			// 
 			static void ComputePivots(std::vector<Vector3> &p_points, std::vector<float> &p_pivotList)
 			{
 				float totalDistance = 0;

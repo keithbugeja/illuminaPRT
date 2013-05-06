@@ -181,8 +181,8 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 	// Visibility query
 	VisibilityQuery pointLightQuery(p_pScene);
 
-	int surfX = p_pContext->SurfacePosition.X,
-		surfY = p_pContext->SurfacePosition.Y,
+	int surfX = (int)p_pContext->SurfacePosition.X,
+		surfY = (int)p_pContext->SurfacePosition.Y,
 		pointLightSetIndex = 
 			Maths::FAbs(surfX % m_nTileWidth + (surfY % m_nTileWidth) * m_nTileWidth);
 
@@ -192,6 +192,13 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 
 	std::vector<VirtualPointLight>::iterator pointLightIterator;
 	
+	// ---> Added 2/5/13
+	// Initialise partition
+	int partitionSize = pointLightSet.size() / p_pContext->SampleCount,
+		partitionStart = p_pContext->SampleIndex * partitionSize,
+		partitionEnd = partitionStart + partitionSize;
+	// ---> Added 2/5/13
+
 	if (p_intersection.IsValid())
 	{
 		if (p_intersection.HasMaterial()) 
@@ -219,8 +226,10 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 				p_pRadianceContext->Albedo = pMaterial->Rho(wOut, p_intersection.Surface);
 				
 				/**/
-				for (samplesUsed = 1, pointLightIterator = pointLightSet.begin(); 
-					 pointLightIterator != pointLightSet.end(); ++pointLightIterator)
+
+				/**/
+				for (samplesUsed = 1, pointLightIterator = pointLightSet.begin() + partitionStart; 
+					 pointLightIterator != pointLightSet.begin() + partitionEnd/*pointLightSet.end()*/; ++pointLightIterator)
 				{
 					VirtualPointLight &pointLight = *pointLightIterator;
 
