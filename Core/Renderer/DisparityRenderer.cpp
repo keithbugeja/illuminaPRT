@@ -50,6 +50,7 @@ void DisparityRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nR
 	// No supersampling
 	context.SampleCount = 1;
 	context.SampleIndex = 0;
+	context.SampleCount = 1;
 
 	// If radiance buffer is available and doesn't fit required dimensions, delete
 	if (m_pRadianceBuffer != NULL &&

@@ -85,6 +85,7 @@ ClientCommandParser::ClientCommandParser(void)
 	this->Add("move|action|direction");
 	this->Add("path|vertices|delta");
 	this->Add("pathex|vertices|delta");
+	this->Add("flush");
 	this->Add("exit");
 }
 //----------------------------------------------------------------------------------------------

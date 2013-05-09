@@ -683,6 +683,8 @@ bool RenderTaskCoordinator::Compute(void)
 //----------------------------------------------------------------------------------------------
 void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordinator)
 {
+	static int counterdisplay = 0;
+
 	while(p_pCoordinator->IsRunning())
 	{
 		if (p_pCoordinator->m_cameraPath.IsEmpty() && p_pCoordinator->m_cameraPathEx.IsEmpty())
@@ -734,8 +736,11 @@ void RenderTaskCoordinator::InputThreadHandler(RenderTaskCoordinator *p_pCoordin
 			}
 			else
 			{
-				if ((int)p_pCoordinator->m_animationTime - (int)lastAnimationTime >= 1)
+				if (counterdisplay++ > 25) 
+				{ 
+					counterdisplay = 0;
 					std::cout << std::endl << "Animation complete:" << p_pCoordinator->m_animationTime * 100.0f << "%" << std::endl;
+				}
 
 				if (!p_pCoordinator->m_cameraPath.IsEmpty())
 				{
