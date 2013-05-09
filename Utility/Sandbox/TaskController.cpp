@@ -193,12 +193,20 @@ bool TaskController::ProcessClientInput(void)
 		
 		IController::WriteToSocket(m_pSocket, "OK", 2);
 	}
-	else if (strCommandName == "play")
+	else if (strCommandName == "flush")
 	{
-		IController::WriteToSocket(m_pSocket, "OK", 2);
-	}
-	else if (strCommandName == "pause")
-	{
+		std::stringstream moveCommandStream;
+
+		moveCommandStream << "command=" << strCommandName << ";";
+
+		if (m_task.HasCoordinator())
+		{
+			std::stringstream message; message << "TaskController :: Sending [" << moveCommandStream.str() << "]" << std::endl;
+			logger->Write(message.str(), LL_Info);
+
+			Resource::Send(moveCommandStream.str(), m_task.GetCoordinatorID(), true);
+		}
+		
 		IController::WriteToSocket(m_pSocket, "OK", 2);
 	}
 	else if (strCommandName == "exit")

@@ -14,7 +14,7 @@
 //----------------------------------------------------------------------------------------------
 //	Set Illumina PRT compilation mode (SHM or DSM)
 //----------------------------------------------------------------------------------------------
-// #define ILLUMINA_SHM
+#define ILLUMINA_SHM
 
 #if (!defined ILLUMINA_SHM)
 	#define ILLUMINA_DSM
@@ -286,7 +286,7 @@ public:
 	}
 };
 
-void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency, 
+void IlluminaPRT(Logger *p_pLogger, int p_nVerboseFrequency, 
 	int p_nIterations, int p_nThreads, int p_nFPS, 
 	int p_nJobs, int p_nSize, int p_nFlags, 
 	std::string p_strScript)
@@ -301,14 +301,17 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 		bAccumulationBufferEnabled		= (p_nFlags & 0x10),
 		bOutputToNullDeviceEnabled		= (p_nFlags & 0x20);
 
-	if (p_bVerbose)
 	{
-		std::cout << "-- Tone Mapping [" << bToneMappingEnabled << "]" << std::endl;
-		std::cout << "-- Bilateral Filter [" << bBilateralFilterEnabled << "]" << std::endl;
-		std::cout << "-- Discontinuity Buffer [" << bDiscontinuityBufferEnabled << "]" << std::endl;
-		std::cout << "-- Frame Reconstruction [" << bFrameReconstructionEnabled << "]" << std::endl;
-		std::cout << "-- Accumulation Buffer [" << bAccumulationBufferEnabled << "]" << std::endl;
-		std::cout << "-- Null Device Output [" << bOutputToNullDeviceEnabled << "]" << std::endl;
+		std::stringstream message;
+
+		message << "-- Tone Mapping [" << bToneMappingEnabled << "]" << std::endl
+		 << "-- Bilateral Filter [" << bBilateralFilterEnabled << "]" << std::endl
+		 << "-- Discontinuity Buffer [" << bDiscontinuityBufferEnabled << "]" << std::endl
+		 << "-- Frame Reconstruction [" << bFrameReconstructionEnabled << "]" << std::endl
+		 << "-- Accumulation Buffer [" << bAccumulationBufferEnabled << "]" << std::endl
+		 << "-- Null Device Output [" << bOutputToNullDeviceEnabled << "]" << std::endl;
+
+		p_pLogger->Write(message.str());
 	}
 
 	//----------------------------------------------------------------------------------------------
@@ -316,10 +319,10 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 	//----------------------------------------------------------------------------------------------
 	SandboxEnvironment sandbox;
 
-	sandbox.Initialise(p_bVerbose);
-	if (!sandbox.LoadScene(p_strScript, p_bVerbose))
+	sandbox.Initialise();
+	if (!sandbox.LoadScene(p_strScript))
 	{
-		sandbox.Shutdown(p_bVerbose);
+		sandbox.Shutdown();
 		return;
 	}
 
@@ -338,7 +341,7 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 	pRenderer->GetDevice()->Open();
 
 	// Initialisation complete
-	Logger::Message("Initialisation complete. Rendering in progress...", p_bVerbose);
+	p_pLogger->Write("Initialisation complete. Rendering in progress...");
 
 	//----------------------------------------------------------------------------------------------
 	// Post processing setup
@@ -561,16 +564,19 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 		//----------------------------------------------------------------------------------------------
 		// Verbose output 
 		//----------------------------------------------------------------------------------------------
-		if (p_bVerbose && nFramesProcessed % p_nVerboseFrequency == 0)
+		if (nFramesProcessed % p_nVerboseFrequency == 0)
 		{
-			std::cout << std::endl << "-- Frame " << nFrame << std::endl;
-			std::cout << "--- Integrator Preparation Time : [" << fFrameIntegratorTime << "s]" << std::endl;
-			std::cout << "--- Space Update Time : [" << fFrameSpaceTime << "s]" << std::endl;
-			std::cout << "--- Radiance Computation Time : [" << fFrameRadianceTime << "s]" << std::endl;
-			std::cout << "--- Post-processing Time : [" << fFramePostProcessingTime << "s]" << std::endl;
-			std::cout << "--- Output Time : [" << fFrameCommitTime << "s]" << std::endl;
-			std::cout << "--- Frame Render Time : [" << fFrameTime << "s]" << std::endl;
-			std::cout << "--- Frames per second : [" << fTotalFramesPerSecond / nFramesProcessed << "]" << std::endl;
+			std::stringstream message;
+			message << std::endl << "-- Frame " << nFrame << std::endl
+				<< "--- Integrator Preparation Time : [" << fFrameIntegratorTime << "s]" << std::endl
+				<< "--- Space Update Time : [" << fFrameSpaceTime << "s]" << std::endl
+				<< "--- Radiance Computation Time : [" << fFrameRadianceTime << "s]" << std::endl
+				<< "--- Post-processing Time : [" << fFramePostProcessingTime << "s]" << std::endl
+				<< "--- Output Time : [" << fFrameCommitTime << "s]" << std::endl
+				<< "--- Frame Render Time : [" << fFrameTime << "s]" << std::endl
+				<< "--- Frames per second : [" << fTotalFramesPerSecond / nFramesProcessed << "]" << std::endl;
+
+			p_pLogger->Write(message.str());
 		}
 	}
 
@@ -582,17 +588,16 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 	//----------------------------------------------------------------------------------------------
 	// Output averaged timings
 	//----------------------------------------------------------------------------------------------
-	if (p_bVerbose)
-	{
-		std::cout << std::endl << "-- Average timings over [" << nFramesProcessed << "] frames" << std::endl;
-		std::cout << "--- Integrator Preparation Time : [" << fTotalIntegratorTime / nFramesProcessed << "s]" << std::endl;
-		std::cout << "--- Space Update Time : [" << fTotalSpaceTime / nFramesProcessed << "s]" << std::endl;
-		std::cout << "--- Radiance Computation Time : [" << fTotalRadianceTime / nFramesProcessed << "s]" << std::endl;
-		std::cout << "--- Post-processing Time : [" << fTotalPostProcessingTime / nFramesProcessed << "s]" << std::endl;
-		std::cout << "--- Output Time : [" << fTotalCommitTime / nFramesProcessed << "s]" << std::endl;
-		std::cout << "--- Frame Render Time : [" << fTotalTime / nFramesProcessed << "s]" << std::endl;
-		std::cout << "--- Frames per second : [" << fTotalFramesPerSecond / nFramesProcessed << "]" << std::endl << std::endl;
-	}
+	std::stringstream message;
+	message << std::endl << "-- Average timings over [" << nFramesProcessed << "] frames" << std::endl
+		<< "--- Integrator Preparation Time : [" << fTotalIntegratorTime / nFramesProcessed << "s]" << std::endl
+		<< "--- Space Update Time : [" << fTotalSpaceTime / nFramesProcessed << "s]" << std::endl
+		<< "--- Radiance Computation Time : [" << fTotalRadianceTime / nFramesProcessed << "s]" << std::endl
+		<< "--- Post-processing Time : [" << fTotalPostProcessingTime / nFramesProcessed << "s]" << std::endl
+		<< "--- Output Time : [" << fTotalCommitTime / nFramesProcessed << "s]" << std::endl
+		<< "--- Frame Render Time : [" << fTotalTime / nFramesProcessed << "s]" << std::endl
+		<< "--- Frames per second : [" << fTotalFramesPerSecond / nFramesProcessed << "]" << std::endl << std::endl;
+	p_pLogger->Write(message.str());
 
 	// Output per thread statistics
 	std::ofstream threadTimings;
@@ -612,13 +617,10 @@ void IlluminaPRT(bool p_bVerbose, int p_nVerboseFrequency,
 	pIntegrator->Shutdown();
 
 	// Shutdown sandbox
-	sandbox.Shutdown(p_bVerbose);
+	sandbox.Shutdown();
 
 	//----------------------------------------------------------------------------------------------
-	if (p_bVerbose)
-	{
-		Logger::Message("Complete :: Press enter to continue", true); std::getchar();
-	}
+	p_pLogger->Write("Complete :: Press enter to continue"); std::getchar();
 }
 //----------------------------------------------------------------------------------------------
 int main(int argc, char** argv)
@@ -778,8 +780,11 @@ int main(int argc, char** argv)
 		std::cout << "Flags [" << nFlags << "]" << std::endl;
 	}
 
+	// Initialise new logger
+	Logger logger; logger.SetLoggingFilter(bVerbose ? LL_All : LL_ErrorLevel);
+
 	// -- start rendering
-	IlluminaPRT(bVerbose, nVerboseFrequency, nIterations, nThreads, nFPS, nJobs, nSize, nFlags, strScript);
+	IlluminaPRT(&logger, nVerboseFrequency, nIterations, nThreads, nFPS, nJobs, nSize, nFlags, strScript);
 
 	// Exit
 	return 1;

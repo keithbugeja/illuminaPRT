@@ -282,10 +282,14 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 	}
 	else
 	{
+		/*
 		Ray ray(p_intersection.Surface.RayOriginWS, -p_intersection.Surface.RayDirectionWS);
 
 		for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
 			p_pRadianceContext->Direct += p_pScene->LightList[lightIndex]->Radiance(ray);
+		*/
+
+		p_pRadianceContext->Direct.Set(20, 50, 100);
 	}
 
 	// Populate radiance context
