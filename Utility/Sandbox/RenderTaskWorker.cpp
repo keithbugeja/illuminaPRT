@@ -86,11 +86,11 @@ bool RenderTaskWorker::ComputeUniform(void)
 		// pixelsRendered += (packet.XSize + overlap) * (packet.YSize + overlap);
 		/**/
 		// Discontinuity Buffer
-		if (m_uiFilterFlags & __PPF_Discontinuity)
+		/* if (m_uiFilterFlags & __PPF_Discontinuity)
 		{		
 			((DiscontinuityBuffer*)m_pDiscontinuityBuffer)->SetKernelSize(1 + overlap);
 			m_pDiscontinuityBuffer->Apply(m_pRimmedRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
-		} 
+		} */
 		/**/
 		/*
 		// Bilateral Filter

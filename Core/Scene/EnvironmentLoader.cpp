@@ -854,6 +854,9 @@ bool EnvironmentLoader::ParseEnvironment(void)
 			pEmissive->SetShape(pGeometry);
 			pEmissive->SetLight((IAreaLight*)pLight);
 
+			// Get Transform
+			argumentMap.GetArgument("Transform", pEmissive->WorldTransform);
+
 			pSpace->PrimitiveList.PushBack(pEmissive);
 		}
 		else if (strType == "Geometry")
@@ -867,6 +870,9 @@ bool EnvironmentLoader::ParseEnvironment(void)
 			GeometricPrimitive *pGeometric = new GeometricPrimitive();
 			pGeometric->SetMaterial(pMaterial);
 			pGeometric->SetShape(pGeometry);
+	
+			// Get Transform
+			argumentMap.GetArgument("Transform", pGeometric->WorldTransform);
 
 			pSpace->PrimitiveList.PushBack(pGeometric);
 		}
