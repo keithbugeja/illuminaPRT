@@ -626,37 +626,6 @@ void IlluminaPRT(Logger *p_pLogger, int p_nVerboseFrequency,
 //----------------------------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-	/* 
-	SceneBuilder sb;
-	Transformation t, t2;
-
-	PathDescriptor i;
-
-	PerspectiveCameraDescriptor c;
-	c.Position.Set(2.5, 2.5, 2.5);
-	c.Target = 0;
-
-	ObjDescriptor s;
-	s.Filename = "\\Model\\test.obj";
-
-	MatteDescriptor m;
-	m.Reflectivity = 1.f;
-
-	PointLightDescriptor l;
-	l.Position = 0.f;
-	l.Power = 100.f;
-
-	sb.SetCamera(&c);
-	sb.SetIntegrator(&i);
-
-	sb.AddLight(&l);
-	sb.AddPrimitive(t, &s, &m, NULL);
-	sb.AddPrimitive(t2, &s, NULL, NULL);
-	sb.Build("C:\\Users\\Keith\\Private\\Development\\test.ilm");
-
-	exit(1); 
-	*/
-
 	std::cout << "Illumina Renderer : Version " << Illumina::Core::Major << "." << Illumina::Core::Minor << "." << Illumina::Core::Build << " http://www.illuminaprt.codeplex.com " << std::endl;
 	std::cout << "Copyright (C) 2010-2012 Keith Bugeja" << std::endl << std::endl;
 
