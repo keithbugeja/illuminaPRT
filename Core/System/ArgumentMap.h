@@ -15,6 +15,8 @@
 
 #include "System/IlluminaPRT.h"
 #include "Exception/Exception.h"
+#include "Geometry/Transform.h"
+#include "Geometry/Matrix4x4.h"
 #include "Geometry/Vector3.h"
 #include "Geometry/Vector2.h"
 #include "Spectrum/Spectrum.h"
@@ -236,6 +238,32 @@ namespace Illumina
 				}
 
 				return true;
+			}
+
+			bool GetArgument(const std::string &p_strArgumentName, Transformation &p_argumentValue)
+			{
+				if (ContainsArgument(p_strArgumentName))
+				{
+					Matrix3x3 rotation;
+					Vector3 translation;
+
+					float value[16], dummy;
+					char separator;
+
+					std::stringstream argumentValue(m_argumentMap[p_strArgumentName]);
+					// argument type : {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}
+					if(argumentValue>>separator>>rotation._00>>separator>>rotation._01>>separator>>rotation._02>>separator>>translation.X>>
+						separator>>rotation._10>>separator>>rotation._11>>separator>>rotation._12>>separator>>translation.Y>>
+						separator>>rotation._20>>separator>>rotation._21>>separator>>rotation._22>>separator>>translation.Z>>
+						separator>>dummy>>separator>>dummy>>separator>>dummy>>separator>>dummy)
+					{
+						p_argumentValue.SetRotation(rotation);
+						p_argumentValue.SetTranslation(translation);
+						return true;
+					}
+				}
+
+				return false;
 			}
 
 			std::string ToString(void) const
