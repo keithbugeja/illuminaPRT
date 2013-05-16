@@ -128,14 +128,18 @@ class GeometricPrimitiveDescriptor
 protected:
 	const std::string TransformToString(void)
 	{
-		Matrix4x4 m4x4 = Transform.GetTransform();
+		Matrix3x3 m3x3 = Transform.GetRotation();
+		Vector3 t = Transform.GetTranslation(),
+			s = Transform.GetScaling();
 
 		std::stringstream result;
 
-		result << "Transform\t=\t{" << m4x4[0];
-		for (int i = 1; i < 16; i++)
-			result << "," << m4x4[i];
-		result << "}";
+		result << "Rotation\t=\t{" << m3x3[0];
+		for (int i = 1; i < 9; i++)
+			result << "," << m3x3[i];
+		result << "}" << std::endl
+			<< "Translation\t=\t{"<<t[0]<<","<<t[1]<<","<<t[2]<<"}" << std::endl
+			<< "Scaling\t=\t{"<<s[0]<<","<<s[1]<<","<<s[2]<<"}" << std::endl;
 
 		return result.str();
 	}

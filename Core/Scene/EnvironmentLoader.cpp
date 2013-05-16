@@ -855,7 +855,19 @@ bool EnvironmentLoader::ParseEnvironment(void)
 			pEmissive->SetLight((IAreaLight*)pLight);
 
 			// Get Transform
-			argumentMap.GetArgument("Transform", pEmissive->WorldTransform);
+			Vector3 translation, 
+				scaling;
+			
+			Matrix3x3 rotation;
+
+			if (argumentMap.GetArgument("Rotation", rotation))
+				pEmissive->WorldTransform.SetRotation(rotation);
+
+			if (argumentMap.GetArgument("Translation", translation))
+				pEmissive->WorldTransform.SetTranslation(translation);
+
+			if (argumentMap.GetArgument("Scaling", scaling))
+				pEmissive->WorldTransform.SetScaling(scaling);
 
 			pSpace->PrimitiveList.PushBack(pEmissive);
 		}
@@ -872,7 +884,19 @@ bool EnvironmentLoader::ParseEnvironment(void)
 			pGeometric->SetShape(pGeometry);
 	
 			// Get Transform
-			argumentMap.GetArgument("Transform", pGeometric->WorldTransform);
+			Vector3 translation, 
+				scaling;
+			
+			Matrix3x3 rotation;
+
+			if (argumentMap.GetArgument("Rotation", rotation))
+				pGeometric->WorldTransform.SetRotation(rotation);
+
+			if (argumentMap.GetArgument("Translation", translation))
+				pGeometric->WorldTransform.SetTranslation(translation);
+
+			if (argumentMap.GetArgument("Scaling", scaling))
+				pGeometric->WorldTransform.SetScaling(scaling);
 
 			pSpace->PrimitiveList.PushBack(pGeometric);
 		}
