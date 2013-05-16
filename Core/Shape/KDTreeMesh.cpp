@@ -127,7 +127,7 @@ bool KDTreeMesh::Compile(void)
 	// Compute the bounds for triangle list
 	ComputeBounds(triangleList, m_rootNode.BoundingBox);
 
-	// Compute the minimum dimensions constraint for a node 				
+	// Compute the minimum dimensions constraint for a node 
 	// TODO: Should be parameterised!
 	m_fMinNodeWidth = m_rootNode.BoundingBox.GetRadius() / 1000.0f;
 	
@@ -138,7 +138,8 @@ bool KDTreeMesh::Compile(void)
 	// I should create some export function in persistent meshes (and even change their ridiculous name, at that).
 	// For the time being, I'll leave this here.
 	//----------------------------------------------------------------------------------------------
-	// /**//*
+	// /**/
+	/*
 	{
 		ImmutableDiskList<Vertex>::Make(&(this->VertexList), "object.ver");
 	
@@ -257,10 +258,10 @@ bool KDTreeMesh::Compile(void)
 
 		ftree.close();
 
-		/*
-		std::cout << "Average triangles per leaf node : " << (float)lic / (float)lc << std::endl;
-		int s = std::getchar();
-		*/
+		//
+		//std::cout << "Average triangles per leaf node : " << (float)lic / (float)lc << std::endl;
+		//int s = std::getchar();
+		//
 	}
 	/* */
 	//----------------------------------------------------------------------------------------------
