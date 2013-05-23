@@ -19,11 +19,14 @@
     <Filter Include="Source Files\common">
       <UniqueIdentifier>{7345b4cc-99b7-4c30-858e-ea8560e0ea5e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\server">
-      <UniqueIdentifier>{ce7459a4-a149-46f1-bdc4-5b5a60a2d4b8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\utility">
       <UniqueIdentifier>{462fa0e0-71aa-466b-a50e-1966afbe99a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\centralised">
+      <UniqueIdentifier>{6b7019ab-e841-4eb0-95e5-30c42efe3596}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\distributed">
+      <UniqueIdentifier>{ce7459a4-a149-46f1-bdc4-5b5a60a2d4b8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -31,46 +34,46 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\ResourceManager.cpp">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\TaskController.cpp">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Resource.cpp">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\ServiceManager.cpp">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\AdminController.cpp">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskPipeline.cpp">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\TaskPipeline.cpp">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Coordinator.cpp">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Worker.cpp">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskWorker.cpp">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskCoordinator.cpp">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Half.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Controller.cpp">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\CommandParser.cpp">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -81,64 +84,73 @@
       <Filter>Source Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\ServiceManager.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\CommandParser.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Controller.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\AdminController.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\ResourceManager.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskController.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Resource.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Task.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskPipeline.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\UniqueId.h">
       <Filter>Source Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Communicator.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskPipeline.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Coordinator.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Worker.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MessageQueue.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskWorker.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCoordinator.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCommon.h">
-      <Filter>Source Files\server</Filter>
+      <Filter>Source Files\distributed</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Half.h">
       <Filter>Source Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Export.h">
       <Filter>Source Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Multithreaded.h">
+      <Filter>Source Files\centralised</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedFrameless.h">
+      <Filter>Source Files\centralised</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedCommon.h">
+      <Filter>Source Files\centralised</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

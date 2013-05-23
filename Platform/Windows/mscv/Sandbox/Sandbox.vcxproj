@@ -190,6 +190,9 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Half.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Logger.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MessageQueue.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Multithreaded.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedCommon.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedFrameless.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCommon.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCoordinator.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskPipeline.h" />
