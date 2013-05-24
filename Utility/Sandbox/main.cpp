@@ -49,14 +49,24 @@ using namespace Illumina::Core;
 #include "Export.h"
 
 #include "Multithreaded.h"
+#include "MultithreadedFrameless.h"
 //----------------------------------------------------------------------------------------------
+class SimpleListener 
+	: public IlluminaMTListener
+{
+	void OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
+	{ 
+		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
+		pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 0.01f);
+	};
+};
 
 void IlluminaPRT(Logger *p_pLogger, int p_nVerboseFrequency, 
 	int p_nIterations, int p_nThreads, int p_nFPS, 
 	int p_nJobs, int p_nSize, int p_nFlags, 
 	std::string p_strScript)
 {
-	IlluminaMT illumina;
+	IlluminaMTFrameless illumina;
 
 	illumina.SetFlags(p_nFlags);
 	illumina.SetLogger(p_pLogger);
@@ -66,6 +76,9 @@ void IlluminaPRT(Logger *p_pLogger, int p_nVerboseFrequency,
 	illumina.SetIterations(p_nIterations);
 	illumina.SetJobs(p_nJobs, p_nSize);
 	illumina.SetFrameBudget(0);
+
+	SimpleListener listener;
+	illumina.AttachListener(&listener);
 
 	illumina.Initialise();
 	illumina.Render();

@@ -15,6 +15,8 @@
 #include "Sampler/Sampler.h"
 #include "Filter/Filter.h"
 
+#include "Sampler/PrecomputationSampler.h"
+
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 BaseRenderer::BaseRenderer(const std::string &p_strName, Scene *p_pScene, IIntegrator *p_pIntegrator, IDevice *p_pDevice, IFilter *p_pFilter, RadianceBuffer* p_pRadianceBuffer, int p_nSampleCount)
@@ -167,7 +169,65 @@ void BaseRenderer::RenderRegion(RadianceBuffer *p_pRadianceBuffer, int p_nRegion
 	}
 }
 //----------------------------------------------------------------------------------------------
-void BaseRenderer::RenderTile(RadianceBuffer *p_pRadianceBuffer, int p_nTileIndex, int p_nTileWidth, int p_nTileHeight) { }
+void BaseRenderer::RenderTile(RadianceBuffer *p_pRadianceBuffer, int p_nTileIndex, int p_nTileWidth, int p_nTileHeight) 
+{
+	RadianceContext *pRadianceContext,
+		accumulator;
+
+	Intersection intersection;
+	IntegratorContext context;
+
+	/* FOR SCIENCE!! */	
+	Vector2 sample;
+	
+	// Compute dimension reciprocals for normalisation
+	float rcpWidth = 1.f / m_pDevice->GetWidth(),
+		rcpHeight = 1.f / m_pDevice->GetHeight(),
+		rcpSampleCount = 1.f / m_nSampleCount;
+	
+	// No supersampling
+	context.SampleIndex = 0;
+
+	int requiredSamples = p_nTileWidth * p_nTileHeight;
+	int maxSamples = requiredSamples;
+	int sampleStart = p_nTileIndex * maxSamples;
+
+	float threshold = 0.1f;
+	int thresholdArea = 0;
+
+	// No supersampling
+	context.SampleIndex = 0;
+
+	// Rasterise pixels
+	for (; requiredSamples > 0; requiredSamples--)
+	{
+		sample.X = GetDevice()->GetWidth() * QuasiRandomSequence::VanDerCorput(sampleStart + maxSamples - requiredSamples);
+		sample.Y = GetDevice()->GetWidth() * QuasiRandomSequence::Sobol2(sampleStart + maxSamples - requiredSamples);
+
+		int srcX = (int)(sample.X),
+			srcY = (int)(sample.Y);
+
+		int dstX = (int)(sample.X),
+			dstY = (int)(sample.Y);
+
+		// Get sub-pixel position
+		sample = m_pScene->GetSampler()->Get2DSample();
+
+		// Get radiance context
+		pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
+
+		// Set integrator context
+		context.SurfacePosition.Set((float)srcX, (float)srcY);
+		context.NormalisedPosition.Set(context.SurfacePosition.X * rcpWidth, context.SurfacePosition.Y * rcpHeight);
+
+		// Get ray from camera
+		m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, sample.U * rcpWidth, sample.V * rcpHeight, pRadianceContext->ViewRay);
+		//m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.5f * rcpWidth, 0.5f * rcpHeight, pRadianceContext->ViewRay);
+				
+		// Get radiance
+		pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
+	}
+}
 //----------------------------------------------------------------------------------------------
 void BaseRenderer::Commit(void) 
 { 

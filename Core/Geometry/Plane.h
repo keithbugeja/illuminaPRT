@@ -47,6 +47,8 @@ namespace Illumina
 
 			inline void Normalize(void);
 
+			bool Equals(const Plane &p_plane, float p_fEpsilon = Maths::Epsilon) const;
+
 			bool operator==(const Plane &p_plane) const;
 			bool operator!=(const Plane &p_plane) const;
 

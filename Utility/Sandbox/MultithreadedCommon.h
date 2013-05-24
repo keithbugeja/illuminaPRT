@@ -79,6 +79,9 @@ protected:
 
 	Flags m_flags;
 
+public:
+	Environment* GetEnvironment(void) const { return m_pEnvironment; }
+
 protected:
 	IIlluminaMT(void) 
 		: m_pLogger(NULL)
