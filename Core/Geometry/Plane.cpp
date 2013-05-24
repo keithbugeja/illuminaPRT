@@ -84,12 +84,18 @@ Plane::Side Plane::GetSide(const Vector3 &p_midPoint, const Vector3 &p_halfVecto
 	return Side_Both;
 }
 //----------------------------------------------------------------------------------------------
+bool Plane::Equals(const Plane &p_plane, float p_fEpsilon) const
+{
+	return ((Maths::Abs(p_plane.Distance - Distance) <= p_fEpsilon) &&
+		p_plane.Normal.Equals(Normal));
+}
+//----------------------------------------------------------------------------------------------
 bool Plane::operator==(const Plane &p_plane) const {
-	return (p_plane.Distance == Distance && p_plane.Normal == Normal);
+	return Equals(p_plane);
 }
 //----------------------------------------------------------------------------------------------
 bool Plane::operator!=(const Plane &p_plane) const {
-	return !(*this == p_plane);
+	return !Equals(p_plane);
 }
 //----------------------------------------------------------------------------------------------
 std::string Plane::ToString(void) const
