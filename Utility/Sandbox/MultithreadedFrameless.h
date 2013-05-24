@@ -328,6 +328,9 @@ public:
 
 	void Render(void)
 	{
+		// Prepare integrator
+		m_pIntegrator->Prepare(m_pEnvironment->GetScene());
+
 		//----------------------------------------------------------------------------------------------
 		// Rendering threads setup
 		//----------------------------------------------------------------------------------------------
@@ -354,6 +357,9 @@ public:
 			fFrameCommitTime = 0, fTotalCommitTime = 0;
 
 		int nFramesProcessed = 0;
+		
+		//// Prepare integrator
+		//m_pIntegrator->Prepare(m_pEnvironment->GetScene());
 
 		//----------------------------------------------------------------------------------------------
 		// Render loop
@@ -375,8 +381,8 @@ public:
 			//----------------------------------------------------------------------------------------------
 			eventStart = start = Platform::GetTime();
 
-			// Prepare integrator
-			m_pIntegrator->Prepare(m_pEnvironment->GetScene());
+			//// Prepare integrator
+			//m_pIntegrator->Prepare(m_pEnvironment->GetScene());
 
 			// Time integrator event
 			eventComplete = Platform::GetTime();
@@ -459,7 +465,7 @@ public:
 			//----------------------------------------------------------------------------------------------
 
 			// Max is 60fps
-			// boost::this_thread::sleep(boost::posix_time::millisec(10));
+			boost::this_thread::sleep(boost::posix_time::millisec(50));
 
 			//----------------------------------------------------------------------------------------------
 			// Frame time computations 
