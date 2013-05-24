@@ -185,9 +185,6 @@ void BaseRenderer::RenderTile(RadianceBuffer *p_pRadianceBuffer, int p_nTileInde
 		rcpHeight = 1.f / m_pDevice->GetHeight(),
 		rcpSampleCount = 1.f / m_nSampleCount;
 	
-	// No supersampling
-	context.SampleIndex = 0;
-
 	int requiredSamples = p_nTileWidth * p_nTileHeight;
 	int maxSamples = requiredSamples;
 	int sampleStart = p_nTileIndex * maxSamples;
@@ -197,6 +194,7 @@ void BaseRenderer::RenderTile(RadianceBuffer *p_pRadianceBuffer, int p_nTileInde
 
 	// No supersampling
 	context.SampleIndex = 0;
+	context.SampleCount = 1;
 
 	// Rasterise pixels
 	for (; requiredSamples > 0; requiredSamples--)
