@@ -251,7 +251,7 @@ public:
 			}
 			
 			p_pState->Reset();
-			boost::this_thread::sleep(boost::posix_time::millisec(10));
+			// boost::this_thread::sleep(boost::posix_time::millisec(10));
 
 			/*
 			threadStats.JobTime = Platform::ToSeconds(Platform::GetTime() - threadStats.JobTime);
@@ -421,20 +421,6 @@ public:
 			// Post processing 
 			//----------------------------------------------------------------------------------------------
 			eventStart = Platform::GetTime();
-
-			/*RadianceContext *rc = m_pRadianceBuffer->GetP(0,0);
-
-			for (int j = 0; j < m_pRadianceOut->GetArea(); j++, rc++)
-			{
-				rc->Final = rc->Indirect;
-			}*/
-
-			for (int i = 0; i < m_pRadianceOut->GetHeight(); i++)
-			{
-				for (int j = 0; j < m_pRadianceOut->GetWidth(); j++)
-				{
-				}
-			}
 
 			// Bilateral filter
 			if (m_flags.IsBilateralFilterEnabled())
