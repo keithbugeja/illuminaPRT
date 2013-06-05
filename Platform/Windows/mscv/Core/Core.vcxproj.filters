@@ -848,6 +848,9 @@
     <ClInclude Include="..\..\..\..\Core\Shape\Quad.h">
       <Filter>Header Files\Shape</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Postproc\Convolution.h">
+      <Filter>Header Files\Postproc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">

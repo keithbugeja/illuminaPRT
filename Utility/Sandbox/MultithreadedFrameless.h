@@ -267,6 +267,8 @@ public:
 		}
 	}
 };
+//----------------------------------------------------------------------------------------------
+
 
 
 //----------------------------------------------------------------------------------------------
@@ -420,6 +422,20 @@ public:
 			//----------------------------------------------------------------------------------------------
 			eventStart = Platform::GetTime();
 
+			/*RadianceContext *rc = m_pRadianceBuffer->GetP(0,0);
+
+			for (int j = 0; j < m_pRadianceOut->GetArea(); j++, rc++)
+			{
+				rc->Final = rc->Indirect;
+			}*/
+
+			for (int i = 0; i < m_pRadianceOut->GetHeight(); i++)
+			{
+				for (int j = 0; j < m_pRadianceOut->GetWidth(); j++)
+				{
+				}
+			}
+
 			// Bilateral filter
 			if (m_flags.IsBilateralFilterEnabled())
 				m_pBilateralFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
@@ -465,7 +481,7 @@ public:
 			//----------------------------------------------------------------------------------------------
 
 			// Max is 60fps
-			boost::this_thread::sleep(boost::posix_time::millisec(50));
+			// boost::this_thread::sleep(boost::posix_time::millisec(50));
 
 			//----------------------------------------------------------------------------------------------
 			// Frame time computations 
