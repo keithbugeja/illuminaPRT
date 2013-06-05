@@ -279,6 +279,7 @@ protected:
 	int m_nBackBuffer;
 
 	RadianceBuffer 
+		*m_pRadianceTemp,
 		*m_pRadianceBuffer,
 		*m_pRadianceOut;
 	
@@ -298,6 +299,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		// Post processing setup
 		//----------------------------------------------------------------------------------------------
+		m_pRadianceTemp = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight());
 		m_pRadianceBuffer = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight());
 		m_pRadianceOut = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight());
 
@@ -330,6 +332,23 @@ public:
 
 	void Render(void)
 	{
+		Convolution convolution;
+		//Spectrum kernel[] = {0.5f, 0.7f, 0.5f, 0.7f, 1, 0.7f, 0.5f, 0.7f, 0.5f};
+		float kernel[] = {0.5f, 0.7f, 0.5f, 0.7f, 1, 0.7f, 0.5f, 0.7f, 0.5f};
+		float kernel2[] = {
+			0.25f, 0.50f, 0.75f, 0.50f, 0.25f,
+			0.50f, 0.75f, 0.90f, 0.75f, 0.50f,
+			0.75f, 0.90f, 1.00f, 0.90f, 0.75f,
+			0.50f, 0.75f, 0.90f, 0.75f, 0.50f,
+			0.25f, 0.50f, 0.75f, 0.50f, 0.25f
+		};
+
+		float sk1[] = {1,0,-1,2,0,-2,1,0,-1},
+			sk2[] = {1,2,1,0,0,0,-1,-2,-1};
+
+		convolution.SetKernel(9, 3, kernel, 0.5f);
+		//convolution.SetKernel(25, 5, kernel2, 0.1f);
+
 		// Prepare integrator
 		m_pIntegrator->Prepare(m_pEnvironment->GetScene());
 
@@ -421,10 +440,18 @@ public:
 			// Post processing 
 			//----------------------------------------------------------------------------------------------
 			eventStart = Platform::GetTime();
+			convolution.Apply(m_pRadianceBuffer, m_pRadianceTemp);
+			convolution.SetKernel(9,3,kernel, 0.1);
+			/*convolution.Apply(m_pRadianceTemp, m_pRadianceBuffer);
+			convolution.SetKernel(9,3,kernel, 0.1);*/
+			/*
+			convolution.Apply(m_pRadianceBuffer, m_pRadianceTemp);
+			convolution.Apply(m_pRadianceTemp, m_pRadianceBuffer);
+			*/
 
 			// Bilateral filter
 			if (m_flags.IsBilateralFilterEnabled())
-				m_pBilateralFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+				m_pBilateralFilter->Apply(m_pRadianceBuffer, m_pRadianceTemp);
 
 			// Discontinuity
 			if (m_flags.IsDiscontinuityBufferEnabled())
@@ -440,7 +467,7 @@ public:
 
 			// Tonemapping
 			if (m_flags.IsToneMappingEnabled())
-				m_pTonemapFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+				m_pTonemapFilter->Apply(m_pRadianceTemp, m_pRadianceBuffer);
 			
 
 			// Time radiance computation event
