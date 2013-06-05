@@ -14,6 +14,7 @@
 #include "Postproc/AutoTone.h"
 #include "Postproc/DragoTone.h"
 #include "Postproc/GlobalTone.h"
+#include "Postproc/Convolution.h"
 #include "Postproc/BilateralFilter.h"
 #include "Postproc/HistoryBuffer.h"
 #include "Postproc/AccumulationBuffer.h"
@@ -24,6 +25,36 @@ namespace Illumina
 {
 	namespace Core
 	{		
+		class ConvolutionFactory : public Illumina::Core::Factory<Illumina::Core::IPostProcess>
+		{
+		public:
+			Illumina::Core::IPostProcess *CreateInstance(void)
+			{
+				return new Convolution();
+			}
+
+			// Arguments
+			// -- Id
+			Illumina::Core::IPostProcess *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strId;
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId);
+
+				return CreateInstance();
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(const std::string &p_strId)
+			{
+				return new Convolution(p_strId);
+			}
+
+			Illumina::Core::IPostProcess *CreateInstance(int dummy)
+			{
+				return new Convolution();
+			}
+		};
+
 		class AccumulationBufferFactory : public Illumina::Core::Factory<Illumina::Core::IPostProcess>
 		{
 		public:
