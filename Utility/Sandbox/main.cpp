@@ -50,7 +50,12 @@ using namespace Illumina::Core;
 
 #include "Multithreaded.h"
 #include "MultithreadedFrameless.h"
+
 //----------------------------------------------------------------------------------------------
+// Should follow Core/System/Platform.h (due to windows.h conflicts)
+// #include <GL/glfw.h>
+//----------------------------------------------------------------------------------------------
+
 class SimpleListener 
 	: public IlluminaMTListener
 {

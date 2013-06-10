@@ -339,6 +339,9 @@
     <ClCompile Include="..\..\..\..\Core\Shape\Quad.cpp">
       <Filter>Header Files\Shape</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Device\GLDisplayDevice.cpp">
+      <Filter>Header Files\Device</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -850,6 +853,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Postproc\Convolution.h">
       <Filter>Header Files\Postproc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Device\GLDisplayDevice.h">
+      <Filter>Header Files\Device</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
