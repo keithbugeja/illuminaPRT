@@ -24,6 +24,8 @@
 #include "Environment.h"
 #include "MultithreadedCommon.h"
 
+#include <CL/cl.hpp>
+
 //----------------------------------------------------------------------------------------------
 class RenderThread_Frameless 
 {
@@ -332,6 +334,23 @@ public:
 
 	void Render(void)
 	{
+		cl_int error;
+		cl_platform_id platform;
+		cl_device_id device;
+		cl_uint platforms, devices;
+
+		error = clGetPlatformIDs(1, &platform, &platforms);
+		error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 1, &device, &devices);
+		cl_context_properties properties[] = {
+			CL_CONTEXT_PLATFORM,
+			(cl_context_properties)platform,
+			0};
+
+		cl_context context = clCreateContext(properties, 1, &device, NULL, NULL, &error);
+		cl_command_queue cq = clCreateCommandQueue(context, device, 0, &error);
+
+		clFinish(cq);
+
 		Convolution convolution;
 		//Spectrum kernel[] = {0.5f, 0.7f, 0.5f, 0.7f, 1, 0.7f, 0.5f, 0.7f, 0.5f};
 		float kernel[] = {0.5f, 0.7f, 0.5f, 0.7f, 1, 0.7f, 0.5f, 0.7f, 0.5f};
@@ -440,8 +459,8 @@ public:
 			// Post processing 
 			//----------------------------------------------------------------------------------------------
 			eventStart = Platform::GetTime();
-			convolution.Apply(m_pRadianceBuffer, m_pRadianceTemp);
-			convolution.SetKernel(9,3,kernel, 0.1);
+			//convolution.Apply(m_pRadianceBuffer, m_pRadianceTemp);
+			//convolution.SetKernel(9,3,kernel, 0.1);
 			/*convolution.Apply(m_pRadianceTemp, m_pRadianceBuffer);
 			convolution.SetKernel(9,3,kernel, 0.1);*/
 			/*
@@ -467,7 +486,8 @@ public:
 
 			// Tonemapping
 			if (m_flags.IsToneMappingEnabled())
-				m_pTonemapFilter->Apply(m_pRadianceTemp, m_pRadianceBuffer);
+				//m_pTonemapFilter->Apply(m_pRadianceTemp, m_pRadianceBuffer);
+				m_pTonemapFilter->Apply(m_pRadianceBuffer, m_pRadianceTemp);
 			
 
 			// Time radiance computation event

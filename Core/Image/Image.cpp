@@ -23,6 +23,11 @@ Image::Image(int p_nWidth, int p_nHeight, RGBPixel *p_pRGBBuffer)
 	: RGBSurface(p_nWidth, p_nHeight, p_pRGBBuffer)
 { }
 //----------------------------------------------------------------------------------------------
+float* Image::GetImageBuffer(void) const
+{
+	return (float*)m_bitmap;
+}
+//----------------------------------------------------------------------------------------------
 void Image::GammaCorrect(float p_fGamma)
 {
 	float fPower = 1.0f / p_fGamma;

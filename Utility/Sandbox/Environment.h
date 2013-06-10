@@ -46,7 +46,7 @@ protected:
 public:
 	//----------------------------------------------------------------------------------------------
 	SandboxEnvironment(void)
-		: m_environment(NULL)				
+		: m_environment(NULL)
 		, m_engineKernel(NULL)
 	{ }
 
@@ -130,6 +130,7 @@ public:
 		// Device
 		//----------------------------------------------------------------------------------------------
 		logger->Write("Environment :: Registering Devices...", LL_Info);
+		m_engineKernel->GetDeviceManager()->RegisterFactory("GLDisplay", new GLDisplayDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("Display", new DisplayDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("BufferedImage", new BufferedImageDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("Image", new ImageDeviceFactory());
@@ -278,12 +279,14 @@ public:
 			//----------------------------------------------------------------------------------------------
 			logger->Write("Environment :: Freeing and unregistering Devices...", LL_Info);
 
+			delete m_engineKernel->GetDeviceManager()->RequestFactory("GLDisplay");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Display");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("BufferedImage");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Image");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Video");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("RTP");
 
+			m_engineKernel->GetDeviceManager()->UnregisterFactory("GLDisplay");
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("Display");
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("BufferedImage");
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("Image");

@@ -13,6 +13,7 @@
 #include "Device/Device.h"
 #include "Device/ImageDevice.h"
 #include "Device/BufferedImageDevice.h"
+#include "Device/GLDisplayDevice.h"
 #include "Device/DisplayDevice.h"
 #include "Device/VideoDevice.h"
 #include "Device/RTPDevice.h"
@@ -22,6 +23,46 @@ namespace Illumina
 {
 	namespace Core
 	{
+		class GLDisplayDeviceFactory : public Illumina::Core::Factory<Illumina::Core::IDevice>
+		{
+		public:
+			Illumina::Core::IDevice *CreateInstance(void)
+			{
+				throw new Exception("Method not supported!");
+			}
+
+			// Arguments
+			// -- Id {String}
+			// -- Width {Integer}
+			// -- Height {Integer}
+			Illumina::Core::IDevice *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				int width = 640,
+					height = 480;
+
+				std::string strId;
+
+				// Read arguments
+				p_argumentMap.GetArgument("Width", width);
+				p_argumentMap.GetArgument("Height", height);
+
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId, width, height);
+
+				return CreateInstance(width, height);
+			}
+
+			Illumina::Core::IDevice *CreateInstance(const std::string &p_strId, int p_nWidth, int p_nHeight)
+			{
+				return new GLDisplayDevice(p_strId, p_nWidth, p_nHeight);
+			}
+
+			Illumina::Core::IDevice *CreateInstance(int p_nWidth, int p_nHeight)
+			{
+				return new GLDisplayDevice(p_nWidth, p_nHeight);
+			}
+		};
+
 		class DisplayDeviceFactory : public Illumina::Core::Factory<Illumina::Core::IDevice>
 		{
 		public:

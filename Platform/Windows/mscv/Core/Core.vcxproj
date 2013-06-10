@@ -85,16 +85,16 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</IntDir>
-    <IncludePath>$(VLC_DIR)\include;$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
-    <LibraryPath>$(VLC_DIR)\lib;$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(OPENCL_DIR)\include;$(GLFW_DIR)\include;$(VLC_DIR)\include;$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(OPENCL_DIR)\lib;$(GLFW_DIR)\lib;$(VLC_DIR)\lib;$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(SolutionDir)..\..\..\Bin\Win64\$(Configuration)\</IntDir>
-    <IncludePath>$(VLC_DIR)\include;$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
-    <LibraryPath>$(VLC_DIR)\lib;$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(OPENCL_DIR)\include;$(GLFW_DIR)\include;$(VLC_DIR)\include;$(FFMPEG_DIR)\include;$(MPI_DIR)\include;$(BOOST_DIR);$(SolutionDir)..\..\..\Core;$(IncludePath)</IncludePath>
+    <LibraryPath>$(OPENCL_DIR)\lib;$(GLFW_DIR)\lib;$(VLC_DIR)\lib;$(FFMPEG_DIR)\lib;$(MPI_DIR)\lib;$(BOOST_DIR)\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -123,7 +123,7 @@
       <OpenMPSupport>true</OpenMPSupport>
       <FloatingPointModel>Fast</FloatingPointModel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <WarningLevel>Level2</WarningLevel>
     </ClCompile>
@@ -140,6 +140,7 @@
     <ClCompile Include="..\..\..\..\Core\Camera\ThinLensCamera.cpp" />
     <ClCompile Include="..\..\..\..\Core\Device\BufferedImageDevice.cpp" />
     <ClCompile Include="..\..\..\..\Core\Device\DisplayDevice.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Device\GLDisplayDevice.cpp" />
     <ClCompile Include="..\..\..\..\Core\Device\ImageDevice.cpp" />
     <ClCompile Include="..\..\..\..\Core\Device\RTPDevice.cpp" />
     <ClCompile Include="..\..\..\..\Core\Device\VideoDevice.cpp" />
@@ -228,6 +229,7 @@
     <ClInclude Include="..\..\..\..\Core\Device\Device.h" />
     <ClInclude Include="..\..\..\..\Core\Device\DeviceFactories.h" />
     <ClInclude Include="..\..\..\..\Core\Device\DisplayDevice.h" />
+    <ClInclude Include="..\..\..\..\Core\Device\GLDisplayDevice.h" />
     <ClInclude Include="..\..\..\..\Core\Device\ImageDevice.h" />
     <ClInclude Include="..\..\..\..\Core\Device\RTPDevice.h" />
     <ClInclude Include="..\..\..\..\Core\Device\VideoDevice.h" />
