@@ -11,8 +11,9 @@
 #include <iostream>
 
 #include "Integrator/Integrator.h"
-#include "Integrator/PathIntegrator.h"
+#include "Integrator/ICIntegrator.h"
 #include "Integrator/IGIIntegrator.h"
+#include "Integrator/PathIntegrator.h"
 // #include "Integrator/PhotonIntegrator.h"
 #include "Integrator/WhittedIntegrator.h"
 #include "Integrator/TestIntegrator.h"

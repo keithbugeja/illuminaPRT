@@ -24,8 +24,8 @@
 #include "Environment.h"
 #include "MultithreadedCommon.h"
 
-#include <CL/cl.hpp>
-#pragma lib("opencl.lib")
+//#include <CL/cl.hpp>
+//#pragma lib("opencl.lib")
 //----------------------------------------------------------------------------------------------
 class RenderThread_Frameless 
 {
@@ -334,6 +334,15 @@ public:
 
 	void Render(void)
 	{
+		IrradianceCacheRecord icr;
+		icr.Point.Set(-7.5, -7.5, -7.5);
+		icr.RiClamp = 1.f;
+
+		IrradianceCache ic;
+		ic.RootNode.Bounds.SetExtents(Vector3(-10,-10,-10), Vector3(10,10,10));
+		
+		ic.Insert(&(ic.RootNode), &icr); 
+
 		/* cl_int error;
 		cl_platform_id platform;
 		cl_device_id device;
