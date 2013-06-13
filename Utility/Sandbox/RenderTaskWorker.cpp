@@ -340,13 +340,13 @@ bool RenderTaskWorker::OnInitialise(void)
 
 	if (!pArgumentMap->GetArgument(__TaskID, m_nTaskId))
 	{
-		logger->Write("RenderTaskWorker :: Unable to determine task id ["__TaskID"] from argument list.", LL_Error);
+		logger->Write("RenderTaskWorker :: Unable to determine task id [" __TaskID "] from argument list.", LL_Error);
 		return false;
 	}
 
 	if (!pArgumentMap->GetArgument(__Script_Name, strScriptName))
 	{
-		logger->Write("RenderTaskWorker :: Unable to find ["__Script_Name"] entry in argument list.", LL_Error);
+		logger->Write("RenderTaskWorker :: Unable to find [" __Script_Name "] entry in argument list.", LL_Error);
 		return false;
 	}
 

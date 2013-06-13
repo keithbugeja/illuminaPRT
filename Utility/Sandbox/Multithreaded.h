@@ -47,7 +47,7 @@ public:
 	{
 	protected:
 		// Shared tile ID 
-		int m_nTileID;
+		Int32 m_nTileID;
 	
 		// Run flag
 		bool m_bIsRunning;
