@@ -58,19 +58,19 @@ bool RenderTaskCoordinator::OnInitialise(void)
 
 	if (!pArgumentMap->GetArgument(__TaskID, m_nTaskId))
 	{
-		logger->Write("RenderTaskCoordinator :: Unable to determine task id ["__TaskID"] from argument list.", LL_Error);
+		logger->Write("RenderTaskCoordinator :: Unable to determine task id [" __TaskID "] from argument list.", LL_Error);
 		return false;
 	}
 
 	if (!pArgumentMap->GetArgument(__Job_User, m_strUserName) || !pArgumentMap->GetArgument(__Job_Name, m_strJobName))
 	{
-		logger->Write("RenderTaskCoordinator :: Unable to determine task details (["__Job_User"] or ["__Job_Name"]) from argument list.", LL_Error);
+		logger->Write("RenderTaskCoordinator :: Unable to determine task details ([" __Job_User "] or [" __Job_Name "]) from argument list.", LL_Error);
 		return false;
 	}
 
 	if (!pArgumentMap->GetArgument(__Script_Name, strScriptName))
 	{
-		logger->Write("RenderTaskCoordinator :: Unable to find ["__Script_Name"] entry in argument list.", LL_Error);
+		logger->Write("RenderTaskCoordinator :: Unable to find [" __Script_Name "] entry in argument list.", LL_Error);
 		return false;
 	}
 

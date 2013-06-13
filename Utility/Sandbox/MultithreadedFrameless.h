@@ -25,7 +25,7 @@
 #include "MultithreadedCommon.h"
 
 #include <CL/cl.hpp>
-
+#pragma lib("opencl.lib")
 //----------------------------------------------------------------------------------------------
 class RenderThread_Frameless 
 {
@@ -49,7 +49,7 @@ public:
 	{
 	protected:
 		// Shared tile ID 
-		int m_nTileID;
+		Int32 m_nTileID;
 	
 		// Run flag
 		bool m_bIsRunning;
@@ -334,7 +334,7 @@ public:
 
 	void Render(void)
 	{
-		cl_int error;
+		/* cl_int error;
 		cl_platform_id platform;
 		cl_device_id device;
 		cl_uint platforms, devices;
@@ -350,6 +350,7 @@ public:
 		cl_command_queue cq = clCreateCommandQueue(context, device, 0, &error);
 
 		clFinish(cq);
+		*/ 
 
 		Convolution convolution;
 		//Spectrum kernel[] = {0.5f, 0.7f, 0.5f, 0.7f, 1, 0.7f, 0.5f, 0.7f, 0.5f};
@@ -363,9 +364,10 @@ public:
 		};
 
 		float sk1[] = {1,0,-1,2,0,-2,1,0,-1},
-			sk2[] = {1,2,1,0,0,0,-1,-2,-1};
+			sk2[] = {1,2,1,0,0,0,-1,-2,-1},
+			mean[] = {0.1111f, 0.1111f, 0.1111f, 0.1111f, 0.1111f, 0.1111f, 0.1111f, 0.1111f, 0.1111f};
 
-		convolution.SetKernel(9, 3, kernel, 0.5f);
+		convolution.SetKernel(9, 3, kernel, 1.f);
 		//convolution.SetKernel(25, 5, kernel2, 0.1f);
 
 		// Prepare integrator
@@ -458,11 +460,21 @@ public:
 			//----------------------------------------------------------------------------------------------
 			// Post processing 
 			//----------------------------------------------------------------------------------------------
+			 
 			eventStart = Platform::GetTime();
-			//convolution.Apply(m_pRadianceBuffer, m_pRadianceTemp);
-			//convolution.SetKernel(9,3,kernel, 0.1);
-			/*convolution.Apply(m_pRadianceTemp, m_pRadianceBuffer);
-			convolution.SetKernel(9,3,kernel, 0.1);*/
+			/*
+			convolution.SetKernel(9, 3, sk1, 1.f);
+			convolution.Apply(m_pRadianceBuffer, m_pRadianceTemp);
+			convolution.SetKernel(9, 3, mean, 1.f);
+			convolution.Apply(m_pRadianceTemp, m_pRadianceBuffer);
+			*/
+
+			/*
+			convolution.SetKernel(9,3,sk2, 1.f);
+			convolution.Apply(m_pRadianceTemp, m_pRadianceBuffer);
+			convolution.SetKernel(9,3,sk1, 1.f);
+			convolution.Apply(m_pRadianceBuffer, m_pRadianceTemp);
+			*/
 			/*
 			convolution.Apply(m_pRadianceBuffer, m_pRadianceTemp);
 			convolution.Apply(m_pRadianceTemp, m_pRadianceBuffer);
@@ -485,9 +497,12 @@ public:
 				m_pEnvironment->GetScene()->GetSampler()->Reset();
 
 			// Tonemapping
+			/* 
 			if (m_flags.IsToneMappingEnabled())
+				m_pTonemapFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
+			*/
 				//m_pTonemapFilter->Apply(m_pRadianceTemp, m_pRadianceBuffer);
-				m_pTonemapFilter->Apply(m_pRadianceBuffer, m_pRadianceTemp);
+				//m_pTonemapFilter->Apply(m_pRadianceBuffer, m_pRadianceTemp);
 			
 
 			// Time radiance computation event

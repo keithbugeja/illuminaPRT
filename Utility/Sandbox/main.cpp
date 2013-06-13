@@ -53,7 +53,6 @@ using namespace Illumina::Core;
 
 //----------------------------------------------------------------------------------------------
 // Should follow Core/System/Platform.h (due to windows.h conflicts)
-// #include <GL/glfw.h>
 //----------------------------------------------------------------------------------------------
 
 class SimpleListener 
