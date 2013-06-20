@@ -69,7 +69,7 @@ namespace Illumina
 				const Vector3 &p_wOut, Vector3 &p_wIn, float &p_pdf, BxDF::Type &p_bxdfType);
 
 			static Spectrum F(Scene *p_pScene, const Intersection &p_intersection,
-				const Vector3 &p_wOut, const Vector3 &p_wIn /*, BxDF::Type &p_bxdfType*/);
+				const Vector3 &p_wOut, const Vector3 &p_wIn);
 
 			std::string ToString(void) const { return "IIntegrator"; }
 		};

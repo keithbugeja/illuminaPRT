@@ -67,6 +67,54 @@ namespace Illumina
 			}
 		};
 
+		class ICIntegratorFactory : public Illumina::Core::Factory<Illumina::Core::IIntegrator>
+		{
+		public:
+			Illumina::Core::IIntegrator *CreateInstance(void)
+			{
+				throw new Exception("Method not supported!");
+			}
+
+			/*
+			 * Arguments
+			 * -- Id {String}
+			 * -- RayDepth {Integer}
+			 * -- Divisions {Integer}
+			 * -- ShadowRays {Integer}
+			 * -- Epsilon {Float}
+			 */
+			Illumina::Core::IIntegrator *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				int raydepth = 6,
+					divisions = 32,
+					shadowrays = 1;
+
+				float reflectEpsilon = 1e-4f;
+
+				std::string strId;
+
+				p_argumentMap.GetArgument("RayDepth", raydepth);
+				p_argumentMap.GetArgument("Divisions", divisions);
+				p_argumentMap.GetArgument("ShadowRays", shadowrays);
+				p_argumentMap.GetArgument("Epsilon", reflectEpsilon);
+
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId, raydepth, divisions, shadowrays, reflectEpsilon);
+
+				return CreateInstance(raydepth, divisions, shadowrays, reflectEpsilon);
+			}
+
+			Illumina::Core::IIntegrator *CreateInstance(const std::string &p_strId, int p_nRayDepth, int p_nDivisions, int p_nShadowRays, float p_fReflectEpsilon)
+			{
+				return new ICIntegrator(p_strId, p_nRayDepth, p_nDivisions, p_nShadowRays, p_fReflectEpsilon);
+			}
+
+			Illumina::Core::IIntegrator *CreateInstance(int p_nRayDepth, int p_nDivisions, int p_nShadowRays, float p_fReflectEpsilon)
+			{
+				return new ICIntegrator(p_nRayDepth, p_nDivisions, p_nShadowRays, p_fReflectEpsilon);
+			}
+		};
+
 		class IGIIntegratorFactory : public Illumina::Core::Factory<Illumina::Core::IIntegrator>
 		{
 		public:

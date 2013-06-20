@@ -13,19 +13,46 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-bool BasicSpace::Initialise(void) { 
+void BasicSpace::ComputeBoundingBox(void) 
+{
+	if (m_bRebuildRequired)
+	{
+		m_aabb.Invalidate();
+
+		for (int nIdx = 0, count = (int)PrimitiveList.Size(); nIdx < count; nIdx++)
+		{
+			IPrimitive *primitive = PrimitiveList.At(nIdx);
+
+			if (primitive->IsBounded())
+				m_aabb.Union(*(primitive->GetWorldBounds()));
+		}
+	}
+}
+
+//----------------------------------------------------------------------------------------------
+bool BasicSpace::Initialise(void) 
+{ 
+	m_bRebuildRequired = true;
+
 	return true; 
 }
 //----------------------------------------------------------------------------------------------
 void BasicSpace::Shutdown(void)  
 { }
 //----------------------------------------------------------------------------------------------
-bool BasicSpace::Build(void) { 
+bool BasicSpace::Build(void) 
+{ 
+	ComputeBoundingBox();
+
 	return true; 
 }
 //----------------------------------------------------------------------------------------------
 bool BasicSpace::Update(void) { 
 	return true; 
+}
+//----------------------------------------------------------------------------------------------
+IBoundingVolume *BasicSpace::GetBoundingVolume(void) {
+	return &m_aabb;
 }
 //----------------------------------------------------------------------------------------------
 bool BasicSpace::Intersects(const Ray &p_ray, Intersection &p_intersection) const

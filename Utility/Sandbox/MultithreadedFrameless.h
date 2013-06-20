@@ -334,6 +334,7 @@ public:
 
 	void Render(void)
 	{
+		/* 
 		IrradianceCacheRecord icr;
 		icr.Point.Set(-7.5, -7.5, -7.5);
 		icr.RiClamp = 1.f;
@@ -342,6 +343,7 @@ public:
 		ic.RootNode.Bounds.SetExtents(Vector3(-10,-10,-10), Vector3(10,10,10));
 		
 		ic.Insert(&(ic.RootNode), &icr); 
+		*/
 
 		/* cl_int error;
 		cl_platform_id platform;
@@ -506,10 +508,10 @@ public:
 				m_pEnvironment->GetScene()->GetSampler()->Reset();
 
 			// Tonemapping
-			/* 
+			
 			if (m_flags.IsToneMappingEnabled())
 				m_pTonemapFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-			*/
+			
 				//m_pTonemapFilter->Apply(m_pRadianceTemp, m_pRadianceBuffer);
 				//m_pTonemapFilter->Apply(m_pRadianceBuffer, m_pRadianceTemp);
 			

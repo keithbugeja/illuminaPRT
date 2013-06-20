@@ -30,6 +30,8 @@ namespace Illumina
 		public:
 			List<IPrimitive*> PrimitiveList;
 
+			virtual IBoundingVolume *GetBoundingVolume(void) = 0;
+
 			virtual bool Initialise(void) = 0;
 			virtual void Shutdown(void) = 0;
 			virtual bool Update(void) = 0;
