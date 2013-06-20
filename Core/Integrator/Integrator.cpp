@@ -183,6 +183,7 @@ Spectrum IIntegrator::SampleAllLights(Scene *p_pScene, const Intersection &p_int
 
 	return Ls / p_nSampleCount;
 }
+
 //----------------------------------------------------------------------------------------------
 Spectrum IIntegrator::SampleF(Scene *p_pScene, Intersection &p_intersection, const Vector3 &p_wOut, Vector3 &p_wIn, float &p_pdf, BxDF::Type &p_bxdfType)
 {

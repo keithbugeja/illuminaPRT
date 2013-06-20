@@ -99,6 +99,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		logger->Write("Environment :: Registering Integrators...", LL_Info);
 		m_engineKernel->GetIntegratorManager()->RegisterFactory("PathTracing", new PathIntegratorFactory());
+		m_engineKernel->GetIntegratorManager()->RegisterFactory("IC", new ICIntegratorFactory());
 		m_engineKernel->GetIntegratorManager()->RegisterFactory("IGI", new IGIIntegratorFactory());
 		m_engineKernel->GetIntegratorManager()->RegisterFactory("Whitted", new WhittedIntegratorFactory());
 		//engineKernel.GetIntegratorManager()->RegisterFactory("Photon", new PhotonIntegratorFactory());
@@ -250,12 +251,14 @@ public:
 			logger->Write("Environment :: Freeing and unregistering Integrators...", LL_Info);
 
 			delete m_engineKernel->GetIntegratorManager()->RequestFactory("PathTracing");
+			delete m_engineKernel->GetIntegratorManager()->RequestFactory("IC");
 			delete m_engineKernel->GetIntegratorManager()->RequestFactory("IGI");
 			delete m_engineKernel->GetIntegratorManager()->RequestFactory("Whitted");
 			//delete m_engineKernel->GetIntegratorManager()->RequestFactory("Photon");
 			//delete m_engineKernel->GetIntegratorManager()->RequestFactory("Test");
 
 			m_engineKernel->GetIntegratorManager()->UnregisterFactory("PathTracing");
+			m_engineKernel->GetIntegratorManager()->UnregisterFactory("IC");
 			m_engineKernel->GetIntegratorManager()->UnregisterFactory("IGI");
 			m_engineKernel->GetIntegratorManager()->UnregisterFactory("Whitted");
 			//m_engineKernel->GetIntegratorManager()->UnregisterFactory("Photon");

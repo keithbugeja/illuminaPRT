@@ -19,7 +19,7 @@ namespace Illumina
 	namespace Core
 	{
 
-		#define __DEBUG_LIST__
+		// #define __DEBUG_LIST__
 		#if defined(__DEBUG_LIST__)
 			template<class T> 
 			class List
@@ -196,7 +196,7 @@ namespace Illumina
 
 				void Clear(void) 
 				{
-					AtomicInt32::Exchange((long*)&m_size, 0);
+					AtomicInt32::Exchange((Int32*)&m_size, 0);
 				}
 
 				void PushBack(const T &p_obj) 

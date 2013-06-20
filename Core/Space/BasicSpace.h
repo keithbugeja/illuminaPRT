@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Space/Space.h"
+#include "Geometry/BoundingBox.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina 
 {
@@ -15,9 +16,19 @@ namespace Illumina
 		class BasicSpace 
 			: public ISpace
 		{
+
+		protected:
+			bool m_bRebuildRequired;
+			AxisAlignedBoundingBox m_aabb;
+
+		protected:
+			void ComputeBoundingBox(void);
+
 		public:
 			BasicSpace(const std::string &p_strName) : ISpace(p_strName) { }
 			BasicSpace(void) { }
+
+			IBoundingVolume *GetBoundingVolume(void);
 
 			bool Initialise(void);
 			void Shutdown(void);
