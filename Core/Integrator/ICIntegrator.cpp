@@ -104,6 +104,10 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 	Vector3 wOutR;
 	Ray r;
 
+	Spectrum e = 0;
+	float tdist = 0;
+	int tnum = 0;
+
 	for (int rayIndex = 0; rayIndex < m_nDivisions; ++rayIndex)
 	{
 		// Get samples for initial position and direction
@@ -111,13 +115,21 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 
 		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, Montecarlo::UniformSampleSphere(sample2D.U, sample2D.V), wOutR); 
 
-		//----------------------------------------------------------------------------------------------
-		// Adjust path for new bounce
-		// -- ray is moved by a small epsilon in sampled direction
-		// -- ray origin is set to point of intersection
-		//----------------------------------------------------------------------------------------------
 		r.Set(p_intersection.Surface.PointWS + wOutR * m_fReflectEpsilon, wOutR, m_fReflectEpsilon, Maths::Maximum);
-	
+
+		p_pScene->Intersects(r, isect);
+		
+		e += SampleAllLights(p_pScene, p_intersection, 
+				p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOutR, 
+				p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+
+		tdist += isect.Surface.Distance; tnum++;
 	}
+
+	p_record.Point = p_intersection.Surface.PointWS;
+	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W;
+	p_record.Irradiance = e / tnum;
+	p_record.Ri = tdist / tnum;
+	p_record.RiClamp = p_record.Ri;
 }
 //----------------------------------------------------------------------------------------------

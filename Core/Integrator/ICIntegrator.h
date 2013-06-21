@@ -142,6 +142,11 @@ namespace Illumina
 						if ((wi = W(p_point, p_normal, r)) > 0)
 							p_nearbyRecordList.push_back(std::pair<float, IrradianceCacheRecord*>(wi, &r));
 					}
+
+					if ((pNode = pNode->Children) == nullptr)
+						break;
+
+					while(!pNode->Bounds.Contains(p_point)) pNode++;
 				}
 
 				return true;
