@@ -22,13 +22,26 @@ namespace Illumina
 			Spectrum Irradiance;
 			
 			float RiClamp, Ri, Rmin, Rmax;
+
+			IrradianceCacheRecord(void) { }
+
+			IrradianceCacheRecord(const IrradianceCacheRecord& p_record)
+			{
+				memcpy(this, &p_record, sizeof(IrradianceCacheRecord));
+			}
+
+			IrradianceCacheRecord& operator=(const IrradianceCacheRecord& p_record)
+			{
+				memcpy(this, &p_record, sizeof(IrradianceCacheRecord));
+				return *this;
+			}
 		};
 
 		struct IrradianceCacheNode
 		{
 			AxisAlignedBoundingBox Bounds;
 			IrradianceCacheNode *Children;
-			std::vector<IrradianceCacheRecord> RecordList;
+			std::vector<IrradianceCacheRecord*> RecordList;
 
 			IrradianceCacheNode(void) 
 				: RecordList(0)
@@ -37,7 +50,7 @@ namespace Illumina
 
 			void Add(IrradianceCacheRecord *p_pRecord)
 			{
-				RecordList.push_back(*p_pRecord);
+				RecordList.push_back(p_pRecord);
 			}
 		};
 
@@ -139,8 +152,8 @@ namespace Illumina
 				{
 					for (auto r : pNode->RecordList)
 					{
-						if ((wi = W(p_point, p_normal, r)) > 0)
-							p_nearbyRecordList.push_back(std::pair<float, IrradianceCacheRecord*>(wi, &r));
+						if ((wi = W(p_point, p_normal, *r)) > 0)
+							p_nearbyRecordList.push_back(std::pair<float, IrradianceCacheRecord*>(wi, r));
 					}
 
 					if ((pNode = pNode->Children) == nullptr)
