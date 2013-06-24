@@ -22,11 +22,19 @@
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 ICIntegrator::ICIntegrator(const std::string &p_strName, int p_nRayDepth, int p_nDivisions, int p_nShadowSampleCount, float p_fReflectEpsilon)
-	: IIntegrator(p_strName) 
+	: IIntegrator(p_strName)
+	, m_nRayDepth(p_nRayDepth)
+	, m_nDivisions(p_nDivisions)
+	, m_nShadowSampleCount(p_nShadowSampleCount)
+	, m_fReflectEpsilon(p_fReflectEpsilon)
 { }
 //----------------------------------------------------------------------------------------------
 ICIntegrator::ICIntegrator(int p_nRayDepth, int p_nDivisions, int p_nShadowSampleCount, float p_fReflectEpsilon)
 	: IIntegrator()
+	, m_nRayDepth(p_nRayDepth)
+	, m_nDivisions(p_nDivisions)
+	, m_nShadowSampleCount(p_nShadowSampleCount)
+	, m_fReflectEpsilon(p_fReflectEpsilon)
 { }
 //----------------------------------------------------------------------------------------------
 bool ICIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
@@ -50,7 +58,77 @@ bool ICIntegrator::Prepare(Scene *p_pScene)
 //----------------------------------------------------------------------------------------------
 Spectrum ICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_intersection, RadianceContext *p_pRadianceContext)
 {
-	return GetIrradiance(p_intersection, p_pScene);
+	float samplesUsed;
+
+	Vector3 wIn;
+
+	// Avoid having to perform multiple checks for a NULL radiance context
+	RadianceContext radianceContext;
+
+	if (p_pRadianceContext == NULL)
+		p_pRadianceContext = &radianceContext;
+	
+	// Initialise context
+	p_pRadianceContext->Flags = 0;
+
+	p_pRadianceContext->Indirect = 
+		p_pRadianceContext->Direct = 
+		p_pRadianceContext->Albedo = 0.f;
+
+	// Visibility query
+	VisibilityQuery pointLightQuery(p_pScene);
+
+	if (p_intersection.IsValid())
+	{
+		if (p_intersection.HasMaterial()) 
+		{
+			// Get material for intersection primitive
+			IMaterial *pMaterial = p_intersection.GetMaterial();
+
+			// Set wOut to eye ray direction vector
+			Vector3 wOut = -Vector3::Normalize(p_intersection.Surface.RayDirectionWS);
+
+			// Start populating radiance context
+			p_pRadianceContext->SetSpatialContext(&p_intersection);
+			
+			if (!p_intersection.IsEmissive())
+			{
+				// Sample direct lighting
+				p_pRadianceContext->Direct = SampleAllLights(p_pScene, p_intersection, 
+					p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, 
+					wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+
+				// Set albedo
+				p_pRadianceContext->Albedo = pMaterial->Rho(wOut, p_intersection.Surface);
+				p_pRadianceContext->Indirect = GetIrradiance(p_intersection, p_pScene);
+			}
+			else
+			{
+				p_pRadianceContext->Direct = p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, 
+					p_intersection.Surface.GeometryBasisWS.W, wOut);
+			}
+		}
+	}
+	else
+	{
+		/*
+		Ray ray(p_intersection.Surface.RayOriginWS, -p_intersection.Surface.RayDirectionWS);
+
+		for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
+			p_pRadianceContext->Direct += p_pScene->LightList[lightIndex]->Radiance(ray);
+		*/
+
+		p_pRadianceContext->Direct.Set(20, 50, 100);
+	}
+
+	// Populate radiance context
+	p_pRadianceContext->Flags |= RadianceContext::DF_Albedo |  
+		RadianceContext::DF_Direct | RadianceContext::DF_Indirect;
+	
+	return p_pRadianceContext->Direct + p_pRadianceContext->Indirect;
+
+	// Spectrum E = GetIrradiance(p_intersection, p_pScene);
+	// return E;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum ICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext)
