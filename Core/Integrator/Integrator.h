@@ -58,11 +58,11 @@ namespace Illumina
 				Vector3 &p_wIn, float p_u, float p_v);
 
 			static Spectrum SampleAllLights(Scene *p_pScene, const Intersection &p_intersection,
-				const Vector3 &p_point, const Vector3 &p_pNormal, const Vector3 &p_wOut,
+				const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wOut,
 				ISampler *p_pSampler, int p_nShadowSamples = 1);
 
 			static Spectrum SampleAllLights(Scene *p_pScene, const Intersection &p_intersection,
-				const Vector3 &p_point, const Vector3 &p_pNormal, const Vector3 &p_wOut,
+				const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wOut,
 				ISampler *p_pSampler, ILight *p_pExclude = NULL, int p_nShadowSamples = 1);
 
 			static Spectrum SampleF(Scene *p_pScene, Intersection &p_intersection, 

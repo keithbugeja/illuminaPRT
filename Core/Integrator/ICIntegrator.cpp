@@ -17,6 +17,7 @@
 #include "Scene/Primitive.h"
 #include "Scene/Scene.h"
 
+#include "Sampler/QuasiRandom.h"
 #include "Maths/Montecarlo.h"
 
 using namespace Illumina::Core;
@@ -41,8 +42,19 @@ bool ICIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 {
 	BOOST_ASSERT(p_pScene != nullptr && p_pScene->GetSpace() != nullptr);
 
-	m_irradianceCache.RootNode.Bounds.ComputeFromVolume(*(p_pScene->GetSpace()->GetBoundingVolume()));
+	// m_irradianceCache.RootNode.Bounds.ComputeFromVolume(*(p_pScene->GetSpace()->GetBoundingVolume()));
 	
+	ISpace *pSpace = p_pScene->GetSpace(); pSpace->Build();
+
+	Vector3 pointList[2];
+	pointList[0] = pSpace->GetBoundingVolume()->GetMinExtent();
+	pointList[1] = pSpace->GetBoundingVolume()->GetMaxExtent();
+
+	pointList[0] *= (1.0f + Maths::Epsilon);
+	pointList[1] *= (1.0f + Maths::Epsilon);
+
+	m_irradianceCache.RootNode.Bounds.ComputeFromPoints((Vector3*)&pointList, 2);
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------
@@ -100,7 +112,9 @@ Spectrum ICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, 
 
 				// Set albedo
 				p_pRadianceContext->Albedo = pMaterial->Rho(wOut, p_intersection.Surface);
-				p_pRadianceContext->Indirect = GetIrradiance(p_intersection, p_pScene);
+				
+				// Set indirect 
+				p_pRadianceContext->Indirect = GetIrradiance(p_intersection, p_pScene) * p_pRadianceContext->Albedo * Maths::InvPi;
 			}
 			else
 			{
@@ -125,7 +139,10 @@ Spectrum ICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, 
 	p_pRadianceContext->Flags |= RadianceContext::DF_Albedo |  
 		RadianceContext::DF_Direct | RadianceContext::DF_Indirect;
 	
+	// return p_pRadianceContext->Indirect * p_pRadianceContext->Albedo;
 	return p_pRadianceContext->Direct + p_pRadianceContext->Indirect;
+
+	// return p_pRadianceContext->Indirect;
 
 	// Spectrum E = GetIrradiance(p_intersection, p_pScene);
 	// return E;
@@ -189,7 +206,8 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 	for (int rayIndex = 0; rayIndex < m_nDivisions; ++rayIndex)
 	{
 		// Get samples for initial position and direction
-		p_pScene->GetSampler()->Get2DSamples(&sample2D, 2);
+		sample2D.X = QuasiRandomSequence::VanDerCorput(rayIndex);
+		sample2D.Y = QuasiRandomSequence::Sobol2(rayIndex);
 
 		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, Montecarlo::UniformSampleSphere(sample2D.U, sample2D.V), wOutR); 
 
@@ -197,17 +215,19 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 
 		p_pScene->Intersects(r, isect);
 		
-		e += SampleAllLights(p_pScene, p_intersection, 
-				p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, wOutR, 
-				p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+		e += SampleAllLights(p_pScene, isect, 
+				isect.Surface.PointWS, isect.Surface.ShadingBasisWS.W, wOutR, 
+				p_pScene->GetSampler(), isect.GetLight(), m_nShadowSampleCount);
 
-		tdist += isect.Surface.Distance; tnum++;
+		// tdist += isect.Surface.Distance; tnum++;
+		tdist += 1.f / isect.Surface.Distance; tnum++;
 	}
 
 	p_record.Point = p_intersection.Surface.PointWS;
 	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W;
 	p_record.Irradiance = e / tnum;
-	p_record.Ri = tdist / tnum;
-	p_record.RiClamp = p_record.Ri;
+	p_record.RiClamp = p_record.Ri = tnum / tdist; //tdist / tnum;
+	p_record.Rmin = 0;
+	p_record.Rmax = Maths::Maximum;
 }
 //----------------------------------------------------------------------------------------------
