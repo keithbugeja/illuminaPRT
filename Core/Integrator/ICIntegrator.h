@@ -138,7 +138,16 @@ namespace Illumina
 					}
 				}
 				else
+				{
+					//if (p_pRecord > (IrradianceCacheRecord*)0x10000000000)
+					//{
+					//	std::cout << "A:[" << p_pRecord << "]" << std::endl;
+					//}
+
+					// Race!
 					p_pNode->Add(p_pRecord);
+					// Race!
+				}
 			}
 
 			bool FindRecords(const Vector3 &p_point, const Vector3 &p_normal, 
@@ -152,8 +161,10 @@ namespace Illumina
 				{
 					for (auto r : pNode->RecordList)
 					{
-						if ((wi = W(p_point, p_normal, *r)) > 0)
+						// Race!
+						if ((wi = W(p_point, p_normal, *r)) > 0.f)
 							p_nearbyRecordList.push_back(std::pair<float, IrradianceCacheRecord*>(wi, r));
+						// Race!
 					}
 
 					if ((pNode = pNode->Children) == nullptr)
@@ -167,10 +178,29 @@ namespace Illumina
 
 			float W(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
 			{
+				/* 
+				Vector3 P = p_record.Point - p_point;
+				float d = Vector3::Dot(P, (p_normal + p_record.Normal) * 0.5f);
+
+				if (d < 0.05f) return -1;
+				*/
+
+				/* */
+				// OK 
 				float dist = Vector3::Distance(p_point, p_record.Point) / p_record.Ri;
 				float norm = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal));
 
-				return 1.f / (dist + norm);
+				return (1.f / (dist + norm)) - 4.f;
+				/* */
+				 
+				/*
+				// Tabellion
+				float epi = Vector3::Distance(p_point, p_record.Point) / (p_record.Ri * 0.5f);
+				float eni = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal)) * 8.0f;
+				float K = 0.25;
+
+				return 1 - K * Maths::Max(epi, eni);
+				*/
 			}
 		};
 
