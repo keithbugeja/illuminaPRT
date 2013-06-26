@@ -14,28 +14,7 @@ namespace Illumina
 {
 	namespace Core
 	{
-		struct IrradianceCacheRecord
-		{
-			Vector3 Point,
-				Normal;
-
-			Spectrum Irradiance;
-			
-			float RiClamp, Ri, Rmin, Rmax;
-
-			IrradianceCacheRecord(void) { }
-
-			IrradianceCacheRecord(const IrradianceCacheRecord& p_record)
-			{
-				memcpy(this, &p_record, sizeof(IrradianceCacheRecord));
-			}
-
-			IrradianceCacheRecord& operator=(const IrradianceCacheRecord& p_record)
-			{
-				memcpy(this, &p_record, sizeof(IrradianceCacheRecord));
-				return *this;
-			}
-		};
+		struct IrradianceCacheRecord;
 
 		struct IrradianceCacheNode
 		{
@@ -44,8 +23,7 @@ namespace Illumina
 			std::vector<IrradianceCacheRecord*> RecordList;
 
 			IrradianceCacheNode(void) 
-				: RecordList(0)
-				, Children (nullptr)
+				: Children (nullptr)
 			{ }
 
 			void Add(IrradianceCacheRecord *p_pRecord)
@@ -54,154 +32,48 @@ namespace Illumina
 			}
 		};
 
-		struct IrradianceCache
+		class IrradianceCache
 		{
+		public:
+			int m_nInsertCount,
+				m_nRecordCount,
+				m_nNodeCount;
+
+		public:
 			IrradianceCacheNode RootNode;
 
-			inline void SetBounds(const AxisAlignedBoundingBox &p_parent, int p_nChildIndex, AxisAlignedBoundingBox &p_child)
-			{
-				Vector3 minExt (p_parent.GetMinExtent()),
-						maxExt (p_parent.GetMaxExtent()),
-						ctr(p_parent.GetCentre());
+		public:
+			IrradianceCache(void) 
+				: m_nInsertCount(0)
+				, m_nRecordCount(0)
+				, m_nNodeCount(0)
+			{ 
+				AxisAlignedBoundingBox aabb, aabb2;
+				aabb.SetMinExtent(Vector3(-1));
+				aabb.SetMaxExtent(Vector3(1));
 
-				switch (p_nChildIndex)
+				for (int i=0; i< 8; i++)
 				{
-					case 0:
-						p_child.SetExtents(minExt, ctr);
-						break;
-
-					case 1:
-						p_child.SetExtents(Vector3(ctr.X, minExt.Y, minExt.Z), Vector3(maxExt.X, ctr.Y, ctr.Z));
-						break;
-
-					case 2:
-						p_child.SetExtents(Vector3(minExt.X, minExt.Y, ctr.Z), Vector3(ctr.X, ctr.Y, maxExt.Z));
-						break;
-
-					case 3:
-						p_child.SetExtents(Vector3(ctr.X, minExt.Y, ctr.Z), Vector3(maxExt.X, ctr.Y, maxExt.Z));
-						break;
-
-					case 4:
-						p_child.SetExtents(Vector3(minExt.X, ctr.Y, minExt.Z), Vector3(ctr.X, maxExt.Y, ctr.Z));
-						break;
-
-					case 5:
-						p_child.SetExtents(Vector3(ctr.X, ctr.Y, minExt.Z), Vector3(maxExt.X, maxExt.Y, ctr.Z));
-						break;
-
-					case 6:
-						p_child.SetExtents(Vector3(minExt.X, ctr.Y, ctr.Z), Vector3(ctr.X, maxExt.Y, maxExt.Z));
-						break;
-
-					case 7:
-						p_child.SetExtents(ctr, maxExt);
-						break;
+					SetBounds(aabb, i, aabb2);
+					std::cout << "BB : [" << i << "] :: " << aabb2.ToString() << std::endl;
 				}
 			}
+
+			int CountNodes(IrradianceCacheNode* p_pNode) const;
+			
+			void SetBounds(const AxisAlignedBoundingBox &p_parent, int p_nChildIndex, AxisAlignedBoundingBox &p_child);
 
 			bool SphereBoxOverlap(const AxisAlignedBoundingBox &p_aabb,
-				const Vector3& p_centre, const float p_fRadius) const
-			{
-				float dmin = 0;
-				
-				for(int i = 0; i < 3; i++)
-				{
-					if (p_centre.Element[i] < p_aabb.GetMinExtent(i)) dmin += Maths::Sqr(p_centre.Element[i] - p_aabb.GetMinExtent(i));
-					else if (p_centre.Element[i] > p_aabb.GetMaxExtent(i)) dmin += Maths::Sqr(p_centre.Element[i] - p_aabb.GetMaxExtent(i));
-				}
+				const Vector3& p_centre, const float p_fRadius) const;
 			
-				return dmin <= p_fRadius*p_fRadius;
-			}
-			
-			void Insert(IrradianceCacheNode *p_pNode, IrradianceCacheRecord *p_pRecord)
-			{
-				if (p_pNode->Bounds.GetRadius() > p_pRecord->RiClamp)
-				{
-					if (p_pNode->Children == nullptr)
-					{
-						Vector3 minExt (p_pNode->Bounds.GetMinExtent()),
-							maxExt (p_pNode->Bounds.GetMaxExtent()),
-							ctr(p_pNode->Bounds.GetCentre());
-
-						p_pNode->Children = new IrradianceCacheNode[8];
-						
-						for (int i = 0; i < 8; i++)
-							SetBounds(p_pNode->Bounds, i, p_pNode->Children[i].Bounds);
-							
-					}
-
-					for (int i = 0; i < 8; i++)
-					{
-						if (SphereBoxOverlap(p_pNode->Children[i].Bounds, p_pRecord->Point, p_pRecord->RiClamp))
-							Insert(p_pNode->Children + i, p_pRecord);
-					}
-				}
-				else
-				{
-					//if (p_pRecord > (IrradianceCacheRecord*)0x10000000000)
-					//{
-					//	std::cout << "A:[" << p_pRecord << "]" << std::endl;
-					//}
-
-					// Race!
-					p_pNode->Add(p_pRecord);
-					// Race!
-				}
-			}
+			void Insert(IrradianceCacheNode *p_pNode, IrradianceCacheRecord *p_pRecord, int p_nDepth);
 
 			bool FindRecords(const Vector3 &p_point, const Vector3 &p_normal, 
-				std::vector<std::pair<float, IrradianceCacheRecord*>>& p_nearbyRecordList)
-			{
-				IrradianceCacheNode *pNode = &RootNode;
+				std::vector<std::pair<float, IrradianceCacheRecord*>>& p_nearbyRecordList);
 
-				float wi;
+			float W(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record);
 
-				while (pNode != nullptr)
-				{
-					for (auto r : pNode->RecordList)
-					{
-						// Race!
-						if ((wi = W(p_point, p_normal, *r)) > 0.f)
-							p_nearbyRecordList.push_back(std::pair<float, IrradianceCacheRecord*>(wi, r));
-						// Race!
-					}
-
-					if ((pNode = pNode->Children) == nullptr)
-						break;
-
-					while(!pNode->Bounds.Contains(p_point)) pNode++;
-				}
-
-				return true;
-			}
-
-			float W(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
-			{
-				/* 
-				Vector3 P = p_record.Point - p_point;
-				float d = Vector3::Dot(P, (p_normal + p_record.Normal) * 0.5f);
-
-				if (d < 0.05f) return -1;
-				*/
-
-				/* */
-				// OK 
-				float dist = Vector3::Distance(p_point, p_record.Point) / p_record.Ri;
-				float norm = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal));
-
-				return (1.f / (dist + norm)) - 4.f;
-				/* */
-				 
-				/*
-				// Tabellion
-				float epi = Vector3::Distance(p_point, p_record.Point) / (p_record.Ri * 0.5f);
-				float eni = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal)) * 8.0f;
-				float K = 0.25;
-
-				return 1 - K * Maths::Max(epi, eni);
-				*/
-			}
+			std::string ToString(void) const;
 		};
 
 		class ICIntegrator : 
@@ -209,10 +81,14 @@ namespace Illumina
 		{
 		protected:
 			int m_nRayDepth,
+				m_nTreeDepth,
 				m_nDivisions,
 				m_nShadowSampleCount;
 
 			float m_fReflectEpsilon;
+
+			float m_fRMin, 
+				m_fRMax;
 
 			IrradianceCache m_irradianceCache;
 
@@ -231,6 +107,8 @@ namespace Illumina
 
 			Spectrum Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext = NULL);
 			Spectrum Radiance(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_intersection, RadianceContext *p_pRadianceContext = NULL);
+		
+			std::string ToString(void) const;
 		};
 	}
 }
