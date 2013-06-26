@@ -570,6 +570,9 @@ public:
 					<< "--- Frame Render Time : [" << fFrameTime << "s]" << std::endl
 					<< "--- Frames per second : [" << fTotalFramesPerSecond / nFramesProcessed << "]" << std::endl;
 
+				message << std::endl << "--- Integrator " << std::endl
+					<< "--- " << m_pIntegrator->ToString() << std::endl;
+
 				m_pLogger->Write(message.str());
 			}
 		}

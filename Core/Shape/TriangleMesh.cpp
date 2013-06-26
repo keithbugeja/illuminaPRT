@@ -18,7 +18,7 @@ ITriangleMesh::ITriangleMesh(const std::string &p_strName)
 { }
 //----------------------------------------------------------------------------------------------
 bool ITriangleMesh::IsBounded(void) const {
-	return false;
+	return true;
 }
 //----------------------------------------------------------------------------------------------
 void ITriangleMesh::ComputeBoundingVolume(void) 
