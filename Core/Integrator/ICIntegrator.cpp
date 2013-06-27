@@ -117,18 +117,6 @@ bool IrradianceCache::SphereBoxOverlap(const AxisAlignedBoundingBox &p_aabb,
 			p_centre.Y - p_fRadius < p_aabb.GetMaxExtent(1) &&
 			p_centre.Z + p_fRadius > p_aabb.GetMinExtent(2) &&
 			p_centre.Z - p_fRadius < p_aabb.GetMaxExtent(2));
-
-	/*
-	float dmin = 0;
-				
-	for(int i = 0; i < 3; i++)
-	{
-		if (p_centre.Element[i] < p_aabb.GetMinExtent(i)) dmin += Maths::Sqr(p_centre.Element[i] - p_aabb.GetMinExtent(i));
-		else if (p_centre.Element[i] > p_aabb.GetMaxExtent(i)) dmin += Maths::Sqr(p_centre.Element[i] - p_aabb.GetMaxExtent(i));
-	}
-			
-	return dmin <= p_fRadius*p_fRadius;
-	*/
 }
 //----------------------------------------------------------------------------------------------
 void IrradianceCache::Insert(IrradianceCacheNode *p_pNode, IrradianceCacheRecord *p_pRecord, int p_nDepth)
@@ -195,12 +183,16 @@ bool IrradianceCache::FindRecords(const Vector3 &p_point, const Vector3 &p_norma
 //----------------------------------------------------------------------------------------------
 float IrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
 {
-	/* */
-	float dist = Vector3::Distance(p_record.Point, p_point) / p_record.RiClamp;
-	float norm = 1.f - Vector3::Dot(p_record.Normal, p_normal);
-	float K = 4;
+	float dist = Vector3::Distance(p_point, p_record.Point) / p_record.Ri;
+	float norm = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal));
+	float alpha = 1.0f; //m_fErrorThreshold;
 
-	return 1 - K * Maths::Max(norm, dist);
+	return (1.f / (dist + norm)) - alpha;
+
+	// float dist = Vector3::Distance(p_record.Point, p_point) / p_record.RiClamp;
+	// return 1 - dist;
+	// float norm = 1.f - Vector3::Dot(p_record.Normal, p_normal);
+	// return 1 - m_fErrorThreshold * Maths::Max(norm, dist);
 	/* */
 
 	/* 
@@ -215,16 +207,16 @@ float IrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, Irradi
 	// float dist = Vector3::Distance(p_point, p_record.Point) / p_record.Ri;
 	float dist = Vector3::Distance(p_point, p_record.Point) / p_record.RiClamp;
 	float norm = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal));
-	const float alpha = 12.0f;
+	float alpha = m_fErrorThreshold;
 
 	return (1.f / (dist + norm)) - alpha;
 	/* */
 
-	/*
+	/* 
 	// Tabellion
-	float epi = Vector3::Distance(p_point, p_record.Point) / (p_record.Ri * 0.5f);
+	float epi = Vector3::Distance(p_point, p_record.Point) / (p_record.RiClamp * 0.5f);
 	float eni = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal)) * 8.0f;
-	float K = 4;
+	float K = m_fErrorThreshold;
 
 	return 1 - K * Maths::Max(epi, eni);
 	/* */
@@ -249,19 +241,38 @@ std::string IrradianceCache::ToString(void) const
 
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-ICIntegrator::ICIntegrator(const std::string &p_strName, int p_nRayDepth, int p_nDivisions, int p_nShadowSampleCount, float p_fReflectEpsilon)
+ICIntegrator::ICIntegrator(const std::string &p_strName, 
+						   int p_nCacheDepth, float p_fErrorThreshold, 
+						   float p_fAmbientMultiplier, float p_fAmbientResolution, 
+						   int p_nAzimuthStrata, int p_nAltitudeStrata, 
+						   int p_nRayDepth, int p_nShadowRays, 
+						   float p_fReflectEpsilon)
 	: IIntegrator(p_strName)
+	, m_nCacheDepth(p_nCacheDepth)
+	, m_fErrorThreshold(p_fErrorThreshold)
+	, m_fAmbientResolution(p_fAmbientResolution)
+	, m_fAmbientMultiplier(p_fAmbientMultiplier)
+	, m_nAzimuthStrata(p_nAzimuthStrata)
+	, m_nAltitudeStrata(p_nAltitudeStrata)
 	, m_nRayDepth(p_nRayDepth)
-	, m_nDivisions(p_nDivisions)
-	, m_nShadowSampleCount(p_nShadowSampleCount)
+	, m_nShadowRays(p_nShadowRays)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
 { }
 //----------------------------------------------------------------------------------------------
-ICIntegrator::ICIntegrator(int p_nRayDepth, int p_nDivisions, int p_nShadowSampleCount, float p_fReflectEpsilon)
+ICIntegrator::ICIntegrator(int p_nCacheDepth, float p_fErrorThreshold, 
+						   float p_fAmbientResolution, float p_fAmbientMultiplier,
+						   int p_nAzimuthStrata, int p_nAltitudeStrata, 
+						   int p_nRayDepth, int p_nShadowRays, 
+						   float p_fReflectEpsilon)
 	: IIntegrator()
+	, m_nCacheDepth(p_nCacheDepth)
+	, m_fErrorThreshold(p_fErrorThreshold)
+	, m_fAmbientResolution(p_fAmbientResolution)
+	, m_fAmbientMultiplier(p_fAmbientMultiplier)
+	, m_nAzimuthStrata(p_nAzimuthStrata)
+	, m_nAltitudeStrata(p_nAltitudeStrata)
 	, m_nRayDepth(p_nRayDepth)
-	, m_nDivisions(p_nDivisions)
-	, m_nShadowSampleCount(p_nShadowSampleCount)
+	, m_nShadowRays(p_nShadowRays)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
 { }
 //----------------------------------------------------------------------------------------------
@@ -286,10 +297,10 @@ bool ICIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 
 	m_irradianceCache.RootNode.Bounds.ComputeFromPoints((Vector3*)&pointList, 2);
 
-	m_fRMin = longestEdge.X * 0.001f;
-	m_fRMax = m_fRMin * 128.f;
+	m_fRMin = longestEdge.X * m_fAmbientResolution;
+	m_fRMax = longestEdge.X * m_fAmbientMultiplier;
 
-	m_nTreeDepth = 16;
+	m_irradianceCache.SetErrorThreshold(m_fErrorThreshold);
 
 	return true;
 }
@@ -339,7 +350,7 @@ Spectrum ICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, 
 				// Sample direct lighting
 				p_pRadianceContext->Direct = SampleAllLights(p_pScene, p_intersection, 
 					p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, 
-					wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowSampleCount);
+					wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowRays);
 
 				// Set albedo
 				p_pRadianceContext->Albedo = pMaterial->Rho(wOut, p_intersection.Surface);
@@ -370,7 +381,7 @@ Spectrum ICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, 
 	p_pRadianceContext->Flags |= RadianceContext::DF_Albedo |  
 		RadianceContext::DF_Direct | RadianceContext::DF_Indirect;
 	
-	return p_pRadianceContext->Direct + p_pRadianceContext->Indirect;
+	return /* p_pRadianceContext->Direct + */ p_pRadianceContext->Indirect;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum ICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext)
@@ -410,56 +421,69 @@ Spectrum ICIntegrator::GetIrradiance(const Intersection &p_intersection, Scene *
 	{
 		IrradianceCacheRecord *r = new IrradianceCacheRecord();
 		ComputeRecord(p_intersection, p_pScene, *r);
-		m_irradianceCache.Insert(&(m_irradianceCache.RootNode), r, m_nTreeDepth);
+		m_irradianceCache.Insert(&(m_irradianceCache.RootNode), r, m_nCacheDepth);
 		return r->Irradiance;
 	}
 }
 //----------------------------------------------------------------------------------------------
 void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pScene, IrradianceCacheRecord &p_record)
 {
-	Vector2 sample2D;
-
 	Intersection isect;
+	Vector2 sample2D;
 	Vector3 wOutR;
-	Ray r;
+	Ray ray;
 
-	Spectrum e = 0;
-	float tdist = 0,
-		mdist = Maths::Maximum;
-	int tnum = 0;
+	Spectrum E = 0;
+	
+	float totLength = 0,
+		minLength = Maths::Maximum;
 
-	for (int rayIndex = 0; rayIndex < m_nDivisions; ++rayIndex)
+	for (int altitudeIndex = 0; altitudeIndex < m_nAltitudeStrata; altitudeIndex++)
 	{
-		sample2D.X = p_pScene->GetSampler()->Get1DSample();
-		sample2D.Y = p_pScene->GetSampler()->Get1DSample();
+		for (int azimuthIndex = 0; azimuthIndex < m_nAzimuthStrata; azimuthIndex++)
+		{
+			// Get samples for initial position and direction
+			/* 
+			sample2D.X = QuasiRandomSequence::VanDerCorput(rayIndex);
+			sample2D.Y = QuasiRandomSequence::Sobol2(rayIndex);
+			/* */
 
-		// Get samples for initial position and direction
-		/* 
-		sample2D.X = QuasiRandomSequence::VanDerCorput(rayIndex) + b.Next();
-		sample2D.Y = QuasiRandomSequence::Sobol2(rayIndex) + b.Next();
-		*/
+			/* */
+			sample2D.X = p_pScene->GetSampler()->Get1DSample();
+			sample2D.Y = p_pScene->GetSampler()->Get1DSample();
+			/* */
 
-		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, Montecarlo::UniformSampleSphere(sample2D.U, sample2D.V), wOutR); 
+			Vector3 vH = 
+				// Montecarlo::UniformSampleSphere(sample2D.U, sample2D.V);
+				Montecarlo::CosineSampleHemisphere(sample2D.X, sample2D.Y, altitudeIndex, azimuthIndex, m_nAltitudeStrata, m_nAzimuthStrata); 
 
-		r.Set(p_intersection.Surface.PointWS + wOutR * m_fReflectEpsilon, wOutR, m_fReflectEpsilon, Maths::Maximum);
+			BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, vH, wOutR); 
 
-		p_pScene->Intersects(r, isect);
+			ray.Set(p_intersection.Surface.PointWS + wOutR * m_fReflectEpsilon, wOutR, m_fReflectEpsilon, Maths::Maximum);
+
+			p_pScene->Intersects(ray, isect);
 		
-		e += SampleAllLights(p_pScene, isect, 
-				isect.Surface.PointWS, isect.Surface.ShadingBasisWS.W, wOutR, 
-				p_pScene->GetSampler(), isect.GetLight(), m_nShadowSampleCount);
+			E += SampleAllLights(p_pScene, isect, 
+					isect.Surface.PointWS, isect.Surface.ShadingBasisWS.W, wOutR, 
+					p_pScene->GetSampler(), isect.GetLight(), m_nShadowRays);
 
-		// tdist += isect.Surface.Distance; tnum++;
-		tdist += 1.f / isect.Surface.Distance; tnum++;
-		mdist = Maths::Min(isect.Surface.Distance, mdist);
+			// totLength += 1.f / isect.Surface.Distance;
+			totLength += isect.Surface.Distance;
+			minLength = Maths::Min(isect.Surface.Distance, minLength);
+		}
 	}
+
+	int mn = m_nAzimuthStrata * m_nAltitudeStrata;
 
 	p_record.Point = p_intersection.Surface.PointWS;
 	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W;
-	p_record.Irradiance = e / tnum;
-	// p_record.Ri = mdist; 
-	p_record.Ri = tnum / tdist; //tdist / tnum;
-	p_record.RiClamp = Maths::Max(m_fRMin, Maths::Min(m_fRMax, p_record.Ri));
+	p_record.Irradiance = E / mn;
+	p_record.Ri = totLength / mn; // mn / totLength; 
+	p_record.RiClamp = Maths::Max(p_record.Ri, m_fRMin);
+	p_record.RiClamp = Maths::Min(p_record.RiClamp, m_fRMax);
+
+	//p_record.Ri = minLength; 
+	//p_record.RiClamp = p_record.Ri; //Maths::Max(m_fRMin, Maths::Min(m_fRMax, p_record.Ri));
 }
 //----------------------------------------------------------------------------------------------
 std::string ICIntegrator::ToString(void) const

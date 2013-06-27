@@ -78,40 +78,61 @@ namespace Illumina
 			/*
 			 * Arguments
 			 * -- Id {String}
+			 * -- CacheDepth {Integer}
+			 * -- ErrorThreshold {Float}
+			 * -- AzimuthStrata {Integer}
+			 * -- AltitudeStrata {Integer}
 			 * -- RayDepth {Integer}
-			 * -- Divisions {Integer}
 			 * -- ShadowRays {Integer}
 			 * -- Epsilon {Float}
 			 */
 			Illumina::Core::IIntegrator *CreateInstance(ArgumentMap &p_argumentMap)
 			{
 				int raydepth = 6,
-					divisions = 32,
+					cacheDepth = 16,
+					azimuthStrata = 12,
+					altitudeStrata = 4,
 					shadowrays = 1;
 
-				float reflectEpsilon = 1e-4f;
+				float errorThreshold = 1.f,
+					ambientResolution = 1e-3f,
+					ambientMultiplier = 1e+3f,
+					reflectEpsilon = 1e-4f;
 
 				std::string strId;
 
+				p_argumentMap.GetArgument("CacheDepth", cacheDepth);
+				p_argumentMap.GetArgument("ErrorThreshold", altitudeStrata);
+				p_argumentMap.GetArgument("AzimuthStrata", azimuthStrata);
+				p_argumentMap.GetArgument("AltitudeStata", altitudeStrata);
+				p_argumentMap.GetArgument("AmbientResolution", ambientResolution);
+				p_argumentMap.GetArgument("AmbientMultiplier", ambientMultiplier);
 				p_argumentMap.GetArgument("RayDepth", raydepth);
-				p_argumentMap.GetArgument("Divisions", divisions);
 				p_argumentMap.GetArgument("ShadowRays", shadowrays);
 				p_argumentMap.GetArgument("Epsilon", reflectEpsilon);
 
 				if (p_argumentMap.GetArgument("Id", strId))
-					return CreateInstance(strId, raydepth, divisions, shadowrays, reflectEpsilon);
+					return CreateInstance(strId, cacheDepth, errorThreshold, ambientResolution, ambientMultiplier, 
+						azimuthStrata, altitudeStrata, raydepth, shadowrays, reflectEpsilon);
 
-				return CreateInstance(raydepth, divisions, shadowrays, reflectEpsilon);
+				return CreateInstance(cacheDepth, errorThreshold, ambientResolution, ambientMultiplier, 
+					azimuthStrata, altitudeStrata, raydepth, shadowrays, reflectEpsilon);
 			}
 
-			Illumina::Core::IIntegrator *CreateInstance(const std::string &p_strId, int p_nRayDepth, int p_nDivisions, int p_nShadowRays, float p_fReflectEpsilon)
+			Illumina::Core::IIntegrator *CreateInstance(const std::string &p_strId,  int p_nCacheDepth, float p_fErrorThreshold, 
+				float p_fAmbientResolution, float p_fAmbientMultiplier, int p_nAzimuthStrata, int p_nAltitudeStrata, 
+				int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
 			{
-				return new ICIntegrator(p_strId, p_nRayDepth, p_nDivisions, p_nShadowRays, p_fReflectEpsilon);
+				return new ICIntegrator(p_strId, p_nCacheDepth, p_fErrorThreshold, p_fAmbientResolution, p_fAmbientMultiplier,
+					p_nAzimuthStrata, p_nAltitudeStrata, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
 			}
 
-			Illumina::Core::IIntegrator *CreateInstance(int p_nRayDepth, int p_nDivisions, int p_nShadowRays, float p_fReflectEpsilon)
+			Illumina::Core::IIntegrator *CreateInstance(int p_nCacheDepth, float p_fErrorThreshold, float p_fAmbientResolution, 
+				float p_fAmbientMultiplier, int p_nAzimuthStrata, int p_nAltitudeStrata, int p_nRayDepth, 
+				int p_nShadowRays, float p_fReflectEpsilon)
 			{
-				return new ICIntegrator(p_nRayDepth, p_nDivisions, p_nShadowRays, p_fReflectEpsilon);
+				return new ICIntegrator(p_nCacheDepth, p_fErrorThreshold, p_fAmbientResolution,  p_fAmbientMultiplier,
+					p_nAzimuthStrata, p_nAltitudeStrata, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
 			}
 		};
 
