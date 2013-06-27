@@ -17,6 +17,17 @@ namespace Illumina
 		class Montecarlo
 		{
 		public:
+			static Vector3 CosineSampleHemisphere(float p_u, float p_v, 
+				float p_j, float p_k, float p_m, float p_n)
+			{
+				float a = (p_u + p_j) / p_m,
+					b = (p_v + p_k) / p_n,
+					c = Maths::PiTwo * b,
+					d = Maths::Sqrt(a);
+
+				return Vector3(d * Maths::Cos(c), d * Maths::Sin(c), Maths::Sqrt(1 - a));
+			}
+
 			static Vector3 UniformSampleSphere(float p_u, float p_v)
 			{
 				float z = 1.0f - 2.0 * p_u;

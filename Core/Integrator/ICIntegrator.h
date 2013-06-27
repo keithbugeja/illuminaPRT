@@ -34,6 +34,9 @@ namespace Illumina
 
 		class IrradianceCache
 		{
+		protected:
+			float m_fErrorThreshold;
+
 		public:
 			int m_nInsertCount,
 				m_nRecordCount,
@@ -47,20 +50,13 @@ namespace Illumina
 				: m_nInsertCount(0)
 				, m_nRecordCount(0)
 				, m_nNodeCount(0)
-			{ 
-				AxisAlignedBoundingBox aabb, aabb2;
-				aabb.SetMinExtent(Vector3(-1));
-				aabb.SetMaxExtent(Vector3(1));
+			{ }
 
-				for (int i=0; i< 8; i++)
-				{
-					SetBounds(aabb, i, aabb2);
-					std::cout << "BB : [" << i << "] :: " << aabb2.ToString() << std::endl;
-				}
-			}
+			void SetErrorThreshold(float p_fErrorThreshold)
+			{ m_fErrorThreshold = p_fErrorThreshold; }
 
 			int CountNodes(IrradianceCacheNode* p_pNode) const;
-			
+
 			void SetBounds(const AxisAlignedBoundingBox &p_parent, int p_nChildIndex, AxisAlignedBoundingBox &p_child);
 
 			bool SphereBoxOverlap(const AxisAlignedBoundingBox &p_aabb,
@@ -81,11 +77,15 @@ namespace Illumina
 		{
 		protected:
 			int m_nRayDepth,
-				m_nTreeDepth,
-				m_nDivisions,
-				m_nShadowSampleCount;
+				m_nShadowRays,
+				m_nCacheDepth,
+				m_nAzimuthStrata,
+				m_nAltitudeStrata;
 
-			float m_fReflectEpsilon;
+			float m_fErrorThreshold,
+				m_fAmbientResolution,
+				m_fAmbientMultiplier,
+				m_fReflectEpsilon;
 
 			float m_fRMin, 
 				m_fRMax;
@@ -97,8 +97,11 @@ namespace Illumina
 			void ComputeRecord(const Intersection &p_intersection, Scene *p_pScene, IrradianceCacheRecord &p_record);
 
 		public:
-			ICIntegrator(const std::string &p_strName, int p_nRayDepth, int p_nDivisions, int p_nShadowSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
-			ICIntegrator(int p_nRayDepth, int p_nDivisions, int p_nShadowSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
+			ICIntegrator(const std::string &p_strName, int p_nCacheDepth, float p_fErrorThreshold, float p_fAmbientResolution, float p_fAmbientMultipler,
+				int p_nAzimuthStrata, int p_nAltitudeStrata, int p_nRayDepth, int p_nShadowRays = 1, float p_fReflectEpsilon = 1e-1f);
+
+			ICIntegrator(int p_nCacheDepth, float p_fErrorThreshold, float p_fAmbientResolution, float p_fAmbientMultipler,
+				int p_nAzimuthStrata, int p_nAltitudeStrata, int p_nRayDepth, int p_nShadowRays = 1, float p_fReflectEpsilon = 1e-1f);
 
 			bool Initialise(Scene *p_pScene, ICamera *p_pCamera);
 			bool Shutdown(void);
