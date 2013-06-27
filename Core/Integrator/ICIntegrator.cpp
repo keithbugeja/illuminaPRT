@@ -121,7 +121,7 @@ bool IrradianceCache::SphereBoxOverlap(const AxisAlignedBoundingBox &p_aabb,
 //----------------------------------------------------------------------------------------------
 void IrradianceCache::Insert(IrradianceCacheNode *p_pNode, IrradianceCacheRecord *p_pRecord, int p_nDepth)
 {
-	if (p_nDepth <= 0 || p_pRecord->RiClamp > p_pNode->Bounds.GetRadius())
+	if (p_nDepth <= 0 || p_pRecord->RiClamp > p_pNode->Bounds.GetExtent().MaxAbsComponent()) // p_pNode->Bounds.GetRadius())
 	{
 		m_nRecordCount++;
 		p_pNode->Add(p_pRecord);
@@ -183,18 +183,6 @@ bool IrradianceCache::FindRecords(const Vector3 &p_point, const Vector3 &p_norma
 //----------------------------------------------------------------------------------------------
 float IrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
 {
-	float dist = Vector3::Distance(p_point, p_record.Point) / p_record.Ri;
-	float norm = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal));
-	float alpha = 1.0f; //m_fErrorThreshold;
-
-	return (1.f / (dist + norm)) - alpha;
-
-	// float dist = Vector3::Distance(p_record.Point, p_point) / p_record.RiClamp;
-	// return 1 - dist;
-	// float norm = 1.f - Vector3::Dot(p_record.Normal, p_normal);
-	// return 1 - m_fErrorThreshold * Maths::Max(norm, dist);
-	/* */
-
 	/* 
 	Vector3 P = p_record.Point - p_point;
 	float d = Vector3::Dot(P, (p_normal + p_record.Normal) * 0.5f);
@@ -202,7 +190,7 @@ float IrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, Irradi
 	if (d < 0.05f) return -1;
 	*/
 
-	/* 
+	/* */
 	// OK - Ward
 	// float dist = Vector3::Distance(p_point, p_record.Point) / p_record.Ri;
 	float dist = Vector3::Distance(p_point, p_record.Point) / p_record.RiClamp;
@@ -243,7 +231,7 @@ std::string IrradianceCache::ToString(void) const
 //----------------------------------------------------------------------------------------------
 ICIntegrator::ICIntegrator(const std::string &p_strName, 
 						   int p_nCacheDepth, float p_fErrorThreshold, 
-						   float p_fAmbientMultiplier, float p_fAmbientResolution, 
+						   float p_fAmbientResolution, float p_fAmbientMultiplier,  
 						   int p_nAzimuthStrata, int p_nAltitudeStrata, 
 						   int p_nRayDepth, int p_nShadowRays, 
 						   float p_fReflectEpsilon)
@@ -467,8 +455,8 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 					isect.Surface.PointWS, isect.Surface.ShadingBasisWS.W, wOutR, 
 					p_pScene->GetSampler(), isect.GetLight(), m_nShadowRays);
 
-			// totLength += 1.f / isect.Surface.Distance;
-			totLength += isect.Surface.Distance;
+			totLength += 1.f / isect.Surface.Distance;
+			// totLength += isect.Surface.Distance;
 			minLength = Maths::Min(isect.Surface.Distance, minLength);
 		}
 	}
@@ -478,7 +466,7 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 	p_record.Point = p_intersection.Surface.PointWS;
 	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W;
 	p_record.Irradiance = E / mn;
-	p_record.Ri = totLength / mn; // mn / totLength; 
+	p_record.Ri = /*totLength / mn; */ mn / totLength; 
 	p_record.RiClamp = Maths::Max(p_record.Ri, m_fRMin);
 	p_record.RiClamp = Maths::Min(p_record.RiClamp, m_fRMax);
 
