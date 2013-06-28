@@ -16,6 +16,9 @@ namespace Illumina
 	{
 		struct IrradianceCacheRecord;
 
+		//----------------------------------------------------------------------------------------------
+		// Irradiance Cache Node
+		//----------------------------------------------------------------------------------------------
 		struct IrradianceCacheNode
 		{
 			AxisAlignedBoundingBox Bounds;
@@ -32,9 +35,13 @@ namespace Illumina
 			}
 		};
 
+		//----------------------------------------------------------------------------------------------
+		// Irradiance Cache
+		//----------------------------------------------------------------------------------------------
 		class IrradianceCache
 		{
 		protected:
+			std::vector<IrradianceCacheRecord*> m_irradianceRecordList;
 			float m_fErrorThreshold;
 
 		public:
@@ -45,6 +52,10 @@ namespace Illumina
 		public:
 			IrradianceCacheNode RootNode;
 
+		protected:
+			float W_Ward(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record);
+			float W_Tabelion(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record);
+
 		public:
 			IrradianceCache(void) 
 				: m_nInsertCount(0)
@@ -52,26 +63,29 @@ namespace Illumina
 				, m_nNodeCount(0)
 			{ }
 
-			void SetErrorThreshold(float p_fErrorThreshold)
-			{ m_fErrorThreshold = p_fErrorThreshold; }
-
 			int CountNodes(IrradianceCacheNode* p_pNode) const;
 
-			void SetBounds(const AxisAlignedBoundingBox &p_parent, int p_nChildIndex, AxisAlignedBoundingBox &p_child);
+			void SetErrorThreshold(float p_fErrorThreshold) { m_fErrorThreshold = p_fErrorThreshold; }
 
+			void SetBounds(const AxisAlignedBoundingBox &p_parent, 
+				int p_nChildIndex, AxisAlignedBoundingBox &p_child);
+			
 			bool SphereBoxOverlap(const AxisAlignedBoundingBox &p_aabb,
 				const Vector3& p_centre, const float p_fRadius) const;
 			
-			void Insert(IrradianceCacheNode *p_pNode, IrradianceCacheRecord *p_pRecord, int p_nDepth);
-
 			bool FindRecords(const Vector3 &p_point, const Vector3 &p_normal, 
 				std::vector<std::pair<float, IrradianceCacheRecord*>>& p_nearbyRecordList);
+
+			void Insert(IrradianceCacheNode *p_pNode, IrradianceCacheRecord *p_pRecord, int p_nDepth);
 
 			float W(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record);
 
 			std::string ToString(void) const;
 		};
 
+		//----------------------------------------------------------------------------------------------
+		// Irradiance Cache Integrator
+		//----------------------------------------------------------------------------------------------
 		class ICIntegrator : 
 			public IIntegrator
 		{
@@ -91,10 +105,13 @@ namespace Illumina
 				m_fRMax;
 
 			IrradianceCache m_irradianceCache;
+			std::vector<IrradianceCacheRecord*> m_irradianceCacheRecordList;
 
 		protected:
 			Spectrum GetIrradiance(const Intersection &p_intersection, Scene *p_pScene);
 			void ComputeRecord(const Intersection &p_intersection, Scene *p_pScene, IrradianceCacheRecord &p_record);
+			IrradianceCacheRecord* RequestRecord(void);
+			void ReleaseRecords(void);
 
 		public:
 			ICIntegrator(const std::string &p_strName, int p_nCacheDepth, float p_fErrorThreshold, float p_fAmbientResolution, float p_fAmbientMultipler,
