@@ -102,9 +102,9 @@ namespace Illumina
 				std::string strId;
 
 				p_argumentMap.GetArgument("CacheDepth", cacheDepth);
-				p_argumentMap.GetArgument("ErrorThreshold", altitudeStrata);
+				p_argumentMap.GetArgument("ErrorThreshold", errorThreshold);
 				p_argumentMap.GetArgument("AzimuthStrata", azimuthStrata);
-				p_argumentMap.GetArgument("AltitudeStata", altitudeStrata);
+				p_argumentMap.GetArgument("AltitudeStrata", altitudeStrata);
 				p_argumentMap.GetArgument("AmbientResolution", ambientResolution);
 				p_argumentMap.GetArgument("AmbientMultiplier", ambientMultiplier);
 				p_argumentMap.GetArgument("RayDepth", raydepth);

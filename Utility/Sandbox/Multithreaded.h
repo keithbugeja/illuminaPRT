@@ -237,7 +237,8 @@ public:
 				const RenderThread::RenderThreadTile &tilePacket = p_pState->GetTilePacket(tileID);
 				
 				/**/
-				pRenderer->RenderRegion(pRadianceBuffer, tilePacket.XStart, tilePacket.YStart, tilePacket.XSize, tilePacket.YSize, tilePacket.XStart, tilePacket.YStart);
+//				pRenderer->RenderRegion(pRadianceBuffer, tilePacket.XStart, tilePacket.YStart, tilePacket.XSize, tilePacket.YSize, tilePacket.XStart, tilePacket.YStart);
+				pRenderer->RenderTile(pRadianceBuffer, tileID, tilePacket.XSize, tilePacket.YSize);
 				/**/
 
 				/*

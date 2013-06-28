@@ -181,6 +181,20 @@ bool IrradianceCache::FindRecords(const Vector3 &p_point, const Vector3 &p_norma
 	return true;
 }
 //----------------------------------------------------------------------------------------------
+float IrradianceCache::W_Ward(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
+{
+	float dist = Vector3::Distance(p_point, p_record.Point) / p_record.RiClamp;
+	float norm = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal));
+	return (1.f / (dist + norm)) - m_fErrorThreshold;
+}
+//----------------------------------------------------------------------------------------------
+float IrradianceCache::W_Tabelion(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
+{
+	float epi = Vector3::Distance(p_point, p_record.Point) / (p_record.RiClamp * 0.5f);
+	float eni = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal)) * 8.0f;
+	return 1 - m_fErrorThreshold * Maths::Max(epi, eni);
+}
+//----------------------------------------------------------------------------------------------
 float IrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
 {
 	/* 
@@ -190,24 +204,9 @@ float IrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, Irradi
 	if (d < 0.05f) return -1;
 	*/
 
-	/* */
-	// OK - Ward
-	// float dist = Vector3::Distance(p_point, p_record.Point) / p_record.Ri;
-	float dist = Vector3::Distance(p_point, p_record.Point) / p_record.RiClamp;
-	float norm = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal));
-	float alpha = m_fErrorThreshold;
-
-	return (1.f / (dist + norm)) - alpha;
-	/* */
-
-	/* 
-	// Tabellion
-	float epi = Vector3::Distance(p_point, p_record.Point) / (p_record.RiClamp * 0.5f);
-	float eni = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal)) * 8.0f;
-	float K = m_fErrorThreshold;
-
-	return 1 - K * Maths::Max(epi, eni);
-	/* */
+	//return W_Ward(
+	return W_Tabelion(
+		p_point, p_normal, p_record);
 }
 //----------------------------------------------------------------------------------------------
 std::string IrradianceCache::ToString(void) const
@@ -295,6 +294,8 @@ bool ICIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 //----------------------------------------------------------------------------------------------
 bool ICIntegrator::Shutdown(void)
 {
+	ReleaseRecords();
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------
@@ -407,10 +408,10 @@ Spectrum ICIntegrator::GetIrradiance(const Intersection &p_intersection, Scene *
 	}
 	else
 	{
-		IrradianceCacheRecord *r = new IrradianceCacheRecord();
-		ComputeRecord(p_intersection, p_pScene, *r);
-		m_irradianceCache.Insert(&(m_irradianceCache.RootNode), r, m_nCacheDepth);
-		return r->Irradiance;
+		IrradianceCacheRecord *record = RequestRecord();
+		ComputeRecord(p_intersection, p_pScene, *record);
+		m_irradianceCache.Insert(&(m_irradianceCache.RootNode), record, m_nCacheDepth);
+		return record->Irradiance;
 	}
 }
 //----------------------------------------------------------------------------------------------
@@ -467,11 +468,20 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W;
 	p_record.Irradiance = E / mn;
 	p_record.Ri = /*totLength / mn; */ mn / totLength; 
-	p_record.RiClamp = Maths::Max(p_record.Ri, m_fRMin);
-	p_record.RiClamp = Maths::Min(p_record.RiClamp, m_fRMax);
-
-	//p_record.Ri = minLength; 
-	//p_record.RiClamp = p_record.Ri; //Maths::Max(m_fRMin, Maths::Min(m_fRMax, p_record.Ri));
+	p_record.RiClamp = Maths::Max(m_fRMin, Maths::Min(m_fRMax, p_record.Ri));
+}
+//----------------------------------------------------------------------------------------------
+IrradianceCacheRecord* ICIntegrator::RequestRecord(void)
+{
+	IrradianceCacheRecord *pRecord = new IrradianceCacheRecord();
+	m_irradianceCacheRecordList.push_back(pRecord);
+	return pRecord;
+}
+//----------------------------------------------------------------------------------------------
+void ICIntegrator::ReleaseRecords(void)
+{
+	for (auto record : m_irradianceCacheRecordList)
+		delete record;
 }
 //----------------------------------------------------------------------------------------------
 std::string ICIntegrator::ToString(void) const
