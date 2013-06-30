@@ -185,7 +185,7 @@ float IrradianceCache::W_Ward(const Vector3 &p_point, const Vector3 &p_normal, I
 {
 	float dist = Vector3::Distance(p_point, p_record.Point) / p_record.RiClamp;
 	float norm = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal));
-	return (1.f / (dist + norm)) - m_fErrorThreshold;
+	return (1.f / (dist + norm)) - (1.f / m_fErrorThreshold);
 }
 //----------------------------------------------------------------------------------------------
 float IrradianceCache::W_Tabelion(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
@@ -204,8 +204,8 @@ float IrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, Irradi
 	if (d < 0.05f) return -1;
 	*/
 
-	//return W_Ward(
-	return W_Tabelion(
+	return W_Ward(
+	//return W_Tabelion(
 		p_point, p_normal, p_record);
 }
 //----------------------------------------------------------------------------------------------
@@ -426,6 +426,9 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 	
 	float totLength = 0,
 		minLength = Maths::Maximum;
+	
+	// Cache this - it doesn't change!
+	int mn = m_nAzimuthStrata * m_nAltitudeStrata;
 
 	for (int altitudeIndex = 0; altitudeIndex < m_nAltitudeStrata; altitudeIndex++)
 	{
@@ -433,13 +436,13 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 		{
 			// Get samples for initial position and direction
 			/* 
-			sample2D.X = QuasiRandomSequence::VanDerCorput(rayIndex);
-			sample2D.Y = QuasiRandomSequence::Sobol2(rayIndex);
+			int index = altitudeIndex * m_nAzimuthStrata + azimuthIndex;
+			sample2D.X = QuasiRandomSequence::VanDerCorput(index);
+			sample2D.Y = QuasiRandomSequence::Sobol2(index);
 			/* */
 
 			/* */
-			sample2D.X = p_pScene->GetSampler()->Get1DSample();
-			sample2D.Y = p_pScene->GetSampler()->Get1DSample();
+			sample2D = p_pScene->GetSampler()->Get2DSample();
 			/* */
 
 			Vector3 vH = 
@@ -457,17 +460,14 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 					p_pScene->GetSampler(), isect.GetLight(), m_nShadowRays);
 
 			totLength += 1.f / isect.Surface.Distance;
-			// totLength += isect.Surface.Distance;
 			minLength = Maths::Min(isect.Surface.Distance, minLength);
 		}
 	}
 
-	int mn = m_nAzimuthStrata * m_nAltitudeStrata;
-
 	p_record.Point = p_intersection.Surface.PointWS;
 	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W;
 	p_record.Irradiance = E / mn;
-	p_record.Ri = /*totLength / mn; */ mn / totLength; 
+	p_record.Ri = mn / totLength; 
 	p_record.RiClamp = Maths::Max(m_fRMin, Maths::Min(m_fRMax, p_record.Ri));
 }
 //----------------------------------------------------------------------------------------------
