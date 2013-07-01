@@ -190,9 +190,15 @@ float IrradianceCache::W_Ward(const Vector3 &p_point, const Vector3 &p_normal, I
 //----------------------------------------------------------------------------------------------
 float IrradianceCache::W_Tabelion(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
 {
-	float epi = Vector3::Distance(p_point, p_record.Point) / (p_record.RiClamp * 0.5f);
-	float eni = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal)) * 8.0f;
-	return 1 - m_fErrorThreshold * Maths::Max(epi, eni);
+	float cosMaxAngleDifference = 0.2f;
+
+	float epi = Vector3::Distance(p_point, p_record.Point) / p_record.RiClamp;
+	float eni = Maths::Sqrt((1 - Vector3::Dot(p_normal, p_record.Normal)) / 
+							(1.f - cosMaxAngleDifference));
+
+	float err = Maths::Max(epi, eni);
+
+	return 1.f - (err * m_fErrorThreshold);
 }
 //----------------------------------------------------------------------------------------------
 float IrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
@@ -204,8 +210,15 @@ float IrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, Irradi
 	if (d < 0.05f) return -1;
 	*/
 
-	return W_Ward(
-	//return W_Tabelion(
+	/* 
+	Vector3 p = p_point - p_record.Point;
+	float d = Vector3::Dot(p, (p_normal + p_record.Normal) * 0.5f);
+
+	if (d < 0.1f) return -1;
+	*/
+
+	// return W_Ward(
+	return W_Tabelion(
 		p_point, p_normal, p_record);
 }
 //----------------------------------------------------------------------------------------------
@@ -370,7 +383,7 @@ Spectrum ICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, 
 	p_pRadianceContext->Flags |= RadianceContext::DF_Albedo |  
 		RadianceContext::DF_Direct | RadianceContext::DF_Indirect;
 	
-	return /* p_pRadianceContext->Direct + */ p_pRadianceContext->Indirect;
+	return p_pRadianceContext->Direct + p_pRadianceContext->Indirect;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum ICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext)
@@ -449,26 +462,117 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 				// Montecarlo::UniformSampleSphere(sample2D.U, sample2D.V);
 				Montecarlo::CosineSampleHemisphere(sample2D.X, sample2D.Y, altitudeIndex, azimuthIndex, m_nAltitudeStrata, m_nAzimuthStrata); 
 
-			BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, vH, wOutR); 
-
+			BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, vH, wOutR);
 			ray.Set(p_intersection.Surface.PointWS + wOutR * m_fReflectEpsilon, wOutR, m_fReflectEpsilon, Maths::Maximum);
 
-			p_pScene->Intersects(ray, isect);
-		
-			E += SampleAllLights(p_pScene, isect, 
-					isect.Surface.PointWS, isect.Surface.ShadingBasisWS.W, wOutR, 
-					p_pScene->GetSampler(), isect.GetLight(), m_nShadowRays);
-
-			totLength += 1.f / isect.Surface.Distance;
-			minLength = Maths::Min(isect.Surface.Distance, minLength);
+			E += PathLi(p_pScene, ray);
+			totLength += 1.f / ray.Max;
+			minLength = Maths::Min(ray.Max, minLength);
 		}
 	}
 
 	p_record.Point = p_intersection.Surface.PointWS;
 	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W;
 	p_record.Irradiance = E / mn;
-	p_record.Ri = mn / totLength; 
+	p_record.Ri = minLength; //mn / totLength; 
 	p_record.RiClamp = Maths::Max(m_fRMin, Maths::Min(m_fRMax, p_record.Ri));
+}
+//----------------------------------------------------------------------------------------------
+Spectrum ICIntegrator::PathLi(Scene *p_pScene, Ray &p_ray)
+{
+	IMaterial *pMaterial = NULL;
+	bool specularBounce = false;
+	
+	Spectrum L(0.f),
+		pathThroughput = 1.;
+	
+	Ray ray(p_ray);
+	
+	BxDF::Type bxdfType;
+	
+	Vector3 wIn, wOut, 
+		wInLocal, wOutLocal; 
+
+	float pdf;
+
+	// Trace
+	for (int pathLength = 0; ; ++pathLength) 
+	{
+		// Find next vertex of path
+		Intersection isect;
+		
+		if (!p_pScene->Intersects(ray, isect))
+			break;
+
+		// Get material
+		if (!isect.HasMaterial()) 
+			break;
+		
+		pMaterial = isect.GetMaterial();
+
+		// Set distance if first bounce
+		if (pathLength == 0)
+			p_ray.Max = ray.Max;
+
+		wOut = -ray.Direction;
+
+		// Possibly add emitted light at path vertex
+		if (specularBounce)
+		{
+			if (isect.IsEmissive())
+			{
+				L += pathThroughput * 
+					isect.GetLight()->Radiance(
+						isect.Surface.PointWS, 
+						isect.Surface.GeometryBasisWS.W, 
+						wOut);
+			}
+		}
+	
+		// Sample illumination from lights to find path contribution
+		L += pathThroughput * SampleAllLights(p_pScene, isect, 
+			isect.Surface.PointWS, isect.Surface.ShadingBasisWS.W, wOut, 
+			p_pScene->GetSampler(), isect.GetLight(), m_nShadowRays);
+
+		if (pathLength + 1 == m_nRayDepth) break;
+
+		// Sample bsdf for next direction
+		Vector2 sample = p_pScene->GetSampler()->Get2DSample();
+
+		// Convert to surface coordinate system where (0,0,1) represents surface normal
+		BSDF::WorldToSurface(isect.WorldTransform, isect.Surface, wOut, wOutLocal);
+
+		// Sample new direction in wIn (remember we're tracing backwards)
+		Spectrum f = pMaterial->SampleF(isect.Surface, wOutLocal, wInLocal, sample.U, sample.V, &pdf, BxDF::All_Combined, &bxdfType);
+
+		// If the reflectivity or pdf are zero, terminate path
+		if (f.IsBlack() || pdf == 0.0f) break;
+
+		// Record if bounce is a specular bounce
+		specularBounce = ((int)(bxdfType & BxDF::Specular)) != 0;
+
+		// Convert back to world coordinates
+		BSDF::SurfaceToWorld(isect.WorldTransform, isect.Surface, wInLocal, wIn);
+		
+		// Adjust path for new bounce
+		ray.Set(isect.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, m_fReflectEpsilon, Maths::Maximum);
+		
+		// Update path contribution at current stage
+		pathThroughput *= f * Vector3::AbsDot(wIn, isect.Surface.ShadingBasisWS.W) / pdf;
+
+		// Use Russian roulette to possibly terminate path
+		if (pathLength > 2)
+		{
+			float continueProbability = Maths::Min(0.5f, 0.33f * (pathThroughput[0] + pathThroughput[1] + pathThroughput[2]));
+
+			if (p_pScene->GetSampler()->Get1DSample() > continueProbability)
+				break;
+
+			pathThroughput /= continueProbability;
+		}
+	}
+
+	return L;
 }
 //----------------------------------------------------------------------------------------------
 IrradianceCacheRecord* ICIntegrator::RequestRecord(void)
