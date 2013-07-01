@@ -108,6 +108,7 @@ namespace Illumina
 			std::vector<IrradianceCacheRecord*> m_irradianceCacheRecordList;
 
 		protected:
+			Spectrum PathLi(Scene *p_pScene, Ray &p_ray);
 			Spectrum GetIrradiance(const Intersection &p_intersection, Scene *p_pScene);
 			void ComputeRecord(const Intersection &p_intersection, Scene *p_pScene, IrradianceCacheRecord &p_record);
 			IrradianceCacheRecord* RequestRecord(void);

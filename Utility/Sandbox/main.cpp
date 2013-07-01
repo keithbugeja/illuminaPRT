@@ -70,8 +70,8 @@ void IlluminaPRT(Logger *p_pLogger, int p_nVerboseFrequency,
 	int p_nJobs, int p_nSize, int p_nFlags, 
 	std::string p_strScript)
 {
-	//IlluminaMTFrameless illumina;
-	IlluminaMT illumina;
+	IlluminaMTFrameless illumina;
+	// IlluminaMT illumina;
 
 	illumina.SetFlags(p_nFlags);
 	illumina.SetLogger(p_pLogger);
