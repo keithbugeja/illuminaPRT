@@ -32,6 +32,11 @@ std::vector<int>& ICoordinator::GetAvailableWorkerList(void)
 	return m_ready;
 }
 //----------------------------------------------------------------------------------------------
+std::set<int>& ICoordinator::GetRegisteredWorkerList(void)
+{
+	return m_registered;
+}
+//----------------------------------------------------------------------------------------------
 void ICoordinator::ControllerCommunication(ResourceMessageQueue *p_pMessageQueue)
 {
 	unsigned char *pCommandBuffer = new unsigned char[8192];
@@ -233,7 +238,7 @@ bool ICoordinator::Synchronise(void)
 	// If THIS PROCESS is the only remaining process on the release list, kill task
 	int coordinatorID = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
 	
-	m_releaseMutex.lock();	
+	m_releaseMutex.lock();
 
 	if (m_release.size() == 1)
 	{
@@ -266,8 +271,13 @@ bool ICoordinator::Synchronise(void)
 		message << "Coordinator :: Synchronise found [" << m_ready.size() << "] workers ready.";
 		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 	}
-
+	
 	return OnSynchronise();
+}
+//----------------------------------------------------------------------------------------------
+bool ICoordinator::Heartbeat(void)
+{
+	return OnHeartbeat();
 }
 //----------------------------------------------------------------------------------------------
 bool ICoordinator::Compute(void) 

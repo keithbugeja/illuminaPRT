@@ -164,6 +164,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\AdminController.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\AsyncRenderTaskCoordinator.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\AsyncRenderTaskWorker.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\AsyncTaskPipeline.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\CommandParser.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Controller.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Coordinator.cpp" />
@@ -175,12 +178,17 @@
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Resource.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\ResourceManager.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\ServiceManager.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\SyncTaskPipeline.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\TaskController.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\TaskPipeline.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Worker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\AdminController.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\AsyncRenderTaskCoordinator.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\AsyncRenderTaskPipeline.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\AsyncRenderTaskWorker.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\AsyncTaskPipeline.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\CommandParser.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Communicator.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Controller.h" />
@@ -200,6 +208,7 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Resource.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\ResourceManager.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\ServiceManager.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\SyncTaskPipeline.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Task.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskPipeline.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\UniqueId.h" />

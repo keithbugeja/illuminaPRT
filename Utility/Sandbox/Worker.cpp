@@ -63,8 +63,15 @@ bool IWorker::Synchronise(void)
 		m_bIsRunning = false;
 		return false;
 	}
-
+	
 	return OnSynchronise(); 
+}
+//----------------------------------------------------------------------------------------------
+bool IWorker::Heartbeat(void)
+{
+
+
+	return OnHeartbeat();
 }
 //----------------------------------------------------------------------------------------------
 bool IWorker::Compute(void) 

@@ -27,9 +27,10 @@ public:
 	bool Initialise(void);
 	void Shutdown(void);
 
-	bool Register(void);
-	bool CoordinatorMessages(void);
-	bool Synchronise(void);
+	virtual bool Register(void);
+	virtual bool CoordinatorMessages(void);
+	virtual bool Synchronise(void);
+	virtual bool Heartbeat(void);
 
 	virtual bool Compute(void);
 
@@ -39,5 +40,6 @@ public:
 	virtual bool OnInitialise(void) { return true; }
 	virtual void OnShutdown(void) { }
 	virtual bool OnSynchronise(void) { return true; }
+	virtual bool OnHeartbeat(void) { return true; }
 };
 //----------------------------------------------------------------------------------------------
