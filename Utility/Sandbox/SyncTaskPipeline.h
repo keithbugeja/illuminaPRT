@@ -1,23 +1,24 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	RenderTaskPipeline.h
+//	Filename:	SyncTaskPipeline.h
 //	Author:		Keith Bugeja
-//	Date:		27/07/2012
+//	Date:		03/07/2013
 //----------------------------------------------------------------------------------------------
 #pragma once
 //----------------------------------------------------------------------------------------------
-#include "SyncTaskPipeline.h"
-#include "Environment.h"
-#include "RenderTaskCoordinator.h"
-#include "RenderTaskWorker.h"
+#include "TaskPipeline.h"
 //----------------------------------------------------------------------------------------------
-class RenderTaskPipeline
-	: public SyncTaskPipeline
+class SyncTaskPipeline 
+	: public ITaskPipeline
 {
-	RenderTaskCoordinator m_coordinator;
-	RenderTaskWorker m_worker;
+protected:
+	using ITaskPipeline::m_pCoordinator;
+	using ITaskPipeline::m_pWorker;
+
+protected:
+	SyncTaskPipeline(ICoordinator *p_pCoordinator,
+		IWorker *p_pWorker);
 
 public:
-	RenderTaskPipeline(void)
-		: SyncTaskPipeline(&m_coordinator, &m_worker)
-	{ }
+	void Execute(ICoordinator *p_pCoordinator);
+	void Execute(IWorker *p_pWorker);
 };

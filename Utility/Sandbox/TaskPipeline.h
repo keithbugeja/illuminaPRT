@@ -21,6 +21,6 @@ protected:
 
 public:
 	virtual void Execute(const std::string &p_strArguments, int p_nResourceID, int p_nCoordinatorID);
-	virtual void Execute(ICoordinator *p_pCoordinator);
-	virtual void Execute(IWorker *p_pWorker);
+	virtual void Execute(ICoordinator *p_pCoordinator) = 0;
+	virtual void Execute(IWorker *p_pWorker) = 0;
 };

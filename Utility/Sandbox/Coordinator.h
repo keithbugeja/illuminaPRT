@@ -23,7 +23,6 @@ class ICoordinator
 
 	// List of registered and ready workers
 	std::set<int> m_registered;
-	//std::vector<int> m_registered;
 	std::vector<int> m_ready;
 
 	// Workers pending release / deregister signal
@@ -53,6 +52,7 @@ public:
 
 	// Get list of available workers
 	std::vector<int>& GetAvailableWorkerList(void);
+	std::set<int>& GetRegisteredWorkerList(void);
 
 	// Check task state
 	bool IsRunning(void) const;
@@ -61,6 +61,7 @@ public:
 	bool Initialise(void);
 	void Shutdown(void);
 	bool Synchronise(void);
+	bool Heartbeat(void);
 	bool EvaluateMessageQueue(ResourceMessageQueue *p_pMessageQueue);
 
 	// Computation 
@@ -71,6 +72,8 @@ public:
 	virtual void OnShutdown(void) { }
 	virtual bool OnSynchronise(void) { return true; }
 	virtual bool OnSynchroniseAbort(void) { return true; }
+	virtual bool OnHeartbeat(void) { return true; }
+	virtual bool OnHeartbeatAbort(void) { return true; }
 	virtual bool OnMessageReceived(ResourceMessage *p_pMessage) { return true; }
 };
 //----------------------------------------------------------------------------------------------

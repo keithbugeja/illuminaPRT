@@ -1,23 +1,23 @@
 //----------------------------------------------------------------------------------------------
-//	Filename:	RenderTaskPipeline.h
+//	Filename:	AsyncRenderTaskPipeline.h
 //	Author:		Keith Bugeja
-//	Date:		27/07/2012
+//	Date:		03/07/2013
 //----------------------------------------------------------------------------------------------
 #pragma once
 //----------------------------------------------------------------------------------------------
-#include "SyncTaskPipeline.h"
+#include "AsyncSyncTaskPipeline.h"
 #include "Environment.h"
 #include "RenderTaskCoordinator.h"
 #include "RenderTaskWorker.h"
 //----------------------------------------------------------------------------------------------
-class RenderTaskPipeline
-	: public SyncTaskPipeline
+class AsyncRenderTaskPipeline
+	: public AsyncTaskPipeline
 {
-	RenderTaskCoordinator m_coordinator;
-	RenderTaskWorker m_worker;
+	AsyncRenderTaskCoordinator m_coordinator;
+	AsyncRenderTaskWorker m_worker;
 
 public:
-	RenderTaskPipeline(void)
-		: SyncTaskPipeline(&m_coordinator, &m_worker)
+	AsyncRenderTaskPipeline(void)
+		: AsyncTaskPipeline(&m_coordinator, &m_worker)
 	{ }
 };
