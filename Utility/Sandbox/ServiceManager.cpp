@@ -6,7 +6,8 @@
 #include "ServiceManager.h"
 #include "Worker.h"
 
-#include "RenderTaskPipeline.h"
+#include "AsyncRenderTaskPipeline.h"
+// #include "RenderTaskPipeline.h"
 //----------------------------------------------------------------------------------------------
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
@@ -62,7 +63,8 @@ void ServiceManager::Start(void)
 //----------------------------------------------------------------------------------------------
 void ServiceManager::RunAsResource(void)
 {
-	RenderTaskPipeline pipeline;
+	// RenderTaskPipeline pipeline;
+	AsyncRenderTaskPipeline pipeline;
 
 	// Start resource
 	m_resourceManager.Me()->Start(&pipeline);

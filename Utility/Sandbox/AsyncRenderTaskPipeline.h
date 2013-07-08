@@ -5,10 +5,10 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 //----------------------------------------------------------------------------------------------
-#include "AsyncSyncTaskPipeline.h"
 #include "Environment.h"
-#include "RenderTaskCoordinator.h"
-#include "RenderTaskWorker.h"
+#include "AsyncTaskPipeline.h"
+#include "AsyncRenderTaskCoordinator.h"
+#include "AsyncRenderTaskWorker.h"
 //----------------------------------------------------------------------------------------------
 class AsyncRenderTaskPipeline
 	: public AsyncTaskPipeline

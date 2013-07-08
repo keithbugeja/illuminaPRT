@@ -69,7 +69,24 @@ bool IWorker::Synchronise(void)
 //----------------------------------------------------------------------------------------------
 bool IWorker::Heartbeat(void)
 {
+	// Ready message to signal availability in next computation cycle
+	Message_Worker_Coordinator_Ready readyMessage;
+	readyMessage.MessageID = MessageIdentifiers::ID_Worker_Ready;
+	Communicator::Send(&readyMessage, sizeof(Message_Worker_Coordinator_Ready), GetCoordinatorID(), Communicator::Worker_Coordinator_Sync);
 
+	// Receive synchronise from coordinator
+	Message_Coordinator_Worker_Sync syncMessage;
+	Communicator::Receive(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), GetCoordinatorID(), Communicator::Coordinator_Worker_Sync);
+
+	// If ordered to unregister, exit immediately.
+	if (syncMessage.Unregister)
+	{
+		std::stringstream message; message << "Worker :: Releasing worker [" << ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID() << "] on event [Synchronise].";
+		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
+
+		m_bIsRunning = false;
+		return false;
+	}
 
 	return OnHeartbeat();
 }
