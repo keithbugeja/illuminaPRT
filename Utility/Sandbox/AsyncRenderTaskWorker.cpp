@@ -368,7 +368,7 @@ void AsyncRenderTaskWorker::OnShutdown(void)
 	delete m_pRenderTile;
 }
 //----------------------------------------------------------------------------------------------
-bool AsyncRenderTaskWorker::OnSynchronise(void) 
+bool AsyncRenderTaskWorker::OnHeartbeat(void) 
 {
 	int synchronisePacketSize;
 

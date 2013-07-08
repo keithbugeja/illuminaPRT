@@ -98,8 +98,8 @@ public:
 
 	bool OnInitialise(void);
 	void OnShutdown(void);
-	bool OnSynchronise(void);
-	bool OnSynchroniseAbort(void);
+	bool OnHeartbeat(void);
+	bool OnHeartbeatAbort(void);
 	bool OnMessageReceived(ResourceMessage *p_pMessage);
 };
 //----------------------------------------------------------------------------------------------

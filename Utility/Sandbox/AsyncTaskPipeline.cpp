@@ -36,8 +36,8 @@ void AsyncTaskPipeline::Execute(ICoordinator *p_pCoordinator)
 	{
 		p_pCoordinator->EvaluateMessageQueue(&messageQueue);
 
-		if (p_pCoordinator->Synchronise())
-			p_pCoordinator->Compute();
+		p_pCoordinator->Heartbeat();
+		p_pCoordinator->Compute();
 	}
 
 	// join to threads
@@ -63,7 +63,7 @@ void AsyncTaskPipeline::Execute(IWorker *p_pWorker)
 	while(p_pWorker->IsRunning())
 	{
 		p_pWorker->CoordinatorMessages(); 
-		p_pWorker->Synchronise();
+		p_pWorker->Heartbeat();
 	}
 
 	workerComputeHandler.join();

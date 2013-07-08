@@ -277,6 +277,75 @@ bool ICoordinator::Synchronise(void)
 //----------------------------------------------------------------------------------------------
 bool ICoordinator::Heartbeat(void)
 {
+	// Set up request and status for non-blocking receive
+	Communicator::Status status;
+
+	// Set up buffer for receipt of heartbeat messages from available resources
+	Message_Worker_Coordinator_Ready readyMessage;
+
+	// We open receive window for 5 ms (maybe less?)
+	double timeOpen = Platform::ToSeconds(Platform::GetTime());
+	
+	// Clear list of ready resources and start receiving
+	for(m_ready.clear();;)
+	{
+		// Do we have any heartbeat messages?
+		if (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Worker_Coordinator_Sync, &status))
+		{
+			// Yes, receive
+			Communicator::Receive(&readyMessage, Communicator::GetSize(&status), status.MPI_SOURCE, status.MPI_TAG);
+
+			// Reply with acknowledgement and force unregistration of worker
+			if (m_release.empty() == false && 
+				m_release.find(status.MPI_SOURCE) != m_release.end())
+			{
+				Message_Coordinator_Worker_Sync syncMessage;
+				syncMessage.MessageID = MessageIdentifiers::ID_Coordinator_Sync;
+				syncMessage.Unregister = true;
+
+				Communicator::Send(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), status.MPI_SOURCE, Communicator::Coordinator_Worker_Sync);
+
+				m_releaseMutex.lock();
+				m_release.erase(status.MPI_SOURCE);
+				m_releaseMutex.unlock();
+			} 
+			else 
+			{
+				// Reply with acknowledgement (state sync follows this)
+				Message_Coordinator_Worker_Sync syncMessage;
+				syncMessage.MessageID = MessageIdentifiers::ID_Coordinator_Sync;
+				syncMessage.Unregister = false;
+
+				Communicator::Send(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), status.MPI_SOURCE, Communicator::Coordinator_Worker_Sync);
+				
+				m_ready.push_back(status.MPI_SOURCE);
+			}
+		}
+
+		// Window is open for 5 ms
+		if (Platform::ToSeconds(Platform::GetTime()) - timeOpen > 0.001 || m_ready.size() == m_registered.size())
+			break;
+	}
+
+	// If THIS PROCESS is the only remaining process on the release list, kill task
+	int coordinatorID = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
+	
+	m_releaseMutex.lock();
+
+	if (m_release.size() == 1)
+	{
+		if (m_release.find(coordinatorID) != m_release.end())
+		{
+			m_release.erase(coordinatorID);
+			m_releaseMutex.unlock();
+
+			m_bIsRunning = false;
+			return false;
+		}
+	}
+
+	m_releaseMutex.unlock();
+	
 	return OnHeartbeat();
 }
 //----------------------------------------------------------------------------------------------

@@ -48,7 +48,7 @@ public:
 
 	bool OnInitialise(void);
 	void OnShutdown(void);
-	bool OnSynchronise(void);
+	bool OnHeartbeat(void);
 	bool OnCoordinatorMessages(void *p_pMessage);
 };
 //----------------------------------------------------------------------------------------------

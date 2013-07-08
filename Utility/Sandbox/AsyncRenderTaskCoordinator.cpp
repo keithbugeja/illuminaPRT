@@ -378,7 +378,7 @@ void AsyncRenderTaskCoordinator::OnShutdown(void)
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-bool AsyncRenderTaskCoordinator::OnSynchronise(void) 
+bool AsyncRenderTaskCoordinator::OnHeartbeat(void) 
 {
 	SynchronisePacket syncPacket;
 
@@ -396,7 +396,7 @@ bool AsyncRenderTaskCoordinator::OnSynchronise(void)
 
 	int synchronisePacketSize = sizeof(SynchronisePacket);
 
-	// Get list of available workers
+	// Get list of heartbeat workers
 	std::vector<int> &workerList 
 		= GetAvailableWorkerList();
 
@@ -412,8 +412,9 @@ bool AsyncRenderTaskCoordinator::OnSynchronise(void)
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
-bool AsyncRenderTaskCoordinator::OnSynchroniseAbort(void)
+bool AsyncRenderTaskCoordinator::OnHeartbeatAbort(void)
 {
+	/* 
 	int abortSignal = -1;
 
 	// Get list of available workers
@@ -426,6 +427,7 @@ bool AsyncRenderTaskCoordinator::OnSynchroniseAbort(void)
 	{
 		Communicator::Send(&abortSignal, sizeof(int), *workerIterator, Communicator::Coordinator_Worker_Job);
 	}
+	*/
 
 	return true;
 }
@@ -492,9 +494,7 @@ bool AsyncRenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 			float angle = (*it).X / 360 * Maths::PiTwo;
 
 			pathVertexEx.orientation = pathVertexEx.position + 
-				Vector3(Maths::Sin(angle),0 , Maths::Cos(angle));
-				
-				//OrthonormalBasis::FromSpherical(Vector2((*it).X / 360 * Maths::PiTwo, 0));
+				Vector3(Maths::Sin(angle), 0 , Maths::Cos(angle));
 			
 			m_cameraPathEx.AddVertex(pathVertexEx);
 		}
@@ -508,207 +508,14 @@ bool AsyncRenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 //----------------------------------------------------------------------------------------------
 bool AsyncRenderTaskCoordinator::Compute(void) 
 {
-	SerialisableRenderTile *pRenderTile = NULL;
-	RadianceContext *pTileBuffer;
-	Communicator::Status status;
-
-#if defined __JOB_TIMING
-	double eventStart, eventComplete, 
-		subEventStart, subEventComplete;
-
-	double frameTime;
-
-	double radianceTime,
-		bilateralTime,
-		discontinuityTime,
-		toneTime,
-		commitTime,
-		accumulationTime;
-#endif
-	
-	//----------------------------------------------------------------------------------------------
-	// Initialise
-	//----------------------------------------------------------------------------------------------
-
-	//----------------------------------------------------------------------------------------------
-	// Get list of available workers for this frame and send the initial job batch
-	//----------------------------------------------------------------------------------------------
-	StartTimer(eventStart);
-	
-	// Compute time elapsed for radiance computation (communication + rendering)
-	radianceTime = GetElapsedF(eventStart, subEventComplete);	
-
-	//----------------------------------------------------------------------------------------------
-	// Additional post-processing filters
-	//----------------------------------------------------------------------------------------------
-	// Bilateral filter
-	RestartTimerF(subEventStart, subEventComplete);
-	//m_pBilateralFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-	bilateralTime = GetElapsedF(subEventStart, subEventComplete);
-
-	// Discontinuity buffer
-	RestartTimerF(subEventStart, subEventComplete);
-	//m_pDiscontinuityBuffer->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-	discontinuityTime = GetElapsedF(subEventStart, subEventComplete);
-
-	// Tone mapping (moved to worker)
-	RestartTimerF(subEventStart, subEventComplete);
-	//m_pTonemapFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-	toneTime = GetElapsedF(subEventStart, subEventComplete);
-
-	// Accumulation and motion blur
-	RestartTimerF(subEventStart, subEventComplete);
-	#if defined __POSTPROC_MOTIONBLUR
-	// m_pMotionBlurFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-	if (m_bResetAccumulation) 
-	{
-		m_pMotionBlurFilter->Reset();
-		m_bResetAccumulation = false;
-	}
-	#endif
-	accumulationTime = GetElapsedF(subEventStart, subEventComplete);
-
-	// Commit to device
-	RestartTimerF(subEventStart, subEventComplete);
-	m_pRenderer->Commit(m_pRadianceBuffer);
-	commitTime = GetElapsedF(subEventStart, subEventComplete);
-
-	// Get frame time
-	frameTime = GetElapsed(eventStart, eventComplete);
-
-	//----------------------------------------------------------------------------------------------
-	// Show frame time breakdown  
-	//----------------------------------------------------------------------------------------------
-	#if defined __JOB_TIMING
-		std::stringstream statistics;
-
-		double elapsedFromLastCheckpoint = Platform::ToSeconds(eventComplete - m_checkPointTime);
-		m_checkPointTime = eventComplete;
-
-		statistics << "RenderTaskCoordinator :: Computation statistics for task [" << m_nTaskId << "] : " 
-		#if __JOB_TIMING_METHOD == __JOB_TIMING_FINE
-			<< std::endl << "\t---| Radiance Time : " << radianceTime << "s"
-			<< std::endl << "\t---| Bilateral Time : " << bilateralTime << "s"
-			<< std::endl << "\t---| Discontinuity Time : " << discontinuityTime << "s"
-			<< std::endl << "\t---| Tonemapping Time : " << toneTime << "s"
-			<< std::endl << "\t---| Accumulation Time : " << accumulationTime << "s"
-			<< std::endl << "\t---| Commit Time : " << commitTime << "s"
-		#endif
-			<< std::endl << "\t---| Frame Time : " << frameTime << "s" 
-			<< std::endl << "\t---| Frame Rate : " << 1.0 / frameTime << "Hz"
-			<< std::endl;
-
-		ServiceManager::GetInstance()->GetLogger()->Write(statistics.str(), LL_Info);
-
-		// Log output to data collection channel (asynchronous file-output channel)
-		statistics.str(std::string(""));
-
-		statistics << Platform::ToSeconds(eventComplete - m_bootTime)
-		#if __JOB_TIMING_METHOD == __JOB_TIMING_FINE
-			<< '\t' << radianceTime << '\t' << accumulationTime << '\t' << commitTime
-		#endif
-			<< '\t' << elapsedFromLastCheckpoint << '\t' << 1.0 / elapsedFromLastCheckpoint
-			<< '\t' << frameTime << '\t' << 1.0 / frameTime
-			// << '\t' << workerList.size()
-			<< std::endl;
-
-		(*ServiceManager::GetInstance()->GetLogger())["data_collection"]->Write(statistics.str(), LL_All);
-	#endif
-
 	return true;
 }
+
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 void AsyncRenderTaskCoordinator::ComputeThreadHandler(AsyncRenderTaskCoordinator *p_pCoordinator)
 {
-	SerialisableRenderTile *m_pRenderTile = NULL;
-	RadianceContext *pTileBuffer;
-	Communicator::Status status;
-
-	int tileID, 
-		receivedTileID;
-
-	//----------------------------------------------------------------------------------------------
-	// Initialise
-	//----------------------------------------------------------------------------------------------
-	tileID = p_pCoordinator->m_renderTaskContext.TilePackets.GetPacketCount() - 1;
-
-	p_pCoordinator->m_nProducerIndex = 0;
-	p_pCoordinator->m_nConsumerIndex = 0;
-	p_pCoordinator->m_nTilesPacked = 0;
-
-	std::vector<int> &workerList = p_pCoordinator->GetAvailableWorkerList();
-
-	while (p_pCoordinator->IsRunning())
-	{
-		if (workerList.size() > 0)
-		{
-			// Assert workerList != 0
-			// Probe for incoming message
-			Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Worker_Coordinator_Job, &status);
-		}
-	}
-
-	/*
-	SerialisableRenderTile *pRenderTile = NULL;
-	RadianceContext *pTileBuffer;
-	Communicator::Status status;
-
-	int receivedTileID, 
-		tileID;
-
-	//----------------------------------------------------------------------------------------------
-	// Initialise
-	//----------------------------------------------------------------------------------------------
-	tileID = p_pCoordinator->m_renderTaskContext.TilePackets.GetPacketCount() - 1;
-
-	// Initialise asynchronous decompression variables
-	p_pCoordinator->m_nProducerIndex = 0;
-	p_pCoordinator->m_nConsumerIndex = 0;
-	p_pCoordinator->m_nTilesPacked = 0;
-
-	std::vector<int> &workerList = p_pCoordinator->GetAvailableWorkerList();
-
-	// Send first batch of jobs
-	for (std::vector<int>::iterator workerIterator = workerList.begin();
-			workerIterator != workerList.end(); workerIterator++)
-	{
-		Communicator::Send(&tileID, sizeof(int), *workerIterator, Communicator::Coordinator_Worker_Job);
-
-		if (--tileID < 0)
-			break;
-	}
-
-	while(p_pCoordinator->IsRunning())
-	{
-		//----------------------------------------------------------------------------------------------
-		// Wait for results and send new task, if available
-		//----------------------------------------------------------------------------------------------
-		// Probe for incoming message
-		Communicator::Probe(Communicator::Source_Any, Communicator::Worker_Coordinator_Job, &status);
-
-		// Receive compressed tile
-		pRenderTile = p_pCoordinator->m_renderTileBuffer[p_pCoordinator->m_nProducerIndex++]; 
-
-		Communicator::Receive(pRenderTile->GetTransferBuffer(), 
-			Communicator::GetSize(&status), status.MPI_SOURCE,
-			Communicator::Worker_Coordinator_Job);
-
-		// Receive complete -> Inform consumer
-		AtomicInt32::Increment((Int32*)&p_pCoordinator->m_nTilesPacked);
-		p_pCoordinator->m_decompressionQueueCV.notify_one();
-
-		// Acknowledge receipt and send new job
-		if (tileID < 0) 
-			tileID = p_pCoordinator->m_renderTaskContext.TilePackets.GetPacketCount() - 1;
-
-		Communicator::Send(&tileID, sizeof(int), status.MPI_SOURCE, Communicator::Coordinator_Worker_Job);
-
-		tileID--;
-	}
-	*/
 }
-
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 void AsyncRenderTaskCoordinator::InputThreadHandler(AsyncRenderTaskCoordinator *p_pCoordinator)
