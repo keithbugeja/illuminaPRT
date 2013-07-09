@@ -350,7 +350,6 @@ bool AsyncRenderTaskWorker::OnInitialise(void)
 
 	return true;
 }
-
 //----------------------------------------------------------------------------------------------
 void AsyncRenderTaskWorker::OnShutdown(void) 
 {

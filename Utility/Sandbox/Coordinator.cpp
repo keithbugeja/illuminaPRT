@@ -21,7 +21,6 @@ void ICoordinator::SetArguments(const std::string &p_strArguments)
 	m_argumentMap.Initialise(m_strArguments);
 }
 //----------------------------------------------------------------------------------------------
-
 std::string ICoordinator::GetArguments(void) const
 {
 	return m_strArguments;
@@ -283,6 +282,52 @@ bool ICoordinator::Heartbeat(void)
 	// Set up buffer for receipt of heartbeat messages from available resources
 	Message_Worker_Coordinator_Ready readyMessage;
 
+	//for(m_ready.clear();;)
+	{
+		m_ready.clear();
+
+		// Do we have any heartbeat messages?
+		while (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Worker_Coordinator_Sync, &status))
+		{
+			Communicator::Receive(&readyMessage, Communicator::GetSize(&status), status.MPI_SOURCE, status.MPI_TAG);
+			std::cout << "Received HBeat from " << status.MPI_SOURCE << std::endl;
+
+			Message_Coordinator_Worker_Sync syncMessage;
+			syncMessage.MessageID = MessageIdentifiers::ID_Coordinator_Sync;
+			syncMessage.Unregister = false;
+
+			Communicator::Send(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), status.MPI_SOURCE, Communicator::Coordinator_Worker_Sync);
+
+
+			//// Reply with acknowledgement and force unregistration of worker
+			//if (m_release.empty() == false && 
+			//	m_release.find(status.MPI_SOURCE) != m_release.end())
+			//{
+			//	Message_Coordinator_Worker_Sync syncMessage;
+			//	syncMessage.MessageID = MessageIdentifiers::ID_Coordinator_Sync;
+			//	syncMessage.Unregister = true;
+
+			//	Communicator::Send(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), status.MPI_SOURCE, Communicator::Coordinator_Worker_Sync);
+
+			//	m_releaseMutex.lock();
+			//	m_release.erase(status.MPI_SOURCE);
+			//	m_releaseMutex.unlock();
+			//} 
+			//else 
+			//{
+			//	// Reply with acknowledgement (state sync follows this)
+			//	Message_Coordinator_Worker_Sync syncMessage;
+			//	syncMessage.MessageID = MessageIdentifiers::ID_Coordinator_Sync;
+			//	syncMessage.Unregister = false;
+
+			//	Communicator::Send(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), status.MPI_SOURCE, Communicator::Coordinator_Worker_Sync);
+			//	
+			//	m_ready.push_back(status.MPI_SOURCE);
+			//}
+		}
+	}
+
+	/*
 	// We open receive window for 5 ms (maybe less?)
 	double timeOpen = Platform::ToSeconds(Platform::GetTime());
 	
@@ -346,6 +391,8 @@ bool ICoordinator::Heartbeat(void)
 
 	m_releaseMutex.unlock();
 	
+	*/
+
 	return OnHeartbeat();
 }
 //----------------------------------------------------------------------------------------------
