@@ -40,7 +40,7 @@ void IWorker::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 bool IWorker::CoordinatorMessages(void)
 {
-	return true;
+	return OnCoordinatorMessages(nullptr);
 }
 //----------------------------------------------------------------------------------------------
 bool IWorker::Synchronise(void) 
@@ -78,6 +78,9 @@ bool IWorker::Heartbeat(void)
 	Message_Coordinator_Worker_Sync syncMessage;
 	Communicator::Receive(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), GetCoordinatorID(), Communicator::Coordinator_Worker_Sync);
 
+	std::cout << "Received message" << syncMessage.MessageID << " : " << syncMessage.Unregister << std::endl;
+
+	/*
 	// If ordered to unregister, exit immediately.
 	if (syncMessage.Unregister)
 	{
@@ -87,8 +90,10 @@ bool IWorker::Heartbeat(void)
 		m_bIsRunning = false;
 		return false;
 	}
+	*/
 
-	return OnHeartbeat();
+	// return OnHeartbeat();
+	return true;
 }
 //----------------------------------------------------------------------------------------------
 bool IWorker::Compute(void) 

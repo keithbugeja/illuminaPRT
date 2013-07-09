@@ -37,7 +37,7 @@ void AsyncTaskPipeline::Execute(ICoordinator *p_pCoordinator)
 		p_pCoordinator->EvaluateMessageQueue(&messageQueue);
 
 		p_pCoordinator->Heartbeat();
-		p_pCoordinator->Compute();
+		//p_pCoordinator->Compute();
 	}
 
 	// join to threads

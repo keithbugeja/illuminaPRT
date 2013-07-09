@@ -400,7 +400,7 @@ bool AsyncRenderTaskCoordinator::OnHeartbeat(void)
 	std::vector<int> &workerList 
 		= GetAvailableWorkerList();
 
-	// Send first batch of jobs
+	// Send first batch of state changes
 	for (std::vector<int>::iterator workerIterator = workerList.begin();
 		 workerIterator != workerList.end(); workerIterator++)
 	{
