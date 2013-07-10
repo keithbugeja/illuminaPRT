@@ -286,18 +286,35 @@ bool ICoordinator::Heartbeat(void)
 	{
 		m_ready.clear();
 
+		Message_Coordinator_Worker_Sync syncMessage;
+		syncMessage.MessageID = MessageIdentifiers::ID_Coordinator_Sync;
+
 		// Do we have any heartbeat messages?
 		while (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Worker_Coordinator_Sync, &status))
 		{
-			Communicator::Receive(&readyMessage, Communicator::GetSize(&status), status.MPI_SOURCE, status.MPI_TAG);
-			std::cout << "Received HBeat from " << status.MPI_SOURCE << std::endl;
-
-			Message_Coordinator_Worker_Sync syncMessage;
-			syncMessage.MessageID = MessageIdentifiers::ID_Coordinator_Sync;
 			syncMessage.Unregister = false;
 
-			Communicator::Send(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), status.MPI_SOURCE, Communicator::Coordinator_Worker_Sync);
+			Communicator::Receive(&readyMessage, Communicator::GetSize(&status), status.MPI_SOURCE, status.MPI_TAG);
 
+			if (m_release.empty() == false)
+			{
+				std::cout << "Pending release messages" << std::endl;
+				for (auto worker : m_release)
+				{
+					std::cout << "Worker : [" << worker << "]" << std::endl;
+				}
+
+				if (m_release.find(status.MPI_SOURCE) != m_release.end())
+				{
+					syncMessage.Unregister = true;
+
+					m_releaseMutex.lock();
+					m_release.erase(status.MPI_SOURCE);
+					m_releaseMutex.unlock();
+				}
+			}
+
+			Communicator::Send(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), status.MPI_SOURCE, Communicator::Coordinator_Worker_Sync);
 
 			//// Reply with acknowledgement and force unregistration of worker
 			//if (m_release.empty() == false && 
