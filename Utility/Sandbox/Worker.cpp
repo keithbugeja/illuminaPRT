@@ -78,22 +78,17 @@ bool IWorker::Heartbeat(void)
 	Message_Coordinator_Worker_Sync syncMessage;
 	Communicator::Receive(&syncMessage, sizeof(Message_Coordinator_Worker_Sync), GetCoordinatorID(), Communicator::Coordinator_Worker_Sync);
 
-	std::cout << "Received message" << syncMessage.MessageID << " : " << syncMessage.Unregister << std::endl;
-
-	/*
 	// If ordered to unregister, exit immediately.
 	if (syncMessage.Unregister)
 	{
-		std::stringstream message; message << "Worker :: Releasing worker [" << ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID() << "] on event [Synchronise].";
+		std::stringstream message; message << "Worker :: Releasing worker [" << ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID() << "] on event [Heartbeat].";
 		ServiceManager::GetInstance()->GetLogger()->Write(message.str(), LL_Info);
 
 		m_bIsRunning = false;
 		return false;
 	}
-	*/
 
-	// return OnHeartbeat();
-	return true;
+	return OnHeartbeat();
 }
 //----------------------------------------------------------------------------------------------
 bool IWorker::Compute(void) 

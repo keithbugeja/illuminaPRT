@@ -66,7 +66,11 @@ void AsyncTaskPipeline::Execute(IWorker *p_pWorker)
 		p_pWorker->Heartbeat();
 	}
 
+	std::cout << "Worker terminated - waiting thread join" << std::endl;
+
 	workerComputeHandler.join();
+
+	std::cout << "Worker thread joined" << std::endl;
 
 	p_pWorker->Shutdown();
 }
