@@ -221,7 +221,8 @@ bool AsyncRenderTaskCoordinator::OnInitialise(void)
 	//----------------------------------------------------------------------------------------------
 	// Initialise radiance buffers and post-processing filters
 	//----------------------------------------------------------------------------------------------
-	m_pRadianceBuffer = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight()),
+	m_pRadianceBuffer = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight());
+	m_pRadianceOutput = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight());
 
 	// Discontinuity, reconstruction and tone mapping
 	m_pBilateralFilter = m_pEngineKernel->GetPostProcessManager()->CreateInstance("BilateralFilter", "BilateralFilter", "");
@@ -355,6 +356,7 @@ void AsyncRenderTaskCoordinator::OnShutdown(void)
 	// Delete radiance buffers
 	//----------------------------------------------------------------------------------------------
 	delete m_pRadianceBuffer;
+	delete m_pRadianceOutput;
 
 	//----------------------------------------------------------------------------------------------
 	// Shutdown and delete sandbox
@@ -401,11 +403,10 @@ bool AsyncRenderTaskCoordinator::OnHeartbeat(void)
 		= GetAvailableWorkerList();
 
 	// Send first batch of state changes
-	for (std::vector<int>::iterator workerIterator = workerList.begin();
-		 workerIterator != workerList.end(); workerIterator++)
+	for (auto worker : workerList)
 	{
-		Communicator::Send(&synchronisePacketSize, sizeof(int), *workerIterator, Communicator::Coordinator_Worker_Job);
-		Communicator::Send(&syncPacket, sizeof(SynchronisePacket), *workerIterator, Communicator::Coordinator_Worker_Job);
+		Communicator::Send(&synchronisePacketSize, sizeof(int), worker, Communicator::Coordinator_Worker_Job);
+		Communicator::Send(&syncPacket, sizeof(SynchronisePacket), worker, Communicator::Coordinator_Worker_Job);
 	}
 
 	return true;
@@ -508,13 +509,15 @@ bool AsyncRenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 //----------------------------------------------------------------------------------------------
 bool AsyncRenderTaskCoordinator::Compute(void) 
 {
+	// Synchronous computation goes here
+
 	return true;
 }
-
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 void AsyncRenderTaskCoordinator::ComputeThreadHandler(AsyncRenderTaskCoordinator *p_pCoordinator)
 {
+	// Asynchronous computation goes here
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
