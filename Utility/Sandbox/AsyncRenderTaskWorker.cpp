@@ -102,7 +102,6 @@ bool AsyncRenderTaskWorker::ComputeUniform(void)
 
 	return true;
 }
-
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 bool AsyncRenderTaskWorker::ComputeVariable(void)
@@ -210,8 +209,11 @@ bool AsyncRenderTaskWorker::Compute(void)
 	 * Uniform tile sizes
 	 */
 
+	return IWorker::Compute();
+	/*
 	// return ComputeVariable();
 	return ComputeUniform();
+	*/
 }
 //----------------------------------------------------------------------------------------------
 // User handlers for init, shutdown and sync events
@@ -384,22 +386,10 @@ bool AsyncRenderTaskWorker::OnHeartbeat(void)
 	/*
 	std::cout << "Worker got sync packet [0] : " << packet->observerPosition.ToString() << std::endl;
 	std::cout << "Worker got sync packet [1] : " << packet->observerTarget.ToString() << std::endl;
-	std::cout << "Worker get sync packet [2] : " << packet->resetSeed << std::endl;
+	std::cout << "Worker get sync packet [2] : " << packet->seed << std::endl;
 	*/
 
 	m_unSamplerSeed = (unsigned int)packet->seed;
-
-	/*
-	int meid = ServiceManager::GetInstance()->GetResourceManager()->Me()->GetID();
-	std::cout << "---[" << meid << "] Seed = " << m_unSamplerSeed << "s" << std::endl;
-	*/
-
-	/*
-	if (packet->resetSeed != 0)
-		m_unSamplerSeed = 0x03170317;
-	else
-		m_unSamplerSeed += 0x0101;
-	*/
 
 	m_pCamera->MoveTo(packet->observerPosition);
 	m_pCamera->LookAt(packet->observerTarget);

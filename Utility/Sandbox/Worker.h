@@ -14,7 +14,7 @@ class IWorker
 	ArgumentMap m_argumentMap;
 
 	int m_nCoordinatorID;
-	bool m_bIsRunning;
+	volatile bool m_bIsRunning;
 
 public:
 	ArgumentMap* GetArgumentMap(void);

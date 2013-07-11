@@ -26,7 +26,8 @@ protected:
 	ICamera *m_pCamera;
 	ISpace *m_pSpace;
 
-	RadianceBuffer *m_pRadianceBuffer;
+	RadianceBuffer *m_pRadianceBuffer,
+		*m_pRadianceOutput;
 
 	IPostProcess *m_pBilateralFilter, 
 		*m_pDiscontinuityBuffer,
