@@ -61,7 +61,7 @@ void Ray::ApplyInverse(const Transformation &p_transformation, const Ray &p_ray,
 //----------------------------------------------------------------------------------------------
 std::string Ray::ToString(void) const
 {
-	std::string strOut = boost::str(boost::format("[O:<%1%> D:<%2%> <%d-%d>]") 
+	std::string strOut = boost::str(boost::format("[O:<%s> D:<%s> <%d-%d>]") 
 		% Origin.ToString() 
 		% Direction.ToString() 
 		% Min % Max);
