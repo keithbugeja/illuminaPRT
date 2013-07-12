@@ -506,18 +506,102 @@ bool AsyncRenderTaskCoordinator::OnMessageReceived(ResourceMessage *p_pMessage)
 	return true;
 }
 //----------------------------------------------------------------------------------------------
+// Synchronous computation
 //----------------------------------------------------------------------------------------------
 bool AsyncRenderTaskCoordinator::Compute(void) 
 {
 	// Synchronous computation goes here
 
+	// memcpy(m_pRadianceOutput, m_pRadianceBuffer, m_pRadianceBuffer->GetArea() * sizeof(RadianceContext));
+	// Apply temporal filtering
+	m_pMotionBlurFilter->Apply(m_pRadianceBuffer, m_pRadianceOutput);
+	if (m_bResetAccumulation)
+	{
+		m_pMotionBlurFilter->Reset();
+		m_bResetAccumulation = false;
+	}
+
+	// Commit frame
+	m_pRenderer->Commit(m_pRadianceOutput);
+
+	// block for 1/30th of a second (we want approx 24fps)
+	boost::this_thread::sleep(boost::posix_time::milliseconds(30));
+	
 	return true;
 }
 //----------------------------------------------------------------------------------------------
+// Asynchronous computation
 //----------------------------------------------------------------------------------------------
 void AsyncRenderTaskCoordinator::ComputeThreadHandler(AsyncRenderTaskCoordinator *p_pCoordinator)
 {
-	// Asynchronous computation goes here
+	// Receive buffer
+	SerialisableRenderTile *pRenderTile = NULL;
+
+	// Set up request and status for non-blocking receive
+	Communicator::Status status;
+
+	int request = 0,
+		finalTaskID = -1,
+		tileID = 0;
+
+	p_pCoordinator->m_nProducerIndex = 0;
+	p_pCoordinator->m_nTilesPacked = 0;
+
+	while(p_pCoordinator->IsRunning())
+	{
+		// Any work requests?
+		while (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Worker_Coordinator_Job, &status))
+		{
+			// Remove message from pending set
+			p_pCoordinator->m_pending.erase(status.MPI_SOURCE);
+
+			// Check by size if payload-less message
+			if (Communicator::GetSize(&status) == sizeof(int))
+			{
+				Communicator::Receive(&request, 
+					Communicator::GetSize(&status), status.MPI_SOURCE,
+					Communicator::Worker_Coordinator_Job);
+			}
+			else
+			{
+				// Receive compressed tile
+				pRenderTile = p_pCoordinator->m_renderTileBuffer[p_pCoordinator->m_nProducerIndex++];
+
+				Communicator::Receive(pRenderTile->GetTransferBuffer(), 
+					Communicator::GetSize(&status), status.MPI_SOURCE,
+					Communicator::Worker_Coordinator_Job);
+
+				// Receive complete -> Inform consumer
+				AtomicInt32::Increment((Int32*)&(p_pCoordinator->m_nTilesPacked));
+				p_pCoordinator->m_decompressionQueueCV.notify_one();
+			}
+
+			// Worker is slated for release
+			if (p_pCoordinator->m_release.find(status.MPI_SOURCE) != p_pCoordinator->m_release.end())
+			{
+				// Send sigterm
+				Communicator::Send(&finalTaskID, sizeof(int), status.MPI_SOURCE, Communicator::Coordinator_Worker_Job);
+			}
+			else
+			{
+				// Add to pending set
+				p_pCoordinator->m_pending.insert(status.MPI_SOURCE);
+
+				Communicator::Send(&tileID, sizeof(int), status.MPI_SOURCE, Communicator::Coordinator_Worker_Job);
+				tileID--;
+			}
+		}
+	}
+
+	// while running
+	//
+	// wait for work request
+	//   does it have a payload?
+	//      push to PC buffer
+	//   is worker still registered?
+	//      send job to worker
+	//   else
+	//      send eoj to worker
 }
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------

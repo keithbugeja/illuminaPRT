@@ -16,6 +16,7 @@ using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 class ICoordinator
 {
+protected:
 	// Message and release mutex (could look into making these look free)
 	boost::mutex m_releaseMutex;
 	boost::mutex m_registeredMutex;

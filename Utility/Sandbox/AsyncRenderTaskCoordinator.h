@@ -40,6 +40,8 @@ protected:
 	// Tile buffer to store results from workers
 	std::vector<SerialisableRenderTile*> m_renderTileBuffer;
 
+	std::set<int> m_pending;
+
 	// Condition variable to synchronise with decompression thread
 	boost::condition_variable m_decompressionQueueCV;
 
