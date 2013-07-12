@@ -205,15 +205,27 @@ bool AsyncRenderTaskWorker::ComputeVariable(void)
 //----------------------------------------------------------------------------------------------
 bool AsyncRenderTaskWorker::Compute(void) 
 {
+	//   send request for work (no payload at first)
+
+	// while is running
+	//   receive response / tile ID
+	//   if (tileID != termination signal)
+	//      render tile by id
+	//      send request for work (incl. results payload)
+	//   else
+	//      terminate
+
 	/* 
 	 * Uniform tile sizes
 	 */
 
-	return IWorker::Compute();
+	// return IWorker::Compute();
 	/*
 	// return ComputeVariable();
 	return ComputeUniform();
 	*/
+
+	return true;
 }
 //----------------------------------------------------------------------------------------------
 // User handlers for init, shutdown and sync events
