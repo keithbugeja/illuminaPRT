@@ -138,11 +138,7 @@ bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int
 		if (p_pArgumentMap != NULL) 
 			p_pArgumentMap->GetArgument("Id", meshName);
 		
-		//IShape* pShape = new PersistentMesh(meshName, "Z:\\Object");
-		//m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, pShape);
 		m_pEngineKernel->GetShapeManager()->RegisterInstance(meshName, context.Mesh);
-
-		//context.Mesh->UpdateNormals();
 	}
 
 	if (context.Materials != NULL)
@@ -349,8 +345,6 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 				else
 				{
 					textureArgumentStream << "Filetype=" << extension << ";";
-
-					std::cout << "Filetype = " << extension << std::endl;
 
 					pTexture = m_pEngineKernel->GetTextureManager()->CreateInstance("Image", 
 						material.DiffuseMap, textureArgumentStream.str());

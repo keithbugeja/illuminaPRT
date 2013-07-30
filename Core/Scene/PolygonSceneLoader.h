@@ -16,7 +16,7 @@
 #include "System/EngineKernel.h"
 #include "Scene/SceneLoader.h"
 
-struct ParticleContext;
+struct PolygonContext;
 
 //----------------------------------------------------------------------------------------------
 namespace Illumina
@@ -42,6 +42,8 @@ namespace Illumina
 		protected:
 			//bool LoadMaterials(const std::string &p_strFilename, ParticleContext &p_context);
 			//bool LoadGeometry(const std::string &p_strFilename, ParticleContext &p_context);
+			bool Load(const std::string &p_strFilename, PolygonContext &p_context);
+			bool LoadMaterial(const std::string &p_strFilename, PolygonContext &p_context);
 			int Tokenise(std::string &p_strText, char *p_pSeparators, std::vector<std::string> &p_tokenList);
 		}; 
 		//----------------------------------------------------------------------------------------------
