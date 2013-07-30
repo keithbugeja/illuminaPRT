@@ -17,14 +17,6 @@ namespace Illumina
 		class Montecarlo
 		{
 		public:
-			static Vector3 CosineSampleHemisphere(float p_u, float p_v)
-			{
-				float a = Maths::PiTwo * p_v,
-					b = Maths::Sqrt(p_u);
-
-				return Vector3(b * Maths::Cos(a), b * Maths::Sin(a), Maths::Sqrt(1 - p_u));
-			}
-
 			static Vector3 CosineSampleHemisphere(float p_u, float p_v, 
 				float p_j, float p_k, float p_m, float p_n)
 			{
@@ -34,6 +26,14 @@ namespace Illumina
 					d = Maths::Sqrt(a);
 
 				return Vector3(d * Maths::Cos(c), d * Maths::Sin(c), Maths::Sqrt(1 - a));
+			}
+
+			static Vector3 CosineSampleHemisphere(float p_u, float p_v)
+			{
+				float a = Maths::PiTwo * p_u;
+				float b = Maths::Sqrt(p_u);
+
+				return Vector3(b * Maths::Cos(a), b * Maths::Sin(a), Maths::Sqrt(1 - p_u));
 			}
 
 			static Vector3 UniformSampleSphere(float p_u, float p_v)

@@ -471,6 +471,9 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 		}
 	}
 
+	// MN = total samples
+
+
 	p_record.Point = p_intersection.Surface.PointWS;
 	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W;
 	p_record.Irradiance = E / mn;
