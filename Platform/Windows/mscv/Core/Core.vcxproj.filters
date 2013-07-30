@@ -345,6 +345,12 @@
     <ClCompile Include="..\..\..\..\Core\Integrator\ICIntegrator.cpp">
       <Filter>Header Files\Integrator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Shape\KDTreeMeshEx.cpp">
+      <Filter>Header Files\Shape</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Scene\PolygonSceneLoader.cpp">
+      <Filter>Header Files\Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -863,6 +869,15 @@
     <ClInclude Include="..\..\..\..\Core\Integrator\ICIntegrator.h">
       <Filter>Header Files\Integrator</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\System\MemoryManager.h">
+      <Filter>Header Files\System</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Shape\KDTreeMeshEx.h">
+      <Filter>Header Files\Shape</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Scene\PolygonSceneLoader.h">
+      <Filter>Header Files\Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">
@@ -894,6 +909,9 @@
     </None>
     <None Include="..\..\..\..\Core\Image\Surface.inl">
       <Filter>Header Files\Image</Filter>
+    </None>
+    <None Include="..\..\..\..\Core\System\MemoryManager.inl">
+      <Filter>Header Files\System</Filter>
     </None>
   </ItemGroup>
 </Project>
