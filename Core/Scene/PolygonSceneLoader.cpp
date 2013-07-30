@@ -48,7 +48,6 @@ using namespace Illumina::Core;
 	double     double-precision float    8
 */
 
-
 /*
 	comment TexutureFile xxx
 
@@ -142,6 +141,17 @@ struct WavefrontContext
 };
 */
 //----------------------------------------------------------------------------------------------
+struct PolygonContext
+{
+	std::string ObjectName;
+
+	ITriangleMesh *Mesh;
+	MaterialGroup *Materials;
+
+	std::vector<Vector3> PositionList;
+	std::vector<Vector3> NormalList;
+};
+//----------------------------------------------------------------------------------------------
 PolygonSceneLoader::PolygonSceneLoader(Environment *p_pEnvironment)
 	: ISceneLoader(p_pEnvironment)
 { 
@@ -149,20 +159,60 @@ PolygonSceneLoader::PolygonSceneLoader(Environment *p_pEnvironment)
 	m_pEngineKernel = p_pEnvironment->GetEngineKernel();
 }
 //----------------------------------------------------------------------------------------------
-bool PolygonSceneLoader::Import(const std::string &p_strFilename, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap)
+bool PolygonSceneLoader::LoadMaterial(const std::string &p_strFilename, PolygonContext &p_context)
 {
-/*	// Use filename as the default object name
-	boost::filesystem::path geometryPath(p_strFilename);
-	std::string objectName = geometryPath.filename().string();
-	
-	ITriangleMesh *pMesh = 
-		new KDTreeMeshEx(objectName);
-		//new PersistentMesh(p_context.ObjectName, "Z:\\Object");
-		//new KDTreeMesh(p_context.ObjectName);
-		//new BVHMesh(p_context.ObjectName);
-		//new BasicMesh(p_context.ObjectName);
+	ITexture *pTexture; IMaterial *pMaterial;
+	std::stringstream textureArgumentStream;
 
-	std::map<std::string, int>
+	boost::filesystem::path materialPath(p_strFilename);
+	std::string materialName = materialPath.filename().string();
+
+	textureArgumentStream << "Id=" << materialName << ";" 
+						<< "Filename=" << p_strFilename << ";";
+
+	// Query extension of image file
+	std::string extension = boost::to_upper_copy(materialName.substr((materialName.find_last_of(".") + 1)));
+
+	// Are we loading a memory-mapped texture?
+	if (extension.find("MMF") != std::string::npos)
+	{
+		pTexture = m_pEngineKernel->GetTextureManager()->CreateInstance("MappedFile", 
+			materialName, textureArgumentStream.str());
+	}
+	else
+	{
+		textureArgumentStream << "Filetype=" << extension << ";";
+
+		pTexture = m_pEngineKernel->GetTextureManager()->CreateInstance("Image", 
+			materialName, textureArgumentStream.str());
+	}
+
+	std::stringstream argumentStream;
+
+	argumentStream << "Id=" << materialName << ";Reflectivity={1,1,1};";
+	pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Matte", materialName, argumentStream.str());
+	((MatteMaterial*)pMaterial)->SetTexture(pTexture);
+
+	p_context.Materials->Add(pMaterial, p_context.Materials->Size());
+
+	return true;
+}
+//----------------------------------------------------------------------------------------------
+bool PolygonSceneLoader::Load(const std::string &p_strFilename, PolygonContext &p_context)
+{
+	// Use filename as the default object name
+	boost::filesystem::path geometryPath(p_strFilename);
+	p_context.ObjectName = geometryPath.filename().string();
+
+	p_context.Mesh = 
+		new KDTreeMeshEx(p_context.ObjectName);
+		//new PersistentMesh(context.ObjectName, "Z:\\Object");
+		//new KDTreeMesh(context.ObjectName);
+		//new BVHMesh(context.ObjectName);
+		//new BasicMesh(context.ObjectName);
+
+	p_context.Materials = 
+		new MaterialGroup(p_context.ObjectName);
 
 	// Open wavefront file
 	std::ifstream plyFile;
@@ -179,10 +229,15 @@ bool PolygonSceneLoader::Import(const std::string &p_strFilename, unsigned int p
 	std::vector<std::string> tokenList,
 		faceTokenList;
 
-	bool magic = false;
-	
-	bool binary, 
-		littleEndian;
+	bool magic, header,
+		binary, littleEndian;
+
+	header = !(magic = 
+		binary = 
+		littleEndian = false);
+
+	int vertexcount,
+		facecount;
 
 	// Parse header
 	while(std::getline(plyFile, currentLine))
@@ -197,49 +252,107 @@ bool PolygonSceneLoader::Import(const std::string &p_strFilename, unsigned int p
 		for (size_t tokenIndex = 0; tokenIndex < tokenList.size(); ++tokenIndex)
 			boost::trim(tokenList[tokenIndex]);
 
-		// Magic number
-		if (tokenList[0] == "ply")
+		if (header)
 		{
-			magic = true;
-		} 
-		else if (tokenList[0] == "format")
-		{
-			if (tokenList.size() != 3)
-				continue;
-
-			if (tokenList[1]) == "binary_little_endian")
-				binary = littleEndian = true;
-		} 
-		else if (tokenList[0] == "comment")
-		{
-			if (tokenList.size() != 3)
-				continue;
-
-			if (tokenList[1]) == "TextureFile")
+			// Magic number
+			if (tokenList[0] == "ply")
 			{
-				// Add material
-			}
-		} 
-		else if (tokenList[0] == "element")
-		{
-			if (tokenList.size() != 3)
-				continue;
+				magic = true;
+				std::cout << "PLY :: magic number" << std::endl;
+			} 
+			else if (tokenList[0] == "format")
+			{
+				if (tokenList.size() != 3)
+					continue;
+
+				if (tokenList[1] == "binary_little_endian")
+				{
+					binary = littleEndian = true;
+					std::cout << "PLY :: body format :: binary | little endian" << std::endl;
+				} 
+				else
+				{
+					binary = littleEndian = false;
+					std::cout << "PLY :: body format :: ascii" << std::endl;
+				}
+			} 
+			else if (tokenList[0] == "comment")
+			{
+				if (tokenList.size() != 3)
+					continue;
+
+				if (tokenList[1] == "TextureFile")
+				{
+					std::cout << "PLY :: texture :: " << tokenList[2] << std::endl;
+					LoadMaterial((geometryPath.parent_path() / tokenList[2]).string(), p_context);
+				}
+				else
+				{
+					std::cout << "PLY :: comment :: " << tokenList[2] << std::endl; 
+				}
+			} 
+			else if (tokenList[0] == "element")
+			{
+				if (tokenList.size() != 3)
+					continue;
 			
-			if (tokenList[1]) == "vertex")
+				if (tokenList[1] == "vertex")
+				{
+					vertexcount = boost::lexical_cast<int>(tokenList[2]);
+					std::cout << "PLY :: vertex element, count = " << vertexcount << std::endl;
+				}
+				else if (tokenList[1] == "face")
+				{
+					facecount = boost::lexical_cast<int>(tokenList[2]);
+					std::cout << "PLY :: face element, count = " << facecount << std::endl;
+				}
+			} 
+			else if (tokenList[0] == "property")
 			{
-			}
-			else if (tokenList[1]) == "face")
+				if (tokenList.size() < 2)
+					continue;
+
+				// We expect to find a set number of properties, 
+				// so they should be validated
+				
+				// [vertices]
+				// x y z nx ny nz |-> float
+
+				// [faces]
+				// vertex_indices |-> list uchar int
+				// texture_coords |-> list uchar float
+				// texture_number |-> int
+
+				std::cout << "PLY :: property :: " << tokenList[1] << " :: " << tokenList[2] << std::endl;
+			} 
+			else if (tokenList[0] == "end_header")
 			{
+				header = false;
+				std::cout << "PLY :: header complete" << std::endl;	
 			}
-		} 
-		else if (tokenList[0] == "property")
-		{
-
-		} 
-		else if (tokenList[0] == "end_header")
-		{
-
 		}
+		else
+		{
+			if (vertexcount > 0)
+			{
+				// read x, y, z, nx, ny, nz
+			}
+			else if (facecount > 0)
+			{
+				// read count, f0, f1, f2, count, t0, t1, t2, t3, t4, t5, t6, texture_idx
+			}
+		}
+	}
+
+	return true;
+}
+//----------------------------------------------------------------------------------------------
+bool PolygonSceneLoader::Import(const std::string &p_strFilename, unsigned int p_uiGeneralFlags, ArgumentMap* p_pArgumentMap)
+{
+	PolygonContext context;
+
+	if (Load(p_strFilename, context))
+	{
 	}
 
 	//// Provide wavefront scene context for loader
@@ -272,7 +385,6 @@ bool PolygonSceneLoader::Import(const std::string &p_strFilename, unsigned int p
 	//	
 	//	m_pEngineKernel->GetMaterialManager()->RegisterInstance(materialGroupName, context.Materials);
 	//}
-	*/
 	return true;
 }
 //----------------------------------------------------------------------------------------------
