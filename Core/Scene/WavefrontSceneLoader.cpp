@@ -20,6 +20,7 @@
 #include "Shape/VertexFormats.h"
 #include "Shape/TriangleMesh.h"
 #include "Shape/KDTreeMesh.h"
+#include "Shape/KDTreeMeshEx.h"
 #include "Shape/BVHMesh.h"
 #include "Shape/PersistentMesh.h"
 #include "Shape/BasicMesh.h"
@@ -402,7 +403,8 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 	p_context.ObjectName = geometryPath.filename().string();
 	
 	//p_context.Mesh = new PersistentMesh(p_context.ObjectName, "Z:\\Object");
-	p_context.Mesh = new KDTreeMesh(p_context.ObjectName);
+	//p_context.Mesh = new KDTreeMesh(p_context.ObjectName);
+	p_context.Mesh = new KDTreeMeshEx(p_context.ObjectName);
 	//p_context.Mesh = new BVHMesh(p_context.ObjectName);
 	//p_context.Mesh = new BasicMesh(p_context.ObjectName);
 

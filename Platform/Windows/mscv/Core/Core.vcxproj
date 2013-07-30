@@ -198,6 +198,7 @@
     <ClCompile Include="..\..\..\..\Core\Scene\EnvironmentLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\GeometricPrimitive.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\ParticleSceneLoader.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Scene\PolygonSceneLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\Scene.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\SceneLoader.cpp" />
     <ClCompile Include="..\..\..\..\Core\Scene\Visibility.cpp" />
@@ -205,6 +206,7 @@
     <ClCompile Include="..\..\..\..\Core\Shape\BasicMesh.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\BVHMesh.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\IndexedTriangle.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Shape\KDTreeMeshEx.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\KDTreeMesh.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\PersistentMesh.cpp" />
     <ClCompile Include="..\..\..\..\Core\Shape\Quad.cpp" />
@@ -325,6 +327,7 @@
     <ClInclude Include="..\..\..\..\Core\Scene\EnvironmentLoader.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\GeometricPrimitive.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\ParticleSceneLoader.h" />
+    <ClInclude Include="..\..\..\..\Core\Scene\PolygonSceneLoader.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\Primitive.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\Scene.h" />
     <ClInclude Include="..\..\..\..\Core\Scene\SceneLoader.h" />
@@ -336,6 +339,7 @@
     <ClInclude Include="..\..\..\..\Core\Shape\DifferentialSurface.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\HybridMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\IndexedTriangle.h" />
+    <ClInclude Include="..\..\..\..\Core\Shape\KDTreeMeshEx.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\KDTreeMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\PersistentMesh.h" />
     <ClInclude Include="..\..\..\..\Core\Shape\Quad.h" />
@@ -370,6 +374,7 @@
     <ClInclude Include="..\..\..\..\Core\System\LibraryImpl.h" />
     <ClInclude Include="..\..\..\..\Core\System\LibraryManager.h" />
     <ClInclude Include="..\..\..\..\Core\System\LibrarySymbols.h" />
+    <ClInclude Include="..\..\..\..\Core\System\MemoryManager.h" />
     <ClInclude Include="..\..\..\..\Core\System\Platform.h" />
     <ClInclude Include="..\..\..\..\Core\System\PlugIn.h" />
     <ClInclude Include="..\..\..\..\Core\System\PlugInManager.h" />
@@ -405,6 +410,7 @@
     <None Include="..\..\..\..\Core\Image\Surface.inl" />
     <None Include="..\..\..\..\Core\Object\Object.inl" />
     <None Include="..\..\..\..\Core\System\FactoryManager.inl" />
+    <None Include="..\..\..\..\Core\System\MemoryManager.inl" />
     <None Include="..\..\..\..\Core\Threading\Spinlock.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
