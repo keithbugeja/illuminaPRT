@@ -18,6 +18,7 @@
 #include "Shape/BasicMesh.h"
 #include "Shape/BVHMesh.h"
 #include "Shape/KDTreeMesh.h"
+#include "Shape/KDTreeMeshEx.h"
 #include "Shape/PersistentMesh.h"
 #include "Shape/IndexedTriangle.h"
 #include "Shape/VertexFormats.h"
@@ -227,29 +228,66 @@ namespace Illumina
 			{
 				std::string strId;
 				
-				int maxDepth, 
-					maxObjects;
+				int maxDepth	= 35, 
+					maxObjects	= 10;
 
-				if (p_argumentMap.GetArgument("MaximumTreeDepth", maxDepth) && 
-					p_argumentMap.GetArgument("MaximumLeafObjects", maxObjects))
-				{
-					if (p_argumentMap.GetArgument("Name", strId))
-						return CreateInstance(strId, maxDepth, maxObjects);
+				p_argumentMap.GetArgument("MaximumTreeDepth", maxDepth);
+				p_argumentMap.GetArgument("MaximumLeafObjects", maxObjects);
+
+				if (p_argumentMap.GetArgument("Name", strId))
+					return CreateInstance(strId, maxObjects, maxDepth);
 					
-					return CreateInstance(maxDepth, maxObjects);
-				}
-
-				throw new Exception("Invalid arguments to KDTreeMeshShapeFactory!");
+				return CreateInstance(maxObjects, maxDepth);
 			}
 
-			Illumina::Core::IShape *CreateInstance(int p_nMaxDepth, int p_nMaxLeafObjects)
+			Illumina::Core::IShape *CreateInstance(int p_nMaxLeafObjects, int p_nMaxDepth)
 			{
-				return new KDTreeMesh(p_nMaxDepth, p_nMaxLeafObjects);
+				return new KDTreeMesh(p_nMaxLeafObjects, p_nMaxDepth);
 			}
 
-			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, int p_nMaxDepth, int p_nMaxLeafObjects)
+			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, int p_nMaxLeafObjects, int p_nMaxDepth)
 			{
-				return new KDTreeMesh(p_strId, p_nMaxDepth, p_nMaxLeafObjects);
+				return new KDTreeMesh(p_strId, p_nMaxLeafObjects, p_nMaxDepth);
+			}
+		};
+
+		//----------------------------------------------------------------------------------------------
+		// KD-Tree Ex shape factory
+		// Note	that the factory produces ITriangleMesh objects with vertex format type Vertex and
+		// IndexedTriangle type faces.
+		//----------------------------------------------------------------------------------------------
+		class KDTreeMeshExShapeFactory : public Illumina::Core::Factory<Illumina::Core::IShape>
+		{
+		public:
+			Illumina::Core::IShape *CreateInstance(void)
+			{
+				return new KDTreeMeshEx();
+			}
+
+			Illumina::Core::IShape *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strId;
+				
+				int maxDepth	= 35, 
+					maxObjects	= 10;
+
+				p_argumentMap.GetArgument("MaximumTreeDepth", maxDepth);
+				p_argumentMap.GetArgument("MaximumLeafObjects", maxObjects);
+
+				if (p_argumentMap.GetArgument("Name", strId))
+					return CreateInstance(strId, maxObjects, maxDepth);
+					
+				return CreateInstance(maxObjects, maxDepth);
+			}
+
+			Illumina::Core::IShape *CreateInstance(int p_nMaxLeafObjects, int p_nMaxDepth)
+			{
+				return new KDTreeMeshEx(p_nMaxLeafObjects, p_nMaxDepth);
+			}
+
+			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, int p_nMaxLeafObjects, int p_nMaxDepth)
+			{
+				return new KDTreeMeshEx(p_strId, p_nMaxLeafObjects, p_nMaxDepth);
 			}
 		};
 
@@ -270,29 +308,26 @@ namespace Illumina
 			{
 				std::string strId;
 				
-				int maxDepth, 
-					maxObjects;
+				int maxDepth	= 35, 
+					maxObjects	= 10;
 
-				if (p_argumentMap.GetArgument("MaximumTreeDepth", maxDepth) && 
-					p_argumentMap.GetArgument("MaximumLeafObjects", maxObjects))
-				{
-					if (p_argumentMap.GetArgument("Name", strId))
-						return CreateInstance(strId, maxDepth, maxObjects);
+				p_argumentMap.GetArgument("MaximumTreeDepth", maxDepth);
+				p_argumentMap.GetArgument("MaximumLeafObjects", maxObjects);
+
+				if (p_argumentMap.GetArgument("Name", strId))
+					return CreateInstance(strId, maxObjects, maxDepth);
 					
-					return CreateInstance(maxDepth, maxObjects);
-				}
-
-				throw new Exception("Invalid arguments to KDTreeMeshShapeFactory!");
+				return CreateInstance(maxObjects, maxDepth);
 			}
 
-			Illumina::Core::IShape *CreateInstance(int p_nMaxDepth, int p_nMaxLeafObjects)
+			Illumina::Core::IShape *CreateInstance(int p_nMaxLeafObjects, int p_nMaxDepth)
 			{
-				return new BVHMesh(p_nMaxDepth, p_nMaxLeafObjects);
+				return new BVHMesh(p_nMaxLeafObjects, p_nMaxDepth);
 			}
 
-			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, int p_nMaxDepth, int p_nMaxLeafObjects)
+			Illumina::Core::IShape *CreateInstance(const std::string &p_strId, int p_nMaxLeafObjects, int p_nMaxDepth)
 			{
-				return new BVHMesh(p_strId, p_nMaxDepth, p_nMaxLeafObjects);
+				return new BVHMesh(p_strId, p_nMaxLeafObjects, p_nMaxDepth);
 			}
 		};
 

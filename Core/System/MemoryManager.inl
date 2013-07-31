@@ -1,15 +1,10 @@
-/* 
- * File:   MemoryManager.cpp
- * Author: Kevin
- * 
- * Created on September 30, 2012, 6:55 PM
- */
-
-// #include "stdint.h"
-
-// #include "Shape/KDTreeKevMesh.h"
-
- using namespace Illumina::Core;
+//----------------------------------------------------------------------------------------------
+//	Filename:	MemoryManager.cpp
+//	Author:		Kevin Napoli
+//	Date:		01/07/2013
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+using namespace Illumina::Core;
 
 template <class T>
 MemoryManager<T>::MemoryManager(unsigned int numElems, unsigned int alignment)
