@@ -158,6 +158,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		logger->Write("Environment :: Registering Shapes...", LL_Info);
 		m_engineKernel->GetShapeManager()->RegisterFactory("PersistentMesh", new PersistentMeshShapeFactory());
+		m_engineKernel->GetShapeManager()->RegisterFactory("KDTreeMeshEx", new KDTreeMeshExShapeFactory());
 		m_engineKernel->GetShapeManager()->RegisterFactory("KDTreeMesh", new KDTreeMeshShapeFactory());
 		m_engineKernel->GetShapeManager()->RegisterFactory("BVHMesh", new BVHMeshShapeFactory());
 		m_engineKernel->GetShapeManager()->RegisterFactory("Quad", new QuadMeshShapeFactory());
@@ -326,6 +327,7 @@ public:
 			logger->Write("Environment :: Freeing and unregistering Shapes...", LL_Info);
 
 			delete m_engineKernel->GetShapeManager()->RequestFactory("PersistentMesh");
+			delete m_engineKernel->GetShapeManager()->RequestFactory("KDTreeMeshEx");
 			delete m_engineKernel->GetShapeManager()->RequestFactory("KDTreeMesh");
 			delete m_engineKernel->GetShapeManager()->RequestFactory("BVHMesh");
 			delete m_engineKernel->GetShapeManager()->RequestFactory("Quad");
@@ -333,6 +335,7 @@ public:
 			delete m_engineKernel->GetShapeManager()->RequestFactory("Sphere");
 
 			m_engineKernel->GetShapeManager()->UnregisterFactory("PersistentMesh");
+			m_engineKernel->GetShapeManager()->UnregisterFactory("KDTreeMeshEx");
 			m_engineKernel->GetShapeManager()->UnregisterFactory("KDTreeMesh");
 			m_engineKernel->GetShapeManager()->UnregisterFactory("BVHMesh");
 			m_engineKernel->GetShapeManager()->UnregisterFactory("Quad");

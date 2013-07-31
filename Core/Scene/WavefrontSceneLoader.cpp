@@ -106,6 +106,7 @@ struct WavefrontContext
 	MaterialGroup *Materials;
 
 	std::string ObjectName;
+	std::string ContainerType;
 	int CurrentMaterialId;
 
 	WavefrontContext(void)
@@ -127,6 +128,9 @@ bool WavefrontSceneLoader::Import(const std::string &p_strFilename, unsigned int
 	// Provide wavefront scene context for loader
 	WavefrontContext context;
 	
+	if (p_pArgumentMap != NULL) 
+		p_pArgumentMap->GetArgument("Container", context.ContainerType);
+
 	// Load geometry
 	if (!LoadGeometry(p_strFilename, context))
 		return false;
@@ -396,12 +400,17 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 	boost::filesystem::path geometryPath(p_strFilename);
 	p_context.ObjectName = geometryPath.filename().string();
 	
-	//p_context.Mesh = new PersistentMesh(p_context.ObjectName, "Z:\\Object");
-	//p_context.Mesh = new KDTreeMesh(p_context.ObjectName);
-	p_context.Mesh = new KDTreeMeshEx(p_context.ObjectName);
-	//p_context.Mesh = new BVHMesh(p_context.ObjectName);
-	//p_context.Mesh = new BasicMesh(p_context.ObjectName);
+	if (m_pEngineKernel->GetShapeManager()->QueryFactory(p_context.ContainerType))
+	{
+		ArgumentMap argumentMap("Name=" + p_context.ObjectName + ";");
 
+		p_context.Mesh = (ITriangleMesh*)
+			m_pEngineKernel->GetShapeManager()->RequestFactory(p_context.ContainerType)
+				->CreateInstance(argumentMap);
+	}
+	else
+		p_context.Mesh = new KDTreeMesh(p_context.ObjectName);
+	
 	// Open wavefront file
 	std::ifstream wavefrontFile;
 	wavefrontFile.open(p_strFilename.c_str());

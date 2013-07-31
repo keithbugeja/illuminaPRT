@@ -29,7 +29,7 @@ namespace Illumina
 				Spinlock m_lock;
 
 			public:			
-				List(int p_nCapacity = 10, int p_nGrowth = 10)
+				List(int p_nCapacity = 10, int p_nGrowth = 5)
 				{
 				}
 
@@ -94,9 +94,9 @@ namespace Illumina
 
 				void PushBack(const T &p_obj) 
 				{
-					m_lock.Lock();
+					// m_lock.Lock();
 					m_list.push_back(p_obj);
-					m_lock.Unlock();
+					// m_lock.Unlock();
 				}
 
 				void PushBack(const List<T> &p_objList)
@@ -206,7 +206,7 @@ namespace Illumina
 					// Do we need array to grow?
 					if (m_size + 1 == m_capacity)
 					{
-						m_capacity += m_growth;
+						m_capacity *= m_growth;
 
 						T *list = (T*)AlignedMalloc(sizeof(T) * m_capacity, 16);
 						BOOST_ASSERT(list != NULL);
