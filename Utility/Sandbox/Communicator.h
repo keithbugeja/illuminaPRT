@@ -31,6 +31,10 @@ public:
 		// Synch
 		Coordinator_Worker_Sync		= 0x00004004,
 		Worker_Coordinator_Sync		= 0x00004005,
+		 
+		// Synch/Hbeat data
+		Coordinator_Worker_SyncData	= 0x00004010,
+		Worker_Coordinator_SyncData = 0x00004011,
 
 		// Job
 		Coordinator_Worker_Job		= 0x00010000,

@@ -196,23 +196,33 @@ void BaseRenderer::RenderTile(RadianceBuffer *p_pRadianceBuffer, int p_nTileInde
 	context.SampleIndex = 0;
 	context.SampleCount = 1;
 
+	/*
+	std::cout << "Required samples" << requiredSamples << std::endl <<
+	"Sample start:" << sampleStart << std::endl;
+	*/
+
+	int width = GetDevice()->GetWidth();
+	int height = GetDevice()->GetHeight();
+
+	pRadianceContext = p_pRadianceBuffer->GetBuffer();
+
 	// Rasterise pixels
 	for (; requiredSamples > 0; requiredSamples--)
 	{
-		sample.X = GetDevice()->GetWidth() * QuasiRandomSequence::VanDerCorput(sampleStart + maxSamples - requiredSamples);
-		sample.Y = GetDevice()->GetWidth() * QuasiRandomSequence::Sobol2(sampleStart + maxSamples - requiredSamples);
+		sample.X = width * QuasiRandomSequence::VanDerCorput(sampleStart + maxSamples - requiredSamples);
+		sample.Y = height * QuasiRandomSequence::Sobol2(sampleStart + maxSamples - requiredSamples);
 
 		int srcX = (int)(sample.X),
 			srcY = (int)(sample.Y);
 
-		int dstX = (int)(sample.X),
-			dstY = (int)(sample.Y);
+		int dstX = (int)(requiredSamples % width),
+			dstY = (int)(requiredSamples / width);
 
 		// Get sub-pixel position
 		sample = m_pScene->GetSampler()->Get2DSample();
 
 		// Get radiance context
-		pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
+		// pRadianceContext = p_pRadianceBuffer->GetP(dstX, dstY);
 
 		// Set integrator context
 		context.SurfacePosition.Set((float)srcX, (float)srcY);
@@ -220,10 +230,10 @@ void BaseRenderer::RenderTile(RadianceBuffer *p_pRadianceBuffer, int p_nTileInde
 
 		// Get ray from camera
 		m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, sample.U * rcpWidth, sample.V * rcpHeight, pRadianceContext->ViewRay);
-		//m_pScene->GetCamera()->GetRay(context.NormalisedPosition.X, context.NormalisedPosition.Y, 0.5f * rcpWidth, 0.5f * rcpHeight, pRadianceContext->ViewRay);
 				
 		// Get radiance
 		pRadianceContext->Final = m_pIntegrator->Radiance(&context, m_pScene, pRadianceContext->ViewRay, intersection, pRadianceContext);
+		pRadianceContext++;
 	}
 }
 //----------------------------------------------------------------------------------------------
