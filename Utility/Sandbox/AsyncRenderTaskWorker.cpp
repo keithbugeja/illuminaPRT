@@ -45,7 +45,11 @@ bool AsyncRenderTaskWorker::ComputeUniform(void)
 		//--------------------------------------------------
 		// If termination signal, stop
 		//--------------------------------------------------
-		if (tileID == -1) break;
+		if (tileID == -1) 
+		{
+			std::cout << "Worker break!" << std::endl;
+			break;
+		}
 
 		//--------------------------------------------------
 		// We have task id - render
@@ -124,12 +128,16 @@ bool AsyncRenderTaskWorker::ComputeVariable(void)
 	Communicator::Send(&tileID, sizeof(int),
 		GetCoordinatorID(), Communicator::Worker_Coordinator_Job);
 
+	tileID = -2;
+
 	while (tileID != -1)
 	{
 		//--------------------------------------------------
 		// Receive tile
 		//--------------------------------------------------
 		Communicator::Receive(&tileID, sizeof(int), GetCoordinatorID(), Communicator::Coordinator_Worker_Job);
+
+		// std::cout << "W) Received Tile [" << tileID << "]" << std::endl;
 
 		//--------------------------------------------------
 		// If termination signal, stop
@@ -146,33 +154,11 @@ bool AsyncRenderTaskWorker::ComputeVariable(void)
 		const int halfKernelSize = kernelSize >> 1;
 
 		m_pRenderTile->Resize(packet.XSize, packet.YSize);
-		m_pRimmedRenderTile->Resize(packet.XSize + kernelSize, packet.YSize + kernelSize);
 
-		m_pRenderer->RenderRegion(m_pRimmedRenderTile->GetImageData(),
-			packet.XStart - halfKernelSize,
-			packet.YStart - halfKernelSize,
-			packet.XSize + kernelSize,
-			packet.YSize + kernelSize,
-			0, 0);
+		m_pRenderer->RenderTile(m_pRenderTile->GetImageData(), 
+			tileID, m_pRenderTile->GetWidth(), m_pRenderTile->GetHeight());
 
-		// spixelsRendered += (packet.XSize + kernelSize) * (packet.YSize + kernelSize);
-
-		RadianceContext *pSrc, *pDst;
-		
-		for (int y = 0, ys = halfKernelSize; y < packet.YSize; y++, ys++)
-		{
-			pSrc = m_pRimmedRenderTile->GetImageData()->GetP(halfKernelSize, ys);
-			pDst = m_pRenderTile->GetImageData()->GetP(0, y);
-
-			for (int x = 0; x < packet.XSize; x++)
-			{
-				pDst->Final = pSrc->Final;
-				pDst->Flags = RadianceContext::DF_Final | RadianceContext::DF_Computed;
-
-				pSrc++;
-				pDst++;
-			}
-		}
+		// std::cout << "Rendererd Tile : [" << tileID << "]" << std::endl;
 
 		// Tone mapping moved to workers
 		m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRenderTile->GetImageData());
@@ -186,6 +172,8 @@ bool AsyncRenderTaskWorker::ComputeVariable(void)
 		//--------------------------------------------------
 		// Send back result
 		//--------------------------------------------------
+		// std::cout << "W) Sending tile [" << tileID << "], Size [" << m_pRenderTile->GetTransferBufferSize() << "]" << std::endl;
+
 		Communicator::Send(m_pRenderTile->GetTransferBuffer(), m_pRenderTile->GetTransferBufferSize(),
 			GetCoordinatorID(), Communicator::Worker_Coordinator_Job);
 	}
@@ -205,6 +193,8 @@ bool AsyncRenderTaskWorker::ComputeVariable(void)
 //----------------------------------------------------------------------------------------------
 bool AsyncRenderTaskWorker::Compute(void) 
 {
+	ComputeVariable();
+
 	//   send request for work (no payload at first)
 
 	// while is running
@@ -385,21 +375,21 @@ bool AsyncRenderTaskWorker::OnHeartbeat(void)
 {
 	int synchronisePacketSize;
 
-	Communicator::Receive(&synchronisePacketSize, sizeof(int), GetCoordinatorID(), Communicator::Coordinator_Worker_Job);
+	Communicator::Receive(&synchronisePacketSize, sizeof(int), GetCoordinatorID(), Communicator::Coordinator_Worker_SyncData);
 	
 	if (synchronisePacketSize == -1)
 		return false;
 
 	char buffer[2048];
 
-	Communicator::Receive(buffer, synchronisePacketSize, GetCoordinatorID(), Communicator::Coordinator_Worker_Job);
+	Communicator::Receive(buffer, synchronisePacketSize, GetCoordinatorID(), Communicator::Coordinator_Worker_SyncData);
 	SynchronisePacket *packet = (SynchronisePacket*)buffer;
 
 	/*
 	std::cout << "Worker got sync packet [0] : " << packet->observerPosition.ToString() << std::endl;
 	std::cout << "Worker got sync packet [1] : " << packet->observerTarget.ToString() << std::endl;
 	std::cout << "Worker get sync packet [2] : " << packet->seed << std::endl;
-	*/
+	/* */
 
 	m_unSamplerSeed = (unsigned int)packet->seed;
 

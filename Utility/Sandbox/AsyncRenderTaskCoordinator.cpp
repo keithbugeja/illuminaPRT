@@ -402,12 +402,17 @@ bool AsyncRenderTaskCoordinator::OnHeartbeat(void)
 	std::vector<int> &workerList 
 		= GetAvailableWorkerList();
 
+	// std::cout << "Heartbeat : [";
+
 	// Send first batch of state changes
 	for (auto worker : workerList)
 	{
-		Communicator::Send(&synchronisePacketSize, sizeof(int), worker, Communicator::Coordinator_Worker_Job);
-		Communicator::Send(&syncPacket, sizeof(SynchronisePacket), worker, Communicator::Coordinator_Worker_Job);
+		// std::cout << worker << ",";
+		Communicator::Send(&synchronisePacketSize, sizeof(int), worker, Communicator::Coordinator_Worker_SyncData);
+		Communicator::Send(&syncPacket, sizeof(SynchronisePacket), worker, Communicator::Coordinator_Worker_SyncData);
 	}
+
+	// std::cout << "]" << std::endl;
 
 	return true;
 }
@@ -514,6 +519,7 @@ bool AsyncRenderTaskCoordinator::Compute(void)
 
 	// memcpy(m_pRadianceOutput, m_pRadianceBuffer, m_pRadianceBuffer->GetArea() * sizeof(RadianceContext));
 	// Apply temporal filtering
+
 	m_pMotionBlurFilter->Apply(m_pRadianceBuffer, m_pRadianceOutput);
 	if (m_bResetAccumulation)
 	{
@@ -547,25 +553,35 @@ void AsyncRenderTaskCoordinator::ComputeThreadHandler(AsyncRenderTaskCoordinator
 	p_pCoordinator->m_nProducerIndex = 0;
 	p_pCoordinator->m_nTilesPacked = 0;
 
+	tileID = p_pCoordinator->m_renderTaskContext.TotalTiles - 1;
+
 	while(p_pCoordinator->IsRunning())
 	{
 		// Any work requests?
 		while (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Worker_Coordinator_Job, &status))
 		{
+			// std::cout << "M) Request for work received. Size [" << Communicator::GetSize(&status) << "]" << std::endl;
+
 			// Remove message from pending set
 			p_pCoordinator->m_pending.erase(status.MPI_SOURCE);
 
 			// Check by size if payload-less message
 			if (Communicator::GetSize(&status) == sizeof(int))
 			{
+				// std::cout << "M) Request doesn't contain data." << std::endl;
+
 				Communicator::Receive(&request, 
 					Communicator::GetSize(&status), status.MPI_SOURCE,
 					Communicator::Worker_Coordinator_Job);
 			}
 			else
 			{
+				// std::cout << "M) Request contains tile data." << std::endl;
+
 				// Receive compressed tile
-				pRenderTile = p_pCoordinator->m_renderTileBuffer[p_pCoordinator->m_nProducerIndex++];
+				// pRenderTile = p_pCoordinator->m_renderTileBuffer[p_pCoordinator->m_nProducerIndex++];
+				pRenderTile = p_pCoordinator->m_renderTileBuffer[p_pCoordinator->m_nProducerIndex];
+				p_pCoordinator->m_nProducerIndex = (p_pCoordinator->m_nProducerIndex  + 1) % p_pCoordinator->m_renderTaskContext.TotalTiles;
 
 				Communicator::Receive(pRenderTile->GetTransferBuffer(), 
 					Communicator::GetSize(&status), status.MPI_SOURCE,
@@ -574,11 +590,15 @@ void AsyncRenderTaskCoordinator::ComputeThreadHandler(AsyncRenderTaskCoordinator
 				// Receive complete -> Inform consumer
 				AtomicInt32::Increment((Int32*)&(p_pCoordinator->m_nTilesPacked));
 				p_pCoordinator->m_decompressionQueueCV.notify_one();
+
+				// std::cout << "Packed Tiles [" << p_pCoordinator->m_nTilesPacked << "]" << std::endl;
 			}
 
 			// Worker is slated for release
 			if (p_pCoordinator->m_release.find(status.MPI_SOURCE) != p_pCoordinator->m_release.end())
 			{
+				// std::cout << "M) Send tile id [" << tileID << "]" << std::endl;
+
 				// Send sigterm
 				Communicator::Send(&finalTaskID, sizeof(int), status.MPI_SOURCE, Communicator::Coordinator_Worker_Job);
 			}
@@ -587,8 +607,11 @@ void AsyncRenderTaskCoordinator::ComputeThreadHandler(AsyncRenderTaskCoordinator
 				// Add to pending set
 				p_pCoordinator->m_pending.insert(status.MPI_SOURCE);
 
+				// std::cout << "M) Send tile id [" << tileID << "]" << std::endl;
 				Communicator::Send(&tileID, sizeof(int), status.MPI_SOURCE, Communicator::Coordinator_Worker_Job);
-				tileID--;
+				
+				if (--tileID < 0)
+					tileID = p_pCoordinator->m_renderTaskContext.TotalTiles - 1;
 			}
 		}
 	}
@@ -713,7 +736,9 @@ void AsyncRenderTaskCoordinator::DecompressionThreadHandler(AsyncRenderTaskCoord
 		// TODO: Check this shit out or it's going to blow in our faces. Goddamnit.
 		if (p_pCoordinator->IsRunning() == false) break;
 
-		pRenderTile = p_pCoordinator->m_renderTileBuffer[p_pCoordinator->m_nConsumerIndex++];
+		//pRenderTile = p_pCoordinator->m_renderTileBuffer[p_pCoordinator->m_nConsumerIndex++];
+		pRenderTile = p_pCoordinator->m_renderTileBuffer[p_pCoordinator->m_nConsumerIndex];
+		p_pCoordinator->m_nConsumerIndex = (p_pCoordinator->m_nConsumerIndex + 1) % p_pCoordinator->m_renderTaskContext.TotalTiles;
 		AtomicInt32::Decrement((Int32*)&(p_pCoordinator->m_nTilesPacked));
 
 		// Decompress current tile
@@ -724,19 +749,26 @@ void AsyncRenderTaskCoordinator::DecompressionThreadHandler(AsyncRenderTaskCoord
 		pTileBuffer = pRenderTile->GetImageData()->GetBuffer(); 
 
 		RenderTilePackets::Packet packet = p_pCoordinator->m_renderTaskContext.TilePackets.GetPacket(receivedTileID);
-		int sx = packet.XStart,
-			sy = packet.YStart,
-			sxe = sx + packet.XSize,
-			sye = sy + packet.YSize;
-		
-		for (int y = sy; y < sye; y++) 
+		int requiredSamples = packet.XSize * packet.YSize;
+		int maxSamples = requiredSamples;
+		int sampleStart = receivedTileID * maxSamples;
+
+		Vector2 sample;
+
+		int width = p_pCoordinator->m_pRenderer->GetDevice()->GetWidth(),
+			height = p_pCoordinator->m_pRenderer->GetDevice()->GetHeight();
+
+		// Rasterise pixels
+		for (; requiredSamples > 0; requiredSamples--)
 		{
-			for (int x = sx; x < sxe; x++) 
-			{
-				p_pCoordinator->m_pRadianceBuffer->Set(x, y, *pTileBuffer);
-				
-				pTileBuffer++;
-			}
+			sample.X = width * QuasiRandomSequence::VanDerCorput(sampleStart + maxSamples - requiredSamples);
+			sample.Y = height * QuasiRandomSequence::Sobol2(sampleStart + maxSamples - requiredSamples);
+
+			int dstX = (int)(sample.X),
+				dstY = (int)(sample.Y);
+
+			p_pCoordinator->m_pRadianceBuffer->Set(dstX, dstY, *pTileBuffer);
+			pTileBuffer++;
 		}
 	}
 
