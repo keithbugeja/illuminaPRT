@@ -351,6 +351,9 @@
     <ClCompile Include="..\..\..\..\Core\Scene\PolygonSceneLoader.cpp">
       <Filter>Header Files\Scene</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Device\SharedMemoryDevice.cpp">
+      <Filter>Header Files\Device</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -877,6 +880,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Scene\PolygonSceneLoader.h">
       <Filter>Header Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Device\SharedMemoryDevice.h">
+      <Filter>Header Files\Device</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

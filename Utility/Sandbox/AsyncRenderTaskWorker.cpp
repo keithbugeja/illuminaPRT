@@ -150,15 +150,11 @@ bool AsyncRenderTaskWorker::ComputeVariable(void)
 		// consider const Packet &packet!
 		RenderTilePackets::Packet packet = m_renderTaskContext.TilePackets.GetPacket(tileID);
 
-		const int kernelSize = 8;
-		const int halfKernelSize = kernelSize >> 1;
-
 		m_pRenderTile->Resize(packet.XSize, packet.YSize);
 
-		m_pRenderer->RenderTile(m_pRenderTile->GetImageData(), 
-			tileID, m_pRenderTile->GetWidth(), m_pRenderTile->GetHeight());
-
-		// std::cout << "Rendererd Tile : [" << tileID << "]" << std::endl;
+		m_pRenderer->RenderTile(
+			m_pRenderTile->GetImageData(),
+			tileID, packet.XSize, packet.YSize);
 
 		// Tone mapping moved to workers
 		m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRenderTile->GetImageData());

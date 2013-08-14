@@ -188,5 +188,8 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\AsyncRenderTaskWorker.h">
       <Filter>Source Files\distributed\async</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\SHMViewer.h">
+      <Filter>Source Files\utility</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

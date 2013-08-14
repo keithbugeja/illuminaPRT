@@ -43,7 +43,8 @@ void ICoordinator::ControllerCommunication(ResourceMessageQueue *p_pMessageQueue
 
 	while(IsRunning())
 	{
-		if (Communicator::ProbeAsynchronous(Communicator::Controller_Rank, Communicator::Controller_Coordinator, &status))
+		// if (Communicator::ProbeAsynchronous(Communicator::Controller_Rank, Communicator::Controller_Coordinator, &status))
+		while (Communicator::ProbeAsynchronous(Communicator::Controller_Rank, Communicator::Controller_Coordinator, &status))
 		{
 			Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), Communicator::Controller_Rank, Communicator::Controller_Coordinator, &status);
 			ResourceMessage *pMessage = new ResourceMessage(status.MPI_SOURCE, -1, status.MPI_TAG, pCommandBuffer[0], Communicator::GetSize(&status), pCommandBuffer);
@@ -61,8 +62,13 @@ void ICoordinator::ControllerCommunication(ResourceMessageQueue *p_pMessageQueue
 				m_messageQueueMutex.unlock();	
 			}
 		}
+
+		boost::this_thread::sleep(boost::posix_time::millisec(15));
+		/* 
+		if (...) { ... }
 		else
 			boost::this_thread::sleep(boost::posix_time::microsec(1000));
+		*/
 	}
 
 	delete[] pCommandBuffer;
@@ -75,7 +81,8 @@ void ICoordinator::WorkerCommunication(ResourceMessageQueue *p_pMessageQueue)
 
 	while(IsRunning())
 	{
-		if (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Worker_Coordinator, &status))
+		// if (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Worker_Coordinator, &status))
+		while (Communicator::ProbeAsynchronous(Communicator::Source_Any, Communicator::Worker_Coordinator, &status))
 		{
 			Communicator::Receive(pCommandBuffer, Communicator::GetSize(&status), Communicator::Source_Any, Communicator::Worker_Coordinator, &status);
 			ResourceMessage *pMessage = new ResourceMessage(status.MPI_SOURCE, -1, status.MPI_TAG, pCommandBuffer[0], Communicator::GetSize(&status), (unsigned char *)pCommandBuffer);
@@ -84,8 +91,13 @@ void ICoordinator::WorkerCommunication(ResourceMessageQueue *p_pMessageQueue)
 			p_pMessageQueue->push(pMessage);
 			m_messageQueueMutex.unlock();
 		}
+
+		boost::this_thread::sleep(boost::posix_time::millisec(15));
+		/* 
+		if (...) { ... }
 		else
 			boost::this_thread::sleep(boost::posix_time::microsec(1000));
+		*/
 	}
 
 	delete[] pCommandBuffer;
@@ -348,7 +360,7 @@ bool ICoordinator::Heartbeat(void)
 	m_releaseMutex.unlock();
 
 	// Every 1/10th of a second for now
-	boost::this_thread::sleep(boost::posix_time::microsec(100));
+	// boost::this_thread::sleep(boost::posix_time::microsec(100));
 
 	// Return heartbeat
 	return OnHeartbeat();
