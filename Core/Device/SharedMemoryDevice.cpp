@@ -64,7 +64,7 @@ bool SharedMemoryDevice::Open(void)
 	#if (defined __PLATFORM_WINDOWS__)
 	// Create a native windows shared memory object.
 	m_pSharedMemorySink = new boost::interprocess::windows_shared_memory(
-		boost::interprocess::create_only, "IlluminaPRT_OutputSink", 
+		boost::interprocess::create_only, "Global\\IlluminaPRT_OutputSink", 
 		boost::interprocess::read_write, segmentSize);
 	#else
 	// Create shared memory object for POSIX compliant systems
@@ -103,7 +103,7 @@ void SharedMemoryDevice::Stream(void)
 	{
 		*dst++ = (unsigned char)(255 * src->R);
 		*dst++ = (unsigned char)(255 * src->G);
-		*dst++ = (unsigned char)(255 * src->G);
+		*dst++ = (unsigned char)(255 * src->B);
 	}
 }
 //----------------------------------------------------------------------------------------------

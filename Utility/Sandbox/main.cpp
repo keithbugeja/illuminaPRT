@@ -5,7 +5,6 @@
 //----------------------------------------------------------------------------------------------
 // TODO:
 // Double check ILight-derived classes ... some methods have not been tested properly.
-// ?? DistributedRenderer should not instantiate MPI - change it to have it passed to the object
 // Polish object factories
 // Move factories to CorePlugins.dll
 // Finish scene loaders
@@ -14,16 +13,23 @@
 //----------------------------------------------------------------------------------------------
 //	Set Illumina PRT compilation mode (SHM or DSM)
 //----------------------------------------------------------------------------------------------
-// #define ILLUMINA_SHM
+//#define ILLUMINA_SHM
 
 #if (!defined ILLUMINA_SHM)
 	#define ILLUMINA_DSM
+/* I hate myself for this */
+#else
+	#define ILLUMINA_SHMVIEWER
+	#if (defined ILLUMINA_SHMVIEWER)
+		#include "SHMViewer.h"
+	#endif
+/**/
 #endif
 
 //----------------------------------------------------------------------------------------------
 //	Set Illumina PRT version
 //----------------------------------------------------------------------------------------------
-namespace Illumina { namespace Core { const int Major = 0; const int Minor = 6; const int Build = 0; } }
+namespace Illumina { namespace Core { const int Major = 0; const int Minor = 7; const int Build = 0; } }
 
 using namespace Illumina::Core;
 
@@ -92,6 +98,28 @@ void IlluminaPRT(Logger *p_pLogger, int p_nVerboseFrequency,
 //----------------------------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
+	#if (defined ILLUMINA_SHMVIEWER)
+	SHMViewer viewer(512, 512);
+	viewer.Open();
+
+	/* 
+	IDevice* p = viewer.SetDummyOutput();
+	p->BeginFrame();
+	for (int y = 0; y < 512; y++)
+		for (int x = 0; x < 512; x++)
+			p->Set(x, y, Spectrum(float(x + y) / 1024));
+	p->EndFrame();
+	*/
+
+	while(true) {
+		viewer.Update();
+		boost::this_thread::sleep(boost::posix_time::millisec(20));
+	}
+
+	viewer.Close();
+	return 0;
+	#endif
+
 	std::cout << "Illumina Renderer : Version " << Illumina::Core::Major << "." << Illumina::Core::Minor << "." << Illumina::Core::Build << " http://www.illuminaprt.codeplex.com " << std::endl;
 	std::cout << "Copyright (C) 2010-2012 Keith Bugeja" << std::endl << std::endl;
 
