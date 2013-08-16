@@ -209,7 +209,7 @@ bool AsyncRenderTaskCoordinator::OnInitialise(void)
 			deviceFactory = "Image";
 			deviceString = deviceArguments.str();
 		}
-		else if (deviceType == "display")
+		else if (deviceType == "sharedmemory")
 		{
 			std::stringstream deviceArguments; std::string argument;
 			pArgumentMap->GetArgument(__Device_Width, argument);
@@ -218,8 +218,8 @@ bool AsyncRenderTaskCoordinator::OnInitialise(void)
 			deviceArguments << ";Height=" << argument;
 			deviceArguments << ";";
 
-			deviceId = "__Override_Coordinator_Display_Device";
-			deviceFactory = "Display";
+			deviceId = "__Override_Coordinator_SharedMemory_Device";
+			deviceFactory = "SharedMemory";
 			deviceString = deviceArguments.str();
 		}
 

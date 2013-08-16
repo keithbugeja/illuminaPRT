@@ -52,7 +52,9 @@ Exception::Exception(const char* p_szMessage)
 	, m_strSourceFile(__FILE__)
 	, m_nSourceLine(__LINE__)
 	, m_pInnerException(NULL)
-{ }
+{ 
+	std::cerr << "Exception thrown :: Message => [" << p_szMessage << "]" << std::endl;
+}
 //----------------------------------------------------------------------------------------------
 Exception::Exception(void)
 	: m_strMessage("")

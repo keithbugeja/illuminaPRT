@@ -131,6 +131,7 @@ public:
 		// Device
 		//----------------------------------------------------------------------------------------------
 		logger->Write("Environment :: Registering Devices...", LL_Info);
+		m_engineKernel->GetDeviceManager()->RegisterFactory("SharedMemory", new SharedMemoryDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("GLDisplay", new GLDisplayDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("Display", new DisplayDeviceFactory());
 		m_engineKernel->GetDeviceManager()->RegisterFactory("BufferedImage", new BufferedImageDeviceFactory());
@@ -283,6 +284,7 @@ public:
 			//----------------------------------------------------------------------------------------------
 			logger->Write("Environment :: Freeing and unregistering Devices...", LL_Info);
 
+			delete m_engineKernel->GetDeviceManager()->RequestFactory("SharedMemory");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("GLDisplay");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Display");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("BufferedImage");
@@ -290,6 +292,7 @@ public:
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("Video");
 			delete m_engineKernel->GetDeviceManager()->RequestFactory("RTP");
 
+			m_engineKernel->GetDeviceManager()->UnregisterFactory("SharedMemory");
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("GLDisplay");
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("Display");
 			m_engineKernel->GetDeviceManager()->UnregisterFactory("BufferedImage");
