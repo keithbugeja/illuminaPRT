@@ -209,6 +209,19 @@ bool RenderTaskCoordinator::OnInitialise(void)
 			deviceFactory = "Image";
 			deviceString = deviceArguments.str();
 		}
+		else if (deviceType == "sharedmemory")
+		{
+			std::stringstream deviceArguments; std::string argument;
+			pArgumentMap->GetArgument(__Device_Width, argument);
+			deviceArguments << "Width=" << argument;
+			pArgumentMap->GetArgument(__Device_Height, argument);
+			deviceArguments << ";Height=" << argument;
+			deviceArguments << ";";
+
+			deviceId = "__Override_Coordinator_SharedMemory_Device";
+			deviceFactory = "SharedMemory";
+			deviceString = deviceArguments.str();
+		}
 
 		// Create device and set tag
 		pDevice = m_pEngineKernel->GetDeviceManager()->CreateInstance(deviceFactory, deviceId, deviceString);

@@ -35,6 +35,9 @@ namespace Illumina
 			bool m_bIsStreaming,
 				m_bIsOpen;
 
+			// Shared memory tag
+			std::string m_strTag;
+
 			#if (defined __PLATFORM_WINDOWS__)
 			boost::interprocess::windows_shared_memory
 				*m_pSharedMemorySink;
@@ -47,8 +50,8 @@ namespace Illumina
 				*m_pSharedMemoryRegion;
 
 		public:
-			SharedMemoryDevice(const std::string &p_strName, int p_nWidth, int p_nHeight);
-			SharedMemoryDevice(int p_nWidth, int p_nHeight);
+			SharedMemoryDevice(const std::string &p_strName, int p_nWidth, int p_nHeight, const std::string &p_strTag);
+			SharedMemoryDevice(int p_nWidth, int p_nHeight, const std::string &p_strTag);
 
 			~SharedMemoryDevice(void);
 
@@ -86,6 +89,8 @@ namespace Illumina
 			void Stream(void);
 
 			Image *GetImage(void) const;
+
+			const std::string GetTag(void) const;
 		};
 	}
 }

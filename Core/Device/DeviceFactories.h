@@ -41,26 +41,28 @@ namespace Illumina
 				int width = 640,
 					height = 480;
 
-				std::string strId;
+				std::string strId,
+					strTag("IlluminaPRT_OutputSink");
 
 				// Read arguments
 				p_argumentMap.GetArgument("Width", width);
 				p_argumentMap.GetArgument("Height", height);
+				p_argumentMap.GetArgument("Tag", strTag);
 
 				if (p_argumentMap.GetArgument("Id", strId))
-					return CreateInstance(strId, width, height);
+					return CreateInstance(strId, width, height, strTag);
 
-				return CreateInstance(width, height);
+				return CreateInstance(width, height, strTag);
 			}
 
-			Illumina::Core::IDevice *CreateInstance(const std::string &p_strId, int p_nWidth, int p_nHeight)
+			Illumina::Core::IDevice *CreateInstance(const std::string &p_strId, int p_nWidth, int p_nHeight, const std::string &p_strTag)
 			{
-				return new SharedMemoryDevice(p_strId, p_nWidth, p_nHeight);
+				return new SharedMemoryDevice(p_strId, p_nWidth, p_nHeight, p_strTag);
 			}
 
-			Illumina::Core::IDevice *CreateInstance(int p_nWidth, int p_nHeight)
+			Illumina::Core::IDevice *CreateInstance(int p_nWidth, int p_nHeight, const std::string &p_strTag)
 			{
-				return new SharedMemoryDevice(p_nWidth, p_nHeight);
+				return new SharedMemoryDevice(p_nWidth, p_nHeight, p_strTag);
 			}
 		};
 
