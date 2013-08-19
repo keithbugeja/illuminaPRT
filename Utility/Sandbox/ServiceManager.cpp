@@ -7,7 +7,7 @@
 #include "Worker.h"
 
 #include "AsyncRenderTaskPipeline.h"
-// #include "RenderTaskPipeline.h"
+#include "RenderTaskPipeline.h"
 //----------------------------------------------------------------------------------------------
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------

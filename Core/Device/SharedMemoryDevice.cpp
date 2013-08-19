@@ -13,10 +13,11 @@ using namespace Illumina::Core;
 
 //----------------------------------------------------------------------------------------------
 SharedMemoryDevice::SharedMemoryDevice(const std::string &p_strName, 
-	int p_nWidth, int p_nHeight)	
+	int p_nWidth, int p_nHeight, const std::string &p_strTag)	
 	: IDevice(p_strName) 
 	, m_nActiveBuffer(0)
 	, m_bIsOpen(false)
+	, m_strTag(p_strTag)
 {
 	m_pImage[0] = new Image(p_nWidth, p_nHeight);
 	m_pImage[1] = new Image(p_nWidth, p_nHeight);
@@ -25,9 +26,11 @@ SharedMemoryDevice::SharedMemoryDevice(const std::string &p_strName,
 	m_pBackBuffer = m_pImage[1 - m_nActiveBuffer];
 }
 //----------------------------------------------------------------------------------------------
-SharedMemoryDevice::SharedMemoryDevice(int p_nWidth, int p_nHeight)
+SharedMemoryDevice::SharedMemoryDevice(int p_nWidth, int p_nHeight,
+									   const std::string &p_strTag)
 	: m_nActiveBuffer(0)
 	, m_bIsOpen(false)
+	, m_strTag(p_strTag)
 {
 	m_pImage[0] = new Image(p_nWidth, p_nHeight);
 	m_pImage[1] = new Image(p_nWidth, p_nHeight);
@@ -64,13 +67,17 @@ bool SharedMemoryDevice::Open(void)
 	#if (defined __PLATFORM_WINDOWS__)
 	// Create a native windows shared memory object.
 	m_pSharedMemorySink = new boost::interprocess::windows_shared_memory(
-		boost::interprocess::create_only, "Global\\IlluminaPRT_OutputSink", 
+		boost::interprocess::create_only, std::string("Global\\" + m_strTag).c_str(), 
 		boost::interprocess::read_write, segmentSize);
 	#else
 	// Create shared memory object for POSIX compliant systems
-	// ...
+	m_pSharedMemorySink = new boost::interprocess::shared_memory_object(
+		boost::interprocess::create_only, m_strTag,
+		boost::interprocess::read_write);
+
+	m_pSharedMemorySink->truncate(segmentSize);
 	#endif
-	
+
 	// Map the whole shared memory in this process
 	m_pSharedMemoryRegion = new boost::interprocess::mapped_region(
 		*m_pSharedMemorySink, boost::interprocess::read_write);
@@ -117,6 +124,11 @@ void SharedMemoryDevice::Close(void)
 
 		// Close stream
 		delete m_pSharedMemoryRegion;
+
+		#if (!defined __PLATFORM_WINDOWS__)
+			m_pSharedMemorySink->remove();
+		#endif
+
 		delete m_pSharedMemorySink;
 
 		// Device is no longer open
