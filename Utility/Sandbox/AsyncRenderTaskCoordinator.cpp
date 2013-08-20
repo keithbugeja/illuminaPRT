@@ -280,8 +280,12 @@ bool AsyncRenderTaskCoordinator::OnInitialise(void)
 	m_renderTileBuffer.clear();
 
 	for (int packetIndex = 0; packetIndex < m_renderTaskContext.TilePackets.GetPacketCount(); packetIndex++)
+	{
 		m_renderTileBuffer.push_back(
-			new SerialisableRenderTile(-1, m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight));
+			new SerialisableRenderTile(
+			-1, m_renderTaskContext.TileWidth, m_renderTaskContext.TileHeight)
+		);
+	}
 
 	//----------------------------------------------------------------------------------------------
 	// Camera and observer details 
@@ -415,17 +419,12 @@ bool AsyncRenderTaskCoordinator::OnHeartbeat(void)
 	std::vector<int> &workerList 
 		= GetAvailableWorkerList();
 
-	// std::cout << "Heartbeat : [";
-
 	// Send first batch of state changes
 	for (auto worker : workerList)
 	{
-		// std::cout << worker << ",";
 		Communicator::Send(&synchronisePacketSize, sizeof(int), worker, Communicator::Coordinator_Worker_SyncData);
 		Communicator::Send(&syncPacket, sizeof(SynchronisePacket), worker, Communicator::Coordinator_Worker_SyncData);
 	}
-
-	// std::cout << "]" << std::endl;
 
 	return true;
 }
@@ -547,6 +546,9 @@ bool AsyncRenderTaskCoordinator::Compute(void)
 	m_pRenderer->Commit(m_pRadianceOutput);
 	*/
 
+	// Build a radiance buffer from fragments
+
+	// Commit radiance buffer
 	m_pRenderer->Commit(m_pRadianceBuffer);
 
 	// block for 1/30th of a second (we want approx 24fps)
@@ -557,6 +559,7 @@ bool AsyncRenderTaskCoordinator::Compute(void)
 		elapsed = checkPoint - lastCheckPoint;
 	
 	long sleep = (long) (((1.f / 24.f) - elapsed) * 1000);
+	
 	if (sleep > 0)
 	{
 		boost::this_thread::sleep(boost::posix_time::millisec(sleep));
