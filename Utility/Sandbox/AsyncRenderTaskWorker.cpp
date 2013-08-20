@@ -151,11 +151,30 @@ bool AsyncRenderTaskWorker::ComputeVariable(void)
 		RenderTilePackets::Packet packet = m_renderTaskContext.TilePackets.GetPacket(tileID);
 
 		m_pRenderTile->Resize(packet.XSize, packet.YSize);
+		m_pRimmedRenderTile->Resize(packet.XSize, packet.YSize);
 
 		m_pRenderer->RenderTile(
 			m_pRenderTile->GetImageData(),
 			tileID, packet.XSize, packet.YSize);
 
+		// Tone mapping moved to workers
+		m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRimmedRenderTile->GetImageData());
+
+		//--------------------------------------------------
+		// Package result
+		//--------------------------------------------------
+		m_pRimmedRenderTile->SetID(tileID);
+		m_pRimmedRenderTile->Package();
+
+		//--------------------------------------------------
+		// Send back result
+		//--------------------------------------------------
+		// std::cout << "W) Sending tile [" << tileID << "], Size [" << m_pRenderTile->GetTransferBufferSize() << "]" << std::endl;
+
+		Communicator::Send(m_pRimmedRenderTile->GetTransferBuffer(), m_pRimmedRenderTile->GetTransferBufferSize(),
+			GetCoordinatorID(), Communicator::Worker_Coordinator_Job);
+
+		/*
 		// Tone mapping moved to workers
 		m_pToneMapper->Apply(m_pRenderTile->GetImageData(), m_pRenderTile->GetImageData());
 
@@ -172,6 +191,7 @@ bool AsyncRenderTaskWorker::ComputeVariable(void)
 
 		Communicator::Send(m_pRenderTile->GetTransferBuffer(), m_pRenderTile->GetTransferBufferSize(),
 			GetCoordinatorID(), Communicator::Worker_Coordinator_Job);
+		*/
 	}
 
 	/* 
