@@ -629,9 +629,11 @@ void AsyncRenderTaskCoordinator::ComputeThreadHandler(AsyncRenderTaskCoordinator
 				// Add to pending set
 				p_pCoordinator->m_pending.insert(status.MPI_SOURCE);
 
-				// std::cout << "M) Send tile id [" << tileID << "]" << std::endl;
+				// Set the next hash
+				p_pCoordinator->m_renderTaskContext.TilePackets.GetPacket(tileID).NextHash = p_pCoordinator->m_ulFrame;
+
 				Communicator::Send(&tileID, sizeof(int), status.MPI_SOURCE, Communicator::Coordinator_Worker_Job);
-				
+
 				if (--tileID < 0)
 					tileID = p_pCoordinator->m_renderTaskContext.TotalTiles - 1;
 			}
@@ -720,6 +722,9 @@ void AsyncRenderTaskCoordinator::InputThreadHandler(AsyncRenderTaskCoordinator *
 			}
 		}
 
+		if (p_pCoordinator->m_bResetAccumulation) 
+			p_pCoordinator->m_ulFrame++;
+
 		// Computed every 20 ms
 		boost::this_thread::sleep(boost::posix_time::millisec(20));
 	}
@@ -769,14 +774,39 @@ void AsyncRenderTaskCoordinator::DecompressionThreadHandler(AsyncRenderTaskCoord
 			height = p_pCoordinator->m_pRenderer->GetDevice()->GetHeight();
 
 		// Rasterise pixels
-		for (; requiredSamples > 0; requiredSamples--)
+		if (packet.ThisHash == packet.NextHash)
 		{
-			p_pCoordinator->m_pRadianceBuffer->Set(
-				(int)(width * QuasiRandomSequence::VanDerCorput(sampleStart - requiredSamples)), 
-				(int)(height * QuasiRandomSequence::Sobol2(sampleStart - requiredSamples)), 
-				*pTileBuffer);
+			packet.RunLength++;
+
+			for (; requiredSamples > 0; requiredSamples--)
+			{
+				int x = (int)(width * QuasiRandomSequence::VanDerCorput(sampleStart - requiredSamples)),
+					y = (int)(height * QuasiRandomSequence::Sobol2(sampleStart - requiredSamples));
+
+				RadianceContext *c = p_pCoordinator->m_pRadianceBuffer->GetP(x, y);
+				c->Final += pTileBuffer->Final;
+				c->Direct += pTileBuffer->Direct;
+				c->Indirect += pTileBuffer->Indirect;
+
+				//p_pCoordinator->m_pRadianceBuffer->Set(x, y,  *pTileBuffer);
 			
-			pTileBuffer++;
+				pTileBuffer++;
+			}
+		}
+		else
+		{
+			packet.RunLength = 0;
+			packet.ThisHash = packet.NextHash;
+
+			for (; requiredSamples > 0; requiredSamples--)
+			{
+				p_pCoordinator->m_pRadianceBuffer->Set(
+					(int)(width * QuasiRandomSequence::VanDerCorput(sampleStart - requiredSamples)), 
+					(int)(height * QuasiRandomSequence::Sobol2(sampleStart - requiredSamples)), 
+					*pTileBuffer);
+			
+				pTileBuffer++;
+			}
 		}
 	}
 
