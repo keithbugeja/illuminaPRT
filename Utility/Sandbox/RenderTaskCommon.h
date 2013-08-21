@@ -66,6 +66,11 @@ public:
 	{
 		short XStart, YStart; 
 		short XSize, YSize;
+		
+		u_long ThisHash,
+			NextHash;
+
+		u_long RunLength;
 	};
 
 public:

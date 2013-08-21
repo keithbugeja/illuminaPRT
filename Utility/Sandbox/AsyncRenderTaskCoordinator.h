@@ -55,6 +55,9 @@ protected:
 	// Unique task identifier within system
 	int m_nTaskId;
 
+	// Capture frame changes
+	u_long m_ulFrame;
+
 	// User name and job name
 	std::string m_strUserName,
 		m_strJobName;
