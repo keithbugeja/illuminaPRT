@@ -531,6 +531,8 @@ bool AsyncRenderTaskCoordinator::Compute(void)
 		Platform::ToSeconds(Platform::GetTime());
 
 	// Synchronous computation goes here
+	if (m_bResetAccumulation)
+		m_bResetAccumulation = false;
 
 	// memcpy(m_pRadianceOutput, m_pRadianceBuffer, m_pRadianceBuffer->GetArea() * sizeof(RadianceContext));
 	// Apply temporal filtering
@@ -765,13 +767,16 @@ void AsyncRenderTaskCoordinator::DecompressionThreadHandler(AsyncRenderTaskCoord
 		receivedTileID = pRenderTile->GetID();
 		pTileBuffer = pRenderTile->GetImageData()->GetBuffer(); 
 
-		RenderTilePackets::Packet packet = p_pCoordinator->m_renderTaskContext.TilePackets.GetPacket(receivedTileID);
+		/*
+		//RenderTilePackets::Packet packet = p_pCoordinator->m_renderTaskContext.TilePackets.GetPacket(receivedTileID);
 		int maxSamples = packet.XSize * packet.YSize,
 			sampleStart = (receivedTileID + 1) * maxSamples,
 			requiredSamples = maxSamples;
 
 		int width = p_pCoordinator->m_pRenderer->GetDevice()->GetWidth(),
 			height = p_pCoordinator->m_pRenderer->GetDevice()->GetHeight();
+
+		std::cout << "Packet Hash : [" << packet.ThisHash << "] : [" << packet.NextHash << "]" << std::endl; 
 
 		// Rasterise pixels
 		if (packet.ThisHash == packet.NextHash)
@@ -797,6 +802,56 @@ void AsyncRenderTaskCoordinator::DecompressionThreadHandler(AsyncRenderTaskCoord
 		{
 			packet.RunLength = 0;
 			packet.ThisHash = packet.NextHash;
+
+			for (; requiredSamples > 0; requiredSamples--)
+			{
+				p_pCoordinator->m_pRadianceBuffer->Set(
+					(int)(width * QuasiRandomSequence::VanDerCorput(sampleStart - requiredSamples)), 
+					(int)(height * QuasiRandomSequence::Sobol2(sampleStart - requiredSamples)), 
+					*pTileBuffer);
+			
+				pTileBuffer++;
+			}
+		}
+		*/
+
+		RenderTilePackets::Packet *pPacket = &(p_pCoordinator->m_renderTaskContext.TilePackets.GetPacket(receivedTileID));
+
+		int maxSamples = pPacket->XSize * pPacket->YSize,
+			sampleStart = (receivedTileID + 1) * maxSamples,
+			requiredSamples = maxSamples;
+
+		int width = p_pCoordinator->m_pRenderer->GetDevice()->GetWidth(),
+			height = p_pCoordinator->m_pRenderer->GetDevice()->GetHeight();
+
+		// std::cout << "Packet Hash : [" << pPacket->ThisHash << "] : [" << pPacket->NextHash << "]" << std::endl; 
+
+		// Rasterise pixels
+		if (pPacket->ThisHash == pPacket->NextHash)
+		{
+			float a = Maths::Max(pPacket->RunLength, 1);
+			pPacket->RunLength++;
+			float b = 1.f / pPacket->RunLength;
+
+			for (; requiredSamples > 0; requiredSamples--)
+			{
+				int x = (int)(width * QuasiRandomSequence::VanDerCorput(sampleStart - requiredSamples)),
+					y = (int)(height * QuasiRandomSequence::Sobol2(sampleStart - requiredSamples));
+
+				RadianceContext *c = p_pCoordinator->m_pRadianceBuffer->GetP(x, y);
+				c->Final = (c->Final * a + pTileBuffer->Final) * b;
+				c->Direct = (c->Direct * a + pTileBuffer->Direct) * b;
+				c->Indirect = (c->Indirect * a + pTileBuffer->Indirect) * b;
+
+				//p_pCoordinator->m_pRadianceBuffer->Set(x, y,  *pTileBuffer);
+			
+				pTileBuffer++;
+			}
+		}
+		else
+		{
+			pPacket->RunLength = 1;
+			pPacket->ThisHash = pPacket->NextHash;
 
 			for (; requiredSamples > 0; requiredSamples--)
 			{

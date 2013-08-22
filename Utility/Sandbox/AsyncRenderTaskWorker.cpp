@@ -171,6 +171,17 @@ bool AsyncRenderTaskWorker::ComputeVariable(void)
 		//--------------------------------------------------
 		// std::cout << "W) Sending tile [" << tileID << "], Size [" << m_pRenderTile->GetTransferBufferSize() << "]" << std::endl;
 
+		if (m_bFramePrepare)
+		{
+			// Set seed 
+			m_pEnvironment->GetSampler()->Reset(m_unSamplerSeed);
+
+			// Prepare integrator
+			m_pIntegrator->Prepare(m_pEnvironment->GetScene());
+		
+			m_bFramePrepare = false;
+		}
+
 		Communicator::Send(m_pRimmedRenderTile->GetTransferBuffer(), m_pRimmedRenderTile->GetTransferBufferSize(),
 			GetCoordinatorID(), Communicator::Worker_Coordinator_Job);
 
@@ -406,6 +417,9 @@ bool AsyncRenderTaskWorker::OnHeartbeat(void)
 	std::cout << "Worker got sync packet [1] : " << packet->observerTarget.ToString() << std::endl;
 	std::cout << "Worker get sync packet [2] : " << packet->seed << std::endl;
 	/* */
+
+	if (m_unSamplerSeed != (unsigned int)packet->seed)
+		m_bFramePrepare = true;
 
 	m_unSamplerSeed = (unsigned int)packet->seed;
 

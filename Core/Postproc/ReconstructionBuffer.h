@@ -39,7 +39,7 @@ namespace Illumina
 				, m_fDistance(p_fDistance)
 			{ }
 
-			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight)
+			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, IPostProcess::BlendMode p_eBlendMode = IPostProcess::Replace)
 			{
 				std::cout << "Reconstructing..." << std::endl;
 
@@ -183,12 +183,12 @@ namespace Illumina
 				return true;
 			}
 
-			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput)
+			bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, IPostProcess::BlendMode p_eBlendMode = IPostProcess::Replace)
 			{
-				return Apply(p_pInput, p_pOutput, 0, 0, p_pInput->GetWidth(), p_pInput->GetHeight());
+				return Apply(p_pInput, p_pOutput, 0, 0, p_pInput->GetWidth(), p_pInput->GetHeight(), p_eBlendMode);
 			}
 
-			std::string ToString(void) const { return "[DiscontinuityBuffer]"; }
+			std::string ToString(void) const { return "[ReconstructionBuffer]"; }
 		};
 
 		//----------------------------------------------------------------------------------------------

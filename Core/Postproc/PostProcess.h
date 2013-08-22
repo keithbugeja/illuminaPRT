@@ -21,6 +21,12 @@ namespace Illumina
 		class IPostProcess 
 			: public Object
 		{
+		public:
+			enum BlendMode {
+				Replace,
+				Add
+			};
+
 		protected:
 			IPostProcess(const std::string &p_strName)
 				: Object(p_strName) 
@@ -34,8 +40,8 @@ namespace Illumina
 
 			virtual void Reset(void) { }
 
-			virtual bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput) = 0;
-			virtual bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight) = 0;
+			virtual bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, IPostProcess::BlendMode p_eBlendMode = IPostProcess::Replace) = 0;
+			virtual bool Apply(RadianceBuffer *p_pInput, RadianceBuffer *p_pOutput, int p_nRegionX, int p_nRegionY, int p_nRegionWidth, int p_nRegionHeight, IPostProcess::BlendMode p_eBlendMode = IPostProcess::Replace) = 0;
 
 			std::string ToString(void) const { return "IPostProcess"; }
 		};
