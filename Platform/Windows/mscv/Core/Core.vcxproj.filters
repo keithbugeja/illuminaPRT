@@ -884,6 +884,9 @@
     <ClInclude Include="..\..\..\..\Core\Device\SharedMemoryDevice.h">
       <Filter>Header Files\Device</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Postproc\MedianFilter.h">
+      <Filter>Header Files\Postproc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">

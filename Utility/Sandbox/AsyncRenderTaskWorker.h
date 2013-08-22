@@ -38,6 +38,8 @@ class AsyncRenderTaskWorker
 	int m_nBorderSize;
 	unsigned int m_uiFilterFlags;
 
+	bool m_bFramePrepare;
+
 protected:
 	bool ComputeUniform(void);
 	bool ComputeVariable(void);

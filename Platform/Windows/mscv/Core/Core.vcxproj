@@ -306,6 +306,7 @@
     <ClInclude Include="..\..\..\..\Core\Postproc\DragoTone.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\GlobalTone.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\HistoryBuffer.h" />
+    <ClInclude Include="..\..\..\..\Core\Postproc\MedianFilter.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\PostProcess.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\PostProcessFactories.h" />
     <ClInclude Include="..\..\..\..\Core\Postproc\ReconstructionBuffer.h" />
