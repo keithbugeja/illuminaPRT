@@ -114,6 +114,13 @@ namespace Illumina
 			RadianceBuffer(int p_nWidth, int p_nHeight, RadianceContext *p_pBuffer)
 				: Buffer2D<RadianceContext>::Buffer2D(p_nWidth, p_nHeight, p_pBuffer)
 			{ }
+
+			void ClearFlags(void)
+			{
+				RadianceContext *pContext = (RadianceContext*)m_buffer;
+				for (int count = GetArea(); count > 0; count--, pContext++)
+					pContext->Flags = 0;
+			}
 		};
 	}
 }

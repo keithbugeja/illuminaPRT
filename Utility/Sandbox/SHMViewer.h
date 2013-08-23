@@ -74,7 +74,7 @@ public:
 
 	IDevice* SetDummyOutput(void)
 	{
-		SharedMemoryDevice *shm = new SharedMemoryDevice(512, 512);
+		SharedMemoryDevice *shm = new SharedMemoryDevice(512, 512, "IlluminaPRT_OutputSink");
 		shm->Open();
 		return shm;
 	}

@@ -111,12 +111,22 @@ void IrradianceCache::SetBounds(const AxisAlignedBoundingBox &p_parent, int p_nC
 bool IrradianceCache::SphereBoxOverlap(const AxisAlignedBoundingBox &p_aabb,
 	const Vector3& p_centre, const float p_fRadius) const
 {
+	float dmin = 0;
+	for( int i = 0; i < 3; i++ )
+	{
+		if (p_centre[i] < p_aabb.GetMinExtent(i) ) dmin += Maths::Sqr(p_centre[i] - p_aabb.GetMinExtent(i));
+		else if (p_centre[i] > p_aabb.GetMaxExtent(i) ) dmin += Maths::Sqr(p_centre[i] - p_aabb.GetMaxExtent(i));
+	}
+	return dmin <= p_fRadius*p_fRadius;
+
+	/*
 	return (p_centre.X + p_fRadius > p_aabb.GetMinExtent(0) &&
 			p_centre.X - p_fRadius < p_aabb.GetMaxExtent(0) &&
 			p_centre.Y + p_fRadius > p_aabb.GetMinExtent(1) &&
 			p_centre.Y - p_fRadius < p_aabb.GetMaxExtent(1) &&
 			p_centre.Z + p_fRadius > p_aabb.GetMinExtent(2) &&
 			p_centre.Z - p_fRadius < p_aabb.GetMaxExtent(2));
+	*/
 }
 //----------------------------------------------------------------------------------------------
 void IrradianceCache::Insert(IrradianceCacheNode *p_pNode, IrradianceCacheRecord *p_pRecord, int p_nDepth)
@@ -129,7 +139,8 @@ void IrradianceCache::Insert(IrradianceCacheNode *p_pNode, IrradianceCacheRecord
 	else
 	{
 		// This node has no children allocated
-		if (p_pNode->Children == nullptr)
+		// if (p_pNode->Children == nullptr)
+		if (p_pNode->Children == NULL)
 		{
 			m_nNodeCount+=8;
 			p_pNode->Children = new IrradianceCacheNode[8];
@@ -157,26 +168,45 @@ bool IrradianceCache::FindRecords(const Vector3 &p_point, const Vector3 &p_norma
 {
 	IrradianceCacheNode *pNode = &RootNode;
 
-	float wi;
+	float wi, minval = 1e+10, maxval = -1e+10;
+	int rejected = 0;
 
 	if (pNode->Bounds.Contains(p_point))
 	{
-		while (pNode != nullptr)
+		//while (pNode != nullptr)
+		while(pNode != NULL)
 		{
-			for (auto r : pNode->RecordList)
+			// for (auto r : pNode->RecordList)
+			for (auto iter = pNode->RecordList.begin(); iter != pNode->RecordList.end(); iter++)
 			{
+				IrradianceCacheRecord *r = *iter;
+
+				wi = W(p_point, p_normal, *r);
+				minval = Maths::Min(wi, minval);
+				maxval = Maths::Max(wi, maxval);
+
 				// Race!
-				if ((wi = W(p_point, p_normal, *r)) > 0.f)
+				//if ((wi = W(p_point, p_normal, *r)) > 0.f)
+				if (wi > 0.f)
+				{
+				// if ((wi = W(p_point, p_normal, *r)) > 1.f / m_fErrorThreshold)
 					p_nearbyRecordList.push_back(std::pair<float, IrradianceCacheRecord*>(wi, r));
 				// Race!
+				}
+				else
+					rejected++;
 			}
 
-			if ((pNode = pNode->Children) == nullptr)
+			// if ((pNode = pNode->Children) == nullptr)
+			if ((pNode = pNode->Children) == NULL)
 				break;
 
+			// Equivalent to three partition tests! Optimise!
 			while(!pNode->Bounds.Contains(p_point)) pNode++;
 		}
 	}
+
+	// std::cout << "MinMax : [" << minval << ":" << maxval << "], Rejected : [" << rejected << "], Accepted : [" << p_nearbyRecordList.size() << "]" << std::endl; 
 
 	return true;
 }
@@ -184,8 +214,10 @@ bool IrradianceCache::FindRecords(const Vector3 &p_point, const Vector3 &p_norma
 float IrradianceCache::W_Ward(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
 {
 	float dist = Vector3::Distance(p_point, p_record.Point) / p_record.RiClamp;
-	float norm = Maths::Sqrt(1 - Vector3::Dot(p_normal, p_record.Normal));
-	return (1.f / (dist + norm)) - (1.f / m_fErrorThreshold);
+	float norm = Maths::Sqrt(1 - Vector3::AbsDot(p_normal, p_record.Normal));
+	// return (1.f / (dist + norm)) - (1.f / m_fErrorThreshold);
+
+	return (1.f / dist) - (1.f / m_fErrorThreshold);
 }
 //----------------------------------------------------------------------------------------------
 float IrradianceCache::W_Tabelion(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
@@ -217,8 +249,8 @@ float IrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, Irradi
 	if (d < 0.1f) return -1;
 	*/
 
-	// return W_Ward(
-	return W_Tabelion(
+	return W_Ward(
+	// return W_Tabelion(
 		p_point, p_normal, p_record);
 }
 //----------------------------------------------------------------------------------------------
@@ -238,6 +270,7 @@ std::string IrradianceCache::ToString(void) const
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 
+//#define ___DEBUG_IC___
 
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
@@ -334,6 +367,10 @@ Spectrum ICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, 
 		p_pRadianceContext->Direct = 
 		p_pRadianceContext->Albedo = 0.f;
 
+	#if (defined ___DEBUG_IC___)
+	p_pRadianceContext->Direct = 
+		p_pRadianceContext->Indirect = 0.f;
+
 	if (p_intersection.IsValid())
 	{
 		if (p_intersection.HasMaterial()) 
@@ -348,42 +385,64 @@ Spectrum ICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, 
 			p_pRadianceContext->SetSpatialContext(&p_intersection);
 			
 			if (!p_intersection.IsEmissive())
-			{
-				// Sample direct lighting
-				p_pRadianceContext->Direct = SampleAllLights(p_pScene, p_intersection, 
-					p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, 
-					wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowRays);
+				return p_pRadianceContext->Indirect = GetIrradiance(p_intersection, p_pScene);
 
-				// Set albedo
-				p_pRadianceContext->Albedo = pMaterial->Rho(wOut, p_intersection.Surface);
-				
-				// Set indirect 
-				p_pRadianceContext->Indirect = GetIrradiance(p_intersection, p_pScene) * p_pRadianceContext->Albedo * Maths::InvPi;
-			}
-			else
-			{
-				p_pRadianceContext->Direct = p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, 
-					p_intersection.Surface.GeometryBasisWS.W, wOut);
-			}
+			return 0.f;
 		}
 	}
-	else
-	{
-		/*
-		Ray ray(p_intersection.Surface.RayOriginWS, -p_intersection.Surface.RayDirectionWS);
-
-		for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
-			p_pRadianceContext->Direct += p_pScene->LightList[lightIndex]->Radiance(ray);
-		*/
-
-		p_pRadianceContext->Direct.Set(20, 50, 100);
-	}
-
-	// Populate radiance context
-	p_pRadianceContext->Flags |= RadianceContext::DF_Albedo |  
-		RadianceContext::DF_Direct | RadianceContext::DF_Indirect;
 	
-	return p_pRadianceContext->Direct + p_pRadianceContext->Indirect;
+	return 0.f;
+	#else
+		if (p_intersection.IsValid())
+		{
+			if (p_intersection.HasMaterial()) 
+			{
+				// Get material for intersection primitive
+				IMaterial *pMaterial = p_intersection.GetMaterial();
+
+				// Set wOut to eye ray direction vector
+				Vector3 wOut = -Vector3::Normalize(p_intersection.Surface.RayDirectionWS);
+
+				// Start populating radiance context
+				p_pRadianceContext->SetSpatialContext(&p_intersection);
+			
+				if (!p_intersection.IsEmissive())
+				{
+					// Sample direct lighting
+					p_pRadianceContext->Direct = SampleAllLights(p_pScene, p_intersection, 
+						p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, 
+						wOut, p_pScene->GetSampler(), p_intersection.GetLight(), m_nShadowRays);
+
+					// Set albedo
+					p_pRadianceContext->Albedo = pMaterial->Rho(wOut, p_intersection.Surface);
+				
+					// Set indirect 
+					p_pRadianceContext->Indirect = GetIrradiance(p_intersection, p_pScene) * p_pRadianceContext->Albedo * Maths::InvPi;
+				}
+				else
+				{
+					p_pRadianceContext->Direct = p_intersection.GetLight()->Radiance(p_intersection.Surface.PointWS, p_intersection.Surface.GeometryBasisWS.W, wOut);
+				}
+			}
+		}
+		else
+		{
+			/*
+			Ray ray(p_intersection.Surface.RayOriginWS, -p_intersection.Surface.RayDirectionWS);
+
+			for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
+				p_pRadianceContext->Direct += p_pScene->LightList[lightIndex]->Radiance(ray);
+			*/
+
+			p_pRadianceContext->Direct.Set(20, 50, 100);
+		}
+
+		// Populate radiance context
+		p_pRadianceContext->Flags |= RadianceContext::DF_Albedo |  
+			RadianceContext::DF_Direct | RadianceContext::DF_Indirect;
+	
+		return p_pRadianceContext->Direct + p_pRadianceContext->Indirect;
+	#endif
 }
 //----------------------------------------------------------------------------------------------
 Spectrum ICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext)
@@ -404,28 +463,41 @@ Spectrum ICIntegrator::GetIrradiance(const Intersection &p_intersection, Scene *
 
 	// Find nearyby records
 	m_irradianceCache.FindRecords(p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, nearbyRecordList);
-	
-	if (nearbyRecordList.size() > 0)
-	{
-		Spectrum num = 0.f;
-		float den = 0.f;
 
-		for (auto pair : nearbyRecordList)
-		{
-			num += pair.second->Irradiance * pair.first;
-			den += pair.first;
-		}
+	#if (defined ___DEBUG_IC___)
+		if (nearbyRecordList.size() > 0)
+			return Spectrum(0.f);
 
-		num /= den;
-		return num;
-	}
-	else
-	{
 		IrradianceCacheRecord *record = RequestRecord();
 		ComputeRecord(p_intersection, p_pScene, *record);
 		m_irradianceCache.Insert(&(m_irradianceCache.RootNode), record, m_nCacheDepth);
-		return record->Irradiance;
-	}
+		return Spectrum(1e+4f);
+	#else
+		if (nearbyRecordList.size() > 0)
+		{
+			Spectrum num = 0.f;
+			float den = 0.f;
+
+			//for (auto pair : nearbyRecordList)
+			for (auto iter = nearbyRecordList.begin(); iter != nearbyRecordList.end(); iter++)
+			{
+				auto pair = *iter;
+
+				num += pair.second->Irradiance * pair.first;
+				den += pair.first;
+			}
+
+			num /= den;
+			return num;
+		}
+		else
+		{
+			IrradianceCacheRecord *record = RequestRecord();
+			ComputeRecord(p_intersection, p_pScene, *record);
+			m_irradianceCache.Insert(&(m_irradianceCache.RootNode), record, m_nCacheDepth);
+			return record->Irradiance;
+		}
+	#endif
 }
 //----------------------------------------------------------------------------------------------
 void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pScene, IrradianceCacheRecord &p_record)
@@ -447,19 +519,9 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 	{
 		for (int azimuthIndex = 0; azimuthIndex < m_nAzimuthStrata; azimuthIndex++)
 		{
-			// Get samples for initial position and direction
-			/* 
-			int index = altitudeIndex * m_nAzimuthStrata + azimuthIndex;
-			sample2D.X = QuasiRandomSequence::VanDerCorput(index);
-			sample2D.Y = QuasiRandomSequence::Sobol2(index);
-			/* */
-
-			/* */
 			sample2D = p_pScene->GetSampler()->Get2DSample();
-			/* */
 
 			Vector3 vH = 
-				// Montecarlo::UniformSampleSphere(sample2D.U, sample2D.V);
 				Montecarlo::CosineSampleHemisphere(sample2D.X, sample2D.Y, altitudeIndex, azimuthIndex, m_nAltitudeStrata, m_nAzimuthStrata); 
 
 			BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, vH, wOutR);
@@ -473,12 +535,16 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 
 	// MN = total samples
 
-
 	p_record.Point = p_intersection.Surface.PointWS;
+	// p_record.Point = p_intersection.Surface.ShadingNormal;
 	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W;
 	p_record.Irradiance = E / mn;
-	p_record.Ri = minLength; //mn / totLength; 
+	p_record.Ri = mn / totLength;
+	// p_record.Ri = minLength;
+	// p_record.RiClamp = p_record.Ri;
 	p_record.RiClamp = Maths::Max(m_fRMin, Maths::Min(m_fRMax, p_record.Ri));
+
+	// std::cout << "Ri = [" << p_record.Ri << "], [" << p_record.RiClamp << "]" << std::endl;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum ICIntegrator::PathLi(Scene *p_pScene, Ray &p_ray)
@@ -489,7 +555,7 @@ Spectrum ICIntegrator::PathLi(Scene *p_pScene, Ray &p_ray)
 	Spectrum L(0.f),
 		pathThroughput = 1.;
 	
-	Ray ray(p_ray);
+	Ray ray(p_ray); p_ray.Max = 1.f;
 	
 	BxDF::Type bxdfType;
 	
@@ -515,7 +581,7 @@ Spectrum ICIntegrator::PathLi(Scene *p_pScene, Ray &p_ray)
 
 		// Set distance if first bounce
 		if (pathLength == 0)
-			p_ray.Max = ray.Max;
+			p_ray.Max = isect.Surface.Distance;
 
 		wOut = -ray.Direction;
 
@@ -558,7 +624,8 @@ Spectrum ICIntegrator::PathLi(Scene *p_pScene, Ray &p_ray)
 		BSDF::SurfaceToWorld(isect.WorldTransform, isect.Surface, wInLocal, wIn);
 		
 		// Adjust path for new bounce
-		ray.Set(isect.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, m_fReflectEpsilon, Maths::Maximum);
+		// ray.Set(isect.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, m_fReflectEpsilon, Maths::Maximum);
+		ray.Set(isect.Surface.PointWS, wIn, m_fReflectEpsilon, Maths::Maximum);
 		
 		// Update path contribution at current stage
 		pathThroughput *= f * Vector3::AbsDot(wIn, isect.Surface.ShadingBasisWS.W) / pdf;
@@ -587,8 +654,16 @@ IrradianceCacheRecord* ICIntegrator::RequestRecord(void)
 //----------------------------------------------------------------------------------------------
 void ICIntegrator::ReleaseRecords(void)
 {
+	for (auto iter = m_irradianceCacheRecordList.begin();
+		 iter != m_irradianceCacheRecordList.end(); iter++)
+	{
+		delete (*iter);
+	}
+
+	/*
 	for (auto record : m_irradianceCacheRecordList)
 		delete record;
+	*/
 }
 //----------------------------------------------------------------------------------------------
 std::string ICIntegrator::ToString(void) const

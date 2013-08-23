@@ -26,7 +26,8 @@ namespace Illumina
 			std::vector<IrradianceCacheRecord*> RecordList;
 
 			IrradianceCacheNode(void) 
-				: Children (nullptr)
+				// : Children (nullptr)
+				: Children(NULL)
 			{ }
 
 			void Add(IrradianceCacheRecord *p_pRecord)

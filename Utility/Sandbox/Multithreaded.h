@@ -236,14 +236,15 @@ public:
 				// std::cout << boost::this_thread::get_id() << " : " << tileID << std::endl;
 				const RenderThread::RenderThreadTile &tilePacket = p_pState->GetTilePacket(tileID);
 				
-				/**/
-//				pRenderer->RenderRegion(pRadianceBuffer, tilePacket.XStart, tilePacket.YStart, tilePacket.XSize, tilePacket.YSize, tilePacket.XStart, tilePacket.YStart);
-				pRenderer->RenderTile(pRadianceBuffer, tileID, tilePacket.XSize, tilePacket.YSize);
-				/**/
-
 				/*
-				pRenderer->RenderRegion(pRadianceBuffer, tilePacket.XStart + 1, tilePacket.YStart + 1, 
-					tilePacket.XSize - 1, tilePacket.YSize - 1, tilePacket.XStart + 1, tilePacket.YStart + 1);
+				 * Region-based rendering for maximum spatial coherence
+				 */
+				pRenderer->RenderRegion(pRadianceBuffer, tilePacket.XStart, tilePacket.YStart, tilePacket.XSize, tilePacket.YSize, tilePacket.XStart, tilePacket.YStart);
+				
+				/*
+				 * Uncomment for low-discrepancy sequence rendering (replaces region-based with a sample-tile)
+				 *
+				pRenderer->RenderTile(pRadianceBuffer, tileID, tilePacket.XSize, tilePacket.YSize);
 				/**/
 
 				// Increment jobs done
@@ -395,9 +396,8 @@ public:
 			//----------------------------------------------------------------------------------------------
 			eventStart = Platform::GetTime();
 
-			RadianceContext *c = m_pRadianceBuffer->GetP(0, 0);
-			for (int j = m_pRadianceBuffer->GetArea(); j > 0; j--, c++)
-				c->Flags = 0;
+			// Clear buffer flags
+			m_pRadianceBuffer->ClearFlags();
 
 			// Render phase
 			renderThreadState.Reset();
@@ -488,7 +488,6 @@ public:
 				m_pLogger->Write(message.str());
 			}
 		}
-
 		//----------------------------------------------------------------------------------------------
 		// Stop rendering threads
 		//----------------------------------------------------------------------------------------------
