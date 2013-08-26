@@ -213,7 +213,7 @@ bool IrradianceCache::FindRecords(const Vector3 &p_point, const Vector3 &p_norma
 //----------------------------------------------------------------------------------------------
 float IrradianceCache::W_Ward(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
 {
-	float dist = Vector3::Distance(p_point, p_record.Point) / p_record.RiClamp.
+	float dist = Vector3::Distance(p_point, p_record.Point) / p_record.RiClamp,
 		cosTheta = Vector3::Dot(p_normal, p_record.Normal);
 
 	if (cosTheta <= 0)

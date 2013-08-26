@@ -13,7 +13,7 @@
 //----------------------------------------------------------------------------------------------
 //	Set Illumina PRT compilation mode (SHM or DSM)
 //----------------------------------------------------------------------------------------------
-#define ILLUMINA_SHM
+//#define ILLUMINA_SHM
 
 #if (!defined ILLUMINA_SHM)
 	#define ILLUMINA_DSM
@@ -67,7 +67,7 @@ class SimpleListener
 	void OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
 	{ 
 		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
-		// pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 0.01f);
+		pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
 	};
 };
 
@@ -77,7 +77,7 @@ void IlluminaPRT(Logger *p_pLogger, int p_nVerboseFrequency,
 	std::string p_strScript)
 {
 	IlluminaMTFrameless illumina;
-	// IlluminaMT illumina;
+	//IlluminaMT illumina;
 
 	illumina.SetFlags(p_nFlags);
 	illumina.SetLogger(p_pLogger);

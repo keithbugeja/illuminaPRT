@@ -193,7 +193,7 @@ void BaseRenderer::RenderTile(RadianceBuffer *p_pRadianceBuffer, int p_nTileInde
 	// Get sub-pixel position
 	sample = m_pScene->GetSampler()->Get2DSample();
 
-	if (width == p_nTileWidth)
+	if (p_pRadianceBuffer->GetWidth() == p_nTileWidth)
 	{
 		// Rasterise pixels
 		for (RadianceContext *pRadianceContext = p_pRadianceBuffer->GetBuffer(); 
