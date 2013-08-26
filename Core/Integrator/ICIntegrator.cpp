@@ -213,11 +213,15 @@ bool IrradianceCache::FindRecords(const Vector3 &p_point, const Vector3 &p_norma
 //----------------------------------------------------------------------------------------------
 float IrradianceCache::W_Ward(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
 {
-	float dist = Vector3::Distance(p_point, p_record.Point) / p_record.RiClamp;
-	float norm = Maths::Sqrt(1 - Vector3::AbsDot(p_normal, p_record.Normal));
-	// return (1.f / (dist + norm)) - (1.f / m_fErrorThreshold);
+	float dist = Vector3::Distance(p_point, p_record.Point) / p_record.RiClamp.
+		cosTheta = Vector3::Dot(p_normal, p_record.Normal);
 
-	return (1.f / dist) - (1.f / m_fErrorThreshold);
+	if (cosTheta <= 0)
+		return -1.f;
+
+	// Also: cache reciprocal of error threshold
+	// float norm = 1 - cosTheta;
+	return (1.f / (dist + 1 - cosTheta)) - (1.f / m_fErrorThreshold);
 }
 //----------------------------------------------------------------------------------------------
 float IrradianceCache::W_Tabelion(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
@@ -270,7 +274,7 @@ std::string IrradianceCache::ToString(void) const
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 
-//#define ___DEBUG_IC___
+// #define ___DEBUG_IC___
 
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------

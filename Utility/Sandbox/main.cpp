@@ -67,7 +67,7 @@ class SimpleListener
 	void OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
 	{ 
 		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
-		pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 0.01f);
+		// pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 0.01f);
 	};
 };
 
