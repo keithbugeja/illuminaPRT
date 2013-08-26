@@ -540,7 +540,8 @@ public:
 			//----------------------------------------------------------------------------------------------
 
 			// Max is 60fps
-			boost::this_thread::sleep(boost::posix_time::millisec(100));
+			boost::this_thread::yield();
+			// boost::this_thread::sleep(boost::posix_time::millisec(100));
 
 			//----------------------------------------------------------------------------------------------
 			// Frame time computations 
