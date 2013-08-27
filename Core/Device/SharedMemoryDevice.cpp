@@ -64,19 +64,28 @@ bool SharedMemoryDevice::Open(void)
 
 	int segmentSize = m_pFrontBuffer->GetWidth() * m_pFrontBuffer->GetHeight() * 3;
 
-	#if (defined __PLATFORM_WINDOWS__)
-	// Create a native windows shared memory object.
-	m_pSharedMemorySink = new boost::interprocess::windows_shared_memory(
-		boost::interprocess::create_only, std::string("Global\\" + m_strTag).c_str(), 
-		boost::interprocess::read_write, segmentSize);
-	#else
-	// Create shared memory object for POSIX compliant systems
-	m_pSharedMemorySink = new boost::interprocess::shared_memory_object(
-		boost::interprocess::create_only, m_strTag,
-		boost::interprocess::read_write);
+	try 
+	{
+		#if (defined __PLATFORM_WINDOWS__)
+		// Create a native windows shared memory object.
+		m_pSharedMemorySink = new boost::interprocess::windows_shared_memory(
+			boost::interprocess::create_only, std::string("Global\\" + m_strTag).c_str(), 
+			boost::interprocess::read_write, segmentSize);
+		#else
+		// Create shared memory object for POSIX compliant systems
+		m_pSharedMemorySink = new boost::interprocess::shared_memory_object(
+			boost::interprocess::create_only, m_strTag,
+			boost::interprocess::read_write);
 
-	m_pSharedMemorySink->truncate(segmentSize);
-	#endif
+		m_pSharedMemorySink->truncate(segmentSize);
+		#endif
+	}
+
+	catch(boost::interprocess::interprocess_exception &ex)
+	{
+		std::cerr << "Unexpected exception: " << ex.what() << std::endl;
+		return false;
+	}
 
 	// Map the whole shared memory in this process
 	m_pSharedMemoryRegion = new boost::interprocess::mapped_region(
@@ -106,11 +115,21 @@ void SharedMemoryDevice::Stream(void)
 
 	for (src = m_pFrontBuffer->GetSurfaceBuffer(),
 		 dst = (unsigned char*)m_pSharedMemoryRegion->get_address(),
-		 index = 0; index < m_pFrontBuffer->GetArea(); index++, src++)
+		 index = 0; index < m_pFrontBuffer->GetArea(); index++, src++/*, dst+=3*/)
 	{
+		/* */ 
+		dst[0] = (unsigned char)(255 * src->R);
+		dst[1] = (unsigned char)(255 * src->G);
+		dst[2] = (unsigned char)(255 * src->B); 
+		dst += 3;
+		/* */
+
+		/* Have to check which version has better yield...
+		   3 Incs + 3 Refs vs 1 Add + 3 Indexed refs
 		*dst++ = (unsigned char)(255 * src->R);
 		*dst++ = (unsigned char)(255 * src->G);
 		*dst++ = (unsigned char)(255 * src->B);
+		*/
 	}
 }
 //----------------------------------------------------------------------------------------------

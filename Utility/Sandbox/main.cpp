@@ -13,12 +13,12 @@
 //----------------------------------------------------------------------------------------------
 //	Set Illumina PRT compilation mode (SHM or DSM)
 //----------------------------------------------------------------------------------------------
-//#define ILLUMINA_SHM
+// #define ILLUMINA_SHM
 
 #if (!defined ILLUMINA_SHM)
 	#define ILLUMINA_DSM
-/* I hate myself for this */
 #else
+	/* I hate myself for this */
 	// #define ILLUMINA_SHMVIEWER
 	#if (defined ILLUMINA_SHMVIEWER)
 		#include "SHMViewer.h"
@@ -99,25 +99,40 @@ void IlluminaPRT(Logger *p_pLogger, int p_nVerboseFrequency,
 int main(int argc, char** argv)
 {
 	#if (defined ILLUMINA_SHMVIEWER)
-	SHMViewer viewer(512, 512);
-	viewer.Open();
+		// Create viewer instance
+		// Note: Pull arguments from command line or something!
+		SHMViewer viewer(512, 512, "IlluminaPRT_OutputSink");
 
-	/* 
-	IDevice* p = viewer.SetDummyOutput();
-	p->BeginFrame();
-	for (int y = 0; y < 512; y++)
-		for (int x = 0; x < 512; x++)
-			p->Set(x, y, Spectrum(float(x + y) / 1024));
-	p->EndFrame();
-	*/
+		/* Test code ... uncomment and run to test SHMViewer with SharedMemoryDevice... 
+		Spectrum luminance;
+		IDevice* p = viewer.SetDummyOutput();
 
-	while(true) {
-		viewer.Update();
-		boost::this_thread::sleep(boost::posix_time::millisec(20));
-	}
+		p->BeginFrame();
+		for (int y = 0; y < 512; y++)
+			for (int x = 0; x < 512; x++)
+			{
+				//luminance.Set(x + y / 1024, x / 1024, 1024 - x / 1024);
+				luminance.Set(1.f, 0.5f, 0.75f);
+				p->Set(x, y, luminance);
+				// p->Set(x, y, Spectrum(float(x + y) / 1024));
+			}
+		p->EndFrame();
+		/* */
 
-	viewer.Close();
-	return 0;
+		// Failed to open?
+		if (!viewer.Open())
+		{
+			std::cerr << "IlluminaPRT Sharedmemory viewer failed to open!" << std::endl;
+			exit(0);
+		}
+
+		while(true) {
+			viewer.Update();
+			boost::this_thread::sleep(boost::posix_time::millisec(20));
+		}
+
+		viewer.Close();
+		return 0;
 	#endif
 
 	std::cout << "Illumina Renderer : Version " << Illumina::Core::Major << "." << Illumina::Core::Minor << "." << Illumina::Core::Build << " http://www.illuminaprt.codeplex.com " << std::endl;
