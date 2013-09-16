@@ -10,12 +10,22 @@
 // Finish scene loaders
 //----------------------------------------------------------------------------------------------
 
+
 //----------------------------------------------------------------------------------------------
-//	Set Illumina PRT compilation mode (SHM or DSM)
+// Illumina PRT compilation modes:
+//	ILLUMINA_SHM : Compilation for local, multithreaded, shared memory systems (no network support)
+//		ILLUMINA_SHMVIEWER : Compile as a shared memory viewer (to be phased out; separate project)
+//  ILLUMINA_DSM : Compilation for multiple-client support (cloud deployment)
+//  ILLUMINA_P2P : Compilation for peer-to-peer support (client collaboration)
 //----------------------------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------------------------
+//	Set Illumina PRT compilation mode (SHM, DSM or P2P)
+//----------------------------------------------------------------------------------------------
+#define ILLUMINA_P2P
 // #define ILLUMINA_SHM
 
-#if (!defined ILLUMINA_SHM)
+#if (!defined ILLUMINA_SHM) || (!defined ILLUMINA_P2P)
 	#define ILLUMINA_DSM
 #else
 	/* I hate myself for this */
@@ -48,8 +58,14 @@ using namespace Illumina::Core;
 #include <boost/filesystem.hpp>
 
 //----------------------------------------------------------------------------------------------
-#if (defined(ILLUMINA_SHM))
 //----------------------------------------------------------------------------------------------
+//	Shared-memory compilation mode
+//----------------------------------------------------------------------------------------------
+//	This compilation modes targets Illumina at a standalone multithreaded system.
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+#if (defined(ILLUMINA_SHM))
+
 #include "Logger.h"
 #include "Environment.h"
 #include "Export.h"
@@ -60,17 +76,17 @@ using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
 // Should follow Core/System/Platform.h (due to windows.h conflicts)
 //----------------------------------------------------------------------------------------------
-
 class SimpleListener 
 	: public IlluminaMTListener
 {
 	void OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
 	{ 
 		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
-		pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
+		// pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
 	};
 };
 
+//----------------------------------------------------------------------------------------------
 void IlluminaPRT(Logger *p_pLogger, int p_nVerboseFrequency, 
 	int p_nIterations, int p_nThreads, int p_nFPS, 
 	int p_nJobs, int p_nSize, int p_nFlags, 
@@ -95,6 +111,7 @@ void IlluminaPRT(Logger *p_pLogger, int p_nVerboseFrequency,
 	illumina.Render();
 	illumina.Shutdown();
 }
+
 //----------------------------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
@@ -301,10 +318,315 @@ int main(int argc, char** argv)
 }
 
 //----------------------------------------------------------------------------------------------
-#elif (defined ILLUMINA_DSM)
 //----------------------------------------------------------------------------------------------
+//	Peer-to-peer compilation mode
+//----------------------------------------------------------------------------------------------
+//  This mode enables single, typically shared memory multithreaded instances to collaborate
+//	by sharing results (e.g., IC samples).
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+#elif (defined ILLUMINA_P2P)
+
+#include "Logger.h"
+#include "Environment.h"
+#include "Export.h"
+#include "Peer.h"
+
+//----------------------------------------------------------------------------------------------
+void IlluminaPRT(
+	Logger *p_pLogger, int p_nVerboseFrequency, int p_nIterations, int p_nFPS,
+	int p_nRenderThreads, int p_nJobsPerFrame, int p_nTileSize, int p_nFlags, std::string p_strScript,
+	bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPort)
+{
+	SparseVectorClock 
+		s0("s0"), 
+		s1("s1"), 
+		s2("s2"), 
+		s3("s3");
+
+	s0.Tick(); // L
+	s1.Send(); // S
+	s2.Tick(); // L
+	s3.Tick(); // L
+
+	std::cout << "------------------------------------" << std::endl;
+	std::cout << s0.ToString() << std::endl;
+	std::cout << s1.ToString() << std::endl;
+	std::cout << s2.ToString() << std::endl;
+	std::cout << s3.ToString() << std::endl;
+
+	s0.Tick(); // L
+
+	SparseVectorClock::Comparison c = s2.Compare(s1);
+
+	s2.Receive(s1); // R
+
+	s1.Tick(); // L
+	s3.Tick(); // L
+	
+	std::cout << "------------------------------------" << std::endl;
+	std::cout << s0.ToString() << std::endl;
+	std::cout << s1.ToString() << std::endl;
+	std::cout << s2.ToString() << std::endl;
+	std::cout << s3.ToString() << std::endl;
+
+	switch(c)
+	{
+	case SparseVectorClock::Equal:
+		std::cout << "EQ";
+		break;
+	case SparseVectorClock::NotEqual:
+		std::cout << "NE";
+		break;
+	case SparseVectorClock::LessThan:
+		std::cout << "LT";
+		break;
+	case SparseVectorClock::GreaterThan:
+		std::cout << "GT";
+		break;
+	}
+
+
+	std::getchar();
+
+	/*
+	IlluminaMTFrameless illumina;
+	//IlluminaMT illumina;
+
+	illumina.SetFlags(p_nFlags);
+	illumina.SetLogger(p_pLogger);
+	illumina.SetLoggerUpdate(p_nVerboseFrequency);
+	illumina.SetScript(p_strScript);
+	illumina.SetThreadCount(p_nThreads);
+	illumina.SetIterations(p_nIterations);
+	illumina.SetJobs(p_nJobs, p_nSize);
+	illumina.SetFrameBudget(0);
+
+	SimpleListener listener;
+	illumina.AttachListener(&listener);
+
+	illumina.Initialise();
+	illumina.Render();
+	illumina.Shutdown();
+	*/
+}
+
+//----------------------------------------------------------------------------------------------
+int main(int argc, char** argv)
+{
+	std::cout << "Illumina Renderer [P2P]: Version " << Illumina::Core::Major << "." << Illumina::Core::Minor << "." << Illumina::Core::Build << " http://www.illuminaprt.codeplex.com " << std::endl;
+	std::cout << "Copyright (C) 2010-2012 Keith Bugeja" << std::endl << std::endl;
+
+	// default options
+	int nVerboseFrequency = 1,
+		nIterations = 1,
+		nThreads = 1,
+		nSize = 32,
+		nJobs = 0x10000,
+		nFPS = 5,
+		nFlags = 0xFF;
+
+	bool bVerbose = false,
+		bDiscovery = false;
+
+	int nPort = 6666;
+
+	std::string strScript("default.ilm"),
+		strPeerAddress("127.0.0.1:6665");
+
+	// Declare the supported options.
+	boost::program_options::options_description description("Allowed Settings");
+
+	description.add_options()
+		("help", "show this message")
+		("verbose", boost::program_options::value<bool>(), "show extended information")
+		("statfreq", boost::program_options::value<int>(), "show frame statistics every nth frame (requires verbose)")
+		("script", boost::program_options::value<std::string>(), "script file to render")
+		("workdir", boost::program_options::value<std::string>(), "working directory")
+		("iterations", boost::program_options::value<int>(), "iterations to execute")
+		("threads", boost::program_options::value<int>(), "number of rendering threads")
+		("tilesize", boost::program_options::value<int>(), "initial length of tile edge")
+		("tilejobs", boost::program_options::value<int>(), "number of jobs before tile subdivision")
+		("flags", boost::program_options::value<int>(), "rendering flags")
+		("fps", boost::program_options::value<int>(), "frame presentation frequency (hint)")
+		("discovery", boost::program_options::value<bool>(), "try automatic discovery in P2P network")
+		("peer", boost::program_options::value<std::string>(), "IP:Port of peer in network")
+		("port", boost::program_options::value<int>(), "listening port")
+		;
+
+	// Declare variable map
+	boost::program_options::variables_map variableMap;
+
+	// Parse command line options
+	try 
+	{
+		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, description), variableMap);
+		boost::program_options::notify(variableMap);
+	} 
+	catch (boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::program_options::unknown_option> > &exception) 
+	{
+		std::cout << "Unknown option [" << exception.get_option_name() << "] : Please use --help to display help message." << std::endl;
+		return 1;
+	}
+	catch (boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<boost::program_options::invalid_option_value> > &exception) 
+	{
+		std::cout << "Error parsing input for [" << exception.get_option_name() << "] : Invalid argument value." << std::endl;
+		return 1;
+	}
+
+	// --help
+	if (variableMap.count("help"))
+	{
+		std::cout << description << std::endl;
+		return 1;
+	}
+
+	// --verbose
+	if (variableMap.count("verbose"))
+	{
+		bVerbose = variableMap["verbose"].as<bool>();
+		std::cout << "Verbose mode [" << (bVerbose ? "ON]" : "OFF]") << std::endl;
+	}
+
+	// --statfreq
+	if (variableMap.count("statfreq"))
+	{
+		try {
+			nVerboseFrequency = variableMap["statfreq"].as<int>();
+		} catch (...) { nVerboseFrequency = 1; } 
+		std::cout << "Render statistics output frequency [" << nIterations << "]" << std::endl;
+	}
+
+	// --iterations
+	if (variableMap.count("iterations"))
+	{
+		try {
+			nIterations = variableMap["iterations"].as<int>();
+		} catch (...) { nIterations = 1; } 
+		std::cout << "Iterations [" << nIterations << "]" << std::endl;
+	}
+
+	// --script
+	if (variableMap.count("script"))
+	{
+		strScript = variableMap["script"].as<std::string>();
+		std::cout << "Script [" << strScript << "]" << std::endl;
+	}
+
+	// --workdir
+	boost::filesystem::path cwdPath;
+
+	if (variableMap.count("workdir"))
+	{
+		cwdPath = boost::filesystem::path(variableMap["workdir"].as<std::string>());
+	}
+	else
+	{
+		// Setting working directory
+		boost::filesystem::path scriptPath(strScript);
+		cwdPath = boost::filesystem::path(scriptPath.parent_path());
+	}
+
+	try {
+		boost::filesystem::current_path(cwdPath);
+		std::cout << "Working directory [" << cwdPath.string() << "]" << std::endl;;
+	} catch (...) { std::cerr << "Error : Unable to set working directory to " << cwdPath.string() << std::endl; }
+
+	// --threads
+	if (variableMap.count("threads"))
+	{
+		try {
+			nThreads = variableMap["threads"].as<int>();
+		} catch (...) { nThreads = 1; } 
+		std::cout << "Threads [" << nThreads << "]" << std::endl;
+	}
+
+	// --width
+	if (variableMap.count("tilesize"))
+	{
+		try {
+			nSize = variableMap["tilesize"].as<int>();
+		} catch (...) { nSize = 16; } 
+		std::cout << "Tile size [" << nSize << " x " << nSize << "]" << std::endl;
+	}
+
+	// --threads
+	if (variableMap.count("tilejobs"))
+	{
+		try {
+			nJobs = variableMap["tilejobs"].as<int>();
+		} catch (...) { nJobs = 0x10000; } 
+		std::cout << "Jobs before tile subdivision [" << nJobs << "]" << std::endl;
+	}
+
+	// --budget
+	if (variableMap.count("fps"))
+	{
+		try {
+			nFPS = variableMap["fps"].as<int>();
+		} catch (...) { nFPS = 0; } 
+		std::cout << "FPS [" << nFPS << "]" << std::endl;
+	}
+
+	// --flags
+	if (variableMap.count("flags"))
+	{
+		try {
+			nFlags = variableMap["flags"].as<int>();
+		} catch (...) { nFlags = 0x01 | 0x02 | 0x04 | 0x08; } 
+		std::cout << "Flags [" << nFlags << "]" << std::endl;
+	}
+
+	// --discovery
+	if (variableMap.count("discovery"))
+	{
+		try {
+			bDiscovery = variableMap["discovery"].as<bool>();
+		} catch (...) { bDiscovery = false; } 
+		std::cout << "Peer-discovery [" << bDiscovery << "]" << std::endl;
+	}
+
+	// --peer
+	if (variableMap.count("peer"))
+	{
+		try {
+			strPeerAddress = variableMap["peer"].as<std::string>();
+		} catch (...) { strPeerAddress = "127.0.0.1:6665"; } 
+		std::cout << "Peer [" << strPeerAddress << "]" << std::endl;
+	}
+
+	// --port
+	if (variableMap.count("port"))
+	{
+		try {
+			nPort = variableMap["port"].as<int>();
+		} catch (...) { nPort = 6666; } 
+		std::cout << "Port [" << nPort << "]" << std::endl;
+	}
+
+	// Initialise new logger
+	Logger logger; logger.SetLoggingFilter(bVerbose ? LL_All : LL_ErrorLevel);
+
+	// -- start rendering
+	IlluminaPRT(&logger, nVerboseFrequency, nIterations, nFPS,  nThreads, nJobs, nSize, nFlags, strScript, bDiscovery, strPeerAddress, nPort);
+
+	// Exit
+	return 1;
+}
+
+//----------------------------------------------------------------------------------------------s
+//----------------------------------------------------------------------------------------------
+//	Client-server compilation mode
+//----------------------------------------------------------------------------------------------
+//	This mode runs IlluminaPRT in server mode in a distributed system, allowing interactive
+//	servicing of multiple clients.
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+#elif (defined ILLUMINA_DSM)
+
 #include "ServiceManager.h"
 
+//----------------------------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
 	std::cout << std::endl

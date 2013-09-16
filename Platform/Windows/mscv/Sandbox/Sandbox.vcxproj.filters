@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\deprecated">
-      <UniqueIdentifier>{a66f369e-507b-4a85-98ca-e46bb5e4155c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\common">
       <UniqueIdentifier>{7345b4cc-99b7-4c30-858e-ea8560e0ea5e}</UniqueIdentifier>
     </Filter>
@@ -36,6 +33,9 @@
     </Filter>
     <Filter Include="Source Files\distributed\sync">
       <UniqueIdentifier>{aa20b8a8-67c3-4074-b6cc-edd995434f6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\decentralised">
+      <UniqueIdentifier>{969a46a5-911d-4c9b-8e24-3ab133ae376b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +190,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\SHMViewer.h">
       <Filter>Source Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Peer.h">
+      <Filter>Source Files\decentralised</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
