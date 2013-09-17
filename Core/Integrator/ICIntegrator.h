@@ -81,6 +81,8 @@ namespace Illumina
 
 			float W(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record);
 
+			void Merge(IrradianceCache *p_pIrradianceCache);
+
 			std::string ToString(void) const;
 		};
 
