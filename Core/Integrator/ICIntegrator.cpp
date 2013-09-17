@@ -258,6 +258,10 @@ float IrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, Irradi
 		p_point, p_normal, p_record);
 }
 //----------------------------------------------------------------------------------------------
+void IrradianceCache::Merge(IrradianceCache *p_pIrradianceCache)
+{
+}
+//----------------------------------------------------------------------------------------------
 std::string IrradianceCache::ToString(void) const
 {
 	std::stringstream output;

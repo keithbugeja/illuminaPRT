@@ -123,22 +123,3 @@ public:
 	}
 };
 
-/*
-class IDistributedObject
-{
-	VectorClock m_clock;
-
-	IDistributedObject* Clone(void);
-	
-	unsigned char* Serialize(void);
-	void Deserialize(unsigned char* p_pObject);
-
-	void Write(IDistributedObject* p_pObject);
-
-	void BeginGlobalWrite(void);
-	void EndGlobalWrite(void);
-
-	void BeginLocalWrite(void);
-	void EndLocalWrite(void);
-};
-*/
