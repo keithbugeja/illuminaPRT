@@ -42,8 +42,9 @@ namespace Illumina
 		class IrradianceCache
 		{
 		protected:
-			std::vector<IrradianceCacheRecord*> m_irradianceRecordList;
+			std::vector<IrradianceCacheRecord*> m_irradianceRecordList;			
 			float m_fErrorThreshold;
+			int m_nDepth;
 
 		public:
 			int m_nInsertCount,
@@ -62,24 +63,22 @@ namespace Illumina
 				: m_nInsertCount(0)
 				, m_nRecordCount(0)
 				, m_nNodeCount(0)
+				, m_nDepth(8)
+				, m_fErrorThreshold(0.35f)
 			{ }
 
 			int CountNodes(IrradianceCacheNode* p_pNode) const;
 
+			void SetDepth(int p_nDepth) { m_nDepth = p_nDepth; }
 			void SetErrorThreshold(float p_fErrorThreshold) { m_fErrorThreshold = p_fErrorThreshold; }
-
-			void SetBounds(const AxisAlignedBoundingBox &p_parent, 
-				int p_nChildIndex, AxisAlignedBoundingBox &p_child);
+			void SetBounds(const AxisAlignedBoundingBox &p_parent, int p_nChildIndex, AxisAlignedBoundingBox &p_child);
 			
-			bool SphereBoxOverlap(const AxisAlignedBoundingBox &p_aabb,
-				const Vector3& p_centre, const float p_fRadius) const;
-			
-			bool FindRecords(const Vector3 &p_point, const Vector3 &p_normal, 
-				std::vector<std::pair<float, IrradianceCacheRecord*>>& p_nearbyRecordList);
-
-			void Insert(IrradianceCacheNode *p_pNode, IrradianceCacheRecord *p_pRecord, int p_nDepth);
-
 			float W(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record);
+			bool SphereBoxOverlap(const AxisAlignedBoundingBox &p_aabb, const Vector3& p_centre, const float p_fRadius) const;			
+			bool FindRecords(const Vector3 &p_point, const Vector3 &p_normal, std::vector<std::pair<float, IrradianceCacheRecord*>>& p_nearbyRecordList);
+
+			void Insert(IrradianceCacheRecord *p_pRecord);
+			void Insert(IrradianceCacheNode *p_pNode, IrradianceCacheRecord *p_pRecord, int p_nDepth);
 
 			void Merge(IrradianceCache *p_pIrradianceCache);
 

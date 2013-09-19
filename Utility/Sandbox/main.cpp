@@ -386,6 +386,17 @@ void IlluminaPRT(
 		break;
 	}
 
+	std::getchar();
+
+	Peer p;
+	boost::array<char, 128> buffer;
+
+	p.Bind("10.60.10.4", 9101);
+
+	while(true)
+	{
+		p.RawReceive(buffer);
+	}
 
 	std::getchar();
 

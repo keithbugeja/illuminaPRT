@@ -118,15 +118,11 @@ bool IrradianceCache::SphereBoxOverlap(const AxisAlignedBoundingBox &p_aabb,
 		else if (p_centre[i] > p_aabb.GetMaxExtent(i) ) dmin += Maths::Sqr(p_centre[i] - p_aabb.GetMaxExtent(i));
 	}
 	return dmin <= p_fRadius*p_fRadius;
-
-	/*
-	return (p_centre.X + p_fRadius > p_aabb.GetMinExtent(0) &&
-			p_centre.X - p_fRadius < p_aabb.GetMaxExtent(0) &&
-			p_centre.Y + p_fRadius > p_aabb.GetMinExtent(1) &&
-			p_centre.Y - p_fRadius < p_aabb.GetMaxExtent(1) &&
-			p_centre.Z + p_fRadius > p_aabb.GetMinExtent(2) &&
-			p_centre.Z - p_fRadius < p_aabb.GetMaxExtent(2));
-	*/
+}
+//----------------------------------------------------------------------------------------------
+void IrradianceCache::Insert(IrradianceCacheRecord *p_pRecord)
+{
+	Insert(&RootNode, p_pRecord, m_nDepth);
 }
 //----------------------------------------------------------------------------------------------
 void IrradianceCache::Insert(IrradianceCacheNode *p_pNode, IrradianceCacheRecord *p_pRecord, int p_nDepth)
@@ -239,20 +235,6 @@ float IrradianceCache::W_Tabelion(const Vector3 &p_point, const Vector3 &p_norma
 //----------------------------------------------------------------------------------------------
 float IrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, IrradianceCacheRecord &p_record)
 {
-	/* 
-	Vector3 P = p_record.Point - p_point;
-	float d = Vector3::Dot(P, (p_normal + p_record.Normal) * 0.5f);
-
-	if (d < 0.05f) return -1;
-	*/
-
-	/* 
-	Vector3 p = p_point - p_record.Point;
-	float d = Vector3::Dot(p, (p_normal + p_record.Normal) * 0.5f);
-
-	if (d < 0.1f) return -1;
-	*/
-
 	return W_Ward(
 	// return W_Tabelion(
 		p_point, p_normal, p_record);
@@ -260,6 +242,10 @@ float IrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, Irradi
 //----------------------------------------------------------------------------------------------
 void IrradianceCache::Merge(IrradianceCache *p_pIrradianceCache)
 {
+	for (auto record : p_pIrradianceCache->m_irradianceRecordList)
+	{
+		Insert(record);
+	}
 }
 //----------------------------------------------------------------------------------------------
 std::string IrradianceCache::ToString(void) const
@@ -342,6 +328,7 @@ bool ICIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 	m_fRMax = longestEdge.X * m_fAmbientMultiplier;
 
 	m_irradianceCache.SetErrorThreshold(m_fErrorThreshold);
+	m_irradianceCache.SetDepth(m_nCacheDepth);
 
 	return true;
 }

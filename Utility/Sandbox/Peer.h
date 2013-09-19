@@ -1,10 +1,22 @@
+//----------------------------------------------------------------------------------------------
+//	Filename:	Peer.h
+//	Author:		Keith Bugeja
+//	Date:		21/09/2013
+//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
 #pragma once
 
 #include <map>
+#include <iostream>
+
+#include <boost/asio.hpp>
+#include <boost/lexical_cast.hpp>
+
 #include <System/Platform.h>
 #include <Maths/Maths.h>
 #include <External/Compression/Compression.h>
 
+//----------------------------------------------------------------------------------------------
 class SparseVectorClock
 {
 public:
@@ -122,4 +134,64 @@ public:
 		return result.str();
 	}
 };
+//----------------------------------------------------------------------------------------------
+
+class P2PMessage;
+
+class Peer 
+{
+protected:
+	boost::asio::io_service m_ioservice;
+
+	boost::asio::ip::udp::endpoint m_endpoint;
+	boost::asio::ip::udp::socket *m_pSocket;
+
+public:
+	bool Bind(const std::string &p_strIP, int p_nPort)
+	{
+		try 
+		{
+			m_endpoint = boost::asio::ip::udp::endpoint(
+				boost::asio::ip::address::from_string(p_strIP), boost::lexical_cast<int>(p_nPort));
+
+			std::cout << "Bind :: [" << m_endpoint << "]" << std::endl;
+
+			m_pSocket = new boost::asio::ip::udp::socket(m_ioservice);
+			m_pSocket->open(boost::asio::ip::udp::v4());
+			m_pSocket->bind(m_endpoint);
+		}
+
+		catch (...)
+		{
+			std::cout << "Exception..." << std::endl;
+			return false;
+		}
+
+		return true;
+	}
+	
+	bool RawReceive(boost::array<char, 128> &p_receiveBuffer)
+	{
+		boost::asio::ip::udp::endpoint sender_endpoint;
+
+		size_t length = m_pSocket->receive_from(
+			boost::asio::buffer(p_receiveBuffer), sender_endpoint);
+
+		std::cout.write(p_receiveBuffer.data(), length);
+
+		return true;
+	}
+
+
+	/*
+	void Connect(void);
+	void SendMessage(Peer *p_pPeer, P2PMessage);
+	void ReceiveMessage(Peer *p_pPeer, P2PMessage);
+	void GetNeighbours(void);
+	void Disconnect(void);
+	*/
+};
+
+
+//----------------------------------------------------------------------------------------------
 
