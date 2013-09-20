@@ -147,6 +147,25 @@ protected:
 	boost::asio::ip::udp::socket *m_pSocket;
 
 public:
+	bool RemoteBind(const std::string &p_strIP, int p_nPort)
+	{
+		try 
+		{
+			m_endpoint = boost::asio::ip::udp::endpoint(
+				boost::asio::ip::address::from_string(p_strIP), boost::lexical_cast<int>(p_nPort));
+		
+			std::cout << "Remote Bind :: [" << m_endpoint << "]" << std::endl;		
+		}
+
+		catch(...)
+		{
+			std::cout << "Exception..." << std::endl;
+			return false;
+		}
+
+		return true;
+	}
+
 	bool Bind(const std::string &p_strIP, int p_nPort)
 	{
 		try 
@@ -170,7 +189,7 @@ public:
 		return true;
 	}
 	
-	bool RawReceive(boost::array<char, 128> &p_receiveBuffer)
+	bool RawReceive(boost::array<char, 4096> &p_receiveBuffer)
 	{
 		boost::asio::ip::udp::endpoint sender_endpoint;
 
@@ -182,6 +201,10 @@ public:
 		return true;
 	}
 
+	bool RawSend(Peer &p_peer, std::vector<unsigned char> &p_data)
+	{
+		m_pSocket->send_to(boost::asio::buffer(p_data), p_peer.m_endpoint);
+	}
 
 	/*
 	void Connect(void);

@@ -338,64 +338,31 @@ void IlluminaPRT(
 	int p_nRenderThreads, int p_nJobsPerFrame, int p_nTileSize, int p_nFlags, std::string p_strScript,
 	bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPort)
 {
-	SparseVectorClock 
-		s0("s0"), 
-		s1("s1"), 
-		s2("s2"), 
-		s3("s3");
+	boost::array<char, 4096> buffer;
 
-	s0.Tick(); // L
-	s1.Send(); // S
-	s2.Tick(); // L
-	s3.Tick(); // L
+	Peer local, 
+		remote;
 
-	std::cout << "------------------------------------" << std::endl;
-	std::cout << s0.ToString() << std::endl;
-	std::cout << s1.ToString() << std::endl;
-	std::cout << s2.ToString() << std::endl;
-	std::cout << s3.ToString() << std::endl;
+	local.Bind("10.60.10.4", 9101);
+	remote.RemoteBind(p_strPeerIP, p_nPort);
 
-	s0.Tick(); // L
-
-	SparseVectorClock::Comparison c = s2.Compare(s1);
-
-	s2.Receive(s1); // R
-
-	s1.Tick(); // L
-	s3.Tick(); // L
-	
-	std::cout << "------------------------------------" << std::endl;
-	std::cout << s0.ToString() << std::endl;
-	std::cout << s1.ToString() << std::endl;
-	std::cout << s2.ToString() << std::endl;
-	std::cout << s3.ToString() << std::endl;
-
-	switch(c)
-	{
-	case SparseVectorClock::Equal:
-		std::cout << "EQ";
-		break;
-	case SparseVectorClock::NotEqual:
-		std::cout << "NE";
-		break;
-	case SparseVectorClock::LessThan:
-		std::cout << "LT";
-		break;
-	case SparseVectorClock::GreaterThan:
-		std::cout << "GT";
-		break;
-	}
-
-	std::getchar();
-
-	Peer p;
-	boost::array<char, 128> buffer;
-
-	p.Bind("10.60.10.4", 9101);
+	std::string input;
+	char cmd;
 
 	while(true)
 	{
-		p.RawReceive(buffer);
+		std::cout << "CMD[s/r] :"; std::cin >> cmd;
+		
+		if (cmd == 's')
+		{
+			std::cout << "Enter message:" << std::endl;
+			std::getline(std::cin, input);
+			std::cout << "Sending : " << input << "..." << std::endl;
+		}
+		else if (cmd == 'r')
+		{
+			std::cout << "Receiving message:" << std::endl;
+		}
 	}
 
 	std::getchar();
