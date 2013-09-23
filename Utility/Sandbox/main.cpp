@@ -336,32 +336,44 @@ int main(int argc, char** argv)
 void IlluminaPRT(
 	Logger *p_pLogger, int p_nVerboseFrequency, int p_nIterations, int p_nFPS,
 	int p_nRenderThreads, int p_nJobsPerFrame, int p_nTileSize, int p_nFlags, std::string p_strScript,
-	bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPort)
+	int p_nPort, bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPeerPort)
 {
 	boost::array<char, 4096> buffer;
 
 	Peer local, 
 		remote;
 
-	local.Bind("10.60.10.4", 9101);
-	remote.RemoteBind(p_strPeerIP, p_nPort);
+	local.Bind("10.60.10.4", p_nPort);
+	remote.RemoteBind(p_strPeerIP, p_nPeerPort);
 
-	std::string input;
+	std::string input; 
+	std::vector<char> inputVector;
+	
 	char cmd;
 
 	while(true)
 	{
-		std::cout << "CMD[s/r] :"; std::cin >> cmd;
-		
+		std::cout << "CMD[s/r] :"; std::getline(std::cin, input); cmd = input[0];
+		std::cout << "Selection : [" << cmd << "]" << std::endl;
+
 		if (cmd == 's')
 		{
-			std::cout << "Enter message:" << std::endl;
-			std::getline(std::cin, input);
-			std::cout << "Sending : " << input << "..." << std::endl;
+			std::cout << "Input send string: ";
+			std::getline(std::cin, input); 
+
+			std::cout << std::endl << "Sending [" << input << "] ..." << std::endl;
+			
+			inputVector.clear(); std::copy(input.begin(), input.end(), std::back_inserter(inputVector));
+			local.RawSend(remote, inputVector);
 		}
 		else if (cmd == 'r')
 		{
-			std::cout << "Receiving message:" << std::endl;
+			std::cout << "Waiting for message..." << std::endl;
+			int length = local.RawReceive(buffer);
+
+			std::cout << "Received [";
+			std::cout.write(buffer.data(), length);
+			std::cout << "]" << std::endl;
 		}
 	}
 
@@ -407,10 +419,11 @@ int main(int argc, char** argv)
 	bool bVerbose = false,
 		bDiscovery = false;
 
-	int nPort = 6666;
+	int nRemotePort = 6666,
+		nPort = 6666;
 
 	std::string strScript("default.ilm"),
-		strPeerAddress("127.0.0.1:6665");
+		strRemoteAddress("127.0.0.1");
 
 	// Declare the supported options.
 	boost::program_options::options_description description("Allowed Settings");
@@ -427,9 +440,10 @@ int main(int argc, char** argv)
 		("tilejobs", boost::program_options::value<int>(), "number of jobs before tile subdivision")
 		("flags", boost::program_options::value<int>(), "rendering flags")
 		("fps", boost::program_options::value<int>(), "frame presentation frequency (hint)")
-		("discovery", boost::program_options::value<bool>(), "try automatic discovery in P2P network")
-		("peer", boost::program_options::value<std::string>(), "IP:Port of peer in network")
 		("port", boost::program_options::value<int>(), "listening port")
+		("discovery", boost::program_options::value<bool>(), "try automatic discovery in P2P network")
+		("remoteaddr", boost::program_options::value<std::string>(), "remote address of peer in P2P network")
+		("remoteport", boost::program_options::value<int>(), "remote port of peer in P2P network")
 		;
 
 	// Declare variable map
@@ -565,28 +579,37 @@ int main(int argc, char** argv)
 	}
 
 	// --peer
-	if (variableMap.count("peer"))
+	if (variableMap.count("remoteaddr"))
 	{
 		try {
-			strPeerAddress = variableMap["peer"].as<std::string>();
-		} catch (...) { strPeerAddress = "127.0.0.1:6665"; } 
-		std::cout << "Peer [" << strPeerAddress << "]" << std::endl;
+			strRemoteAddress = variableMap["remoteaddr"].as<std::string>();
+		} catch (...) { strRemoteAddress = "127.0.0.1"; } 
+		std::cout << "Remote Address (Peer) [" << strRemoteAddress << "]" << std::endl;
 	}
 
-	// --port
+	// --remoteport
+	if (variableMap.count("remoteport"))
+	{
+		try {
+			nRemotePort = variableMap["remoteport"].as<int>();
+		} catch (...) { nRemotePort = 6666; } 
+		std::cout << "Remote Port (Peer) [" << nRemotePort << "]" << std::endl;
+	}
+
+	// --localport
 	if (variableMap.count("port"))
 	{
 		try {
 			nPort = variableMap["port"].as<int>();
 		} catch (...) { nPort = 6666; } 
-		std::cout << "Port [" << nPort << "]" << std::endl;
+		std::cout << "Local Port [" << nPort << "]" << std::endl;
 	}
 
 	// Initialise new logger
 	Logger logger; logger.SetLoggingFilter(bVerbose ? LL_All : LL_ErrorLevel);
 
 	// -- start rendering
-	IlluminaPRT(&logger, nVerboseFrequency, nIterations, nFPS,  nThreads, nJobs, nSize, nFlags, strScript, bDiscovery, strPeerAddress, nPort);
+	IlluminaPRT(&logger, nVerboseFrequency, nIterations, nFPS,  nThreads, nJobs, nSize, nFlags, strScript, nPort, bDiscovery, strRemoteAddress, nRemotePort);
 
 	// Exit
 	return 1;

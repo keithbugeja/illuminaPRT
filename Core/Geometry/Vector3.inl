@@ -269,14 +269,14 @@ FORCEINLINE float Vector3::AbsDot(const Vector3 &p_vector1, const Vector3 &p_vec
 FORCEINLINE Vector3 Vector3::Cross(const Vector3 &p_vector1, const Vector3 &p_vector2)
 {
 	return Vector3(p_vector1.Y * p_vector2.Z - p_vector1.Z * p_vector2.Y,
-		p_vector1.X * p_vector2.Z - p_vector1.Z * p_vector2.X,
+		p_vector1.Z * p_vector2.X - p_vector1.X * p_vector2.Z,
 		p_vector1.X * p_vector2.Y - p_vector1.Y * p_vector2.X);
 }
 //----------------------------------------------------------------------------------------------
 FORCEINLINE void Vector3::Cross(const Vector3 &p_vector1, const Vector3 &p_vector2, Vector3 &p_out)
 {
 	p_out.Set(p_vector1.Y * p_vector2.Z - p_vector1.Z * p_vector2.Y,
-		p_vector1.X * p_vector2.Z - p_vector1.Z * p_vector2.X,
+		p_vector1.Z * p_vector2.X - p_vector1.X * p_vector2.Z,
 		p_vector1.X * p_vector2.Y - p_vector1.Y * p_vector2.X);
 }
 //----------------------------------------------------------------------------------------------

@@ -159,7 +159,7 @@ public:
 
 		catch(...)
 		{
-			std::cout << "Exception..." << std::endl;
+			std::cout << "Exception on RemoteBind()" << std::endl;
 			return false;
 		}
 
@@ -170,8 +170,16 @@ public:
 	{
 		try 
 		{
-			m_endpoint = boost::asio::ip::udp::endpoint(
-				boost::asio::ip::address::from_string(p_strIP), boost::lexical_cast<int>(p_nPort));
+			if (p_strIP.length() > 0)
+			{
+				m_endpoint = boost::asio::ip::udp::endpoint(
+					boost::asio::ip::address::from_string(p_strIP), boost::lexical_cast<int>(p_nPort));
+			}
+			else
+			{
+				m_endpoint = boost::asio::ip::udp::endpoint(
+					boost::asio::ip::udp::v4(), boost::lexical_cast<int>(p_nPort));
+			}
 
 			std::cout << "Bind :: [" << m_endpoint << "]" << std::endl;
 
@@ -182,28 +190,27 @@ public:
 
 		catch (...)
 		{
-			std::cout << "Exception..." << std::endl;
+			std::cout << "Exception on Bind()" << std::endl;
 			return false;
 		}
 
 		return true;
 	}
 	
-	bool RawReceive(boost::array<char, 4096> &p_receiveBuffer)
+	int RawReceive(boost::array<char, 4096> &p_receiveBuffer)
 	{
 		boost::asio::ip::udp::endpoint sender_endpoint;
 
 		size_t length = m_pSocket->receive_from(
 			boost::asio::buffer(p_receiveBuffer), sender_endpoint);
 
-		std::cout.write(p_receiveBuffer.data(), length);
-
-		return true;
+		return length;
 	}
 
-	bool RawSend(Peer &p_peer, std::vector<unsigned char> &p_data)
+	bool RawSend(Peer &p_peer, std::vector<char> &p_data)
 	{
 		m_pSocket->send_to(boost::asio::buffer(p_data), p_peer.m_endpoint);
+		return true;
 	}
 
 	/*
