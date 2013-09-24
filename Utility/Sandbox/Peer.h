@@ -16,6 +16,10 @@
 #include <Maths/Maths.h>
 #include <External/Compression/Compression.h>
 
+#include <RakPeerInterface.h>
+#include <ConnectionGraph2.h>
+#include <BitStream.h>
+
 //----------------------------------------------------------------------------------------------
 class SparseVectorClock
 {
@@ -137,6 +141,136 @@ public:
 //----------------------------------------------------------------------------------------------
 
 class P2PMessage;
+
+struct Neighbour
+{
+	std::string Address;
+	unsigned int Port;
+	unsigned int Latency;
+};
+
+class Peer2
+{
+	RakNet::RakPeerInterface *m_pRakPeer;
+	RakNet::ConnectionGraph2 m_connectionGraph;
+
+	std::vector<Neighbour> m_neighbours;
+
+	int m_nMaxConnections,
+		m_nMaxIncomingConnections,
+		m_nListenPort;
+
+public:
+	Peer2(int p_nPort, int p_nMaxConnections, int p_nMaxIncoming)
+		: m_nListenPort(p_nPort)
+		, m_nMaxConnections(p_nMaxConnections)
+		, m_nMaxIncomingConnections(p_nMaxIncoming)
+	{ }
+
+	Peer2(void)
+		: m_nListenPort(0)
+		, m_nMaxConnections(0)
+		, m_nMaxIncomingConnections(0)
+	{ }
+
+	void Configure(int p_nPort, int p_nMaxConnections, int p_nMaxIncoming)
+	{
+		m_nListenPort = p_nPort;
+		m_nMaxConnections = p_nMaxConnections;
+		m_nMaxIncomingConnections = p_nMaxIncoming;
+	}
+
+	bool Initialise(void)
+	{
+		m_pRakPeer = RakNet::RakPeerInterface::GetInstance();
+		m_pRakPeer->AttachPlugin(&m_connectionGraph);
+
+		RakNet::SocketDescriptor socketDescriptor(m_nListenPort, 0);
+		socketDescriptor.socketFamily = AF_INET;
+		
+		RakNet::StartupResult sr = m_pRakPeer->Startup(m_nMaxConnections, &socketDescriptor, 1, THREAD_PRIORITY_NORMAL);
+		
+		if (sr == RakNet::RAKNET_STARTED)
+		{
+			m_pRakPeer->SetMaximumIncomingConnections(m_nMaxIncomingConnections);
+			
+			std::cout << "Peer :: Peer bound to the following addresses :" << std::endl;
+			for (int addrIndex = 0; addrIndex < m_pRakPeer->GetNumberOfAddresses(); addrIndex++)
+				std::cout << "[" << addrIndex << "] :: " << m_pRakPeer->GetLocalIP(addrIndex) << std::endl;
+			
+			return true;
+		}
+
+		std::cerr << "Peer :: RakNet failed to start! ERR => [" << sr << "]" << std::endl; 
+		return false;
+	}
+
+	bool Discover(int p_nRemotePort, int p_nTimeout)
+	{
+		m_pRakPeer->Ping("255.255.255.255", (unsigned short)p_nRemotePort, false);
+		
+		RakNet::Packet *pPacket;
+		int deadline = RakNet::GetTimeMS() + p_nTimeout;
+		
+		while (RakNet::GetTimeMS() < deadline)
+		{
+			pPacket = m_pRakPeer->Receive();
+
+			if (pPacket == NULL) 
+			{
+				boost::thread::yield();
+				continue;
+			}
+			else
+			{
+				RakNet::TimeMS checkpoint; 
+				RakNet::BitStream bitStream(pPacket->data, pPacket->length, false);
+				bitStream.IgnoreBytes(1); bitStream.Read(checkpoint);
+
+				Neighbour neighbour;
+				neighbour.Address = pPacket->systemAddress.ToString();
+				neighbour.Port = (unsigned int)p_nRemotePort;
+				neighbour.Latency = Maths::Min(RakNet::GetTimeMS() - checkpoint, p_nTimeout);
+				m_neighbours.push_back(neighbour);
+
+				m_pRakPeer->DeallocatePacket(pPacket);
+
+				std::cout << "Got Pong from " << neighbour.Address << " :: Latency = " << neighbour.Latency << "ms" << std::endl;
+			}
+		}
+
+		return true;
+	}
+
+	int RawReceive(boost::array<unsigned char, 4096> &p_receiveBuffer)
+	{
+		RakNet::Packet *pPacket;
+
+		if (pPacket = m_pRakPeer->Receive())
+		{
+			int length = Maths::Min(4906, pPacket->length);
+			// memcpy((unsigned char*)(p_receiveBuffer.data), pPacket->data, length);
+
+			// deallocate packet
+			m_pRakPeer->DeallocatePacket(pPacket);
+
+			return length;
+		}
+
+		return 0;
+	}
+
+	/* bool RawSend(Peer &p_peer, std::vector<char> &p_data)
+	{
+		m_pRakPeer->Send(*(p_data.begin()), p_data.size(), HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_RAKNET_GUID, true);
+		return true;
+	} */
+
+	void Shutdown(void)
+	{
+		RakNet::RakPeerInterface::DestroyInstance(m_pRakPeer);
+	}
+};
 
 class Peer 
 {
