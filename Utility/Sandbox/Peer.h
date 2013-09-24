@@ -144,6 +144,14 @@ class P2PMessage;
 
 struct Neighbour
 {
+	static std::string MakeKey(const std::string p_strAddress, int p_nPort) {
+		return p_strAddress + ":" + boost::lexical_cast<std::string>(p_nPort);
+	}
+
+	std::string GetKey(void) {
+		return MakeKey(Address, Port);
+	}
+
 	std::string Address;
 	unsigned int Port;
 	unsigned int Latency;
@@ -154,7 +162,8 @@ class Peer2
 	RakNet::RakPeerInterface *m_pRakPeer;
 	RakNet::ConnectionGraph2 m_connectionGraph;
 
-	std::vector<Neighbour> m_neighbours;
+	// std::vector<Neighbour> m_neighbours;
+	std::map<std::string, Neighbour> m_neighbourMap;
 
 	int m_nMaxConnections,
 		m_nMaxIncomingConnections,
@@ -205,6 +214,45 @@ public:
 		return false;
 	}
 
+	bool Ping(const std::string p_strRemoteAddress, int p_nRemotePort, int p_nTimeout)
+	{
+		m_pRakPeer->Ping(p_strRemoteAddress.c_str(), (unsigned short)p_nRemotePort, false);
+		
+		RakNet::Packet *pPacket;
+		int deadline = RakNet::GetTimeMS() + p_nTimeout;
+		
+		while (RakNet::GetTimeMS() < deadline)
+		{
+			pPacket = m_pRakPeer->Receive();
+
+			if (pPacket == NULL) 
+			{
+				boost::thread::yield();
+				continue;
+			}
+			else
+			{
+				RakNet::TimeMS checkpoint; 
+				RakNet::BitStream bitStream(pPacket->data, pPacket->length, false);
+				bitStream.IgnoreBytes(1); bitStream.Read(checkpoint);
+
+				Neighbour neighbour;
+				neighbour.Address = pPacket->systemAddress.ToString();
+				neighbour.Port = (unsigned int)p_nRemotePort;
+				neighbour.Latency = Maths::Min(RakNet::GetTimeMS() - checkpoint, p_nTimeout);
+				m_neighbourMap[neighbour.GetKey()] = neighbour;
+
+				m_pRakPeer->DeallocatePacket(pPacket);
+
+				std::cout << "Got Pong from " << neighbour.Address << " :: Latency = " << neighbour.Latency << "ms" << std::endl;
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	bool Discover(int p_nRemotePort, int p_nTimeout)
 	{
 		m_pRakPeer->Ping("255.255.255.255", (unsigned short)p_nRemotePort, false);
@@ -231,7 +279,7 @@ public:
 				neighbour.Address = pPacket->systemAddress.ToString();
 				neighbour.Port = (unsigned int)p_nRemotePort;
 				neighbour.Latency = Maths::Min(RakNet::GetTimeMS() - checkpoint, p_nTimeout);
-				m_neighbours.push_back(neighbour);
+				m_neighbourMap[neighbour.GetKey()] = neighbour;
 
 				m_pRakPeer->DeallocatePacket(pPacket);
 
