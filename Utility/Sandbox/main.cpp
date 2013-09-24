@@ -340,6 +340,58 @@ void IlluminaPRT(
 {
 	boost::array<char, 4096> buffer;
 
+	Peer2 local, 
+		remote;
+
+	local.Configure(p_nPort, 10, 5);
+	local.Initialise();
+	local.Discover(p_nPeerPort, 5000);
+
+	std::string input; 
+	std::vector<char> inputVector;
+	
+	char cmd;
+
+	while(true)
+	{
+		std::cout << "CMD[s/r/q] :"; std::getline(std::cin, input); cmd = input[0];
+		std::cout << "Selection : [" << cmd << "]" << std::endl;
+
+		if (cmd == 's')
+		{
+			std::cout << "Input send string: ";
+			std::getline(std::cin, input); 
+
+			std::cout << std::endl << "Sending [" << input << "] ..." << std::endl;
+			
+			inputVector.clear(); std::copy(input.begin(), input.end(), std::back_inserter(inputVector));
+			// local.RawSend(remote, inputVector);
+		}
+		else if (cmd == 'r')
+		{
+			std::cout << "Waiting for message..." << std::endl;
+			int length = 0;
+			// int length = local.RawReceive(buffer);
+			
+			std::cout << "Received [";
+			std::cout.write(buffer.data(), length);
+			std::cout << "]" << std::endl;
+		}
+		else if (cmd == 'q')
+		{
+			std::cout << "Terminating..." << std::endl;
+			break;
+		}
+	}
+
+	local.Shutdown();
+	
+	std::cout << "Press any key to continue..." << std::endl;
+	std::getchar();
+
+	/*
+	boost::array<char, 4096> buffer;
+
 	Peer local, 
 		remote;
 
@@ -378,6 +430,7 @@ void IlluminaPRT(
 	}
 
 	std::getchar();
+	*/
 
 	/*
 	IlluminaMTFrameless illumina;
