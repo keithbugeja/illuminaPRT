@@ -671,7 +671,7 @@ bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray)
 	if (!pAABB->Intersects(p_ray, tIn, tOut))
 		return false;
 
-	tIn = Maths::Max(0, tIn);
+	tIn = Maths::Max(0.f, tIn);
 
 	KDTreeStackElement rootElement(p_pNode, tIn, tOut);
 	std::stack<KDTreeStackElement> traverseStack;
@@ -752,7 +752,7 @@ bool KDTreeMesh::Intersect_Stack(KDTreeMeshNode *p_pNode, Ray &p_ray, Differenti
 		return false;
 
 	tHit = tOut;
-	tIn = Maths::Max(0, tIn);
+	tIn = Maths::Max(0.f, tIn);
 
 	bool bIntersect = false;
 
