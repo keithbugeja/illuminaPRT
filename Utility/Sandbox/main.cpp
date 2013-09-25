@@ -340,48 +340,76 @@ void IlluminaPRT(
 {
 	boost::array<char, 4096> buffer;
 
-	Peer2 local, 
-		remote;
+	Peer2 local;
+	std::vector<Neighbour> neighbourList;
 
 	local.Configure(p_nPort, 10, 5);
 	local.Initialise();
 	local.Discover(p_nPeerPort, 5000);
+	local.GetNeighbours(neighbourList);
 
-	std::string input; 
-	std::vector<char> inputVector;
-	
-	char cmd;
-
-	while(true)
+	// if (!neighbourList.empty() && local.Connect(neighbourList[0], 5000))
 	{
-		std::cout << "CMD[s/r/q] :"; std::getline(std::cin, input); cmd = input[0];
-		std::cout << "Selection : [" << cmd << "]" << std::endl;
+		char cmd;
 
-		if (cmd == 's')
+		std::string input; 
+		std::vector<unsigned char> inputVector,
+			outputVector;
+	
+		while(true)
 		{
-			std::cout << "Input send string: ";
-			std::getline(std::cin, input); 
+			std::cout << "CMD[d/c/s/r/q] :"; std::getline(std::cin, input); cmd = input[0];
+			std::cout << "Selection : [" << cmd << "]" << std::endl;
 
-			std::cout << std::endl << "Sending [" << input << "] ..." << std::endl;
+			if (cmd == 'd')
+			{
+				std::cout << "Peer discovery..." << std::endl;
+				
+				local.Discover(p_nPeerPort, 5000);
+				local.GetNeighbours(neighbourList);
+			}
+			else if (cmd == 'c')
+			{
+				std::cout << "Trying connection..." << std::endl;
+
+				if (!neighbourList.empty())
+					local.Connect(neighbourList[0], 5000);
+			}
+
+			if (cmd == 's')
+			{
+				std::cout << "Input send string: ";
+				std::getline(std::cin, input); 
+
+				std::cout << std::endl << "Sending [" << input << "] ..." << std::endl;
+				inputVector.clear(); std::copy(input.begin(), input.end(), std::back_inserter(inputVector));
 			
-			inputVector.clear(); std::copy(input.begin(), input.end(), std::back_inserter(inputVector));
-			// local.RawSend(remote, inputVector);
+				local.RawSend(neighbourList[0], inputVector);
+			}
+			else if (cmd == 'r')
+			{
+				Neighbour neighbour;
+				std::cout << "Waiting for message..." << std::endl;
+				
+				if (local.RawReceive(outputVector, neighbour))
+				{
+					std::cout << "Received [";
+					std::cout.write((const char*)outputVector.data(), outputVector.size());
+					std::cout << "] from " << neighbour.GetKey() << std::endl;
+				}
+				else
+				{
+					std::cout << "No packets in queue!" << std::endl;
+				}
+			}
+			else if (cmd == 'q')
+			{
+				std::cout << "Terminating..." << std::endl;
+				break;
+			}
 		}
-		else if (cmd == 'r')
-		{
-			std::cout << "Waiting for message..." << std::endl;
-			int length = 0;
-			// int length = local.RawReceive(buffer);
-			
-			std::cout << "Received [";
-			std::cout.write(buffer.data(), length);
-			std::cout << "]" << std::endl;
-		}
-		else if (cmd == 'q')
-		{
-			std::cout << "Terminating..." << std::endl;
-			break;
-		}
+
+		local.Disconnect(neighbourList[0]);
 	}
 
 	local.Shutdown();

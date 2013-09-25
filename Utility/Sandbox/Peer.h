@@ -16,6 +16,7 @@
 #include <Maths/Maths.h>
 #include <External/Compression/Compression.h>
 
+#include <MessageIdentifiers.h>
 #include <RakPeerInterface.h>
 #include <ConnectionGraph2.h>
 #include <BitStream.h>
@@ -153,8 +154,8 @@ struct Neighbour
 	}
 
 	std::string Address;
-	unsigned int Port;
-	unsigned int Latency;
+	unsigned short Port;
+	int Latency;
 };
 
 class Peer2
@@ -187,6 +188,14 @@ public:
 		m_nListenPort = p_nPort;
 		m_nMaxConnections = p_nMaxConnections;
 		m_nMaxIncomingConnections = p_nMaxIncoming;
+	}
+
+	void GetNeighbours(std::vector<Neighbour> &p_neighbourList)
+	{
+		p_neighbourList.clear();
+
+		for (auto pair : m_neighbourMap)
+			p_neighbourList.push_back(pair.second);
 	}
 
 	bool Initialise(void)
@@ -232,19 +241,27 @@ public:
 			}
 			else
 			{
-				RakNet::TimeMS checkpoint; 
-				RakNet::BitStream bitStream(pPacket->data, pPacket->length, false);
-				bitStream.IgnoreBytes(1); bitStream.Read(checkpoint);
+				if (pPacket->data[0] == ID_UNCONNECTED_PONG)
+				{
+					RakNet::TimeMS checkpoint; 
+					RakNet::BitStream bitStream(pPacket->data, pPacket->length, false);
+					bitStream.IgnoreBytes(1); bitStream.Read(checkpoint);
 
-				Neighbour neighbour;
-				neighbour.Address = pPacket->systemAddress.ToString();
-				neighbour.Port = (unsigned int)p_nRemotePort;
-				neighbour.Latency = Maths::Min(RakNet::GetTimeMS() - checkpoint, p_nTimeout);
-				m_neighbourMap[neighbour.GetKey()] = neighbour;
+					Neighbour neighbour;
+					neighbour.Address = pPacket->systemAddress.ToString();
+					neighbour.Port = (unsigned int)p_nRemotePort;
+					neighbour.Latency = Maths::Min<int>(RakNet::GetTimeMS() - checkpoint, p_nTimeout);
+					m_neighbourMap[neighbour.GetKey()] = neighbour;
+					
+					std::cout << "Got Pong from " << neighbour.Address << " :: Latency = " << neighbour.Latency << "ms" << std::endl;
+				}
+				else if (pPacket->data[0] == ID_UNCONNECTED_PING || 
+					pPacket->data[0] == ID_UNCONNECTED_PING_OPEN_CONNECTIONS)
+				{
+					std::cout << "Discarding Ping packet..." << std::endl;
+				}
 
 				m_pRakPeer->DeallocatePacket(pPacket);
-
-				std::cout << "Got Pong from " << neighbour.Address << " :: Latency = " << neighbour.Latency << "ms" << std::endl;
 
 				return true;
 			}
@@ -253,9 +270,9 @@ public:
 		return false;
 	}
 
-	bool Discover(int p_nRemotePort, int p_nTimeout)
+	bool Discover(unsigned int p_nRemotePort, int p_nTimeout)
 	{
-		m_pRakPeer->Ping("255.255.255.255", (unsigned short)p_nRemotePort, false);
+		m_pRakPeer->Ping("255.255.255.255", p_nRemotePort, false);
 		
 		RakNet::Packet *pPacket;
 		int deadline = RakNet::GetTimeMS() + p_nTimeout;
@@ -271,48 +288,115 @@ public:
 			}
 			else
 			{
-				RakNet::TimeMS checkpoint; 
-				RakNet::BitStream bitStream(pPacket->data, pPacket->length, false);
-				bitStream.IgnoreBytes(1); bitStream.Read(checkpoint);
+				if (pPacket->data[0] == ID_UNCONNECTED_PONG)
+				{
+					RakNet::TimeMS checkpoint; 
+					RakNet::BitStream bitStream(pPacket->data, pPacket->length, false);
+					bitStream.IgnoreBytes(1); bitStream.Read(checkpoint);
 
-				Neighbour neighbour;
-				neighbour.Address = pPacket->systemAddress.ToString();
-				neighbour.Port = (unsigned int)p_nRemotePort;
-				neighbour.Latency = Maths::Min(RakNet::GetTimeMS() - checkpoint, p_nTimeout);
-				m_neighbourMap[neighbour.GetKey()] = neighbour;
-
-				m_pRakPeer->DeallocatePacket(pPacket);
-
-				std::cout << "Got Pong from " << neighbour.Address << " :: Latency = " << neighbour.Latency << "ms" << std::endl;
+					Neighbour neighbour;
+					neighbour.Address = pPacket->systemAddress.ToString();
+					neighbour.Port = (unsigned int)p_nRemotePort;
+					neighbour.Latency = Maths::Min<int>(RakNet::GetTimeMS() - checkpoint, p_nTimeout);
+					m_neighbourMap[neighbour.GetKey()] = neighbour;
+					
+					std::cout << "Got Pong from " << neighbour.Address << " :: Latency = " << neighbour.Latency << "ms" << std::endl;
+				}
+				else if (pPacket->data[0] == ID_UNCONNECTED_PING || 
+					pPacket->data[0] == ID_UNCONNECTED_PING_OPEN_CONNECTIONS)
+				{
+					std::cout << "Discarding Ping packet..." << std::endl;
+				}
 			}
 		}
 
 		return true;
 	}
 
-	int RawReceive(boost::array<unsigned char, 4096> &p_receiveBuffer)
+	bool Connect(Neighbour &p_neighbour, int p_nTimeout = 0)
+	{
+		RakNet::SystemAddress address;
+		address.FromStringExplicitPort(p_neighbour.Address.c_str(), p_neighbour.Port);
+
+		RakNet::ConnectionAttemptResult car = m_pRakPeer->Connect(p_neighbour.Address.c_str(), p_neighbour.Port, NULL, 0);
+		
+		if (p_nTimeout == 0)
+			return (car == RakNet::CONNECTION_ATTEMPT_STARTED);
+
+		int deadline = RakNet::GetTimeMS() + p_nTimeout;
+		
+		while (RakNet::GetTimeMS() < deadline)
+		{
+			RakNet::ConnectionState cs = m_pRakPeer->GetConnectionState(address);
+			switch(cs)
+			{
+				case RakNet::IS_CONNECTED: 
+					return true;
+
+				case RakNet::IS_CONNECTING:
+					continue;
+			}
+			
+			boost::thread::yield();
+		}
+
+		return false;
+	}
+
+	void Disconnect(Neighbour &p_neighbour)
+	{
+		RakNet::SystemAddress address;
+		address.FromStringExplicitPort(p_neighbour.Address.c_str(), p_neighbour.Port);
+		
+		m_pRakPeer->CloseConnection(address, false);
+	}
+
+	bool IsConnected(Neighbour &p_neighbour)
+	{
+		RakNet::SystemAddress address;
+		address.FromStringExplicitPort(p_neighbour.Address.c_str(), p_neighbour.Port);
+		
+		RakNet::ConnectionState cs = m_pRakPeer->GetConnectionState(address);
+		return (cs == RakNet::ConnectionState::IS_CONNECTED);
+	}
+
+	bool RawSend(Neighbour &p_neighbour, std::vector<unsigned char> &p_data)
+	{
+		RakNet::SystemAddress address;
+		address.FromStringExplicitPort(p_neighbour.Address.c_str(), p_neighbour.Port);
+
+		bool result = m_pRakPeer->Send(
+			(const char*)p_data.data(), p_data.size(), HIGH_PRIORITY, RELIABLE, 0, address, false);
+
+		return result;
+	}
+
+	bool RawReceive(std::vector<unsigned char> &p_data, Neighbour &p_neighbour)
 	{
 		RakNet::Packet *pPacket;
 
 		if (pPacket = m_pRakPeer->Receive())
 		{
-			int length = Maths::Min(4906, pPacket->length);
-			// memcpy((unsigned char*)(p_receiveBuffer.data), pPacket->data, length);
+			// Assign data
+			p_data.clear(); p_data.assign(pPacket->data, pPacket->data + pPacket->length);
 
-			// deallocate packet
+			// Is neighbour known?
+			std::string hostKey = Neighbour::MakeKey(pPacket->systemAddress.ToString(false), pPacket->systemAddress.GetPort());
+			if (m_neighbourMap.find(hostKey) != m_neighbourMap.end())
+			{
+				p_neighbour = m_neighbourMap[hostKey];
+			} else {
+				p_neighbour.Address = pPacket->systemAddress.ToString(false);
+				p_neighbour.Port = pPacket->systemAddress.GetPort();
+				p_neighbour.Latency = -1;
+			}
+			
 			m_pRakPeer->DeallocatePacket(pPacket);
-
-			return length;
+			return true;
 		}
 
-		return 0;
+		return false;
 	}
-
-	/* bool RawSend(Peer &p_peer, std::vector<char> &p_data)
-	{
-		m_pRakPeer->Send(*(p_data.begin()), p_data.size(), HIGH_PRIORITY, RELIABLE, 0, UNASSIGNED_RAKNET_GUID, true);
-		return true;
-	} */
 
 	void Shutdown(void)
 	{

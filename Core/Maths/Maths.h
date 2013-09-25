@@ -129,9 +129,11 @@ namespace Illumina
 				return p_fAngle * _DegToRad;
 			}
 
+			/*
 			inline static float Min(float p_fValue1, float p_fValue2) {
 				return (p_fValue1 < p_fValue2) ? p_fValue1 : p_fValue2;
 			}
+			*/
 
 			inline static float Clamp(float p_fValue, float p_fMin, float p_fMax )
 			{
@@ -140,9 +142,11 @@ namespace Illumina
 				return p_fValue;
 			}
 
+			/* 
 			inline static float Max(float p_fValue1, float p_fValue2) {
 				return (p_fValue1 > p_fValue2) ? p_fValue1 : p_fValue2;
-			}
+			} 
+			*/
 
 			inline static bool Equals(float p_fValue1, float p_fValue2, float p_fTolerance = Epsilon) {
 				return (Abs(p_fValue1 - p_fValue2) <= p_fTolerance);

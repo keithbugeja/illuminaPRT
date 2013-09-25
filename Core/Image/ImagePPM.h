@@ -101,9 +101,9 @@ namespace Illumina
 
 				for (int i = 0; i < p_image.GetArea(); i++)
 				{
-					imageFile.put((unsigned char)Maths::Min(255, 256 * p_image[i].R));
-					imageFile.put((unsigned char)Maths::Min(255, 256 * p_image[i].G));
-					imageFile.put((unsigned char)Maths::Min(255, 256 * p_image[i].B));
+					imageFile.put((unsigned char)Maths::Min(255, (int)(256.f * p_image[i].R)));
+					imageFile.put((unsigned char)Maths::Min(255, (int)(256.f * p_image[i].G)));
+					imageFile.put((unsigned char)Maths::Min(255, (int)(256.f * p_image[i].B)));
 				}
 				
 				imageFile.close();

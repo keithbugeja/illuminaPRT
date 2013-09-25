@@ -829,7 +829,7 @@ void AsyncRenderTaskCoordinator::DecompressionThreadHandler(AsyncRenderTaskCoord
 		// Rasterise pixels
 		if (pPacket->ThisHash == pPacket->NextHash)
 		{
-			float a = Maths::Max(pPacket->RunLength, 1);
+			float a = (float)Maths::Max(pPacket->RunLength, 1UL);
 			pPacket->RunLength++;
 			float b = 1.f / pPacket->RunLength;
 

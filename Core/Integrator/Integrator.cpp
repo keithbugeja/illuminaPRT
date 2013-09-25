@@ -127,7 +127,7 @@ Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, 
 	p_wIn = -p_wIn;
 
 	if (p_pMaterial == NULL)
-		return Ls * Maths::Max(0, Vector3::Dot(p_wIn, p_normal));
+		return Ls * Maths::Max(0.f, Vector3::Dot(p_wIn, p_normal));
 		//return Ls * Maths::Max(0, Vector3::AbsDot(p_wIn, p_normal));
 
 	Vector3 bsdfIn, bsdfOut;
@@ -135,7 +135,7 @@ Spectrum IIntegrator::EstimateDirectLighting(Scene *p_pScene, ILight *p_pLight, 
 	BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, p_wOut, bsdfOut);
 	BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, p_wIn, bsdfIn);
 
-	return Ls * Maths::Max(0, Vector3::Dot(p_wIn, p_normal)) * p_pMaterial->F(p_intersection.Surface, bsdfOut, bsdfIn);
+	return Ls * Maths::Max(0.f, Vector3::Dot(p_wIn, p_normal)) * p_pMaterial->F(p_intersection.Surface, bsdfOut, bsdfIn);
 	//return Ls * Maths::Max(0, Vector3::AbsDot(p_wIn, p_normal)) * p_pMaterial->F(p_intersection.Surface, bsdfOut, bsdfIn);
 }
 //----------------------------------------------------------------------------------------------
