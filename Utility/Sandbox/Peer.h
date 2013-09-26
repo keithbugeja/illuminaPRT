@@ -256,7 +256,9 @@ public:
 					std::cout << "Got Pong from " << neighbour.Address << " :: Latency = " << neighbour.Latency << "ms" << std::endl;
 				}
 				else if (pPacket->data[0] == ID_UNCONNECTED_PING || 
-					pPacket->data[0] == ID_UNCONNECTED_PING_OPEN_CONNECTIONS)
+					pPacket->data[0] == ID_UNCONNECTED_PING_OPEN_CONNECTIONS ||
+					pPacket->data[0] == ID_CONNECTED_PING || 
+					pPacket->data[0] == ID_CONNECTED_PONG)
 				{
 					std::cout << "Discarding Ping packet..." << std::endl;
 				}
@@ -303,10 +305,14 @@ public:
 					std::cout << "Got Pong from " << neighbour.Address << " :: Latency = " << neighbour.Latency << "ms" << std::endl;
 				}
 				else if (pPacket->data[0] == ID_UNCONNECTED_PING || 
-					pPacket->data[0] == ID_UNCONNECTED_PING_OPEN_CONNECTIONS)
+					pPacket->data[0] == ID_UNCONNECTED_PING_OPEN_CONNECTIONS ||
+					pPacket->data[0] == ID_CONNECTED_PING || 
+					pPacket->data[0] == ID_CONNECTED_PONG)
 				{
 					std::cout << "Discarding Ping packet..." << std::endl;
 				}
+
+				m_pRakPeer->DeallocatePacket(pPacket);
 			}
 		}
 
@@ -360,15 +366,19 @@ public:
 		return (cs == RakNet::ConnectionState::IS_CONNECTED);
 	}
 
-	bool RawSend(Neighbour &p_neighbour, std::vector<unsigned char> &p_data)
+	bool RawSend(Neighbour &p_neighbour, const char *p_pData, int p_nLength)
 	{
 		RakNet::SystemAddress address;
 		address.FromStringExplicitPort(p_neighbour.Address.c_str(), p_neighbour.Port);
 
 		bool result = m_pRakPeer->Send(
-			(const char*)p_data.data(), p_data.size(), HIGH_PRIORITY, RELIABLE, 0, address, false);
+			p_pData, p_nLength, HIGH_PRIORITY, RELIABLE, 0, address, false);
 
 		return result;
+	}
+
+	bool RawSend(Neighbour &p_neighbour, std::vector<unsigned char> &p_data) {
+		return RawSend(p_neighbour, (const char*)p_data.data(), p_data.size());
 	}
 
 	bool RawReceive(std::vector<unsigned char> &p_data, Neighbour &p_neighbour)
@@ -377,6 +387,8 @@ public:
 
 		if (pPacket = m_pRakPeer->Receive())
 		{
+			// Have to discard uninteresting packets!
+
 			// Assign data
 			p_data.clear(); p_data.assign(pPacket->data, pPacket->data + pPacket->length);
 
