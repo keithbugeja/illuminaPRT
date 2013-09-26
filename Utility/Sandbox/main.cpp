@@ -338,8 +338,19 @@ void IlluminaPRT(
 	int p_nRenderThreads, int p_nJobsPerFrame, int p_nTileSize, int p_nFlags, std::string p_strScript,
 	int p_nPort, bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPeerPort)
 {
-	boost::array<char, 4096> buffer;
+	Peer2 localHost;
+	std::vector<Neighbour> neighbourList; 
 
+	localHost.Configure(p_nPort, 10, 5);
+	localHost.Initialise();
+	localHost.Discover(p_nPeerPort, 5000);
+	localHost.Ping(p_strPeerIP, p_nPeerPort);
+	localHost.GetNeighbours(neighbourList);
+
+	if (!neighbourList.empty())
+		localHost.Connect(neighbourList[0], 1000);
+	
+	/*
 	Peer2 local;
 	std::vector<Neighbour> neighbourList;
 
@@ -413,9 +424,7 @@ void IlluminaPRT(
 	}
 
 	local.Shutdown();
-	
-	std::cout << "Press any key to continue..." << std::endl;
-	std::getchar();
+	*/
 
 	/*
 	boost::array<char, 4096> buffer;
@@ -460,7 +469,7 @@ void IlluminaPRT(
 	std::getchar();
 	*/
 
-	/*
+	/* */
 	IlluminaMTFrameless illumina;
 	//IlluminaMT illumina;
 
@@ -477,9 +486,12 @@ void IlluminaPRT(
 	illumina.AttachListener(&listener);
 
 	illumina.Initialise();
-	illumina.Render();
+	illumina.Render();	
 	illumina.Shutdown();
-	*/
+	/* */
+
+	std::cout << "Press any key to continue..." << std::endl;
+	std::getchar();
 }
 
 //----------------------------------------------------------------------------------------------
