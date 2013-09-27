@@ -166,6 +166,7 @@
     <ClCompile Include="..\..\..\..\Core\Integrator\ICIntegrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\IGIIntegrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\Integrator.cpp" />
+    <ClCompile Include="..\..\..\..\Core\Integrator\MLICIntegrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\PathIntegrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\PhotonIntegrator.cpp" />
     <ClCompile Include="..\..\..\..\Core\Integrator\TestIntegrator.cpp" />
@@ -270,6 +271,7 @@
     <ClInclude Include="..\..\..\..\Core\Integrator\IGIIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\Integrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\IntegratorFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Integrator\MLICIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\PathIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\PhotonIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\TestIntegrator.h" />
