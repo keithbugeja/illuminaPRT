@@ -99,6 +99,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		logger->Write("Environment :: Registering Integrators...", LL_Info);
 		m_engineKernel->GetIntegratorManager()->RegisterFactory("PathTracing", new PathIntegratorFactory());
+		m_engineKernel->GetIntegratorManager()->RegisterFactory("MLIC", new MLICIntegratorFactory());
 		m_engineKernel->GetIntegratorManager()->RegisterFactory("IC", new ICIntegratorFactory());
 		m_engineKernel->GetIntegratorManager()->RegisterFactory("IGI", new IGIIntegratorFactory());
 		m_engineKernel->GetIntegratorManager()->RegisterFactory("Whitted", new WhittedIntegratorFactory());
@@ -253,6 +254,7 @@ public:
 			logger->Write("Environment :: Freeing and unregistering Integrators...", LL_Info);
 
 			delete m_engineKernel->GetIntegratorManager()->RequestFactory("PathTracing");
+			delete m_engineKernel->GetIntegratorManager()->RequestFactory("MLIC");
 			delete m_engineKernel->GetIntegratorManager()->RequestFactory("IC");
 			delete m_engineKernel->GetIntegratorManager()->RequestFactory("IGI");
 			delete m_engineKernel->GetIntegratorManager()->RequestFactory("Whitted");
@@ -260,6 +262,7 @@ public:
 			//delete m_engineKernel->GetIntegratorManager()->RequestFactory("Test");
 
 			m_engineKernel->GetIntegratorManager()->UnregisterFactory("PathTracing");
+			m_engineKernel->GetIntegratorManager()->UnregisterFactory("MLIC");
 			m_engineKernel->GetIntegratorManager()->UnregisterFactory("IC");
 			m_engineKernel->GetIntegratorManager()->UnregisterFactory("IGI");
 			m_engineKernel->GetIntegratorManager()->UnregisterFactory("Whitted");

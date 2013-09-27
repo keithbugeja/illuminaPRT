@@ -344,12 +344,13 @@ void IlluminaPRT(
 	localHost.Configure(p_nPort, 10, 5);
 	localHost.Initialise();
 	localHost.Discover(p_nPeerPort, 5000);
-	localHost.Ping(p_strPeerIP, p_nPeerPort);
+	localHost.Ping(p_strPeerIP, p_nPeerPort, 5000);
 	localHost.GetNeighbours(neighbourList);
 
 	if (!neighbourList.empty())
 		localHost.Connect(neighbourList[0], 1000);
-	
+
+
 	/*
 	Peer2 local;
 	std::vector<Neighbour> neighbourList;
@@ -469,7 +470,7 @@ void IlluminaPRT(
 	std::getchar();
 	*/
 
-	/* */
+	/* 
 	IlluminaMTFrameless illumina;
 	//IlluminaMT illumina;
 

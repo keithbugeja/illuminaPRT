@@ -354,6 +354,9 @@
     <ClCompile Include="..\..\..\..\Core\Device\SharedMemoryDevice.cpp">
       <Filter>Header Files\Device</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Integrator\MLICIntegrator.cpp">
+      <Filter>Header Files\Integrator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -886,6 +889,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Postproc\MedianFilter.h">
       <Filter>Header Files\Postproc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Integrator\MLICIntegrator.h">
+      <Filter>Header Files\Integrator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
