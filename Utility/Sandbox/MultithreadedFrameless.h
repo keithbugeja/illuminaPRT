@@ -334,53 +334,6 @@ public:
 
 	void Render(void)
 	{
-		/* 
-		IrradianceCacheRecord icr;
-		icr.Point.Set(-7.5, -7.5, -7.5);
-		icr.RiClamp = 1.f;
-
-		IrradianceCache ic;
-		ic.RootNode.Bounds.SetExtents(Vector3(-10,-10,-10), Vector3(10,10,10));
-		
-		ic.Insert(&(ic.RootNode), &icr); 
-		*/
-
-		/* cl_int error;
-		cl_platform_id platform;
-		cl_device_id device;
-		cl_uint platforms, devices;
-
-		error = clGetPlatformIDs(1, &platform, &platforms);
-		error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 1, &device, &devices);
-		cl_context_properties properties[] = {
-			CL_CONTEXT_PLATFORM,
-			(cl_context_properties)platform,
-			0};
-
-		cl_context context = clCreateContext(properties, 1, &device, NULL, NULL, &error);
-		cl_command_queue cq = clCreateCommandQueue(context, device, 0, &error);
-
-		clFinish(cq);
-		*/ 
-
-		Convolution convolution;
-		//Spectrum kernel[] = {0.5f, 0.7f, 0.5f, 0.7f, 1, 0.7f, 0.5f, 0.7f, 0.5f};
-		float kernel[] = {0.5f, 0.7f, 0.5f, 0.7f, 1, 0.7f, 0.5f, 0.7f, 0.5f};
-		float kernel2[] = {
-			0.25f, 0.50f, 0.75f, 0.50f, 0.25f,
-			0.50f, 0.75f, 0.90f, 0.75f, 0.50f,
-			0.75f, 0.90f, 1.00f, 0.90f, 0.75f,
-			0.50f, 0.75f, 0.90f, 0.75f, 0.50f,
-			0.25f, 0.50f, 0.75f, 0.50f, 0.25f
-		};
-
-		float sk1[] = {1,0,-1,2,0,-2,1,0,-1},
-			sk2[] = {1,2,1,0,0,0,-1,-2,-1},
-			mean[] = {0.1111f, 0.1111f, 0.1111f, 0.1111f, 0.1111f, 0.1111f, 0.1111f, 0.1111f, 0.1111f};
-
-		convolution.SetKernel(9, 3, kernel, 1.f);
-		//convolution.SetKernel(25, 5, kernel2, 0.1f);
-
 		// Prepare integrator
 		m_pIntegrator->Prepare(m_pEnvironment->GetScene());
 
@@ -473,23 +426,6 @@ public:
 			//----------------------------------------------------------------------------------------------
 			 
 			eventStart = Platform::GetTime();
-			/*
-			convolution.SetKernel(9, 3, sk1, 1.f);
-			convolution.Apply(m_pRadianceBuffer, m_pRadianceTemp);
-			convolution.SetKernel(9, 3, mean, 1.f);
-			convolution.Apply(m_pRadianceTemp, m_pRadianceBuffer);
-			*/
-
-			/*
-			convolution.SetKernel(9,3,sk2, 1.f);
-			convolution.Apply(m_pRadianceTemp, m_pRadianceBuffer);
-			convolution.SetKernel(9,3,sk1, 1.f);
-			convolution.Apply(m_pRadianceBuffer, m_pRadianceTemp);
-			*/
-			/*
-			convolution.Apply(m_pRadianceBuffer, m_pRadianceTemp);
-			convolution.Apply(m_pRadianceTemp, m_pRadianceBuffer);
-			*/
 
 			// Bilateral filter
 			if (m_flags.IsBilateralFilterEnabled())
@@ -510,8 +446,7 @@ public:
 			// Tonemapping
 			
 			if (m_flags.IsToneMappingEnabled())
-				m_pTonemapFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
-			
+				m_pTonemapFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);			
 				//m_pTonemapFilter->Apply(m_pRadianceTemp, m_pRadianceBuffer);
 				//m_pTonemapFilter->Apply(m_pRadianceBuffer, m_pRadianceTemp);
 			

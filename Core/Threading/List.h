@@ -18,6 +18,123 @@ namespace Illumina
 {
 	namespace Core
 	{
+		// TODO:
+		//	Base all lists on a common interface
+
+		template<class T>
+		class WaitFreeList
+		{
+		protected:
+			struct WaitFreeListNode
+			{
+				WaitFreeListNode *pNext;
+				T *pRecordList;
+			};
+
+			WaitFreeListNode m_baseNode;
+
+		protected:
+			Int64 m_nPageCapacity,
+				  m_nRecordIndex,
+				  m_nRecordCount,
+				  m_nSize;
+
+		public:
+			WaitFreeList(int p_nPageCapacity = 100)
+				: m_nPageCapacity(p_nPageCapacity)
+				, m_nRecordIndex(0)
+				, m_nRecordCount(0)
+				, m_nSize(0)
+			{
+				m_baseNode.pNext = NULL;
+				m_baseNode.pRecordList = new T[m_nPageCapacity];
+			}
+
+			inline const T& operator[](size_t p_index) const 
+			{
+				if (p_index < (size_t)m_nSize)
+				{
+					Int64 blockIndex = p_index / m_nPageCapacity,
+						blockPosition = p_index % m_nPageCapacity;
+
+					WaitFreeListNode *pTail;
+
+					for (pTail = &m_baseNode; blockIndex > 0; 
+						 pTail = pTail->pNext, blockIndex--);
+
+					return pTail->pRecordList[blockPosition];
+				}
+			}
+
+			inline T& operator[](size_t p_index) 
+			{
+				if (p_index < (size_t)m_nSize)
+				{
+					Int64 blockIndex = p_index / m_nPageCapacity,
+						blockPosition = p_index % m_nPageCapacity;
+
+					WaitFreeListNode *pTail;
+
+					for (pTail = &m_baseNode; blockIndex > 0; 
+						 pTail = pTail->pNext, blockIndex--);
+
+					return pTail->pRecordList[blockPosition];
+				}
+			}
+
+			inline size_t Size(void) const 
+			{
+				return (size_t)m_nSize;
+			}
+
+			void PushBack(const T &p_obj) 
+			{
+				// Increment record index atomically
+				Int64 currentIndex = Illumina::Core::AtomicInt64::FetchAndAdd(&m_nRecordIndex, 1);
+				
+				// Get block index and block position
+				Int64 blockIndex = currentIndex / m_nPageCapacity,
+					blockPosition = currentIndex % m_nPageCapacity;
+
+				// Find block for insert
+				WaitFreeListNode *pTail; 
+				Int64 blockCount = 0;
+
+				for (pTail = &m_baseNode; pTail->pNext != NULL && blockCount < blockIndex;
+						pTail = pTail->pNext, blockCount++);
+
+				if (blockIndex > blockCount) 
+				{
+					for (Int64 i = 0; i < blockIndex - blockCount; i++) 
+					{
+						if (pTail->pNext == NULL)
+						{
+							WaitFreeListNode *pNode = new WaitFreeListNode();
+							pNode->pRecordList = new T[m_nPageCapacity];
+							pNode->pNext = NULL;
+
+							if (pTail->pNext == (WaitFreeListNode*)Illumina::Core::AtomicInt64::CompareAndSwap((Int64*)&(pTail->pNext), (Int64)pNode, (Int64)NULL))
+							{
+								delete[] pNode->pRecordList;
+								delete pNode;
+							}
+						}
+
+						pTail = pTail->pNext;						
+					}
+				}
+
+				// Insert record
+				pTail->pRecordList[blockPosition] = p_obj;
+
+				// Increment record count
+				Illumina::Core::AtomicInt64::Add(&m_nRecordCount, 1);
+				
+				// Update size if record count and record index match
+				Int64 value = m_nRecordIndex;
+				if (m_nRecordCount == value) m_nSize = value;
+			}
+		};
 
 		// #define __DEBUG_LIST__
 		#if defined(__DEBUG_LIST__)
