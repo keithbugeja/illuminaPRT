@@ -20,7 +20,6 @@ namespace Illumina
 	{
 		// TODO:
 		//	Base all lists on a common interface
-
 		template<class T>
 		class WaitFreeList
 		{
@@ -32,6 +31,42 @@ namespace Illumina
 			};
 
 			WaitFreeListNode m_baseNode;
+
+		public:
+			class iterator
+			{
+			protected:
+				WaitFreeList *m_pList;
+				WaitFreeListNode *m_pNode;
+
+				int m_nPosition;
+			
+			public:
+				void Reset(void) 
+				{ 
+					m_nPosition = 0;
+					m_pNode = m_pList->m_baseNode;
+				}
+
+				T& Next(void) 
+				{
+					int index = m_nPosition % m_pList->m_nPageCapacity;
+
+					if (m_nPosition > 0 &&  index == 0 && m_pNode->pNext != NULL)
+						m_pNode = m_pNode->pNext;
+
+					p_nPosition++;
+
+					return m_pNode->pRecordList[index];
+				}
+
+				bool HasNext(void) 
+				{ 
+					return m_nPosition < m_pList->Size();
+				}
+			};
+
+			friend iterator;
 
 		protected:
 			Int64 m_nPageCapacity,
