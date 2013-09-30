@@ -24,6 +24,7 @@ namespace Illumina
 			AxisAlignedBoundingBox Bounds;
 			MLIrradianceCacheNode *Children;
 			std::vector<MLIrradianceCacheRecord*> RecordList;
+			// WaitFreeList<MLIrradianceCacheRecord*> RecordList;
 
 			MLIrradianceCacheNode(void) 
 				: Children(NULL)
@@ -31,8 +32,77 @@ namespace Illumina
 
 			void Add(MLIrradianceCacheRecord *p_pRecord) {
 				RecordList.push_back(p_pRecord);
+				//RecordList.PushBack(p_pRecord);
 			}
 		};
+
+
+		//----------------------------------------------------------------------------------------------
+		// Irradiance Cache Sample List
+		//----------------------------------------------------------------------------------------------
+		
+		/*
+		class MLIrradianceCacheRecordList
+		{
+		protected:
+			Int64 m_nRecordCount,
+				  m_nRecordIndex;
+
+		public:
+			MLIrradianceCacheRecordList(int p_nRecordCount)
+				: m_nRecordCount(p_nRecordCount)
+				, m_nRecordIndex(0)
+			{ 
+				BaseNode.pNext = NULL;
+				BaseNode.pRecordList = 
+					new MLIrradianceCacheRecord[m_nRecordCount];
+			}
+
+			MLIrradianceCacheRecord *RequestRecord(void)
+			{
+				Int64 currentIndex = Illumina::Core::AtomicInt64::FetchAndAdd(&m_nRecordIndex, 1);
+				
+				Int64 blockIndex = currentIndex / m_nRecordCount,
+					blockPosition = currentIndex % m_nRecordCount;
+
+				MLIrradianceRecordListNode *pTail; 
+				Int64 blockCount = 0;
+
+				for (pTail = &BaseNode; pTail->pNext != NULL && blockCount < blockIndex;
+						pTail = pTail->pNext, blockCount++);
+
+				if (blockIndex > blockCount) 
+				{
+					for (Int64 i = 0; i < blockIndex - blockCount; i++) 
+					{
+						if (pTail->pNext == NULL)
+						{
+							MLIrradianceRecordListNode *pNode = new MLIrradianceRecordListNode();
+							pNode->pRecordList = new MLIrradianceCacheRecord[m_nRecordCount];
+							pNode->pNext = NULL;
+
+							if (pTail->pNext == Illumina::Core::AtomicInt64::CompareAndSwap(&(pTail->pNext), (Int64)pNode, (Int64)NULL))
+							{
+								delete[] pNode->pRecordList;
+								delete pNode;
+							}
+						}
+
+						pTail = pTail->pNext;						
+					}
+				}
+
+				return pTail->pRecordList + blockPosition;
+			}
+
+		protected:
+			struct MLIrradianceRecordListNode
+			{
+				MLIrradianceRecordListNode *pNext;
+				MLIrradianceCacheRecord *pRecordList;
+			} BaseNode;
+		}
+		*/
 
 		//----------------------------------------------------------------------------------------------
 		// Irradiance Cache
@@ -115,6 +185,7 @@ namespace Illumina
 
 			MLIrradianceCache m_irradianceCache;
 			std::vector<MLIrradianceCacheRecord*> m_irradianceCacheRecordList;
+			// WaitFreeList<MLIrradianceCacheRecord*> m_irradianceCacheRecordList;
 
 		protected:
 			Spectrum PathLi(Scene *p_pScene, Ray &p_ray);

@@ -201,6 +201,7 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Multithreaded.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedCommon.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedFrameless.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedP2P.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Peer.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCommon.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCoordinator.h" />

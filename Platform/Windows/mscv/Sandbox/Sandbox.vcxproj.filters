@@ -19,9 +19,6 @@
     <Filter Include="Source Files\utility">
       <UniqueIdentifier>{462fa0e0-71aa-466b-a50e-1966afbe99a2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\centralised">
-      <UniqueIdentifier>{6b7019ab-e841-4eb0-95e5-30c42efe3596}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\distributed">
       <UniqueIdentifier>{ce7459a4-a149-46f1-bdc4-5b5a60a2d4b8}</UniqueIdentifier>
     </Filter>
@@ -36,6 +33,9 @@
     </Filter>
     <Filter Include="Source Files\decentralised">
       <UniqueIdentifier>{969a46a5-911d-4c9b-8e24-3ab133ae376b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\multithreaded">
+      <UniqueIdentifier>{6b7019ab-e841-4eb0-95e5-30c42efe3596}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -114,13 +114,13 @@
       <Filter>Source Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Multithreaded.h">
-      <Filter>Source Files\centralised</Filter>
+      <Filter>Source Files\multithreaded</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedFrameless.h">
-      <Filter>Source Files\centralised</Filter>
+      <Filter>Source Files\multithreaded</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedCommon.h">
-      <Filter>Source Files\centralised</Filter>
+      <Filter>Source Files\multithreaded</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\AsyncTaskPipeline.h">
       <Filter>Source Files\distributed\async</Filter>
@@ -192,6 +192,9 @@
       <Filter>Source Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Peer.h">
+      <Filter>Source Files\decentralised</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedP2P.h">
       <Filter>Source Files\decentralised</Filter>
     </ClInclude>
   </ItemGroup>
