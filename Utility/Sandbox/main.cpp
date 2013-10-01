@@ -332,6 +332,22 @@ int main(int argc, char** argv)
 #include "Export.h"
 #include "Peer.h"
 
+#include "Multithreaded.h"
+#include "MultithreadedFrameless.h"
+
+//----------------------------------------------------------------------------------------------
+// Should follow Core/System/Platform.h (due to windows.h conflicts)
+//----------------------------------------------------------------------------------------------
+class SimpleListener 
+	: public IlluminaMTListener
+{
+	void OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
+	{ 
+		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
+		// pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
+	};
+};
+
 //----------------------------------------------------------------------------------------------
 void IlluminaPRT(
 	Logger *p_pLogger, int p_nVerboseFrequency, int p_nIterations, int p_nFPS,
@@ -350,8 +366,24 @@ void IlluminaPRT(
 	if (!neighbourList.empty())
 		localHost.Connect(neighbourList[0], 1000);
 
+	/*
+	WaitFreeList<int> myList;
 
+	for (int j = 0; j <= 10000; j++)
+	{
+		myList.push_back(j);
+	}
 
+	WaitFreeList<int>::iterator it = myList.begin();
+	for(; it != myList.end(); it++)
+		std::cout << *it << ",";
+	std::cout << std::endl;
+
+	for (auto a : myList)
+		std::cout << a << ",";
+	
+	std::cout << std::endl;
+	*/
 
 	/*
 	Peer2 local;
@@ -472,7 +504,7 @@ void IlluminaPRT(
 	std::getchar();
 	*/
 
-	/* 
+	/* */
 	IlluminaMTFrameless illumina;
 	//IlluminaMT illumina;
 
@@ -480,9 +512,9 @@ void IlluminaPRT(
 	illumina.SetLogger(p_pLogger);
 	illumina.SetLoggerUpdate(p_nVerboseFrequency);
 	illumina.SetScript(p_strScript);
-	illumina.SetThreadCount(p_nThreads);
+	illumina.SetThreadCount(p_nRenderThreads);
 	illumina.SetIterations(p_nIterations);
-	illumina.SetJobs(p_nJobs, p_nSize);
+	illumina.SetJobs(p_nJobsPerFrame, p_nTileSize);
 	illumina.SetFrameBudget(0);
 
 	SimpleListener listener;

@@ -35,35 +35,58 @@ namespace Illumina
 		public:
 			class iterator
 			{
+				friend WaitFreeList;
+
 			protected:
 				WaitFreeList *m_pList;
 				WaitFreeListNode *m_pNode;
 
 				int m_nPosition;
 			
-			public:
-				void Reset(void) 
-				{ 
-					m_nPosition = 0;
-					m_pNode = m_pList->m_baseNode;
-				}
-
-				T& Next(void) 
+				iterator(int p_nPosition, WaitFreeList *p_pList)
 				{
-					int index = m_nPosition % m_pList->m_nPageCapacity;
+					m_pList = p_pList;
+					m_nPosition = p_nPosition;
+					m_pNode = findNode(p_nPosition);
+				}
 
-					if (m_nPosition > 0 &&  index == 0 && m_pNode->pNext != NULL)
+				WaitFreeListNode *findNode(int p_nPosition) 
+				{
+					WaitFreeListNode *pNode = &(m_pList->m_baseNode);
+					int nodeIdx = p_nPosition / m_pList->m_nPageCapacity;
+					for (; nodeIdx > 0 && pNode->pNext != NULL; 
+						 nodeIdx--, pNode = pNode->pNext);
+
+					if (nodeIdx > 0)
+						return NULL;
+
+					return pNode;
+				}
+
+				void next(void)
+				{
+					m_nPosition++;
+
+					if (m_nPosition % m_pList->m_nPageCapacity == 0 && m_pNode->pNext != NULL)
 						m_pNode = m_pNode->pNext;
-
-					p_nPosition++;
-
-					return m_pNode->pRecordList[index];
 				}
 
-				bool HasNext(void) 
-				{ 
-					return m_nPosition < m_pList->Size();
+			public:
+				iterator(const iterator &p_iterator)
+				{
+					m_pList = p_iterator.m_pList;
+					m_pNode = p_iterator.m_pNode;
+					m_nPosition = p_iterator.m_nPosition;
 				}
+
+				iterator operator++() { iterator it(*this); next(); return it; }
+				iterator operator++(int postfix) { next(); return *this; }
+
+				T& operator*() { return m_pNode->pRecordList[m_nPosition % m_pList->m_nPageCapacity]; }
+				T* operator->() { return m_pNode->pRecordList + (m_nPosition % m_pList->m_nPageCapacity); }
+
+				bool operator==(const iterator &rhs) { return m_nPosition == rhs.m_nPosition; }
+				bool operator!=(const iterator &rhs) { return m_nPosition != rhs.m_nPosition; }
 			};
 
 			friend iterator;
@@ -83,6 +106,16 @@ namespace Illumina
 			{
 				m_baseNode.pNext = NULL;
 				m_baseNode.pRecordList = new T[m_nPageCapacity];
+			}
+
+			iterator begin(void)
+			{
+				return iterator(0, this);
+			}
+
+			iterator end(void)
+			{
+				return iterator(this->size(), this);
 			}
 
 			inline const T& operator[](size_t p_index) const 
@@ -117,12 +150,12 @@ namespace Illumina
 				}
 			}
 
-			inline size_t Size(void) const 
+			inline size_t size(void) const 
 			{
 				return (size_t)m_nSize;
 			}
 
-			void PushBack(const T &p_obj) 
+			void push_back(const T &p_obj) 
 			{
 				// Increment record index atomically
 				Int64 currentIndex = Illumina::Core::AtomicInt64::FetchAndAdd(&m_nRecordIndex, 1);
