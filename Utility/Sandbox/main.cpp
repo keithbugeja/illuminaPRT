@@ -335,18 +335,7 @@ int main(int argc, char** argv)
 #include "Multithreaded.h"
 #include "MultithreadedFrameless.h"
 
-//----------------------------------------------------------------------------------------------
-// Should follow Core/System/Platform.h (due to windows.h conflicts)
-//----------------------------------------------------------------------------------------------
-class SimpleListener 
-	: public IlluminaMTListener
-{
-	void OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
-	{ 
-		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
-		// pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
-	};
-};
+#include "MultithreadedP2P.h"
 
 //----------------------------------------------------------------------------------------------
 void IlluminaPRT(
@@ -361,152 +350,13 @@ void IlluminaPRT(
 	localHost.Initialise();
 	localHost.Discover(p_nPeerPort, 5000);
 	localHost.Ping(p_strPeerIP, p_nPeerPort, 5000);
-	localHost.GetNeighbours(neighbourList);
 
-	if (!neighbourList.empty())
-		localHost.Connect(neighbourList[0], 1000);
+	// localHost.GetNeighbours(neighbourList);
+	// if (!neighbourList.empty())
+	//	localHost.Connect(neighbourList[0], 1000);
 
-	/*
-	WaitFreeList<int> myList;
-
-	for (int j = 0; j <= 10000; j++)
-	{
-		myList.push_back(j);
-	}
-
-	WaitFreeList<int>::iterator it = myList.begin();
-	for(; it != myList.end(); it++)
-		std::cout << *it << ",";
-	std::cout << std::endl;
-
-	for (auto a : myList)
-		std::cout << a << ",";
-	
-	std::cout << std::endl;
-	*/
-
-	/*
-	Peer2 local;
-	std::vector<Neighbour> neighbourList;
-
-	local.Configure(p_nPort, 10, 5);
-	local.Initialise();
-	local.Discover(p_nPeerPort, 5000);
-	local.GetNeighbours(neighbourList);
-
-	// if (!neighbourList.empty() && local.Connect(neighbourList[0], 5000))
-	{
-		char cmd;
-
-		std::string input; 
-		std::vector<unsigned char> inputVector,
-			outputVector;
-	
-		while(true)
-		{
-			std::cout << "CMD[d/c/s/r/q] :"; std::getline(std::cin, input); cmd = input[0];
-			std::cout << "Selection : [" << cmd << "]" << std::endl;
-
-			if (cmd == 'd')
-			{
-				std::cout << "Peer discovery..." << std::endl;
-				
-				local.Discover(p_nPeerPort, 5000);
-				local.GetNeighbours(neighbourList);
-			}
-			else if (cmd == 'c')
-			{
-				std::cout << "Trying connection..." << std::endl;
-
-				if (!neighbourList.empty())
-					local.Connect(neighbourList[0], 5000);
-			}
-
-			if (cmd == 's')
-			{
-				std::cout << "Input send string: ";
-				std::getline(std::cin, input); 
-
-				std::cout << std::endl << "Sending [" << input << "] ..." << std::endl;
-				inputVector.clear(); std::copy(input.begin(), input.end(), std::back_inserter(inputVector));
-			
-				local.RawSend(neighbourList[0], inputVector);
-			}
-			else if (cmd == 'r')
-			{
-				Neighbour neighbour;
-				std::cout << "Waiting for message..." << std::endl;
-				
-				if (local.RawReceive(outputVector, neighbour))
-				{
-					std::cout << "Received [";
-					std::cout.write((const char*)outputVector.data(), outputVector.size());
-					std::cout << "] from " << neighbour.GetKey() << std::endl;
-				}
-				else
-				{
-					std::cout << "No packets in queue!" << std::endl;
-				}
-			}
-			else if (cmd == 'q')
-			{
-				std::cout << "Terminating..." << std::endl;
-				break;
-			}
-		}
-
-		local.Disconnect(neighbourList[0]);
-	}
-
-	local.Shutdown();
-	*/
-
-	/*
-	boost::array<char, 4096> buffer;
-
-	Peer local, 
-		remote;
-
-	local.Bind("10.60.10.4", p_nPort);
-	remote.RemoteBind(p_strPeerIP, p_nPeerPort);
-
-	std::string input; 
-	std::vector<char> inputVector;
-	
-	char cmd;
-
-	while(true)
-	{
-		std::cout << "CMD[s/r] :"; std::getline(std::cin, input); cmd = input[0];
-		std::cout << "Selection : [" << cmd << "]" << std::endl;
-
-		if (cmd == 's')
-		{
-			std::cout << "Input send string: ";
-			std::getline(std::cin, input); 
-
-			std::cout << std::endl << "Sending [" << input << "] ..." << std::endl;
-			
-			inputVector.clear(); std::copy(input.begin(), input.end(), std::back_inserter(inputVector));
-			local.RawSend(remote, inputVector);
-		}
-		else if (cmd == 'r')
-		{
-			std::cout << "Waiting for message..." << std::endl;
-			int length = local.RawReceive(buffer);
-
-			std::cout << "Received [";
-			std::cout.write(buffer.data(), length);
-			std::cout << "]" << std::endl;
-		}
-	}
-
-	std::getchar();
-	*/
-
-	/* */
 	IlluminaMTFrameless illumina;
-	//IlluminaMT illumina;
+	// IlluminaMT illumina;
 
 	illumina.SetFlags(p_nFlags);
 	illumina.SetLogger(p_pLogger);
@@ -517,13 +367,13 @@ void IlluminaPRT(
 	illumina.SetJobs(p_nJobsPerFrame, p_nTileSize);
 	illumina.SetFrameBudget(0);
 
-	SimpleListener listener;
+	P2PListener listener;
+	listener.SetPeer(&localHost, p_nPeerPort == 7000 ? P2PListener::P2PReceive : P2PListener::P2PSend);
 	illumina.AttachListener(&listener);
 
 	illumina.Initialise();
 	illumina.Render();	
 	illumina.Shutdown();
-	/* */
 
 	std::cout << "Press any key to continue..." << std::endl;
 	std::getchar();

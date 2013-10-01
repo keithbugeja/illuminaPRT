@@ -14,7 +14,32 @@ namespace Illumina
 {
 	namespace Core
 	{
-		struct MLIrradianceCacheRecord;
+		//----------------------------------------------------------------------------------------------
+		// Irradiance Cache Node
+		//----------------------------------------------------------------------------------------------
+		struct MLIrradianceCacheRecord
+		{
+			Spectrum Irradiance;
+
+			Vector3 Point, 
+				Normal;
+			
+			float RiClamp, 
+				Ri;
+
+			int Epoch;
+
+			MLIrradianceCacheRecord(void) { }
+
+			MLIrradianceCacheRecord(const MLIrradianceCacheRecord& p_record) {
+				memcpy(this, &p_record, sizeof(MLIrradianceCacheRecord));
+			}
+
+			MLIrradianceCacheRecord& operator=(const MLIrradianceCacheRecord& p_record) {
+				memcpy(this, &p_record, sizeof(MLIrradianceCacheRecord));
+				return *this;
+			}
+		};
 
 		//----------------------------------------------------------------------------------------------
 		// Irradiance Cache Node
@@ -99,6 +124,14 @@ namespace Illumina
 			public IIntegrator
 		{
 		protected:
+			// Irradiance cache
+			MLIrradianceCache m_irradianceCache;
+
+			// Irradiance record list
+			WaitFreeList<MLIrradianceCacheRecord*> m_irradianceCacheRecordList;
+			// std::vector<MLIrradianceCacheRecord*> m_irradianceCacheRecordList;
+
+			// Irradiance cache rendering parameters
 			int m_nRayDepth,
 				m_nShadowRays,
 				m_nCacheDepth,
@@ -113,24 +146,46 @@ namespace Illumina
 			float m_fRMin, 
 				m_fRMax;
 
+			// Sample creation epoch
 			int	m_nEpoch;
 
-			MLIrradianceCache m_irradianceCache;
-			// std::vector<MLIrradianceCacheRecord*> m_irradianceCacheRecordList;
-			WaitFreeList<MLIrradianceCacheRecord*> m_irradianceCacheRecordList;
+			// Disable creation of new samples
+			bool m_bIsSampleGenerationDisabled;
 
 		protected:
+			// Mini-path tracer
 			Spectrum PathLi(Scene *p_pScene, Ray &p_ray);
+			
+			// Return Irradiance value at intersection
 			Spectrum GetIrradiance(const Intersection &p_intersection, Scene *p_pScene);
+			
+			// Compute a new irradiance record
 			void ComputeRecord(const Intersection &p_intersection, Scene *p_pScene, MLIrradianceCacheRecord &p_record);
+			
+		public:
+			// Request allocation of a new irradiance record
 			MLIrradianceCacheRecord* RequestRecord(void);
+			MLIrradianceCacheRecord* RequestRecord(MLIrradianceCacheRecord* p_pRecord);
+
+			// Release all allocated irradiance records
 			void ReleaseRecords(void);
 
 		public:
+			// Return irradiance cache for direct manipulation outside of integrator
 			MLIrradianceCache *GetIrradianceCache(void) { return &m_irradianceCache; }
 
-			void GetByEpoch(int p_nEpoch, std::vector<MLIrradianceCacheRecord*> &p_recordList) { }
-			void DiscardByEpoch(int p_nEpoch) { }
+			// Return irradiance samples by their epoch index
+			void GetByEpoch(int p_nEpoch, std::vector<MLIrradianceCacheRecord*> &p_recordList);
+			void GetByEpochRange(int p_nEpochMin, int p_nEpochMax, std::vector<MLIrradianceCacheRecord*> &p_recordList);
+
+			// Move to next epoch
+			int NextEpoch(void) { return m_nEpoch++; }
+			
+			// Return current epoch
+			int GetEpoch(void) { return m_nEpoch; }
+
+			// Disable sample generation
+			void DisableSampleGeneration(bool p_bDisable) { m_bIsSampleGenerationDisabled = p_bDisable; }
 
 		public:
 			MLICIntegrator(const std::string &p_strName, int p_nCacheDepth, float p_fErrorThreshold, float p_fAmbientResolution, float p_fAmbientMultipler,
@@ -138,6 +193,8 @@ namespace Illumina
 
 			MLICIntegrator(int p_nCacheDepth, float p_fErrorThreshold, float p_fAmbientResolution, float p_fAmbientMultipler,
 				int p_nAzimuthStrata, int p_nAltitudeStrata, int p_nRayDepth, int p_nShadowRays = 1, float p_fReflectEpsilon = 1e-1f);
+
+			std::string GetType(void) const { return "WFIC"; }
 
 			bool Initialise(Scene *p_pScene, ICamera *p_pCamera);
 			bool Shutdown(void);

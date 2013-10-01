@@ -366,6 +366,55 @@ public:
 		return (cs == RakNet::ConnectionState::IS_CONNECTED);
 	}
 
+	bool SendData(Neighbour &p_neighbour, const char *p_pData, int p_nLength)
+	{
+		RakNet::BitStream bitStream;
+		bitStream.Write(ID_USER_PACKET_ENUM);
+		bitStream.Write(p_pData, p_nLength);
+
+		RakNet::SystemAddress address;
+		address.FromStringExplicitPort(p_neighbour.Address.c_str(), p_neighbour.Port);
+
+		bool result = m_pRakPeer->Send(
+			&bitStream, MEDIUM_PRIORITY, RELIABLE, 0, address, false);
+
+		return result;
+	}
+
+	bool ReceiveData(std::vector<unsigned char> &p_data, Neighbour &p_neighbour)
+	{
+		RakNet::Packet *pPacket;
+
+		if (pPacket = m_pRakPeer->Receive())
+		{
+			// Have to discard uninteresting packets!
+			if (pPacket->data[0] != ID_USER_PACKET_ENUM)
+			{
+				m_pRakPeer->PushBackPacket(pPacket, false);
+				return false;
+			}
+
+			// Assign data
+			p_data.clear(); p_data.assign(pPacket->data + 1, pPacket->data + pPacket->length - 1);
+
+			// Is neighbour known?
+			std::string hostKey = Neighbour::MakeKey(pPacket->systemAddress.ToString(false), pPacket->systemAddress.GetPort());
+			if (m_neighbourMap.find(hostKey) != m_neighbourMap.end())
+			{
+				p_neighbour = m_neighbourMap[hostKey];
+			} else {
+				p_neighbour.Address = pPacket->systemAddress.ToString(false);
+				p_neighbour.Port = pPacket->systemAddress.GetPort();
+				p_neighbour.Latency = -1;
+			}
+			
+			m_pRakPeer->DeallocatePacket(pPacket);
+			return true;
+		}
+
+		return false;
+	}
+
 	bool RawSend(Neighbour &p_neighbour, const char *p_pData, int p_nLength)
 	{
 		RakNet::SystemAddress address;

@@ -123,6 +123,8 @@ namespace Illumina
 			ICIntegrator(int p_nCacheDepth, float p_fErrorThreshold, float p_fAmbientResolution, float p_fAmbientMultipler,
 				int p_nAzimuthStrata, int p_nAltitudeStrata, int p_nRayDepth, int p_nShadowRays = 1, float p_fReflectEpsilon = 1e-1f);
 
+			std::string GetType(void) const { return "IC"; }
+
 			bool Initialise(Scene *p_pScene, ICamera *p_pCamera);
 			bool Shutdown(void);
 

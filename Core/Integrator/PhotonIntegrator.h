@@ -3,6 +3,13 @@
 //	Author:		Keith Bugeja
 //	Date:		27/02/2010
 //----------------------------------------------------------------------------------------------
+//
+//  NOTE: 
+//		The Photon Mapping Integrator is currently a mess. It does not work and the only 
+//		reason it hasn't been removed is that eventually a correct version has to be
+//		implemented. Until this note remains here, it is advised not to call this integrator
+//		for any rendering tasks.
+//
 //----------------------------------------------------------------------------------------------
 #pragma once
 
@@ -58,6 +65,8 @@ namespace Illumina
 		public:
 			PhotonIntegrator(const std::string &p_strName, int p_nMaxPhotonCount = 100000, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 16, float p_fReflectEpsilon = 1E-1f);
 			PhotonIntegrator(int p_nMaxPhotonCount = 100000, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
+
+			std::string GetType(void) const { return "PM"; }
 
 			bool Initialise(Scene *p_pScene, ICamera *p_pCamera);
 			bool Shutdown(void);

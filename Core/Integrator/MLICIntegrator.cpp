@@ -22,37 +22,6 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-namespace Illumina
-{
-	namespace Core
-	{
-		struct MLIrradianceCacheRecord
-		{
-			Spectrum Irradiance;
-
-			Vector3 Point, 
-				Normal;
-			
-			float RiClamp, 
-				Ri;
-
-			int Epoch;
-
-			MLIrradianceCacheRecord(void) {}
-
-			MLIrradianceCacheRecord(const MLIrradianceCacheRecord& p_record) {
-				memcpy(this, &p_record, sizeof(MLIrradianceCacheRecord));
-			}
-
-			MLIrradianceCacheRecord& operator=(const MLIrradianceCacheRecord& p_record) {
-				memcpy(this, &p_record, sizeof(MLIrradianceCacheRecord));
-				return *this;
-			}
-		};
-	}
-}
-//----------------------------------------------------------------------------------------------
-
 //----------------------------------------------------------------------------------------------
 int MLIrradianceCache::CountNodes(MLIrradianceCacheNode* p_pNode) const
 {
@@ -147,8 +116,8 @@ void MLIrradianceCache::Insert(MLIrradianceCacheNode *p_pNode, MLIrradianceCache
 
 			for (int i = 0; i < 8; i++)
 			{
-				// We still aren't sure where thread that made CAS fail stopped, 
-				// so although redundant, we still set the bounds of the node
+				// We still aren't sure where the thread that made CAS fail stopped, 
+				// so although redundant, we still set the bounds of the nodes
 				SetBounds(p_pNode->Bounds, i, p_pNode->Children[i].Bounds);
 				if (SphereBoxOverlap(p_pNode->Children[i].Bounds, p_pRecord->Point, p_pRecord->RiClamp))
 					Insert(p_pNode->Children + i, p_pRecord, p_nDepth - 1);
@@ -282,6 +251,8 @@ MLICIntegrator::MLICIntegrator(const std::string &p_strName,
 	, m_nRayDepth(p_nRayDepth)
 	, m_nShadowRays(p_nShadowRays)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
+	, m_nEpoch(0)
+	, m_bIsSampleGenerationDisabled(false)
 { }
 //----------------------------------------------------------------------------------------------
 MLICIntegrator::MLICIntegrator(int p_nCacheDepth, float p_fErrorThreshold, 
@@ -299,7 +270,27 @@ MLICIntegrator::MLICIntegrator(int p_nCacheDepth, float p_fErrorThreshold,
 	, m_nRayDepth(p_nRayDepth)
 	, m_nShadowRays(p_nShadowRays)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
+	, m_nEpoch(0)
+	, m_bIsSampleGenerationDisabled(false)
 { }
+//----------------------------------------------------------------------------------------------
+void MLICIntegrator::GetByEpoch(int p_nEpoch, std::vector<MLIrradianceCacheRecord*> &p_recordList)
+{
+	for (auto record : m_irradianceCacheRecordList)
+	{
+		if (record->Epoch == p_nEpoch)
+			p_recordList.push_back(record);
+	}
+}
+//----------------------------------------------------------------------------------------------
+void MLICIntegrator::GetByEpochRange(int p_nEpochMin, int p_nEpochMax, std::vector<MLIrradianceCacheRecord*> &p_recordList)
+{
+	for (auto record : m_irradianceCacheRecordList)
+	{
+		if (record->Epoch >= p_nEpochMin && record->Epoch <= p_nEpochMax)
+			p_recordList.push_back(record);
+	}
+}
 //----------------------------------------------------------------------------------------------
 bool MLICIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 {
@@ -485,6 +476,8 @@ Spectrum MLICIntegrator::GetIrradiance(const Intersection &p_intersection, Scene
 		}
 		else
 		{
+			if (m_bIsSampleGenerationDisabled) return 0.f;
+
 			MLIrradianceCacheRecord *record = RequestRecord();
 			ComputeRecord(p_intersection, p_pScene, *record);
 			m_irradianceCache.Insert(&(m_irradianceCache.RootNode), record, m_nCacheDepth);
@@ -642,6 +635,15 @@ MLIrradianceCacheRecord* MLICIntegrator::RequestRecord(void)
 {
 	MLIrradianceCacheRecord *pRecord = new MLIrradianceCacheRecord();
 	m_irradianceCacheRecordList.push_back(pRecord);
+	pRecord->Epoch = m_nEpoch;
+	return pRecord;
+}
+//----------------------------------------------------------------------------------------------
+MLIrradianceCacheRecord* MLICIntegrator::RequestRecord(MLIrradianceCacheRecord* p_pRecord)
+{
+	MLIrradianceCacheRecord *pRecord = new MLIrradianceCacheRecord(*p_pRecord);
+	m_irradianceCacheRecordList.push_back(pRecord);
+	pRecord->Epoch = m_nEpoch;
 	return pRecord;
 }
 //----------------------------------------------------------------------------------------------
