@@ -97,8 +97,10 @@ namespace Illumina
 				mesh->AddVertex(vertex[2]);
 				mesh->AddVertex(vertex[3]);
 
-				mesh->AddIndexedTriangle(0, 2, 1);
-				mesh->AddIndexedTriangle(1, 2, 3);
+				mesh->AddIndexedTriangle(0, 1, 2);
+				mesh->AddIndexedTriangle(0, 2, 3);
+				//mesh->AddIndexedTriangle(0, 2, 1);
+				//mesh->AddIndexedTriangle(1, 2, 3);
 
 				return mesh;
 			}
@@ -147,8 +149,10 @@ namespace Illumina
 				p_pMesh->AddVertex(vertex[2]);
 				p_pMesh->AddVertex(vertex[3]);
 
-				p_pMesh->AddIndexedTriangle(0, 2, 1);
-				p_pMesh->AddIndexedTriangle(1, 2, 3);
+				p_pMesh->AddIndexedTriangle(0, 1, 2);
+				p_pMesh->AddIndexedTriangle(0, 2, 3);
+				//p_pMesh->AddIndexedTriangle(0, 2, 1);
+				//p_pMesh->AddIndexedTriangle(1, 2, 3);
 
 				return true;
 			}

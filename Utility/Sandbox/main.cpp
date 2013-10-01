@@ -356,7 +356,7 @@ void IlluminaPRT(
 	//	localHost.Connect(neighbourList[0], 1000);
 
 	IlluminaMTFrameless illumina;
-	// IlluminaMT illumina;
+	//IlluminaMT illumina;
 
 	illumina.SetFlags(p_nFlags);
 	illumina.SetLogger(p_pLogger);
