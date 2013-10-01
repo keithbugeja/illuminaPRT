@@ -13,8 +13,14 @@ namespace Illumina
 {
 	namespace Core
 	{
-        /*
-         * TODO : Rewrite test integrator!
+		class TestIntegrator
+		{
+		public:
+			TestIntegrator(void);
+		};
+
+		/*
+		 * TODO : Rewrite test integrator!
 		class TestIntegrator 
 			: public IIntegrator
 		{
@@ -34,6 +40,6 @@ namespace Illumina
 		protected:
 			Spectrum Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, int p_nRayDepth);
 		};
-         */
+		 */
 	}
 }

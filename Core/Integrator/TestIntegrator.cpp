@@ -16,6 +16,9 @@
 #include "Scene/Scene.h"
 
 using namespace Illumina::Core;
+//----------------------------------------------------------------------------------------------
+TestIntegrator::TestIntegrator(void) { }
+
 /*
 //----------------------------------------------------------------------------------------------
 TestIntegrator::TestIntegrator(const std::string &p_strName)

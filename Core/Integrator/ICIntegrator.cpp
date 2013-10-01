@@ -517,7 +517,7 @@ void ICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pS
 			sample2D = p_pScene->GetSampler()->Get2DSample();
 
 			Vector3 vH = 
-				Montecarlo::CosineSampleHemisphere(sample2D.X, sample2D.Y, altitudeIndex, azimuthIndex, m_nAltitudeStrata, m_nAzimuthStrata); 
+				Montecarlo::CosineSampleHemisphere(sample2D.X, sample2D.Y, (float)altitudeIndex, (float)azimuthIndex, (float)m_nAltitudeStrata, (float)m_nAzimuthStrata); 
 
 			BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, vH, wOutR);
 			ray.Set(p_intersection.Surface.PointWS + wOutR * m_fReflectEpsilon, wOutR, m_fReflectEpsilon, Maths::Maximum);

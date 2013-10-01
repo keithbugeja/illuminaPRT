@@ -9,6 +9,8 @@
 
 using namespace Illumina::Core;
 
+int rgbPixelDummyToPreventCompilerWarning = 0;
+
 /*
 RGBPixel const RGBPixel::White	= RGBPixel(1.0f);
 RGBPixel const RGBPixel::Black	= RGBPixel(0.0f);
