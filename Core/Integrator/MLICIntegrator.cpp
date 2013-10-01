@@ -139,11 +139,16 @@ void MLIrradianceCache::Insert(MLIrradianceCacheNode *p_pNode, MLIrradianceCache
 		// if (p_pNode->Children == nullptr)
 		if (p_pNode->Children == NULL)
 		{
-			m_nNodeCount+=8;
-			p_pNode->Children = new MLIrradianceCacheNode[8];
+			MLIrradianceCacheNode *pTempNode = new MLIrradianceCacheNode[8];
+			if (p_pNode->Children == (MLIrradianceCacheNode*)AtomicInt64::CompareAndSwap((Int64*)&(p_pNode->Children), (Int64)pTempNode, NULL))
+				delete [] pTempNode;
+			else
+				m_nNodeCount+=8;
 
 			for (int i = 0; i < 8; i++)
 			{
+				// We still aren't sure where thread that made CAS fail stopped, 
+				// so although redundant, we still set the bounds of the node
 				SetBounds(p_pNode->Bounds, i, p_pNode->Children[i].Bounds);
 				if (SphereBoxOverlap(p_pNode->Children[i].Bounds, p_pRecord->Point, p_pRecord->RiClamp))
 					Insert(p_pNode->Children + i, p_pRecord, p_nDepth - 1);
@@ -182,14 +187,8 @@ bool MLIrradianceCache::FindRecords(const Vector3 &p_point, const Vector3 &p_nor
 				minval = Maths::Min(wi, minval);
 				maxval = Maths::Max(wi, maxval);
 
-				// Race!
-				//if ((wi = W(p_point, p_normal, *r)) > 0.f)
 				if (wi > 0.f)
-				{
-				// if ((wi = W(p_point, p_normal, *r)) > 1.f / m_fErrorThreshold)
 					p_nearbyRecordList.push_back(std::pair<float, MLIrradianceCacheRecord*>(wi, r));
-				// Race!
-				}
 				else
 					rejected++;
 			}
@@ -244,9 +243,7 @@ float MLIrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, MLIr
 void MLIrradianceCache::Merge(MLIrradianceCache *p_pIrradianceCache)
 {
 	for (auto record : p_pIrradianceCache->m_irradianceRecordList)
-	{
 		Insert(record);
-	}
 }
 //----------------------------------------------------------------------------------------------
 std::string MLIrradianceCache::ToString(void) const
