@@ -62,6 +62,8 @@ namespace Illumina
 			IGIIntegrator(const std::string &p_strName, int p_nMaxVPL = 256, int p_nMaxPath = 8, int p_nTileWidth = 3, float p_fGTermMax = 0.001f, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, int p_nIndirectSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
 			IGIIntegrator(int p_nMaxVPL = 256, int p_nMaxPath = 8, int p_nTileWidth = 3, float p_fGTermMax = 0.001f, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 1, int p_nIndirectSampleCount = 1, float p_fReflectEpsilon = 1E-1f);
 
+			std::string GetType(void) const { return "IGI"; }
+
 			bool Initialise(Scene *p_pScene, ICamera *p_pCamera);
 			bool Shutdown(void);
 

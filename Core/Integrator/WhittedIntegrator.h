@@ -25,6 +25,8 @@ namespace Illumina
 			WhittedIntegrator(const std::string &p_strName, int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 16, bool p_bEnableShadowRays = true);
 			WhittedIntegrator(int p_nMaxRayDepth = 4, int p_nShadowSampleCount = 16, bool p_bEnableShadowRays = true);
 
+			std::string GetType(void) const { return "WRT"; }
+
 			bool Initialise(Scene *p_pScene, ICamera *p_pCamera);
 			bool Shutdown(void);
 

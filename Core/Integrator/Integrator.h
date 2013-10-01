@@ -42,6 +42,9 @@ namespace Illumina
 			IIntegrator(void) { }
 
 		public:
+			// Considering whether to promote type to a first class citizen of IObject
+			virtual std::string GetType(void) const { return "BaseInterface"; }
+
 			virtual bool Initialise(Scene *p_pScene, ICamera *p_pCamera) = 0;
 			virtual bool Shutdown(void) = 0;
 
