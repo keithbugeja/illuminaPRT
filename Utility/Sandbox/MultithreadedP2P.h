@@ -19,7 +19,7 @@ protected:
 	std::vector<Neighbour> m_neighbourList;
 
 	// P2P message hub for current peer
-	Peer2 *m_pPeer;
+	Peer *m_pPeer;
 
 	// Role of current peer
 	Role m_eRole;
@@ -31,7 +31,7 @@ protected:
 	MLIrradianceCacheRecord *m_pRecordBuffer;
 
 public:
-	void SetPeer(Peer2 *p_pPeer, Role p_eRole = P2PSendReceive) 
+	void SetPeer(Peer *p_pPeer, Role p_eRole = P2PSendReceive) 
 	{
 		m_pPeer = p_pPeer;
 		m_eRole = p_eRole;
@@ -55,7 +55,8 @@ public:
 		}
 
 		std::cout << "P2PListener :: Populating neighbour list..." << std::endl;
-		m_pPeer->GetNeighbours(m_neighbourList);
+		m_pPeer->Ping("255.255.255.255", m_pPeer->GetOutgoingPort(), 2500, m_neighbourList);
+		//m_pPeer->GetNeighbours(m_neighbourList);
 
 		if (!m_neighbourList.empty())
 		{
@@ -96,16 +97,20 @@ public:
 					m_pWFICIntegrator->GetByEpoch(epoch, recordList);
 
 					std::cout << "P2PListener :: [Send Role] :: Fetched [" << recordList.size() << "] for epoch [" << epoch << "]" << std::endl;
-					
-					MLIrradianceCacheRecord *pRecordBuffer = m_pRecordBuffer;
-					for (auto record : recordList)
-						*pRecordBuffer++ = *record;
-
-					// For each connected neighbour, share
-					for (auto neighbour : m_neighbourList)
+					if (!recordList.empty())
 					{
-						m_pPeer->RawSend(neighbour, (char*)m_pRecordBuffer, 
-							recordList.size() * sizeof(MLIrradianceCacheRecord));
+						MLIrradianceCacheRecord *pRecordBuffer = m_pRecordBuffer;
+						for (auto record : recordList)
+							*pRecordBuffer++ = *record;
+
+						// For each connected neighbour, share
+						for (auto neighbour : m_neighbourList)
+						{
+							std::cout << "P2PListener :: [Send Role] :: Sending batch to [" << neighbour.Address << ":" << neighbour.Port << "]" << std::endl;
+							//m_pPeer->RawSend(neighbour, (char*)m_pRecordBuffer, 
+							m_pPeer->SendData(neighbour, (char*)m_pRecordBuffer,
+								recordList.size() * sizeof(MLIrradianceCacheRecord));
+						}
 					}
 				} 
 				else if (m_eRole == P2PReceive)
@@ -117,17 +122,21 @@ public:
 
 					// While any messages are waiting in the queue
 					for(std::vector<unsigned char> receiveBuffer;
-						m_pPeer->RawReceive(receiveBuffer, neighbour);
+						//m_pPeer->RawReceive(receiveBuffer, neighbour);
+						m_pPeer->ReceiveData(receiveBuffer, neighbour);
 						receiveBuffer.clear())
 					{
-						MLIrradianceCacheRecord *pRecord = 
-							(MLIrradianceCacheRecord*)receiveBuffer.data();
-						int recordCount = receiveBuffer.size() / sizeof(MLIrradianceCacheRecord);
+						if (!receiveBuffer.empty())
+						{
+							MLIrradianceCacheRecord *pRecord = 
+								(MLIrradianceCacheRecord*)receiveBuffer.data();
+							int recordCount = receiveBuffer.size() / sizeof(MLIrradianceCacheRecord);
 
-						std::cout << "P2PListener :: [Receive Role] :: Received [" << recordCount << "] samples from [" << neighbour.Address << ":" << neighbour.Port << "]" << std::endl;
+							std::cout << "P2PListener :: [Receive Role] :: Received [" << recordCount << "] samples from [" << neighbour.Address << ":" << neighbour.Port << "]" << std::endl;
 
-						for(;recordCount > 0; --recordCount, pRecord++)
-							pIrradianceCache->Insert(m_pWFICIntegrator->RequestRecord(pRecord));
+							for(;recordCount > 0; --recordCount, pRecord++)
+								pIrradianceCache->Insert(m_pWFICIntegrator->RequestRecord(pRecord));
+						}
 					}
 				}
 			}
