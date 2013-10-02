@@ -343,20 +343,14 @@ void IlluminaPRT(
 	int p_nRenderThreads, int p_nJobsPerFrame, int p_nTileSize, int p_nFlags, std::string p_strScript,
 	int p_nPort, bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPeerPort)
 {
-	Peer2 localHost;
+	Peer localHost;
 	std::vector<Neighbour> neighbourList; 
 
-	localHost.Configure(p_nPort, 10, 5);
+	localHost.Configure(p_nPort, p_nPeerPort, 10, 5);
 	localHost.Initialise();
-	localHost.Discover(p_nPeerPort, 5000);
-	localHost.Ping(p_strPeerIP, p_nPeerPort, 5000);
 
-	// localHost.GetNeighbours(neighbourList);
-	// if (!neighbourList.empty())
-	//	localHost.Connect(neighbourList[0], 1000);
-
-	IlluminaMTFrameless illumina;
-	//IlluminaMT illumina;
+	// IlluminaMTFrameless illumina;
+	IlluminaMT illumina;
 
 	illumina.SetFlags(p_nFlags);
 	illumina.SetLogger(p_pLogger);
