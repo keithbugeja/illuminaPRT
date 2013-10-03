@@ -349,6 +349,53 @@ void IlluminaPRT(
 	localHost.Configure(p_nPort, p_nPeerPort, 10, 5);
 	localHost.Initialise();
 
+	HostId host("10.5.2.9", 12345);
+	std::cout << "HostID = " << host.ToString() << std::endl;
+	std::cout << "IP = " << std::hex << host.GetIPv4() << std::dec << std::endl;
+	std::cout << "Port = " << host.GetPort() << std::endl;
+	
+	HostId host0("10.1.2.0", 12345);
+	HostId host1("10.1.2.1", 12345);
+	HostId host2("10.1.2.2", 12345);
+	HostId host3("10.1.2.3", 12345);
+	HostId host4("10.1.2.4", 12345);
+	HostId host5("10.1.2.5", 12345);
+
+	HostDirectory hmap(3);
+	hmap.Add(host5);
+	hmap.Add(host4);
+	hmap.Add(host3);
+	hmap.Add(host2);
+	hmap.Add(host1);
+	hmap.Add(host0);
+
+	hmap.Sort();
+	hmap.Truncate();
+
+	std::vector<HostId> hostlist,
+		hostlist2;
+
+	hmap.GetDirectory(hostlist);
+
+	for(auto a : hostlist)
+		std::cout << a.ToString() << std::endl;
+
+	RakNet::BitStream b;
+	HostDirectoryTransaction tr1(host);
+	tr1.SetData(hostlist);
+	tr1.WriteToBitStream(b);
+
+	HostDirectoryTransaction tr2;
+	tr2.ReadFromBitStream(b);
+	tr2.GetData(hostlist2);
+
+	std::cout << "Hostlist 2" << std::endl;
+
+	for(auto a : hostlist2)
+		std::cout << a.ToString() << std::endl;
+
+
+
 	// IlluminaMTFrameless illumina;
 	IlluminaMT illumina;
 

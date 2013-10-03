@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include <boost/asio.hpp>
+#include <boost/asio/ip/address_v4.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <System/Platform.h>
@@ -140,6 +141,70 @@ public:
 	}
 };
 //----------------------------------------------------------------------------------------------
+class HostId
+{
+protected:
+	Int64 m_hostId;
+
+public:
+	static Int64 MakeHostId(const std::string &p_strAddress, unsigned short p_nPort) 
+	{
+		unsigned long ulIPv4 = 
+			boost::asio::ip::address_v4::from_string(p_strAddress.c_str()).to_ulong();
+
+		return MakeInt64(ulIPv4, p_nPort);
+	}
+
+public:
+	HostId(const std::string &p_strAddress, unsigned short p_nPort)
+		: m_hostId(HostId::MakeHostId(p_strAddress, p_nPort))
+	{ }
+
+	HostId(unsigned long long p_ullHostId)
+		: m_hostId((Int64)p_ullHostId)
+	{ }
+
+	HostId(const HostId &p_hostId)
+		: m_hostId(p_hostId.m_hostId)
+	{ }
+
+	HostId(void)
+		: m_hostId(0)
+	{ }
+
+	bool operator==(const HostId &p_hostId) { return m_hostId == p_hostId.m_hostId; }
+	bool operator!=(const HostId &p_hostId) { return m_hostId != p_hostId.m_hostId; }
+
+	unsigned short GetPort(void)
+	{
+		return (unsigned short)GetLoWord(m_hostId);
+	}
+
+	unsigned long GetIPv4(void)
+	{
+		return (unsigned long)GetHiWord(m_hostId);
+	}
+
+	HostId &operator=(unsigned long long p_ullHostId)
+	{
+		m_hostId = (Int64)p_ullHostId;
+		return *this;
+	}
+
+	unsigned long long GetHash(void)
+	{
+		return (unsigned long long)m_hostId;
+	}
+
+	std::string ToString(void)
+	{
+		std::stringstream result;
+		result << std::hex << "[" << (unsigned long long)m_hostId << "]" << std::dec;
+		return result.str();
+	}
+};
+//----------------------------------------------------------------------------------------------
+
 struct Neighbour
 {
 	static std::string MakeKey(const std::string p_strAddress, int p_nPort) {

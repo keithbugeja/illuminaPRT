@@ -197,5 +197,8 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedP2P.h">
       <Filter>Source Files\decentralised</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Transaction.h">
+      <Filter>Source Files\decentralised</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

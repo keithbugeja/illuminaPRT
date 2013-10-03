@@ -214,6 +214,7 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\SyncTaskPipeline.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Task.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskPipeline.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Transaction.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\UniqueId.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Worker.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\TaskController.h" />
