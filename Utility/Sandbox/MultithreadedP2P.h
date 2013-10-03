@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MultithreadedCommon.h"
+#include "Transaction.h"
 #include "Peer.h"
 
 class P2PListener 
