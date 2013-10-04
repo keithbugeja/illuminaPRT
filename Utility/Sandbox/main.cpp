@@ -344,7 +344,6 @@ void IlluminaPRT(
 	int p_nPort, bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPeerPort)
 {
 	Peer localHost;
-	std::vector<Neighbour> neighbourList; 
 
 	localHost.Configure(p_nPort, p_nPeerPort, 10, 5);
 	localHost.Initialise();
@@ -381,6 +380,7 @@ void IlluminaPRT(
 		std::cout << a.ToString() << std::endl;
 
 	RakNet::BitStream b;
+
 	HostDirectoryTransaction tr1(host);
 	tr1.SetData(hostlist);
 	tr1.WriteToBitStream(b);

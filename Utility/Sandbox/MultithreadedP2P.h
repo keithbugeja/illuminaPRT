@@ -16,9 +16,6 @@ public:
 	};
 
 protected:
-	// List of currently active neighbours
-	std::vector<Neighbour> m_neighbourList;
-
 	// P2P message hub for current peer
 	Peer *m_pPeer;
 
@@ -31,7 +28,29 @@ protected:
 	// Record buffer for sends/receives
 	MLIrradianceCacheRecord *m_pRecordBuffer;
 
+	HostDirectory m_hostDirectory;
+
+	Illumina::Core::Random m_random;
 public:
+	void Newscast(void)
+	{
+		std::vector<HostId> hostList;
+		m_hostDirectory.GetDirectory(hostList);
+
+		HostId hostId = 
+			hostList[m_random.Next(hostList.size() - 1)];
+
+		m_pPeer->Connect(hostId, 1000);
+
+		// Can we communicate?
+		if (m_pPeer->IsConnected(hostId))
+		{
+		}
+
+		// Done : just disconnect
+		m_pPeer->Disconnect(hostId);
+	}
+
 	void SetPeer(Peer *p_pPeer, Role p_eRole = P2PSendReceive) 
 	{
 		m_pPeer = p_pPeer;
@@ -55,6 +74,7 @@ public:
 			m_pRecordBuffer = NULL;
 		}
 
+		/*
 		std::cout << "P2PListener :: Populating neighbour list..." << std::endl;
 		m_pPeer->Ping("255.255.255.255", m_pPeer->GetOutgoingPort(), 2500, m_neighbourList);
 		//m_pPeer->GetNeighbours(m_neighbourList);
@@ -69,12 +89,15 @@ public:
 				m_pPeer->Connect(neighbour, 500);
 			}
 		}
+		*/
 	}
 
 	void OnEndRender(IIlluminaMT *p_pIlluminaMT)
 	{
-			for (auto neighbour : m_neighbourList)
-				m_pPeer->Disconnect(neighbour);
+		/*
+		for (auto neighbour : m_neighbourList)
+			m_pPeer->Disconnect(neighbour);
+		*/
 	}
 
 	void OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
@@ -85,6 +108,7 @@ public:
 
 	void OnEndFrame(IIlluminaMT *p_pIlluminaMT)
 	{
+		/*
 		// Share irradiance?
 		if (m_pWFICIntegrator != NULL)
 		{
@@ -142,5 +166,6 @@ public:
 				}
 			}
 		}
+		*/
 	}
 };

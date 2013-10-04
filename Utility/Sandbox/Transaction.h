@@ -54,6 +54,8 @@ public:
 	virtual void ReadFromBitStream(RakNet::BitStream &p_bitstream) = 0;
 };
 
+
+template <class T, TransactionType K>
 class IDataTransaction
 	: public ITransaction
 {
@@ -74,7 +76,7 @@ public:
 	{ }
 
 	IDataTransaction(HostId p_hostId)
-		: ITransaction(TTGeneric, p_hostId)
+		: ITransaction(K, p_hostId)
 		, m_pData(NULL)
 		, m_nLength(-1)
 	{ }
@@ -82,6 +84,23 @@ public:
 	~IDataTransaction(void)
 	{
 		Safe_Delete(m_pData);
+	}
+
+	void SetData(std::vector<T> &p_dataList)
+	{
+		Safe_Delete(m_pData);
+		
+		m_nLength = p_dataList.size() * sizeof(T);
+		m_pData = new unsigned char[m_nLength];
+		memcpy(m_pData, p_dataList.data(), m_nLength);
+	}
+
+	void GetData(std::vector<T> &p_dataList)
+	{
+		int count = m_nLength / sizeof(T);
+		
+		for (T *pDatum = (T*)m_pData; count > 0; count--, pDatum++)
+			p_dataList.push_back(*pDatum);
 	}
 
 	void SetData(void *p_pData, int p_nLength)
@@ -164,45 +183,5 @@ public:
 	}
 };
 
-class HostDirectoryTransaction
-	: public IDataTransaction
-{
-public:
-	HostDirectoryTransaction(void)
-		: IDataTransaction()
-	{
-		m_ulType = TTPeerList;
-	}
-
-	HostDirectoryTransaction(HostId p_hostId)
-		: IDataTransaction(p_hostId)
-	{
-		m_ulType = TTPeerList;
-	}
-
-	void SetData(std::vector<HostId> &p_hostList)
-	{
-		Safe_Delete(m_pData);
-		
-		m_nLength = p_hostList.size() * sizeof(HostId);
-		m_pData = new unsigned char[m_nLength];
-		memcpy(m_pData, p_hostList.data(), m_nLength);
-	}
-
-	void GetData(std::vector<HostId> &p_hostList)
-	{
-		int count = m_nLength / sizeof(HostId);
-		
-		for (HostId *pHostId = (HostId*)m_pData; count > 0; count--, pHostId++)
-			p_hostList.push_back(*pHostId);
-	}
-};
-
-/*
-HostListTransaction
-	: public IDataTransaction
-{
-	void SetData(HostList &p_hostList);
-	void GetData(HostList &p_hostList);
-};
-*/
+typedef IDataTransaction<HostId, TTPeerList> HostDirectoryTransaction;
+typedef IDataTransaction<MLIrradianceCacheRecord, TTIrradianceSamples> IrradianceRecordTransaction;
