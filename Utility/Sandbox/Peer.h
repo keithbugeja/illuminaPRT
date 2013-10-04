@@ -155,9 +155,18 @@ public:
 		return MakeInt64(ulIPv4, p_nPort);
 	}
 
+	static Int64 MakeHostId(unsigned long p_nAddress, unsigned short p_nPort)
+	{
+		return MakeInt64(p_nAddress, p_nPort);
+	}
+
 public:
 	HostId(const std::string &p_strAddress, unsigned short p_nPort)
 		: m_hostId(HostId::MakeHostId(p_strAddress, p_nPort))
+	{ }
+
+	HostId(unsigned long p_nAddress, unsigned short p_nPort)
+		: m_hostId(MakeHostId(p_nAddress, p_nPort))
 	{ }
 
 	HostId(unsigned long long p_ullHostId)
@@ -202,28 +211,27 @@ public:
 		result << std::hex << "[" << (unsigned long long)m_hostId << "]" << std::dec;
 		return result.str();
 	}
-};
-//----------------------------------------------------------------------------------------------
 
-struct Neighbour
-{
-	static std::string MakeKey(const std::string p_strAddress, int p_nPort) {
-		return p_strAddress + ":" + boost::lexical_cast<std::string>(p_nPort);
+	std::string ToIPv4String(void)
+	{
+		unsigned long IPv4 = GetIPv4();
+		unsigned char *pOctet = (unsigned char*)&IPv4;
+
+		std::stringstream result;
+		result << pOctet[0] << "." 
+			<< pOctet[1] << "."
+			<< pOctet[2] << "."
+			<< pOctet[3];
+
+		return result.str();
 	}
-
-	std::string GetKey(void) {
-		return MakeKey(Address, Port);
-	}
-
-	std::string Address;
-	unsigned short Port;
-	int Latency;
-	bool Active;
 };
 //----------------------------------------------------------------------------------------------
 class Peer
 {
 	RakNet::RakPeerInterface *m_pRakPeer;
+
+	HostId m_localHostId;
 
 	int m_nMaxConnections,
 		m_nMaxIncomingConnections,
@@ -245,6 +253,8 @@ public:
 		, m_nMaxIncomingConnections(0)
 	{ }
 	
+	//----------------------------------------------------------------------------------------------
+	HostId GetHostId(void) const { return m_localHostId; }
 	//----------------------------------------------------------------------------------------------
 	int GetIncomingPort(void) const { return m_nListenPort; }
 	int GetOutgoingPort(void) const { return m_nBroadcastPort; }
@@ -273,7 +283,8 @@ public:
 			std::cout << "Peer :: Peer bound to the following addresses :" << std::endl;
 			for (int addrIndex = 0; addrIndex < m_pRakPeer->GetNumberOfAddresses(); addrIndex++)
 				std::cout << "[" << addrIndex << "] :: " << m_pRakPeer->GetLocalIP(addrIndex) << std::endl;
-			
+		
+			m_localHostId = HostId::MakeHostId(std::string(m_pRakPeer->GetLocalIP(0)), m_nListenPort);
 			return true;
 		}
 
@@ -286,7 +297,7 @@ public:
 		RakNet::RakPeerInterface::DestroyInstance(m_pRakPeer);
 	}
 	//----------------------------------------------------------------------------------------------
-	bool Ping(const std::string p_strRemoteAddress, unsigned int p_nRemotePort, int p_nTimeout, std::vector<Neighbour> &p_neighbourList)
+	bool Ping(const std::string p_strRemoteAddress, unsigned int p_nRemotePort, int p_nTimeout, HostId &p_hostId) //, std::vector<Neighbour> &p_neighbourList)
 	{
 		RakNet::Packet *pPacket;
 		bool bResponse = false;
@@ -318,13 +329,10 @@ public:
 					RakNet::BitStream bitStream(pPacket->data, pPacket->length, false);
 					bitStream.IgnoreBytes(1); bitStream.Read(checkpoint);
 
-					Neighbour neighbour;
-					neighbour.Address = pPacket->systemAddress.ToString();
-					neighbour.Port = (unsigned int)p_nRemotePort;
-					neighbour.Latency = Maths::Min<int>(RakNet::GetTimeMS() - checkpoint, p_nTimeout);
-					p_neighbourList.push_back(neighbour);
+					HostId host(RakNet::SystemAddress::ToInteger(pPacket->systemAddress), p_nRemotePort);
+					long latency = Maths::Min<int>(RakNet::GetTimeMS() - checkpoint, p_nTimeout);
 					
-					std::cout << "Peer :: Received PONG from [" << neighbour.Address << "] :: Latency [" << neighbour.Latency << "ms]" << std::endl;
+					std::cout << "Peer :: Received PONG from " << host.ToString() << " :: Latency [" << latency << "ms]" << std::endl;
 				}
 				else if (pPacket->data[0] == ID_UNCONNECTED_PING || 
 					pPacket->data[0] == ID_UNCONNECTED_PING_OPEN_CONNECTIONS ||
@@ -341,12 +349,15 @@ public:
 		return bResponse;
 	}
 	//----------------------------------------------------------------------------------------------
-	bool Connect(Neighbour &p_neighbour, int p_nTimeout = 0)
+	bool Connect(HostId p_hostId, int p_nTimeout = 0)
 	{
-		RakNet::SystemAddress address;
-		address.FromStringExplicitPort(p_neighbour.Address.c_str(), p_neighbour.Port);
+		std::string IPv4 = p_hostId.ToIPv4String();
+		unsigned short port = p_hostId.GetPort();
 
-		RakNet::ConnectionAttemptResult car = m_pRakPeer->Connect(p_neighbour.Address.c_str(), p_neighbour.Port, NULL, 0);
+		RakNet::SystemAddress address;
+		address.FromStringExplicitPort(IPv4.c_str(), port);
+		
+		RakNet::ConnectionAttemptResult car = m_pRakPeer->Connect(IPv4.c_str(), port, NULL, 0);
 		
 		if (p_nTimeout == 0)
 			return (car == RakNet::CONNECTION_ATTEMPT_STARTED);
@@ -371,31 +382,31 @@ public:
 		return false;
 	}
 	//----------------------------------------------------------------------------------------------
-	void Disconnect(Neighbour &p_neighbour)
+	void Disconnect(HostId p_hostId)
 	{
 		RakNet::SystemAddress address;
-		address.FromStringExplicitPort(p_neighbour.Address.c_str(), p_neighbour.Port);
+		address.FromStringExplicitPort(p_hostId.ToIPv4String().c_str(), p_hostId.GetPort());
 		
 		m_pRakPeer->CloseConnection(address, false);
 	}
 	//----------------------------------------------------------------------------------------------
-	bool IsConnected(Neighbour &p_neighbour)
+	bool IsConnected(HostId p_hostId)
 	{
 		RakNet::SystemAddress address;
-		address.FromStringExplicitPort(p_neighbour.Address.c_str(), p_neighbour.Port);
+		address.FromStringExplicitPort(p_hostId.ToIPv4String().c_str(), p_hostId.GetPort());
 		
 		RakNet::ConnectionState cs = m_pRakPeer->GetConnectionState(address);
 		return (cs == RakNet::ConnectionState::IS_CONNECTED);
 	}
 	//----------------------------------------------------------------------------------------------
-	bool SendData(Neighbour &p_neighbour, const char *p_pData, int p_nLength)
+	bool SendData(HostId p_hostId, const char *p_pData, int p_nLength)
 	{
 		RakNet::BitStream bitStream;
 		bitStream.Write((unsigned char)ID_USER_PACKET_ENUM);
 		bitStream.Write(p_pData, p_nLength);
 
 		RakNet::SystemAddress address;
-		address.FromStringExplicitPort(p_neighbour.Address.c_str(), p_neighbour.Port);
+		address.FromStringExplicitPort(p_hostId.ToIPv4String().c_str(), p_hostId.GetPort());
 
 		bool result = m_pRakPeer->Send(
 			&bitStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, address, false);
@@ -403,7 +414,7 @@ public:
 		return result;
 	}
 	//----------------------------------------------------------------------------------------------
-	bool ReceiveData(std::vector<unsigned char> &p_data, Neighbour &p_neighbour)
+	bool ReceiveData(std::vector<unsigned char> &p_data, HostId &p_hostId)
 	{
 		RakNet::Packet *pPacket;
 
@@ -421,10 +432,7 @@ public:
 
 			// Assign data
 			p_data.clear(); p_data.assign(pPacket->data + 1, pPacket->data + pPacket->length);
-
-			p_neighbour.Address = pPacket->systemAddress.ToString(false);
-			p_neighbour.Port = pPacket->systemAddress.GetPort();
-			p_neighbour.Latency = -1;
+			p_hostId = HostId::MakeHostId(pPacket->systemAddress.ToString(false), pPacket->systemAddress.GetPort());
 
 			m_pRakPeer->DeallocatePacket(pPacket);
 			return true;
