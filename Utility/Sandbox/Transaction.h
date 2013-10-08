@@ -174,12 +174,35 @@ public:
 	void AddToDirectory(std::vector<HostId> &p_hostList)
 	{
 		for (auto host : p_hostList) Add(host);
+
+		std::map<unsigned int, std::pair<HostId, double>> hostMap;
+		for (auto host : m_hostList)
+		{
+			auto hostIt = hostMap.find(host.first.GetIPv4());
+
+			if (hostIt == hostMap.end() || 
+				(hostIt != hostMap.end() && hostIt->second.second < host.second))
+			{
+				hostMap[host.first.GetIPv4()] = host;
+			}
+		}
+
+		m_hostList.clear();
+		for (auto host : hostMap) m_hostList.push_back(host.second);
 	}
 
 	void GetDirectory(std::vector<HostId> &p_hostList)
 	{
 		for (auto host : m_hostList)
 			p_hostList.push_back(HostId(host.first));
+	}
+
+	bool IsEmpty(void) {
+		return m_hostList.empty();
+	}
+
+	size_t Size(void) {
+		return m_hostList.size();
 	}
 };
 
