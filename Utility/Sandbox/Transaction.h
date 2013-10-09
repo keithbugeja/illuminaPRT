@@ -11,6 +11,7 @@ enum TransactionType
 {
 	TTGeneric,
 	TTPeerList,
+	TTTransactionList,
 	TTIrradianceSamples
 };
 
@@ -32,6 +33,19 @@ protected:
 	{ }
 
 public:
+	static std::string GetIdString(boost::uuids::uuid &p_uuid)
+	{
+		std::stringstream uid; uid << "[ " << std::hex;
+		for (auto idbyte : p_uuid)
+			uid << (unsigned int)idbyte;
+		uid << " ]" << std::dec;
+
+		return uid.str();
+	}
+
+public:
+	void SetId(boost::uuids::uuid &p_uuid) { m_transactionId = p_uuid; }
+
 	boost::uuids::uuid GetId(void) { return m_transactionId; }
 	std::string GetIdString(void) 
 	{
@@ -147,10 +161,31 @@ protected:
 	std::vector<std::pair<HostId, double>> m_hostList;
 	int m_nSize;
 
+protected:
+	class FindFirstPredicate 
+	{
+	public:
+		FindFirstPredicate(const HostId &hostId) 
+			: toFind(hostId) { }
+	
+		HostId toFind;
+		
+		bool operator() ( std::pair<HostId, double> &p ) 
+		{
+			return p.first==toFind;
+		}
+	};
+
 public:
 	HostDirectory(int p_nSize = 10)
 		: m_nSize(p_nSize)
 	{ }
+
+	void Remove(HostId p_hostId)
+	{
+		auto it = std::find_if(m_hostList.begin(), m_hostList.end(), FindFirstPredicate(p_hostId)); 
+		if (it != m_hostList.end()) m_hostList.erase(it);
+	}
 
 	void Add(HostId p_hostId) {
 		m_hostList.push_back(std::pair<HostId, double>(p_hostId, Illumina::Core::Platform::GetTime()));
@@ -207,4 +242,5 @@ public:
 };
 
 typedef IDataTransaction<HostId, TTPeerList> HostDirectoryTransaction;
+typedef IDataTransaction<boost::uuids::uuid, TTTransactionList> TransactionListTransaction;
 typedef IDataTransaction<MLIrradianceCacheRecord, TTIrradianceSamples> IrradianceRecordTransaction;

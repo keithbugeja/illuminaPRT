@@ -292,6 +292,20 @@ void MLICIntegrator::GetByEpochRange(int p_nEpochMin, int p_nEpochMax, std::vect
 	}
 }
 //----------------------------------------------------------------------------------------------
+bool MLICIntegrator::HasEpochQuota(int p_nQuota)
+{
+	int quota = 0;
+
+	for (auto record: m_irradianceCacheRecordList)
+	{
+		if (record->Epoch == m_nEpoch)  {
+			quota++; if (quota >= p_nQuota) return true;
+		}
+	}
+
+	return false;
+}
+//----------------------------------------------------------------------------------------------
 bool MLICIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 {
 	BOOST_ASSERT(p_pScene != nullptr && p_pScene->GetSpace() != nullptr);
@@ -639,11 +653,11 @@ MLIrradianceCacheRecord* MLICIntegrator::RequestRecord(void)
 	return pRecord;
 }
 //----------------------------------------------------------------------------------------------
-MLIrradianceCacheRecord* MLICIntegrator::RequestRecord(MLIrradianceCacheRecord* p_pRecord)
+MLIrradianceCacheRecord* MLICIntegrator::RequestRecord(MLIrradianceCacheRecord* p_pRecord, int p_nEpoch)
 {
 	MLIrradianceCacheRecord *pRecord = new MLIrradianceCacheRecord(*p_pRecord);
 	m_irradianceCacheRecordList.push_back(pRecord);
-	pRecord->Epoch = m_nEpoch;
+	pRecord->Epoch = (p_nEpoch == -1) ? m_nEpoch : p_nEpoch;
 	return pRecord;
 }
 //----------------------------------------------------------------------------------------------

@@ -165,7 +165,7 @@ namespace Illumina
 		public:
 			// Request allocation of a new irradiance record
 			MLIrradianceCacheRecord* RequestRecord(void);
-			MLIrradianceCacheRecord* RequestRecord(MLIrradianceCacheRecord* p_pRecord);
+			MLIrradianceCacheRecord* RequestRecord(MLIrradianceCacheRecord* p_pRecord, int p_nEpoch = -1);
 
 			// Release all allocated irradiance records
 			void ReleaseRecords(void);
@@ -177,6 +177,7 @@ namespace Illumina
 			// Return irradiance samples by their epoch index
 			void GetByEpoch(int p_nEpoch, std::vector<MLIrradianceCacheRecord*> &p_recordList);
 			void GetByEpochRange(int p_nEpochMin, int p_nEpochMax, std::vector<MLIrradianceCacheRecord*> &p_recordList);
+			bool HasEpochQuota(int p_nQuota);
 
 			// Move to next epoch
 			int NextEpoch(void) { return m_nEpoch++; }
