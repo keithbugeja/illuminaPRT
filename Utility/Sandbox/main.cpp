@@ -362,8 +362,10 @@ void IlluminaPRT(
 	illumina.SetJobs(p_nJobsPerFrame, p_nTileSize);
 	illumina.SetFrameBudget(0);
 
-	P2PListener listener;
-	listener.SetPeer(&localHost, p_nPeerPort == 7000 ? P2PListener::P2PReceive : P2PListener::P2PSend);
+	//P2PListener listener;
+	//listener.SetPeer(&localHost, p_nPort == 7001 ? P2PListener::P2PReceive : P2PListener::P2PSendReceive);
+	P2PListener2Way listener;
+	listener.SetPeer(&localHost, p_nPort == 7001 ? P2PListener2Way::P2PReceive : P2PListener2Way::P2PSendReceive);
 	HostDirectory &hostDir = listener.GetHostDirectory();
 	hostDir.Add(remoteHost);
 	illumina.AttachListener(&listener);
