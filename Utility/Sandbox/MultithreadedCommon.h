@@ -1,5 +1,11 @@
 #pragma once
 
+//----------------------------------------------------------------------------------------------
+#include "Path.h"
+#include "Logger.h"
+#include "Export.h"
+#include "Environment.h"
+
 class IIlluminaMT;
 
 class IlluminaMTListener
@@ -187,5 +193,3 @@ public:
 	virtual bool OnInitialise(void) = 0;
 	virtual bool OnShutdown(void) = 0;
 };
-
-

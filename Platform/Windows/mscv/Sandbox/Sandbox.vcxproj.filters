@@ -96,6 +96,9 @@
     <ClCompile Include="..\..\..\..\Utility\Sandbox\AsyncRenderTaskWorker.cpp">
       <Filter>Source Files\distributed\async</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\MultithreadedP2P.cpp">
+      <Filter>Source Files\decentralised</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Logger.h">
@@ -199,6 +202,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Transaction.h">
       <Filter>Source Files\decentralised</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Path.h">
+      <Filter>Source Files\common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -43,6 +43,11 @@ public:
 		return uid.str();
 	}
 
+	static boost::uuids::uuid GenerateId(void)
+	{
+		return boost::uuids::random_generator()();
+	}
+
 public:
 	void SetId(boost::uuids::uuid &p_uuid) { m_transactionId = p_uuid; }
 

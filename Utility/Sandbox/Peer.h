@@ -160,6 +160,11 @@ public:
 		return MakeInt64(p_nAddress, p_nPort);
 	}
 
+	static Int64 MakeHostId(RakNet::SystemAddress *p_pSystemAddress)
+	{
+		return MakeHostId(p_pSystemAddress->ToString(false), p_pSystemAddress->GetPort());
+	}
+
 public:
 	HostId(const std::string &p_strAddress, unsigned short p_nPort)
 		: m_hostId(HostId::MakeHostId(p_strAddress, p_nPort))
@@ -386,8 +391,12 @@ public:
 	{
 		RakNet::SystemAddress address;
 		address.FromStringExplicitPort(p_hostId.ToIPv4String().c_str(), p_hostId.GetPort());
-		
-		m_pRakPeer->CloseConnection(address, false);
+
+		RakNet::ConnectionState cs = m_pRakPeer->GetConnectionState(address);
+		if (cs == RakNet::ConnectionState::IS_CONNECTED)
+			m_pRakPeer->CloseConnection(address, false);
+		else if (cs == RakNet::ConnectionState::IS_CONNECTING)
+			m_pRakPeer->CancelConnectionAttempt(address);
 	}
 	//----------------------------------------------------------------------------------------------
 	bool IsConnected(HostId p_hostId)
@@ -407,9 +416,22 @@ public:
 		return m_pRakPeer->GetConnectionState(address);
 	}
 	//----------------------------------------------------------------------------------------------
+	bool GetConnectionList(std::vector<HostId> &p_hostConnectionList) 
+	{
+		RakNet::SystemAddress* addressList[32];
+		unsigned short addressCount;
+		
+		m_pRakPeer->GetConnectionList((RakNet::SystemAddress*)addressList, &addressCount);
+		
+		for (; addressCount > 0; addressCount--)
+			p_hostConnectionList.push_back(HostId::MakeHostId(addressList[addressCount]));
+
+		return !p_hostConnectionList.empty();
+	}
+	//----------------------------------------------------------------------------------------------
 	bool SendIddStream(HostId p_hostId, unsigned char p_streamId, RakNet::BitStream &p_bitStream, unsigned char p_ucIdOffset = 0)
 	{
-		std::cout << "Peer :: SendIddData :: Stream id = [" << (int)p_streamId << "]" << std::endl;
+		//std::cout << "Peer :: SendIddData :: Stream id = [" << (int)p_streamId << "]" << std::endl;
 
 		RakNet::BitStream bitStream;
 		bitStream.Write((unsigned char)(ID_USER_PACKET_ENUM + p_ucIdOffset));
@@ -431,7 +453,7 @@ public:
 
 		if (pPacket = m_pRakPeer->Receive())
 		{
-			std::cout << "Peer :: ReceivedIddData :: Header [" << (int)pPacket->data[0] << "]" << std::endl;
+			//std::cout << "Peer :: ReceivedIddData :: Header [" << (int)pPacket->data[0] << "]" << std::endl;
 			
 			// Have to discard uninteresting packets!
 			if (pPacket->data[0] < ID_USER_PACKET_ENUM)
@@ -447,7 +469,7 @@ public:
 				p_hostId = HostId::MakeHostId(pPacket->systemAddress.ToString(false), pPacket->systemAddress.GetPort());
 				p_streamId = pPacket->data[1];
 
-				std::cout << "Peer :: ReceivedIddData :: Stream id = [" << (int)p_streamId << "]" << std::endl;
+				//std::cout << "Peer :: ReceivedIddData :: Stream id = [" << (int)p_streamId << "]" << std::endl;
 
 				m_pRakPeer->DeallocatePacket(pPacket);
 				return true;
@@ -483,7 +505,7 @@ public:
 
 		if (pPacket = m_pRakPeer->Receive())
 		{
-			std::cout << "Peer :: ReceiveData :: Header [" << (int)pPacket->data[0] << "]" << std::endl;
+			//std::cout << "Peer :: ReceiveData :: Header [" << (int)pPacket->data[0] << "]" << std::endl;
 			
 			// Have to discard uninteresting packets!
 			if (pPacket->data[0] < ID_USER_PACKET_ENUM)
