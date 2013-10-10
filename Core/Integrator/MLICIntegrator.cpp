@@ -296,7 +296,7 @@ bool MLICIntegrator::HasEpochQuota(int p_nQuota)
 {
 	int quota = 0;
 
-	for (auto record: m_irradianceCacheRecordList)
+	for (auto record : m_irradianceCacheRecordList)
 	{
 		if (record->Epoch == m_nEpoch)  {
 			quota++; if (quota >= p_nQuota) return true;
@@ -648,16 +648,16 @@ Spectrum MLICIntegrator::PathLi(Scene *p_pScene, Ray &p_ray)
 MLIrradianceCacheRecord* MLICIntegrator::RequestRecord(void)
 {
 	MLIrradianceCacheRecord *pRecord = new MLIrradianceCacheRecord();
-	m_irradianceCacheRecordList.push_back(pRecord);
 	pRecord->Epoch = m_nEpoch;
+	m_irradianceCacheRecordList.push_back(pRecord);
 	return pRecord;
 }
 //----------------------------------------------------------------------------------------------
 MLIrradianceCacheRecord* MLICIntegrator::RequestRecord(MLIrradianceCacheRecord* p_pRecord, int p_nEpoch)
 {
 	MLIrradianceCacheRecord *pRecord = new MLIrradianceCacheRecord(*p_pRecord);
-	m_irradianceCacheRecordList.push_back(pRecord);
 	pRecord->Epoch = (p_nEpoch == -1) ? m_nEpoch : p_nEpoch;
+	m_irradianceCacheRecordList.push_back(pRecord);
 	return pRecord;
 }
 //----------------------------------------------------------------------------------------------

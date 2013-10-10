@@ -4,7 +4,8 @@
 #include "Transaction.h"
 #include "Peer.h"
 
-#define P2PLISTENER_GIC_EPOCH 0x7FFFFF
+#define P2PLISTENER_GIC_EPOCH	0x7FFFFF
+#define P2PLISTENER_TX_QUOTA	500
 
 /* */
 class P2PListener2Way 
