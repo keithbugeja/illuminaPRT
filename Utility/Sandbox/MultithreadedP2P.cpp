@@ -1,6 +1,28 @@
 #include "MultithreadedP2P.h"
 
 //----------------------------------------------------------------------------------------------
+void P2PListener2Way::NewsCastThreadHandler(P2PListener2Way *p_pListener)
+{
+	while(p_pListener->IsRunning())
+	{
+		if (p_pListener->m_pWFICIntegrator != NULL)
+			p_pListener->NewsCast();
+	
+		boost::this_thread::sleep(boost::posix_time::millisec(500));
+	}
+}
+//----------------------------------------------------------------------------------------------
+void P2PListener2Way::NewsUpdateThreadHandler(P2PListener2Way *p_pListener)
+{
+	while(p_pListener->IsRunning())
+	{
+		if (p_pListener->m_pWFICIntegrator != NULL)
+			p_pListener->NewsUpdate();
+	
+		boost::this_thread::sleep(boost::posix_time::millisec(500));
+	}
+}
+//----------------------------------------------------------------------------------------------
 void P2PListener2Way::BackgroundThreadHandler(P2PListener2Way *p_pListener)
 {
 	while(p_pListener->IsRunning())
@@ -168,7 +190,7 @@ bool P2PListener2Way::State_TransactionReceive(RakNet::BitStream &p_bitStream, H
 	for (auto uuid : p_outRequestList)
 		std::cout << "------->" << ITransaction::GetIdString(uuid) << "[-]" << std::endl;
 
-	m_newscastDeadline += 50 * p_outRequestList.size();
+	m_newscastDeadline += 500 * p_outRequestList.size();
 
 	return p_outRequestList.size() > 0;
 }
@@ -219,7 +241,11 @@ bool P2PListener2Way::State_IrradianceReceive(RakNet::BitStream &p_bitStream, Ho
 	m_transactionMap[received.GetId()] = m_newscastEpoch;
 
 	for (auto irradiance : irradianceList)
-		pIrradianceCache->Insert(m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch));
+	{
+		MLIrradianceCacheRecord *pRecord = m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch);
+		pIrradianceCache->Insert(pRecord);
+		//pIrradianceCache->Insert(m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch));
+	}
 
 	std::cout << "---> [P2P Subsystem] :: Transaction " << received.GetIdString() << " bound to epoch [" << m_newscastEpoch << "]" << std::endl;
 	m_newscastEpoch++;
@@ -430,8 +456,13 @@ void P2PListener2Way::OnBeginRender(IIlluminaMT *p_pIlluminaMT)
 	// Start background thread
 	m_bIsRunning = true;
 
-	boost::thread inputThreadHandler = 
-		boost::thread(boost::bind(P2PListener2Way::BackgroundThreadHandler, this));
+	//boost::thread inputThreadHandler = 
+	//	boost::thread(boost::bind(P2PListener2Way::BackgroundThreadHandler, this));
+
+	boost::thread newscastThreadHandler = 
+		boost::thread(boost::bind(P2PListener2Way::NewsCastThreadHandler, this));
+	boost::thread newsupdateThreadHandler = 
+		boost::thread(boost::bind(P2PListener2Way::NewsUpdateThreadHandler, this));
 }
 //----------------------------------------------------------------------------------------------
 void P2PListener2Way::OnEndRender(IIlluminaMT *p_pIlluminaMT)
