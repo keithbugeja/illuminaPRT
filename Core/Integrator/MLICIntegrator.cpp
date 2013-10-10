@@ -97,7 +97,7 @@ void MLIrradianceCache::Insert(MLIrradianceCacheRecord *p_pRecord)
 //----------------------------------------------------------------------------------------------
 void MLIrradianceCache::Insert(MLIrradianceCacheNode *p_pNode, MLIrradianceCacheRecord *p_pRecord, int p_nDepth)
 {
-	if (p_nDepth <= 0 || p_pRecord->RiClamp > p_pNode->Bounds.GetExtent().MaxAbsComponent()) // p_pNode->Bounds.GetRadius())
+	if (p_nDepth <= 0 || p_pRecord->RiClamp > p_pNode->Bounds.GetExtent().MaxAbsComponent())
 	{
 		m_nRecordCount++;
 		p_pNode->Add(p_pRecord);
@@ -105,12 +105,14 @@ void MLIrradianceCache::Insert(MLIrradianceCacheNode *p_pNode, MLIrradianceCache
 	else
 	{
 		// This node has no children allocated
-		// if (p_pNode->Children == nullptr)
 		if (p_pNode->Children == NULL)
 		{
 			MLIrradianceCacheNode *pTempNode = new MLIrradianceCacheNode[8];
 			if (p_pNode->Children == (MLIrradianceCacheNode*)AtomicInt64::CompareAndSwap((Int64*)&(p_pNode->Children), (Int64)pTempNode, NULL))
+			{
+				std::cout << "CAS failed at new node!" << std::endl;
 				delete [] pTempNode;
+			}
 			else
 				m_nNodeCount+=8;
 

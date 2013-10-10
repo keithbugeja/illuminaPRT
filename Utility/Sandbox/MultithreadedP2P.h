@@ -73,6 +73,8 @@ public:
 
 protected:
 	static void BackgroundThreadHandler(P2PListener2Way *p_pListener);
+	static void NewsCastThreadHandler(P2PListener2Way *p_pListener);
+	static void NewsUpdateThreadHandler(P2PListener2Way *p_pListener);
 
 	//----------------------------------------------------------------------------------------------
 	bool State_InitiateConnection(void);
