@@ -350,8 +350,8 @@ void IlluminaPRT(
 
 	HostId remoteHost = HostId::MakeHostId(p_strPeerIP, p_nPeerPort);
 
-	IlluminaMTFrameless illumina;
-	// IlluminaMT illumina;
+	// IlluminaMTFrameless illumina;
+	IlluminaMT illumina;
 
 	illumina.SetFlags(p_nFlags);
 	illumina.SetLogger(p_pLogger);

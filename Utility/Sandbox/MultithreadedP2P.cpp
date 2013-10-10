@@ -36,7 +36,7 @@ bool P2PListener2Way::State_InitiateConnection(void)
 				
 	// New state / set deadline (5s)
 	m_newscastState = NCConnect;
-	m_newscastDeadline = RakNet::GetTimeMS() + 15000;
+	m_newscastDeadline = RakNet::GetTimeMS() + 5000;
 
 	return true;
 }
@@ -168,6 +168,8 @@ bool P2PListener2Way::State_TransactionReceive(RakNet::BitStream &p_bitStream, H
 	for (auto uuid : p_outRequestList)
 		std::cout << "------->" << ITransaction::GetIdString(uuid) << "[-]" << std::endl;
 
+	m_newscastDeadline += 50 * p_outRequestList.size();
+
 	return p_outRequestList.size() > 0;
 }
 //----------------------------------------------------------------------------------------------
@@ -231,10 +233,8 @@ bool P2PListener2Way::State_IrradianceReceive(RakNet::BitStream &p_bitStream, Ho
 //----------------------------------------------------------------------------------------------
 void P2PListener2Way::UpdateLocalCatalogue(void)
 {
-	std::cout << "---> [P2P Subsystem] :: Updating local catalogue ..." << std::endl;
-
 	// We need a quota of at least 100 samples before promoting to a transaction!
-	if (m_pWFICIntegrator->HasEpochQuota(100))
+	if (m_pWFICIntegrator->HasEpochQuota(P2PLISTENER_TX_QUOTA))
 	{
 		boost::uuids::uuid transactionId = ITransaction::GenerateId();
 		int lastEpoch = m_pWFICIntegrator->NextEpoch();
@@ -252,7 +252,7 @@ void P2PListener2Way::NewsUpdate(void)
 	unsigned char streamId; HostId hostId; RakNet::BitStream bitStream;
 
 	// Check if we have any pending packets (not response packets)
-	if (m_pPeer->ReceiveIddStream(bitStream, streamId, hostId))
+	while (m_pPeer->ReceiveIddStream(bitStream, streamId, hostId))
 	{
 		std::vector<boost::uuids::uuid> requestList;
 
@@ -347,11 +347,11 @@ void P2PListener2Way::NewsCast(void)
 
 		case NCQuiescent:
 		{
-			std::cout << "---> [P2P Subsystem] :: State = [Quiescent]" << std::endl;
+			// std::cout << "---> [P2P Subsystem] :: State = [Quiescent]" << std::endl;
 			unsigned char streamId; HostId hostId; RakNet::BitStream bitStream;
 
 			// Check if we have any pending packets
-			if (m_pPeer->ReceiveIddStream(bitStream, streamId, hostId, 0x01))
+			while (m_pPeer->ReceiveIddStream(bitStream, streamId, hostId, 0x01))
 			{
 				std::cout << "---> [P2P Subsystem] :: Received response data from [" << hostId.ToIPv4String() << " : " << hostId.GetPort() << "]" << std::endl;
 				switch(streamId)
