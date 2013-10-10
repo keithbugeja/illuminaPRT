@@ -172,6 +172,7 @@
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Coordinator.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\Half.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\main.cpp" />
+    <ClCompile Include="..\..\..\..\Utility\Sandbox\MultithreadedP2P.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskCoordinator.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskPipeline.cpp" />
     <ClCompile Include="..\..\..\..\Utility\Sandbox\RenderTaskWorker.cpp" />
@@ -202,6 +203,7 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedCommon.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedFrameless.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedP2P.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Path.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Peer.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCommon.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCoordinator.h" />

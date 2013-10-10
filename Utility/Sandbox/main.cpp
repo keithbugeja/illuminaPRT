@@ -345,13 +345,13 @@ void IlluminaPRT(
 {
 	Peer localHost;
 
-	localHost.Configure(p_nPort, p_nPeerPort, 10, 5);
+	localHost.Configure(p_nPort, p_nPeerPort, 2, 1);
 	localHost.Initialise();
 
 	HostId remoteHost = HostId::MakeHostId(p_strPeerIP, p_nPeerPort);
 
-	// IlluminaMTFrameless illumina;
-	IlluminaMT illumina;
+	IlluminaMTFrameless illumina;
+	// IlluminaMT illumina;
 
 	illumina.SetFlags(p_nFlags);
 	illumina.SetLogger(p_pLogger);
@@ -362,8 +362,6 @@ void IlluminaPRT(
 	illumina.SetJobs(p_nJobsPerFrame, p_nTileSize);
 	illumina.SetFrameBudget(0);
 
-	//P2PListener listener;
-	//listener.SetPeer(&localHost, p_nPort == 7001 ? P2PListener::P2PReceive : P2PListener::P2PSendReceive);
 	P2PListener2Way listener;
 	listener.SetPeer(&localHost, p_nPort == 7001 ? P2PListener2Way::P2PReceive : P2PListener2Way::P2PSendReceive);
 	HostDirectory &hostDir = listener.GetHostDirectory();
