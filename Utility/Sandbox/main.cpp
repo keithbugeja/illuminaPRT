@@ -22,8 +22,8 @@
 //----------------------------------------------------------------------------------------------
 //	Set Illumina PRT compilation mode (SHM, DSM or P2P)
 //----------------------------------------------------------------------------------------------
-#define ILLUMINA_P2P
-// #define ILLUMINA_SHM
+// #define ILLUMINA_P2P
+#define ILLUMINA_SHM
 
 #if (!defined ILLUMINA_SHM) || (!defined ILLUMINA_P2P)
 	#define ILLUMINA_DSM
