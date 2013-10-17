@@ -22,6 +22,7 @@
 #include <ConnectionGraph2.h>
 #include <BitStream.h>
 
+#pragma comment(lib,"raknetdll_x64.lib")
 //----------------------------------------------------------------------------------------------
 class SparseVectorClock
 {
