@@ -69,6 +69,7 @@ using namespace Illumina::Core;
 #include "Logger.h"
 #include "Environment.h"
 #include "Export.h"
+#include "GBuffer.h"
 
 #include "Multithreaded.h"
 #include "MultithreadedFrameless.h"
@@ -79,11 +80,41 @@ using namespace Illumina::Core;
 class SimpleListener 
 	: public IlluminaMTListener
 {
+protected:
+	PathEx m_path;
+	float m_fDeltaTime;
+	int m_nFrameNumber;
+
+public:
+	SimpleListener(void)
+		: m_nFrameNumber(0)
+		, m_fDeltaTime(0)
+	{ 
+		m_path.Clear();
+		m_path.FromString("path={{-16, -14, -5.75},{90,0,0},{-8, -14, -5.75},{90,0,0},{-2.36, -14, -5.75},{90,0,0}}");
+	}
+
 	void OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
 	{ 
 		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
+		Vector3 position, lookAt;
+
+		m_fDeltaTime += 0.1f; if (m_fDeltaTime > 1.f) m_fDeltaTime = 1.f;
+
+		m_path.Get(m_fDeltaTime, position, lookAt);
+
+		pCamera->MoveTo(position);
+		pCamera->LookAt(lookAt);
+
+		std::cout << "Position : " << position.ToString() << ", LookAt : " << lookAt.ToString() << std::endl;
+
 		// pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
 	};
+
+	void OnEndFrame(IIlluminaMT *p_pIlluminaMT)
+	{
+		GBuffer::Persist("Output\\gbuffer.gbf", m_nFrameNumber++, p_pIlluminaMT->GetCommitBuffer());
+	}
 };
 
 //----------------------------------------------------------------------------------------------
@@ -92,8 +123,8 @@ void IlluminaPRT(Logger *p_pLogger, int p_nVerboseFrequency,
 	int p_nJobs, int p_nSize, int p_nFlags, 
 	std::string p_strScript)
 {
-	IlluminaMTFrameless illumina;
-	//IlluminaMT illumina;
+	//IlluminaMTFrameless illumina;
+	IlluminaMT illumina;
 
 	illumina.SetFlags(p_nFlags);
 	illumina.SetLogger(p_pLogger);

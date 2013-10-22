@@ -87,6 +87,7 @@ protected:
 
 public:
 	Environment* GetEnvironment(void) const { return m_pEnvironment; }
+	virtual RadianceBuffer* GetCommitBuffer(void) { return NULL; }
 
 protected:
 	IIlluminaMT(void) 

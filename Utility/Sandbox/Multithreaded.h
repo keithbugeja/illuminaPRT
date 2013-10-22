@@ -287,6 +287,8 @@ protected:
 public:
 	void SetJobs(int p_nSubdivide, int p_nSize) { m_nJobs = p_nSubdivide; m_nSize = p_nSize; }
 
+	RadianceBuffer *GetCommitBuffer(void) { return m_pRadianceBuffer; }
+
 	bool OnInitialise(void) 
 	{
 		//----------------------------------------------------------------------------------------------
