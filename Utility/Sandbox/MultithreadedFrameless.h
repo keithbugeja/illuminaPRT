@@ -294,6 +294,8 @@ protected:
 	MotionBlur *m_pTemporalFilter;
 
 public:
+	RadianceBuffer *GetCommitBuffer(void) { return m_pRadianceBuffer; }
+
 	void SetJobs(int p_nSubdivide, int p_nSize) { m_nJobs = p_nSubdivide; m_nSize = p_nSize; }
 
 	bool OnInitialise(void) 

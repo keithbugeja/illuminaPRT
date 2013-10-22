@@ -206,5 +206,8 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Path.h">
       <Filter>Source Files\common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\GBuffer.h">
+      <Filter>Source Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

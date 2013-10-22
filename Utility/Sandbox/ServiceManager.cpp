@@ -63,8 +63,8 @@ void ServiceManager::Start(void)
 //----------------------------------------------------------------------------------------------
 void ServiceManager::RunAsResource(void)
 {
-	// RenderTaskPipeline pipeline;
-	AsyncRenderTaskPipeline pipeline;
+	RenderTaskPipeline pipeline;
+	// AsyncRenderTaskPipeline pipeline;
 
 	// Start resource
 	m_resourceManager.Me()->Start(&pipeline);
