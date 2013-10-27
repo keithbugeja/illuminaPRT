@@ -44,6 +44,8 @@ public:
 			imageFile.write((char*)(&pContext->ViewRay.Origin), sizeof(float) * 3);
 			imageFile.write((char*)(&pContext->ViewRay.Direction), sizeof(float) * 3);
 			imageFile.write((char*)(&pContext->Distance), sizeof(float));
+
+			pContext++;
 		}
 				
 		imageFile.close();
