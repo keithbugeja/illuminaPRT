@@ -1,5 +1,7 @@
 #pragma once
+
 #include <System/Platform.h>
+#include <System/ArgumentMap.h>
 #include <Geometry/Vector3.h>
 #include <Geometry/Spline.h>
 

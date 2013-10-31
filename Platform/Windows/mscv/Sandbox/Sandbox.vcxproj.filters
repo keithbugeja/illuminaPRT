@@ -37,6 +37,9 @@
     <Filter Include="Source Files\multithreaded">
       <UniqueIdentifier>{6b7019ab-e841-4eb0-95e5-30c42efe3596}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\external">
+      <UniqueIdentifier>{d2457496-b9d4-4a1e-b9be-946aadc9051e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\main.cpp">
@@ -207,6 +210,12 @@
       <Filter>Source Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\GBuffer.h">
+      <Filter>Source Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\PointSet.h">
+      <Filter>Source Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\Defs.h">
       <Filter>Source Files\common</Filter>
     </ClInclude>
   </ItemGroup>

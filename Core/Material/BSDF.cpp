@@ -10,27 +10,8 @@
 
 using namespace Illumina::Core;
 //----------------------------------------------------------------------------------------------
-void BSDF::GenerateVectorInHemisphere(float p_u, float p_v, Vector3 &p_out)
-{
+void BSDF::GenerateVectorInHemisphere(float p_u, float p_v, Vector3 &p_out) {
 	p_out = Montecarlo::CosineSampleHemisphere(p_u, p_v);
-
-	//float phi = Maths::PiTwo * p_u;
-	//float r = Maths::Sqrt(p_v);
-	//float x = r * Maths::Cos(phi);
-	//float y = r * Maths::Sin(phi);
-	//float z = Maths::Sqrt(1 - x*x - y*y);
-
-	//p_out.Set(x, y, z);
-
-	/*
-	float cosTheta = Maths::Sqrt(1 - p_u);
-	float sinTheta = Maths::Sqrt(1 - cosTheta * cosTheta);
-	float phi = Maths::PiTwo * p_v * 2;
-	float cosPhi = Maths::Cos(phi);
-	float sinPhi = Maths::Sin(phi);
-
-	p_out.Set(cosPhi * sinTheta, sinPhi * sinTheta, cosTheta);
-	*/
 }
 //----------------------------------------------------------------------------------------------
 void BSDF::LocalToSurface(const DifferentialSurface &p_surface, const Vector3 &p_vector, Vector3 &p_out, bool p_bUseShadingNormals)

@@ -28,7 +28,7 @@ Spectrum Lambertian::SampleF(const Spectrum &p_reflectance, const Vector3 &p_wOu
 { 
 	BSDF::GenerateVectorInHemisphere(p_u, p_v, p_wIn);
 	
-	// Allahares nidghi, ghax kieku shittha Malta
+	// U hawn intbaht illi kieku kelli ruh, zgur tliftha wara l-hames mitt litanija dagha fahxi...
 	if (p_wOut.Z < 0) p_wIn.Z = -p_wIn.Z;
 
 	*p_pdf = Pdf(p_wOut, p_wIn); 

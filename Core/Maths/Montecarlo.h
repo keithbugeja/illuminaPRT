@@ -30,7 +30,7 @@ namespace Illumina
 
 			static Vector3 CosineSampleHemisphere(float p_u, float p_v)
 			{
-				float a = Maths::PiTwo * p_u;
+				float a = Maths::PiTwo * p_v;
 				float b = Maths::Sqrt(p_u);
 
 				return Vector3(b * Maths::Cos(a), b * Maths::Sin(a), Maths::Sqrt(1 - p_u));
@@ -38,17 +38,33 @@ namespace Illumina
 
 			static Vector3 UniformSampleSphere(float p_u, float p_v)
 			{
+				Vector3 result;
+
+				result.Z = p_u;
+				float r = Maths::Sqrt(Maths::Max(0.f, 1.f - result.Z * result.Z));
+				float phi = Maths::PiTwo * p_v;
+				result.X = r * Maths::Cos(phi);
+				result.Y = r * Maths::Sin(phi);
+				
+				return result;
+				/* 
 				float z = 1.0f - 2.0 * p_u;
 				float r = Maths::Sqrt(Maths::Max(0.0f, 1.0f - z * z));
 				float phi = Maths::PiTwo * p_v;
 				float x = r * Maths::Cos(phi);
 				float y = r * Maths::Sin(phi);
 				return Vector3(x, y, z);
+				*/
 			}
 
-			static float UniformSpherePdf()
+			static float UniformHemispherePdf(void)
 			{
-				return 0.5f / Maths::PiTwo;
+				return Maths::InvPiTwo;
+			}
+
+			static float UniformSpherePdf(void)
+			{
+				return 1.f / (4.f * Maths::Pi);
 			}
 
 			static void UniformSampleTriangle(float p_u, float p_v, float *p_uOut, float *p_vOut) 

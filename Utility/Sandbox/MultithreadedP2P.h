@@ -3,6 +3,7 @@
 #include "MultithreadedCommon.h"
 #include "Transaction.h"
 #include "Peer.h"
+#include "Path.h"
 
 #define P2PLISTENER_GIC_EPOCH	0x7FFFFF
 #define P2PLISTENER_TX_QUOTA	500
