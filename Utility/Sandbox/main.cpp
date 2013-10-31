@@ -9,32 +9,7 @@
 // Move factories to CorePlugins.dll
 // Finish scene loaders
 //----------------------------------------------------------------------------------------------
-
-
-//----------------------------------------------------------------------------------------------
-// Illumina PRT compilation modes:
-//	ILLUMINA_SHM : Compilation for local, multithreaded, shared memory systems (no network support)
-//		ILLUMINA_SHMVIEWER : Compile as a shared memory viewer (to be phased out; separate project)
-//  ILLUMINA_DSM : Compilation for multiple-client support (cloud deployment)
-//  ILLUMINA_P2P : Compilation for peer-to-peer support (client collaboration)
-//----------------------------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------------------------
-//	Set Illumina PRT compilation mode (SHM, DSM or P2P)
-//----------------------------------------------------------------------------------------------
-// #define ILLUMINA_P2P
-#define ILLUMINA_SHM
-
-#if (!defined ILLUMINA_SHM) || (!defined ILLUMINA_P2P)
-	#define ILLUMINA_DSM
-#else
-	/* I hate myself for this */
-	// #define ILLUMINA_SHMVIEWER
-	#if (defined ILLUMINA_SHMVIEWER)
-		#include "SHMViewer.h"
-	#endif
-/**/
-#endif
+#include "Defs.h"
 
 //----------------------------------------------------------------------------------------------
 //	Set Illumina PRT version
@@ -99,7 +74,7 @@ public:
 		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
 		Vector3 position, lookAt;
 
-		m_fDeltaTime += 0.1f; if (m_fDeltaTime > 1.f) m_fDeltaTime = 1.f;
+		m_fDeltaTime += 0.02f; if (m_fDeltaTime > 1.f) m_fDeltaTime = 1.f;
 
 		m_path.Get(m_fDeltaTime, position, lookAt);
 
@@ -360,6 +335,7 @@ int main(int argc, char** argv)
 
 #include "Logger.h"
 #include "Environment.h"
+#include "PointSet.h"
 #include "Export.h"
 #include "Peer.h"
 
@@ -400,6 +376,25 @@ void IlluminaPRT(
 	illumina.AttachListener(&listener);
 
 	illumina.Initialise();
+
+	Environment *pEnv = illumina.GetEnvironment();
+
+	PointSet pointSet;
+	pointSet.Initialise(pEnv->GetScene(), 0.025f, 5.0f, 1024, 32, 48, 24, 0.01f, Vector3(32));
+	//pointSet.Initialise(pEnv->GetScene(), 0.1f, 0.5f, 64, 64, 32, 64, 0.01f, Vector3(64));
+	//pointSet.Initialise(pEnv->GetScene(), 0.01f, 0.75f, 128, 256, 16, 48, 0.01f);
+	pointSet.Generate();
+	std::cout << "Generated point set. Elements in grid [" << pointSet.Get().Size() << "]" << std::endl;
+
+
+	std::cout << "Shading points..." << std::endl;
+	PointShader shader;
+	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1, 24, 48);
+	shader.Shade(pointSet.Get().Get());
+
+	pointSet.Save("Output//pointcloud_full.asc");
+	std::cout << "Point cloud saved." << std::endl;
+
 	illumina.Render();	
 	illumina.Shutdown();
 

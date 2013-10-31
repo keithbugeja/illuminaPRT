@@ -68,14 +68,17 @@ Spectrum PointLight::SampleRadiance(const Scene *p_pScene, float p_u, float p_v,
 {
 	Vector3 normal;
 
+	//p_ray.Direction = Montecarlo::UniformSampleSphere(p_w, p_x);
+	//p_ray.Origin = SamplePoint(p_u, p_v, normal, p_pdf) + p_ray.Direction * 1e-3f; normal = -normal;
+	
 	p_ray.Direction = Montecarlo::UniformSampleSphere(p_w, p_x);
-	p_ray.Origin = SamplePoint(p_u, p_v, normal, p_pdf) + p_ray.Direction * 1e-3f; normal = -normal;
+	p_ray.Origin = m_position;
 
 	p_ray.Min = 1e-3f;
 	p_ray.Max = Maths::Maximum;
 
-	if (Vector3::Dot(p_ray.Direction, normal) < 0) 
-		p_ray.Direction *= -1.0f;
+	//if (Vector3::Dot(p_ray.Direction, normal) < 0) 
+	//	p_ray.Direction *= -1.0f;
 
 	Vector3::Inverse(p_ray.Direction, p_ray.DirectionInverseCache);
 
