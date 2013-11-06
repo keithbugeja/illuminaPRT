@@ -380,7 +380,7 @@ void IlluminaPRT(
 	Environment *pEnv = illumina.GetEnvironment();
 
 	PointSet pointSet;
-	pointSet.Initialise(pEnv->GetScene(), 0.025f, 5.0f, 1024, 32, 48, 24, 0.01f, Vector3(32));
+	pointSet.Initialise(pEnv->GetScene(), 0.00025f, 0.1f, 1024, 32, 48, 24, 0.01f, Vector3(32));
 	//pointSet.Initialise(pEnv->GetScene(), 0.1f, 0.5f, 64, 64, 32, 64, 0.01f, Vector3(64));
 	//pointSet.Initialise(pEnv->GetScene(), 0.01f, 0.75f, 128, 256, 16, 48, 0.01f);
 	pointSet.Generate();
