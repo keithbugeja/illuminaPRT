@@ -43,6 +43,9 @@ namespace Illumina
 		public:
 			void SetProjection(float p_fLeft, float p_fRight, float p_fTop, float p_fBottom, float p_fDistance);
 			void SetFieldOfView(float p_fDegrees, float p_fAspectRatio);
+			void GetFieldOfView(float *p_pfDegrees, float *p_pfAspectRatio) const;
+			float GetFieldOfView(void) const;
+			float GetAspectRatio(void) const;
 
 			void Move(const Vector3 &p_displacement);
 			void MoveTo(const Vector3 &p_position);

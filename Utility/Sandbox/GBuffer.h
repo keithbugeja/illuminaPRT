@@ -5,7 +5,7 @@
 class GBuffer 
 {
 public:
-	static bool Persist(const std::string &p_strFilename, int p_nFrameNumber, RadianceBuffer *p_pRadianceBuffer)
+	static bool Persist(const std::string &p_strFilename, int p_nFrameNumber, ICamera* p_pCamera, RadianceBuffer *p_pRadianceBuffer)
 	{
 		std::ofstream imageFile;
 		std::stringstream imageNameStream;
@@ -23,14 +23,22 @@ public:
 		int width = p_pRadianceBuffer->GetWidth(), 
 			height = p_pRadianceBuffer->GetHeight();
 
+		// Width, height of image raster
 		imageFile.write((char*)&width, sizeof(int));
 		imageFile.write((char*)&height, sizeof(int));
 
-		// To add: 
-		//	camera position (float x 3)
-		//  camera orientation (float x 3)
-		//  fov (float)
-		//	aspect ratio (float)
+		// Camera position
+		imageFile.write((char*)(&p_pCamera->GetObserver()), sizeof(float) * 3);
+		
+		// Camera frame
+		imageFile.write((char*)(&p_pCamera->GetFrame().U), sizeof(float) * 3);
+		imageFile.write((char*)(&p_pCamera->GetFrame().V), sizeof(float) * 3);
+		imageFile.write((char*)(&p_pCamera->GetFrame().W), sizeof(float) * 3);
+		
+		// Field of view (degrees), aspect ratio
+		float fov, aspect; p_pCamera->GetFieldOfView(&fov, &aspect);
+		imageFile.write((char*)(&fov), sizeof(float));
+		imageFile.write((char*)(&aspect), sizeof(float));
 
 		// G buffer
 		RadianceContext *pContext = p_pRadianceBuffer->GetBuffer();
