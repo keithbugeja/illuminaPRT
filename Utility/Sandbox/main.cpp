@@ -88,7 +88,7 @@ public:
 
 	void OnEndFrame(IIlluminaMT *p_pIlluminaMT)
 	{
-		GBuffer::Persist("Output\\gbuffer.gbf", m_nFrameNumber++, p_pIlluminaMT->GetCommitBuffer());
+		GBuffer::Persist("Output\\gbuffer.gbf", m_nFrameNumber++, p_pIlluminaMT->GetEnvironment()->GetCamera(), p_pIlluminaMT->GetCommitBuffer());
 	}
 };
 
@@ -379,6 +379,7 @@ void IlluminaPRT(
 
 	Environment *pEnv = illumina.GetEnvironment();
 
+	/*
 	PointSet pointSet;
 	pointSet.Initialise(pEnv->GetScene(), 0.00025f, 0.1f, 1024, 32, 48, 24, 0.01f, Vector3(32));
 	//pointSet.Initialise(pEnv->GetScene(), 0.1f, 0.5f, 64, 64, 32, 64, 0.01f, Vector3(64));
@@ -394,6 +395,7 @@ void IlluminaPRT(
 
 	pointSet.Save("Output//pointcloud_full.asc");
 	std::cout << "Point cloud saved." << std::endl;
+	*/
 
 	illumina.Render();	
 	illumina.Shutdown();
