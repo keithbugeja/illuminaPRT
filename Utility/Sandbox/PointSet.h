@@ -189,6 +189,8 @@ protected:
 		m_nAltitudeStrata;
 	float m_fMinRadius,
 		m_fMaxRadius,
+		m_fMinRadiusPercent,
+		m_fMaxRadiusPercent,
 		m_fReflectEpsilon;
 
 public:
@@ -248,8 +250,8 @@ public:
 	void Initialise(Scene *p_pScene, float p_fMinRadius, float p_fMaxRadius, int p_nMaxDartSources, int p_nMaxDartsPerSource, int p_nAzimuthStrata, int p_nAltitudeStrata, float p_fReflectEpsilon, const Vector3 &p_subdivisions)
 	{
 		m_pScene = p_pScene;
-		m_fMinRadius = p_fMinRadius;
-		m_fMaxRadius = p_fMaxRadius;
+		m_fMinRadiusPercent = p_fMinRadius;
+		m_fMaxRadiusPercent = p_fMaxRadius;
 		m_nMaxDartSources = p_nMaxDartSources;
 		m_nMaxDartsPerSource = p_nMaxDartsPerSource;
 		m_nAzimuthStrata = p_nAltitudeStrata;
@@ -263,6 +265,9 @@ public:
 		Vector3 size = pBoundingVolume->GetSize();
 
 		m_grid.Initialise(centroid, size, m_subdivisions);
+
+		m_fMinRadius = m_fMinRadiusPercent * size.MaxAbsComponent();
+		m_fMaxRadius = m_fMaxRadiusPercent * size.MaxAbsComponent();
 	}
 
 	PointGrid<Dart>& Get(void) {
@@ -334,18 +339,20 @@ protected:
 				direction.Z = Maths::Abs(direction.Z);
 				direction = basis.Project(direction);
 
-				dart.Set(dartSource.Position + direction * m_fReflectEpsilon, direction, 0, Maths::Maximum);
+				dart.Set(dartSource.Position + direction * m_fReflectEpsilon, direction, m_fReflectEpsilon, Maths::Maximum);
 				
 				if (m_pScene->Intersects(dart, intersection))
 				{
 					std::cout << "[" << dartCount++ << " of " << dartMaxCount << "] Index : " << dartIndex << ", Centre : " << intersection.Surface.PointWS.ToString() << std::endl; 
 
 					// Reject trivially
+					/*
 					if (m_grid.Contains(intersection.Surface.PointWS, m_fMinRadius)) 
 					{
 						discarded++;
 						continue;
 					}
+					*/
 
 					// std::cout << "Point not trivially rejected" << std::endl;
 
@@ -357,12 +364,13 @@ protected:
 					dartPoint.Occlusion = rayDetails.U;
 
 					std::cout << "Ambient occlusion computed [" << dartPoint.Occlusion << "] for radius [" << dartPoint.Radius << "]" << std::endl;
-
+					/*
 					if (dartPoint.Radius > m_fMinRadius && m_grid.Contains(intersection.Surface.PointWS, dartPoint.Radius)) 
 					{
 						discarded++;
 						continue;
 					}
+					*/
 
 					std::cout << "Point accepted" << std::endl;
 
