@@ -1,8 +1,18 @@
 #pragma once
 #include <Maths/Montecarlo.h>
+#include <Scene/Visibility.h>
 #include "Environment.h"
 
 using namespace Illumina::Core;
+
+struct PhotonEmitter
+{
+	Spectrum Contribution;
+	Vector3	Position;
+	Vector3 Normal;
+	Vector3 Direction;
+	bool Invalid;
+};
 
 struct Dart
 {
@@ -525,6 +535,96 @@ protected:
 
 	Scene *m_pScene;
 
+public:
+	void TraceEmitters(std::vector<PhotonEmitter> &p_photonEmitterList, int p_nMaxEmitters, int p_nMaxPaths)
+	{
+		Intersection intersection;
+		IMaterial *pMaterial;
+		BxDF::Type bxdfType = BxDF::All_Combined;
+		PhotonEmitter emitter;
+		Ray lightRay;
+
+		Spectrum contribution, 
+			alpha, f;
+
+		Vector3 normal, 
+			wOut, wIn;
+
+		Vector2 pSample2D[2];
+
+		float continueProbability, 
+			pdf;
+
+		int intersections;
+
+		// Trace either a maximum number of paths or virtual point lights
+		for (int lightIndex = 0, nPathIndex = p_nMaxPaths; nPathIndex > 0 && p_photonEmitterList.size() < p_nMaxEmitters; --nPathIndex)
+		{
+			// Get samples for initial position and direction
+			m_pScene->GetSampler()->Get2DSamples(pSample2D, 2);
+		
+			// Get initial radiance, position and direction
+			alpha = m_pScene->LightList[lightIndex]->SampleRadiance(
+				m_pScene, pSample2D[0].U, pSample2D[0].V, 
+				pSample2D[1].U, pSample2D[1].V, lightRay, pdf);
+
+			// If pdf or radiance are zero, choose a new path
+			if (pdf == 0.0f || alpha.IsBlack())
+				continue;
+
+			// Scale radiance by pdf
+			alpha /= pdf;
+
+			// Start tracing virtual point light path
+			for (intersections = 1; m_pScene->Intersects(lightRay, intersection); ++intersections)
+			{
+				wOut = -lightRay.Direction;
+				pMaterial = intersection.GetMaterial();
+				Spectrum Le = alpha * pMaterial->Rho(wOut, intersection.Surface) / Maths::Pi;
+
+				// Set point light parameters
+				emitter.Direction = wOut;
+				emitter.Position = intersection.Surface.PointWS;
+				emitter.Normal = intersection.Surface.GeometryBasisWS.W;
+				emitter.Contribution = Le;
+
+				std::cout << "Le = " << Le.ToString() << std::endl;
+
+				// Push point light on list
+				p_photonEmitterList.push_back(emitter);
+
+				// Sample new direction
+				f = pMaterial->SampleF(intersection.Surface, wOut, wIn, pSample2D[0].U, pSample2D[0].V, &pdf, bxdfType);
+			
+				// If reflectivity or pdf are zero, end path
+				if (f.IsBlack() || pdf == 0.0f || intersections > m_nRayDepth)
+					break;
+
+				// Compute contribution of path
+				contribution = f * Vector3::AbsDot(wIn, intersection.Surface.ShadingBasisWS.W) / pdf;
+
+				// Possibly terminate virtual light path with Russian roulette
+				continueProbability = Maths::Min(1.f, (contribution[0] + contribution[1] + contribution[2]) * 0.33f);
+				if (m_pScene->GetSampler()->Get1DSample() > continueProbability)
+						break;
+
+				// Modify contribution accordingly
+				alpha *= contribution / continueProbability;
+
+				// Set new ray position and direction
+				lightRay.Set(intersection.Surface.PointWS, wIn, m_fReflectEpsilon, Maths::Maximum);
+			}
+
+			// Increment light index, and reset if we traversed all scene lights
+			if (++lightIndex == m_pScene->LightList.Size())
+				lightIndex = 0;
+		}
+
+		// Just in case we traced more than is required
+		if (p_photonEmitterList.size() > p_nMaxEmitters)
+			p_photonEmitterList.erase(p_photonEmitterList.begin() + p_nMaxEmitters, p_photonEmitterList.end());
+	}
+
 protected:
 	Spectrum Shade(Vector3 &p_position, Vector3 &p_normal)
 	{
@@ -557,6 +657,39 @@ protected:
 		}
 
 		return E / mn;
+	}
+
+	Spectrum PathGather(Vector3 &p_position, Vector3 &p_normal, std::vector<PhotonEmitter> &p_emitterList, float p_fGTermMax)
+	{
+		VisibilityQuery emitterQuery(m_pScene);
+		Spectrum Le(0), f;
+		Vector3 wIn;
+		int samplesUsed = 1;
+
+		for (auto emitter : p_emitterList)
+		{
+			wIn = Vector3::Normalize(emitter.Position - p_position);
+
+			if (wIn.Dot(emitter.Normal) < 0.f)
+			{
+				emitterQuery.SetSegment(p_position, 1e-4f, emitter.Position, 1e-4f);
+				
+				if (emitterQuery.IsOccluded())
+					continue;
+
+				float d2 = 1.f / Vector3::DistanceSquared(p_position, emitter.Position);
+
+				const float G = Maths::Min(
+						Vector3::Dot(emitter.Normal, -wIn) * 
+						Vector3::AbsDot(p_normal, wIn) * d2,
+						p_fGTermMax);
+
+				Le += emitter.Contribution * G;
+				samplesUsed++;
+			}
+		}
+
+		return Le / samplesUsed;
 	}
 
 	Spectrum PathLi(Ray &p_ray)
@@ -670,9 +803,35 @@ public:
 		m_nAzimuthStrata = p_nAzimuthStrata;
 	}
 
-	void Shade(std::vector<Dart*> p_pointList)
+	void Shade(std::vector<Dart*> &p_pointList, std::vector<PhotonEmitter> &p_emitterList, float p_fGTermMax)
 	{
+		std::cout << "Shading point using PathGather..." << std::endl;
+
+		double total = Platform::GetTime();
+
 		for (auto point : p_pointList)
+		{
+			double timestart = Platform::GetTime();
+			point->Irradiance = PathGather(point->Position, point->Normal, p_emitterList, p_fGTermMax);
+			std::cout << "Shaded in [" << Platform::ToSeconds(Platform::GetTime() - timestart) << "]" << std::endl;
+		}
+
+		std::cout << "Shaded [" << p_pointList.size() << "] in [" << Platform::ToSeconds(Platform::GetTime() - total) << "]" << std::endl;
+	}
+
+	void Shade(std::vector<Dart*> &p_pointList)
+	{
+		std::cout << "Shading point using PathLi..." << std::endl;
+
+		double total = Platform::GetTime();
+
+		for (auto point : p_pointList)
+		{
+			double timestart = Platform::GetTime();
 			point->Irradiance = Shade(point->Position, point->Normal);
+			std::cout << "Shaded in [" << Platform::ToSeconds(Platform::GetTime() - timestart) << "]" << std::endl;
+		}
+
+		std::cout << "Shaded [" << p_pointList.size() << "] in [" << Platform::ToSeconds(Platform::GetTime() - total) << "]" << std::endl;
 	}
 };
