@@ -169,7 +169,7 @@ public:
 						std::vector<T*> list = Get(iterator);
 						for(auto point : list)
 						{
-							if (Vector3::Distance(point->Position, p_centre) < point->Radius + p_fRadius)
+							if (Vector3::Distance(point->Position, p_centre) < p_fRadius)
 								return true;
 						}
 					}
@@ -199,8 +199,10 @@ protected:
 		m_nAltitudeStrata;
 	float m_fMinRadius,
 		m_fMaxRadius,
+		m_fOcclusionRadius,
 		m_fMinRadiusPercent,
 		m_fMaxRadiusPercent,
+		m_fOcclusionRadiusPercent,
 		m_fReflectEpsilon;
 
 public:
@@ -257,11 +259,12 @@ public:
 		return true;
 	}
 
-	void Initialise(Scene *p_pScene, float p_fMinRadius, float p_fMaxRadius, int p_nMaxDartSources, int p_nMaxDartsPerSource, int p_nAzimuthStrata, int p_nAltitudeStrata, float p_fReflectEpsilon, const Vector3 &p_subdivisions)
+	void Initialise(Scene *p_pScene, float p_fMinRadius, float p_fMaxRadius, float p_fOcclusionRadius, int p_nMaxDartSources, int p_nMaxDartsPerSource, int p_nAzimuthStrata, int p_nAltitudeStrata, float p_fReflectEpsilon, const Vector3 &p_subdivisions)
 	{
 		m_pScene = p_pScene;
 		m_fMinRadiusPercent = p_fMinRadius;
 		m_fMaxRadiusPercent = p_fMaxRadius;
+		m_fOcclusionRadiusPercent = p_fOcclusionRadius; 
 		m_nMaxDartSources = p_nMaxDartSources;
 		m_nMaxDartsPerSource = p_nMaxDartsPerSource;
 		m_nAzimuthStrata = p_nAltitudeStrata;
@@ -278,6 +281,7 @@ public:
 
 		m_fMinRadius = m_fMinRadiusPercent * size.MaxAbsComponent();
 		m_fMaxRadius = m_fMaxRadiusPercent * size.MaxAbsComponent();
+		m_fOcclusionRadius = m_fOcclusionRadiusPercent * size.MaxAbsComponent();
 	}
 
 	PointGrid<Dart>& Get(void) {
@@ -356,13 +360,13 @@ protected:
 					std::cout << "[" << dartCount++ << " of " << dartMaxCount << "] Index : " << dartIndex << ", Centre : " << intersection.Surface.PointWS.ToString() << std::endl; 
 
 					// Reject trivially
-					/*
+					/* */
 					if (m_grid.Contains(intersection.Surface.PointWS, m_fMinRadius)) 
 					{
 						discarded++;
 						continue;
 					}
-					*/
+					/* */
 
 					// std::cout << "Point not trivially rejected" << std::endl;
 
@@ -370,17 +374,17 @@ protected:
 
 					dartPoint.Position = intersection.Surface.PointWS;
 					dartPoint.Normal = intersection.Surface.ShadingBasisWS.W;
-					dartPoint.Radius = ComputeAmbientOcclusion(intersection, m_fMaxRadius, rayDetails) * m_fMaxRadius;
-					dartPoint.Occlusion = rayDetails.U;
+					dartPoint.Occlusion = ComputeAmbientOcclusion(intersection, m_fOcclusionRadius, rayDetails);
+					dartPoint.Radius = dartPoint.Occlusion * m_fMaxRadius;
 
 					std::cout << "Ambient occlusion computed [" << dartPoint.Occlusion << "] for radius [" << dartPoint.Radius << "]" << std::endl;
-					/*
+					/* */
 					if (dartPoint.Radius > m_fMinRadius && m_grid.Contains(intersection.Surface.PointWS, dartPoint.Radius)) 
 					{
 						discarded++;
 						continue;
 					}
-					*/
+					/* */
 
 					std::cout << "Point accepted" << std::endl;
 
@@ -517,9 +521,9 @@ protected:
 			}
 		}
 
-		p_rayLengths.U = Maths::Clamp(mn / harmonicMean, m_fMinRadius, m_fMaxRadius);
-		return Maths::Min(p_rayLengths.V, p_fRadius) / p_fRadius;
-		// return Maths::Clamp(totalLength / (mn * p_fRadius), 0, 1);
+		//p_rayLengths.U = Maths::Clamp(mn / harmonicMean, m_fMinRadius, m_fMaxRadius);
+		//return Maths::Min(p_rayLengths.V, p_fRadius) / p_fRadius;
+		return Maths::Clamp(totalLength / (mn * p_fRadius), 0, 1);
 	}
 };
 
@@ -580,15 +584,14 @@ public:
 			{
 				wOut = -lightRay.Direction;
 				pMaterial = intersection.GetMaterial();
-				Spectrum Le = alpha * pMaterial->Rho(wOut, intersection.Surface) / Maths::Pi;
 
 				// Set point light parameters
 				emitter.Direction = wOut;
 				emitter.Position = intersection.Surface.PointWS;
 				emitter.Normal = intersection.Surface.GeometryBasisWS.W;
-				emitter.Contribution = Le;
+				emitter.Contribution = alpha * pMaterial->Rho(wOut, intersection.Surface) / Maths::Pi;
 
-				std::cout << "Le = " << Le.ToString() << std::endl;
+				std::cout << "Le = " << emitter.Contribution.ToString() << std::endl;
 
 				// Push point light on list
 				p_photonEmitterList.push_back(emitter);
@@ -599,6 +602,9 @@ public:
 				// If reflectivity or pdf are zero, end path
 				if (f.IsBlack() || pdf == 0.0f || intersections > m_nRayDepth)
 					break;
+
+				// One bounce only
+				// break;
 
 				// Compute contribution of path
 				contribution = f * Vector3::AbsDot(wIn, intersection.Surface.ShadingBasisWS.W) / pdf;
@@ -672,7 +678,7 @@ protected:
 
 			if (wIn.Dot(emitter.Normal) < 0.f)
 			{
-				emitterQuery.SetSegment(p_position, 1e-4f, emitter.Position, 1e-4f);
+				emitterQuery.SetSegment(p_position, m_fReflectEpsilon, emitter.Position, m_fReflectEpsilon);
 				
 				if (emitterQuery.IsOccluded())
 					continue;
@@ -684,7 +690,7 @@ protected:
 						Vector3::AbsDot(p_normal, wIn) * d2,
 						p_fGTermMax);
 
-				Le += emitter.Contribution * G;
+				Le += emitter.Contribution * G * Maths::InvPi;
 				samplesUsed++;
 			}
 		}
@@ -787,7 +793,7 @@ protected:
 			}
 		}
 
-		return L;
+		return L * Maths::InvPi;
 	}
 
 public:

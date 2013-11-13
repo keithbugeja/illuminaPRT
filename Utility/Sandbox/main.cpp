@@ -381,20 +381,35 @@ void IlluminaPRT(
 
 	/* */
 	PointSet pointSet;
-	pointSet.Initialise(pEnv->GetScene(), 0.00025f, 0.1f, 1024, 32, 48, 24, 0.01f, Vector3(32));
+	pointSet.Initialise(pEnv->GetScene(), 0.00025f, 0.025f, 0.5f, 1024, 32, 48, 24, 0.01f, Vector3(32));
+	
 	//pointSet.Initialise(pEnv->GetScene(), 0.1f, 0.5f, 64, 64, 32, 64, 0.01f, Vector3(64));
 	//pointSet.Initialise(pEnv->GetScene(), 0.01f, 0.75f, 128, 256, 16, 48, 0.01f);
 	pointSet.Generate();
+	//pointSet.Load("Output//pointcloud_full.asc");
+	
 	std::cout << "Generated point set. Elements in grid [" << pointSet.Get().Size() << "]" << std::endl;
-
 
 	std::cout << "Shading points..." << std::endl;
 	PointShader shader; std::vector<PhotonEmitter> emitterList;
 	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1, 24, 48);
-	shader.TraceEmitters(emitterList, 256, 512);
+	shader.TraceEmitters(emitterList, 4096, 16384);
+
+	/* */
+	std::ofstream emitterFile;
+	emitterFile.open("Output//emitter.asc", std::ios::binary);
+
+	for (auto emitter : emitterList)
+	{
+		emitterFile << emitter.Position.X << ", " << emitter.Position.Y << ", " << emitter.Position.Z << std::endl; 
+	}
+
+	emitterFile.close();
+	/* */
+
 	//shader.Shade(pointSet.Get().Get());
 	shader.Shade(pointSet.Get().Get(), emitterList, 0.1f);
-
+	
 	pointSet.Save("Output//pointcloud_full.asc");
 	std::cout << "Point cloud saved." << std::endl;
 	/* */
