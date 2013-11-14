@@ -453,6 +453,8 @@ protected:
 				p_dartSourceList.push_back(dartThrower);
 
 				// Sample new direction
+				m_pScene->GetSampler()->Get2DSamples(pSample2D, 1);
+
 				f = pMaterial->SampleF(intersection.Surface, wOut, wIn, pSample2D[0].U, pSample2D[0].V, &pdf, bxdfType);
 			
 				// If reflectivity or pdf are zero, end path
@@ -566,7 +568,7 @@ public:
 		{
 			// Get samples for initial position and direction
 			m_pScene->GetSampler()->Get2DSamples(pSample2D, 2);
-		
+
 			// Get initial radiance, position and direction
 			alpha = m_pScene->LightList[lightIndex]->SampleRadiance(
 				m_pScene, pSample2D[0].U, pSample2D[0].V, 
@@ -582,6 +584,8 @@ public:
 			// Start tracing virtual point light path
 			for (intersections = 1; m_pScene->Intersects(lightRay, intersection); ++intersections)
 			{
+				m_pScene->GetSampler()->Get2DSamples(pSample2D, 1);
+
 				wOut = -lightRay.Direction;
 				pMaterial = intersection.GetMaterial();
 
@@ -674,23 +678,29 @@ protected:
 
 		for (auto emitter : p_emitterList)
 		{
-			wIn = Vector3::Normalize(emitter.Position - p_position);
+			wIn = Vector3::Normalize(p_position - emitter.Position);
 
-			if (wIn.Dot(emitter.Normal) < 0.f)
+			if (wIn.Dot(emitter.Normal) > 0.f)
 			{
 				emitterQuery.SetSegment(p_position, m_fReflectEpsilon, emitter.Position, m_fReflectEpsilon);
 				
 				if (emitterQuery.IsOccluded())
 					continue;
 
-				float d2 = 1.f / Vector3::DistanceSquared(p_position, emitter.Position);
+				float d2 = 1.f / Maths::Max(1.f, Vector3::DistanceSquared(p_position, emitter.Position));
 
+				const float G = Vector3::Dot(emitter.Normal, wIn) *
+					Vector3::Dot(p_normal, -wIn) * d2;
+
+				Le += emitter.Contribution * G * Maths::InvPi;
+				/*
 				const float G = Maths::Min(
 						Vector3::Dot(emitter.Normal, -wIn) * 
 						Vector3::AbsDot(p_normal, wIn) * d2,
 						p_fGTermMax);
 
-				Le += emitter.Contribution * G * Maths::InvPi;
+				Le += emitter.Contribution * G;
+				*/
 				samplesUsed++;
 			}
 		}
