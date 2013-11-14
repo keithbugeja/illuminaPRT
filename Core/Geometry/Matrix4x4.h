@@ -551,7 +551,7 @@ namespace Illumina
 				#endif
 			}
 
-			/* Produce of two matrices */
+			/* Product of two matrices */
 			inline static void Product(const Matrix4x4 &p_matrix1, const Matrix4x4 &p_matrix2, Matrix4x4 &p_out)
 			{
 				#if defined(SSE_ENABLED)
