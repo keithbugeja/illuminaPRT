@@ -234,9 +234,9 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 					
 					if (wIn.Dot(pointLight.Context.Surface.ShadingBasisWS.W) < 0.f)
 					{
-						// Sample reflectivity (we sample this first as its a faster 
+						// Sample reflectivity (we sample this first as it's a faster 
 						// early out than an intersection test)
-						Spectrum f = IIntegrator::F(p_pScene, p_intersection, wOut, wIn);;
+						Spectrum f = IIntegrator::F(p_pScene, p_intersection, wOut, wIn);
 			
 						if (f.IsBlack()) 
 							continue;
