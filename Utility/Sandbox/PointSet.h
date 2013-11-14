@@ -568,7 +568,7 @@ public:
 		{
 			// Get samples for initial position and direction
 			m_pScene->GetSampler()->Get2DSamples(pSample2D, 2);
-
+		
 			// Get initial radiance, position and direction
 			alpha = m_pScene->LightList[lightIndex]->SampleRadiance(
 				m_pScene, pSample2D[0].U, pSample2D[0].V, 
@@ -590,10 +590,10 @@ public:
 				pMaterial = intersection.GetMaterial();
 
 				// Set point light parameters
-				emitter.Direction = wOut;
+				emitter.Direction = intersection.Surface.RayOriginWS;
 				emitter.Position = intersection.Surface.PointWS;
-				emitter.Normal = intersection.Surface.GeometryBasisWS.W;
-				emitter.Contribution = alpha * pMaterial->Rho(wOut, intersection.Surface) / Maths::Pi;
+				emitter.Normal = intersection.Surface.ShadingBasisWS.W;
+				emitter.Contribution = alpha * pMaterial->Rho(wOut, intersection.Surface) * Maths::InvPi;
 
 				std::cout << "Le = " << emitter.Contribution.ToString() << std::endl;
 
@@ -705,7 +705,7 @@ protected:
 			}
 		}
 
-		return Le / samplesUsed;
+		return Le / (float)p_emitterList.size();
 	}
 
 	Spectrum PathLi(Ray &p_ray)
