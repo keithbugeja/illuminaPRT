@@ -438,9 +438,13 @@ namespace Illumina
 			/* Product operation with a vector */
 			Vector3 operator*(const Vector3& p_vector) const
 			{
-				return Vector3(_00 * p_vector.X + _01 * p_vector.Y + _02 * p_vector.Z,
+				/*return Vector3(_00 * p_vector.X + _01 * p_vector.Y + _02 * p_vector.Z,
 							   _10 * p_vector.X + _11 * p_vector.Y + _12 * p_vector.Z,
-							   _20 * p_vector.X + _21 * p_vector.Y + _22 * p_vector.Z);
+							   _20 * p_vector.X + _21 * p_vector.Y + _22 * p_vector.Z); */
+
+				return Vector3(_00 * p_vector.X + _10 * p_vector.Y + _20 * p_vector.Z,
+							   _01 * p_vector.X + _11 * p_vector.Y + _21 * p_vector.Z,
+							   _02 * p_vector.X + _12 * p_vector.Y + _22 * p_vector.Z);
 			}
 
 			/* Product operation with a matrix */
@@ -581,9 +585,15 @@ namespace Illumina
 			/* Product of a matrix and a vector */
 			inline static void Product(const Matrix3x3 &p_matrix, const Vector3 &p_vector, Vector3 &p_out)
 			{
+				/*
 				p_out.Set(p_matrix._00 * p_vector.X + p_matrix._01 * p_vector.Y + p_matrix._02 * p_vector.Z,
 						  p_matrix._10 * p_vector.X + p_matrix._11 * p_vector.Y + p_matrix._12 * p_vector.Z,
 						  p_matrix._20 * p_vector.X + p_matrix._21 * p_vector.Y + p_matrix._22 * p_vector.Z);
+				*/
+
+				p_out.Set(p_matrix._00 * p_vector.X + p_matrix._10 * p_vector.Y + p_matrix._20 * p_vector.Z,
+						  p_matrix._01 * p_vector.X + p_matrix._11 * p_vector.Y + p_matrix._21 * p_vector.Z,
+						  p_matrix._02 * p_vector.X + p_matrix._12 * p_vector.Y + p_matrix._22 * p_vector.Z);
 			}
 
 			/* Transposition of two matrices */

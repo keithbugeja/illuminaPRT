@@ -420,9 +420,15 @@ namespace Illumina
 			/* Product operation with a vector */
 			Vector3 operator*(const Vector3 &p_vector) const
 			{
+				/*
 				return Vector3( _00 * p_vector.X + _01 * p_vector.Y + _02 * p_vector.Z + _03,
 								_10 * p_vector.X + _11 * p_vector.Y + _12 * p_vector.Z + _13,
 								_20 * p_vector.X + _21 * p_vector.Y + _22 * p_vector.Z + _23);
+				*/
+
+				return Vector3( _00 * p_vector.X + _10 * p_vector.Y + _20 * p_vector.Z + _30,
+								_01 * p_vector.X + _11 * p_vector.Y + _21 * p_vector.Z + _31,
+								_02 * p_vector.X + _12 * p_vector.Y + _22 * p_vector.Z + _32);
 			}
 
 			/* Product operation with a matrix */
