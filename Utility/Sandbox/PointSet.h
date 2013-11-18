@@ -561,7 +561,7 @@ public:
 		float continueProbability, 
 			pdf;
 
-		int intersections;
+		int intersections, index = 0;
 
 		// Trace either a maximum number of paths or virtual point lights
 		for (int lightIndex = 0, nPathIndex = p_nMaxPaths; nPathIndex > 0 && p_photonEmitterList.size() < p_nMaxEmitters; --nPathIndex)
@@ -579,12 +579,14 @@ public:
 				continue;
 
 			// Scale radiance by pdf
-			alpha /= pdf;
+			alpha /= pdf; 
 
 			// Start tracing virtual point light path
 			for (intersections = 1; m_pScene->Intersects(lightRay, intersection); ++intersections)
 			{
 				m_pScene->GetSampler()->Get2DSamples(pSample2D, 1);
+				// pSample2D[0].Set((float)QuasiRandomSequence::Sobol2(index), (float)QuasiRandomSequence::VanDerCorput(index));
+				// index++;
 
 				wOut = -lightRay.Direction;
 				pMaterial = intersection.GetMaterial();
@@ -689,23 +691,28 @@ protected:
 
 				float d2 = 1.f / Maths::Max(1.f, Vector3::DistanceSquared(p_position, emitter.Position));
 
-				const float G = Vector3::Dot(emitter.Normal, wIn) *
-					Vector3::Dot(p_normal, -wIn) * d2;
+				const float G = 
+					Maths::Min(
+					Vector3::Dot(emitter.Normal, wIn) *
+					Vector3::Dot(p_normal, -wIn) * d2,
+					p_fGTermMax);
 
-				Le += emitter.Contribution * G * Maths::InvPi;
+				// Le += emitter.Contribution * G * Maths::InvPi;
+				
 				/*
 				const float G = Maths::Min(
-						Vector3::Dot(emitter.Normal, -wIn) * 
-						Vector3::AbsDot(p_normal, wIn) * d2,
+						Vector3::Dot(emitter.Normal, wIn) * 
+						Vector3::Dot(p_normal, wIn) * d2,
 						p_fGTermMax);
-
-				Le += emitter.Contribution * G;
 				*/
+
+				Le += emitter.Contribution * G * Maths::InvPi;
+				
 				samplesUsed++;
 			}
 		}
 
-		return Le / (float)p_emitterList.size();
+		return Le / samplesUsed; //(float)p_emitterList.size();
 	}
 
 	Spectrum PathLi(Ray &p_ray)
