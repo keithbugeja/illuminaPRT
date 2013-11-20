@@ -41,8 +41,10 @@ namespace Illumina
 				, m_fEtaT(p_fEtaT)
 				, m_pTexture(p_pTexture)
 			{
-				m_bxdfList.PushBack(new SpecularTransmission(p_fEtaI, p_fEtaT));
-				m_bxdfList.PushBack(new SpecularReflection());
+				//m_bxdfList.PushBack(new SpecularTransmission(p_fEtaI, p_fEtaT));
+				//m_bxdfList.PushBack(new SpecularReflection());
+				m_bxdfList.push_back(new SpecularTransmission(p_fEtaI, p_fEtaT));
+				m_bxdfList.push_back(new SpecularReflection());
 			}
 
 			GlassMaterial(const Spectrum &p_reflectivity, const Spectrum &p_transmittance, float p_fAbsorption = 1.0f, float p_fEtaI = 1.0f, float p_fEtaT = 1.52f, ITexture *p_pTexture = NULL)
@@ -53,14 +55,18 @@ namespace Illumina
 				, m_fEtaT(p_fEtaT)
 				, m_pTexture(p_pTexture)
 			{
-				m_bxdfList.PushBack(new SpecularTransmission(p_fEtaI, p_fEtaT));
-				m_bxdfList.PushBack(new SpecularReflection());
+				//m_bxdfList.PushBack(new SpecularTransmission(p_fEtaI, p_fEtaT));
+				//m_bxdfList.PushBack(new SpecularReflection());
+				m_bxdfList.push_back(new SpecularTransmission(p_fEtaI, p_fEtaT));
+				m_bxdfList.push_back(new SpecularReflection());
 			}
 
 			~GlassMaterial(void)
 			{
-				delete m_bxdfList.At(1);
-				delete m_bxdfList.At(0);
+				//delete m_bxdfList.At(1);
+				//delete m_bxdfList.At(0);
+				delete m_bxdfList[1];
+				delete m_bxdfList[0];
 			}
 
 			void SetTexture(ITexture* p_pTexture)

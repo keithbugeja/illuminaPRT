@@ -15,6 +15,7 @@
 #include "Sampler/JitterSampler.h"
 #include "Sampler/MultijitterSampler.h"
 #include "Sampler/PrecomputationSampler.h"
+#include "Sampler/LowDiscrepancySampler.h"
 
 namespace Illumina
 {
@@ -75,6 +76,33 @@ namespace Illumina
 			}
 		};
 		//----------------------------------------------------------------------------------------------
+
+		//----------------------------------------------------------------------------------------------
+		class LowDiscrepancySamplerFactory : public Illumina::Core::Factory<Illumina::Core::ISampler>
+		{
+		public:
+			Illumina::Core::ISampler *CreateInstance(void)
+			{
+				return new LowDiscrepancySampler();
+			}
+
+			// Arguments
+			// -- Id {String}
+			Illumina::Core::ISampler *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				std::string strId;
+
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId);
+
+				return CreateInstance();
+			}
+
+			Illumina::Core::ISampler *CreateInstance(const std::string &p_strId)
+			{
+				return new LowDiscrepancySampler(p_strId);
+			}
+		};
 
 		//----------------------------------------------------------------------------------------------
 		class RandomSamplerFactory : public Illumina::Core::Factory<Illumina::Core::ISampler>

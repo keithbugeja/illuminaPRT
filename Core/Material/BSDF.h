@@ -46,7 +46,8 @@ namespace Illumina
 			virtual Spectrum SampleTexture(const DifferentialSurface &p_surface, int p_nBxDFIndex);
 		
 		protected:
-			List<BxDF*> m_bxdfList;
+			// List<BxDF*> m_bxdfList;
+			std::vector<BxDF*> m_bxdfList;
 		};
 	}
 }
