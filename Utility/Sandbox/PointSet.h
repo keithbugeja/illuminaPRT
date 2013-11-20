@@ -296,7 +296,7 @@ public:
 
 		// Generate dart sources
 		std::cout << "Generating dart sources..." << std::endl;
-		GenerateDartSources(m_nMaxDartSources, 6, dartSourceList);
+		GenerateDartSources(m_nMaxDartSources * 6, 6, dartSourceList);
 
 		// Persist
 		std::ofstream dartFile;
@@ -413,7 +413,12 @@ protected:
 		Vector3 normal, 
 			wOut, wIn;
 
-		Vector2 pSample2D[2];
+		LowDiscrepancySampler positionSampler,
+			directionSampler;
+
+		Vector2 positionSample, 
+			directionSample,
+			sample;
 
 		float continueProbability, 
 			pdf;
@@ -424,12 +429,13 @@ protected:
 		for (int lightIndex = 0, nPathIndex = p_nMaxPaths; nPathIndex > 0 && p_dartSourceList.size() < m_nMaxDartSources; --nPathIndex)
 		{
 			// Get samples for initial position and direction
-			m_pScene->GetSampler()->Get2DSamples(pSample2D, 2);
+			positionSample = positionSampler.Get2DSample();
+			directionSample = directionSampler.Get2DSample();
 		
 			// Get initial radiance, position and direction
 			alpha = m_pScene->LightList[lightIndex]->SampleRadiance(
-				m_pScene, pSample2D[0].U, pSample2D[0].V, 
-				pSample2D[1].U, pSample2D[1].V, lightRay, pdf);
+				m_pScene, positionSample.U, positionSample.V,
+				directionSample.U, directionSample.V, lightRay, pdf);
 
 			// If pdf or radiance are zero, choose a new path
 			if (pdf == 0.0f || alpha.IsBlack())
@@ -453,9 +459,9 @@ protected:
 				p_dartSourceList.push_back(dartThrower);
 
 				// Sample new direction
-				m_pScene->GetSampler()->Get2DSamples(pSample2D, 1);
+				sample = m_pScene->GetSampler()->Get2DSample();
 
-				f = pMaterial->SampleF(intersection.Surface, wOut, wIn, pSample2D[0].U, pSample2D[0].V, &pdf, bxdfType);
+				f = pMaterial->SampleF(intersection.Surface, wOut, wIn, sample.U, sample.V, &pdf, bxdfType);
 			
 				// If reflectivity or pdf are zero, end path
 				if (f.IsBlack() || pdf == 0.0f || intersections > p_nMaxBounces)
@@ -556,7 +562,12 @@ public:
 		Vector3 normal, 
 			wOut, wIn;
 
-		Vector2 pSample2D[2];
+		LowDiscrepancySampler positionSampler,
+			directionSampler, continueSampler;
+
+		Vector2 positionSample, 
+			directionSample,
+			sample;
 
 		float continueProbability, 
 			pdf;
@@ -567,32 +578,32 @@ public:
 		for (int lightIndex = 0, nPathIndex = p_nMaxPaths; nPathIndex > 0 && p_photonEmitterList.size() < p_nMaxEmitters; --nPathIndex)
 		{
 			// Get samples for initial position and direction
-			m_pScene->GetSampler()->Get2DSamples(pSample2D, 2);
+			positionSample = positionSampler.Get2DSample();
+			directionSample = directionSampler.Get2DSample();
 		
+			// std::cout << pSample2D[0].ToString() << ":" << pSample2D[1].ToString() << std::endl;
+
 			// Get initial radiance, position and direction
 			alpha = m_pScene->LightList[lightIndex]->SampleRadiance(
-				m_pScene, pSample2D[0].U, pSample2D[0].V, 
-				pSample2D[1].U, pSample2D[1].V, lightRay, pdf);
+				m_pScene, positionSample.U, positionSample.V,
+				directionSample.U, directionSample.V, lightRay, pdf);
 
 			// If pdf or radiance are zero, choose a new path
 			if (pdf == 0.0f || alpha.IsBlack())
 				continue;
 
 			// Scale radiance by pdf
-			alpha /= pdf; 
+			alpha /= pdf;
 
 			// Start tracing virtual point light path
 			for (intersections = 1; m_pScene->Intersects(lightRay, intersection); ++intersections)
 			{
-				m_pScene->GetSampler()->Get2DSamples(pSample2D, 1);
-				// pSample2D[0].Set((float)QuasiRandomSequence::Sobol2(index), (float)QuasiRandomSequence::VanDerCorput(index));
-				// index++;
+				sample = m_pScene->GetSampler()->Get2DSample();
 
 				wOut = -lightRay.Direction;
 				pMaterial = intersection.GetMaterial();
 
 				// Set point light parameters
-				emitter.Direction = intersection.Surface.RayOriginWS;
 				emitter.Position = intersection.Surface.PointWS;
 				emitter.Normal = intersection.Surface.ShadingBasisWS.W;
 				emitter.Contribution = alpha * pMaterial->Rho(wOut, intersection.Surface) * Maths::InvPi;
@@ -603,21 +614,18 @@ public:
 				p_photonEmitterList.push_back(emitter);
 
 				// Sample new direction
-				f = pMaterial->SampleF(intersection.Surface, wOut, wIn, pSample2D[0].U, pSample2D[0].V, &pdf, bxdfType);
+				f = pMaterial->SampleF(intersection.Surface, wOut, wIn, sample.U, sample.V, &pdf, bxdfType);
 			
 				// If reflectivity or pdf are zero, end path
 				if (f.IsBlack() || pdf == 0.0f || intersections > m_nRayDepth)
 					break;
-
-				// One bounce only
-				// break;
 
 				// Compute contribution of path
 				contribution = f * Vector3::AbsDot(wIn, intersection.Surface.ShadingBasisWS.W) / pdf;
 
 				// Possibly terminate virtual light path with Russian roulette
 				continueProbability = Maths::Min(1.f, (contribution[0] + contribution[1] + contribution[2]) * 0.33f);
-				if (m_pScene->GetSampler()->Get1DSample() > continueProbability)
+				if (continueSampler.Get1DSample() > continueProbability)
 						break;
 
 				// Modify contribution accordingly
@@ -689,7 +697,7 @@ protected:
 				if (emitterQuery.IsOccluded())
 					continue;
 
-				float d2 = 1.f / Maths::Max(1.f, Vector3::DistanceSquared(p_position, emitter.Position));
+				float d2 = 1.f / Vector3::DistanceSquared(p_position, emitter.Position);
 
 				const float G = 
 					Maths::Min(

@@ -77,6 +77,7 @@ public:
 		m_engineKernel->GetSamplerManager()->RegisterFactory("Random", new RandomSamplerFactory());
 		m_engineKernel->GetSamplerManager()->RegisterFactory("Jitter", new JitterSamplerFactory());
 		m_engineKernel->GetSamplerManager()->RegisterFactory("Multijitter", new MultijitterSamplerFactory());
+		m_engineKernel->GetSamplerManager()->RegisterFactory("LowDiscrepancy", new LowDiscrepancySamplerFactory());
 		m_engineKernel->GetSamplerManager()->RegisterFactory("PrecomputedRandom", new PrecomputedRandomSamplerFactory());
 		m_engineKernel->GetSamplerManager()->RegisterFactory("PrecomputedHalton", new PrecomputedHaltonSamplerFactory());
 		m_engineKernel->GetSamplerManager()->RegisterFactory("PrecomputedSobol", new PrecomputedSobolSamplerFactory());
@@ -218,6 +219,7 @@ public:
 			delete m_engineKernel->GetSamplerManager()->RequestFactory("Random");
 			delete m_engineKernel->GetSamplerManager()->RequestFactory("Jitter");
 			delete m_engineKernel->GetSamplerManager()->RequestFactory("Multijitter");
+			delete m_engineKernel->GetSamplerManager()->RequestFactory("LowDiscrepancy");
 			delete m_engineKernel->GetSamplerManager()->RequestFactory("PrecomputedRandom");
 			delete m_engineKernel->GetSamplerManager()->RequestFactory("PrecomputedHalton");
 			delete m_engineKernel->GetSamplerManager()->RequestFactory("PrecomputedSobol");
@@ -225,6 +227,7 @@ public:
 			m_engineKernel->GetSamplerManager()->UnregisterFactory("Random");
 			m_engineKernel->GetSamplerManager()->UnregisterFactory("Jitter");
 			m_engineKernel->GetSamplerManager()->UnregisterFactory("Multijitter");
+			m_engineKernel->GetSamplerManager()->UnregisterFactory("LowDiscrepancy");
 			m_engineKernel->GetSamplerManager()->UnregisterFactory("PrecomputedRandom");
 			m_engineKernel->GetSamplerManager()->UnregisterFactory("PrecomputedHalton");
 			m_engineKernel->GetSamplerManager()->UnregisterFactory("PrecomputedSobol");

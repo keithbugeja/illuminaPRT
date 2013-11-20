@@ -54,12 +54,13 @@ void SamplerDiagnostics::DistributionTest(ISampler *p_pSampler, int p_nSequenceL
 {
 	Image image(512, 512, RGBPixel::White);
 
+	Vector2 sample;
+
 	for (int j = 0; j < p_nSequenceLength; j++)
 	{
-		float x = p_pSampler->Get1DSample();
-		float y = p_pSampler->Get1DSample();
+		sample = p_pSampler->Get2DSample();
 
-		image.Set((int)(x * 512.f), (int)(y * 512.f), RGBPixel::Black);
+		image.Set((int)(sample.X * 512.f), (int)(sample.Y * 512.f), RGBPixel::Black);
 	}
 
 	ImagePPM imageIO;

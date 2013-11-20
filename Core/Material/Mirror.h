@@ -29,19 +29,22 @@ namespace Illumina
 				, m_reflectivity(p_reflectivity)
 				, m_pTexture(p_pTexture)
 			{
-				m_bxdfList.PushBack(new SpecularReflection());
+				//m_bxdfList.PushBack(new SpecularReflection());
+				m_bxdfList.push_back(new SpecularReflection());
 			}
 
 			MirrorMaterial(const Spectrum& p_reflectivity, ITexture *p_pTexture = NULL)
 				: m_reflectivity(p_reflectivity)
 				, m_pTexture(p_pTexture)
 			{
-				m_bxdfList.PushBack(new SpecularReflection());
+				//m_bxdfList.PushBack(new SpecularReflection());
+				m_bxdfList.push_back(new SpecularReflection());
 			}
 
 			~MirrorMaterial(void)
 			{
-				delete m_bxdfList.At(0);
+				//delete m_bxdfList.At(0);
+				delete m_bxdfList[0];
 			}
 
 			void SetTexture(ITexture* p_pTexture)

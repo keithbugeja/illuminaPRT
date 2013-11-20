@@ -22,7 +22,7 @@ const unsigned int Random::m_unMagicNumbers[2] = { 0x0, MERSENNE_MATRIX_A };
 //----------------------------------------------------------------------------------------------
 Random::Random(void) 
 {
-	Seed(0x000C1CC0); 
+	Seed(5489UL); 
 }
 
 Random::Random(unsigned int p_unSeed) 

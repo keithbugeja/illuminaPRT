@@ -350,6 +350,16 @@ void IlluminaPRT(
 	int p_nRenderThreads, int p_nJobsPerFrame, int p_nTileSize, int p_nFlags, std::string p_strScript,
 	int p_nPort, bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPeerPort)
 {
+	SamplerDiagnostics diagnostics;
+
+	diagnostics.DistributionTest(new LowDiscrepancySampler(), 512*512, "Output\\ld.ppm");
+	diagnostics.DistributionTest(new RandomSampler(), 512*512, "Output\\rng.ppm");
+	diagnostics.DistributionTest(new MultijitterSampler(), 512*512, "Output\\mj.ppm");
+	diagnostics.DistributionTest(new JitterSampler(), 512*512, "Output\\j.ppm");
+
+	std::cout << "OK" << std::endl;
+	std::getchar();
+
 	Peer localHost;
 
 	localHost.Configure(p_nPort, p_nPeerPort, 2, 1);
@@ -381,8 +391,9 @@ void IlluminaPRT(
 
 	/* */
 	PointSet pointSet;
-	pointSet.Initialise(pEnv->GetScene(), 0.00025f, 0.005f, 0.5f, 1024, 32, 48, 24, 0.01f, Vector3(32));
-	
+	//pointSet.Initialise(pEnv->GetScene(), 0.00025f, 0.0025f, 0.75f, 1024, 32, 48, 24, 0.01f, Vector3(32));
+	pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.01f, 0.75f, 1024, 64, 48, 24, 0.01f, Vector3(32));
+
 	//pointSet.Initialise(pEnv->GetScene(), 0.1f, 0.5f, 64, 64, 32, 64, 0.01f, Vector3(64));
 	//pointSet.Initialise(pEnv->GetScene(), 0.01f, 0.75f, 128, 256, 16, 48, 0.01f);
 	//pointSet.Generate();
@@ -393,7 +404,7 @@ void IlluminaPRT(
 	std::cout << "Shading points..." << std::endl;
 	PointShader shader; std::vector<PhotonEmitter> emitterList;
 	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1, 24, 48);
-	shader.TraceEmitters(emitterList, 512, 8192);
+	shader.TraceEmitters(emitterList, 1024, 8192);
 
 	/* */
 	std::ofstream emitterFile;

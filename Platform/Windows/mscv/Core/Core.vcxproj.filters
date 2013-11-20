@@ -357,6 +357,9 @@
     <ClCompile Include="..\..\..\..\Core\Integrator\MLICIntegrator.cpp">
       <Filter>Header Files\Integrator</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Sampler\LowDiscrepancySampler.cpp">
+      <Filter>Header Files\Sampler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -892,6 +895,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Integrator\MLICIntegrator.h">
       <Filter>Header Files\Integrator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Sampler\LowDiscrepancySampler.h">
+      <Filter>Header Files\Sampler</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

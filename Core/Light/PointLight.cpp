@@ -66,13 +66,11 @@ Spectrum PointLight::SampleRadiance(const Vector3 &p_surfacePoint, float p_u, fl
 //----------------------------------------------------------------------------------------------
 Spectrum PointLight::SampleRadiance(const Scene *p_pScene, float p_u, float p_v, float p_w, float p_x, Ray &p_ray, float &p_pdf)
 {
-	Vector3 normal;
-
+	//Vector3 normal;
 	//p_ray.Direction = Montecarlo::UniformSampleSphere(p_w, p_x);
 	//p_ray.Origin = SamplePoint(p_u, p_v, normal, p_pdf) + p_ray.Direction * 1e-3f; normal = -normal;
 	
-	p_ray.Set(m_position, Montecarlo::UniformSampleSphere(p_w, p_x));
-
+	p_ray.Set(m_position, Montecarlo::UniformSampleSphere(p_u, p_v));
 	p_pdf = Montecarlo::UniformSpherePdf();
 	
 	return m_intensity;
