@@ -68,7 +68,7 @@ namespace Illumina
 				const Vector3 &p_point, const Vector3 &p_normal, const Vector3 &p_wOut,
 				ISampler *p_pSampler, ILight *p_pExclude = NULL, int p_nShadowSamples = 1);
 
-			static Spectrum SampleF(Scene *p_pScene, Intersection &p_intersection, 
+			static Spectrum SampleF(Scene *p_pScene, Intersection &p_intersection, ISampler *p_pSampler,
 				const Vector3 &p_wOut, Vector3 &p_wIn, float &p_pdf, BxDF::Type &p_bxdfType);
 
 			static Spectrum F(Scene *p_pScene, const Intersection &p_intersection,

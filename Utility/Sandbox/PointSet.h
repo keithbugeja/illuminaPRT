@@ -598,7 +598,8 @@ public:
 			// Start tracing virtual point light path
 			for (intersections = 1; m_pScene->Intersects(lightRay, intersection); ++intersections)
 			{
-				sample = m_pScene->GetSampler()->Get2DSample();
+				// sample = m_pScene->GetSampler()->Get2DSample();
+				sample = directionSampler.Get2DSample();
 
 				wOut = -lightRay.Direction;
 				pMaterial = intersection.GetMaterial();

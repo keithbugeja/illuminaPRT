@@ -8,6 +8,7 @@
 
 #include "Integrator/Integrator.h"
 #include "Geometry/Intersection.h"
+#include "Sampler/LowDiscrepancySampler.h"
 //----------------------------------------------------------------------------------------------
 namespace Illumina
 {
@@ -54,6 +55,11 @@ namespace Illumina
 			float m_fReflectEpsilon,
 				m_fGTermMax;
 
+			std::vector<LowDiscrepancySampler*> 
+				m_directionSamplerList,
+				m_positionSamplerList,
+				m_rouletteSamplerList;
+
 		public:
 			std::vector<std::vector<VirtualPointLight>> VirtualPointLightSet;
 			std::vector<VirtualPointLight> VirtualPointLightList;
@@ -73,7 +79,7 @@ namespace Illumina
 			Spectrum Radiance(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_intersection, RadianceContext *p_pRadianceContext = NULL);
 		
 		protected:
-			void TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, int p_nMaxPointLights, int p_nMaxBounces, std::vector<VirtualPointLight> &p_virtualPointLightList);
+			void TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, int p_nMaxPointLights, int p_nMaxBounces, int p_nVirtualPointLightSetId, std::vector<VirtualPointLight> &p_virtualPointLightList);
 			void TraceVPLs(Scene *p_pScene, int p_nLightIdx, int p_nVPLPaths, int p_nMaxVPLs, int p_nMaxBounces, std::vector<VirtualPointLight> &p_vplList);
 		};
 	}

@@ -49,15 +49,33 @@ IGIIntegrator::IGIIntegrator(int p_nMaxVPL, int p_nMaxPath, int p_nTileWidth, fl
 //----------------------------------------------------------------------------------------------
 bool IGIIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 {
+	for (int nPointSets = 0; nPointSets < m_nTileArea; nPointSets++)
+	{
+		m_directionSamplerList.push_back(new LowDiscrepancySampler());
+		m_positionSamplerList.push_back(new LowDiscrepancySampler());
+		m_rouletteSamplerList.push_back(new LowDiscrepancySampler());
+	}
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------
 bool IGIIntegrator::Shutdown(void)
 {
+	for (int nPointSets = 0; nPointSets < m_nTileArea; nPointSets++)
+	{
+		delete m_directionSamplerList[nPointSets];
+		delete m_positionSamplerList[nPointSets];
+		delete m_rouletteSamplerList[nPointSets];
+	}
+
+	m_directionSamplerList.clear();
+	m_positionSamplerList.clear();
+	m_rouletteSamplerList.clear();
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, int p_nMaxPointLights, int p_nMaxBounces, std::vector<VirtualPointLight> &p_virtualPointLightList)
+void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, int p_nMaxPointLights, int p_nMaxBounces, int p_nVirtualPointLightSetId, std::vector<VirtualPointLight> &p_virtualPointLightList)
 {
 	VirtualPointLight pointLight;
 	Intersection intersection;
@@ -82,7 +100,9 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 	for (int lightIndex = 0, nPathIndex = p_nMaxPaths; nPathIndex > 0 && p_virtualPointLightList.size() < p_nMaxPointLights; --nPathIndex)
 	{
 		// Get samples for initial position and direction
-		p_pScene->GetSampler()->Get2DSamples(pSample2D, 2);
+		// p_pScene->GetSampler()->Get2DSamples(pSample2D, 2);
+		pSample2D[0] = m_positionSamplerList[p_nVirtualPointLightSetId]->Get2DSample();
+		pSample2D[1] = m_directionSamplerList[p_nVirtualPointLightSetId]->Get2DSample();
 		
 		// Get initial radiance, position and direction
 		alpha = p_pScene->LightList[lightIndex]->SampleRadiance(
@@ -114,7 +134,7 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 			p_virtualPointLightList.push_back(pointLight);
 
 			// Sample new direction
-			f = SampleF(p_pScene, intersection, wOut, wIn, pdf, bxdfType);
+			f = SampleF(p_pScene, intersection, m_directionSamplerList[p_nVirtualPointLightSetId], wOut, wIn, pdf, bxdfType);
 			
 			// If reflectivity or pdf are zero, end path
 			if (f.IsBlack() || pdf == 0.0f || intersections > p_nMaxBounces)
@@ -125,7 +145,9 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 
 			// Possibly terminate virtual light path with Russian roulette
 			continueProbability = Maths::Min(1.f, (contribution[0] + contribution[1] + contribution[2]) * 0.33f);
-			if (p_pScene->GetSampler()->Get1DSample() > continueProbability)
+			
+			//if (p_pScene->GetSampler()->Get1DSample() > continueProbability)
+			if (m_rouletteSamplerList[p_nVirtualPointLightSetId]->Get1DSample() > continueProbability)
 					break;
 
 			// Modify contribution accordingly
@@ -147,12 +169,27 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 //----------------------------------------------------------------------------------------------
 bool IGIIntegrator::Prepare(Scene *p_pScene)
 {
+	// Just in case we're compiling for Windows and 
+	// min and max are defined as macros
+	#define __igi_max max
+	#undef max
+
+	int maxValue = std::numeric_limits<int>::max();
+
+	// Restore max macro
+	#define max __igi_max
+
 	VirtualPointLightSet.clear();
 
-	for (int pointLightSet = m_nTileArea; pointLightSet != 0; --pointLightSet)
+	for (int pointLightSet = 0; pointLightSet < m_nTileArea; ++pointLightSet)
 	{
 		VirtualPointLightSet.push_back(std::vector<VirtualPointLight>());
-		TraceVirtualPointLights(p_pScene, m_nMaxPath, m_nMaxVPL, m_nMaxRayDepth, VirtualPointLightSet.back());
+
+		m_directionSamplerList[pointLightSet]->Reset((unsigned int)(maxValue * p_pScene->GetSampler()->Get1DSample()));
+		m_positionSamplerList[pointLightSet]->Reset((unsigned int)(maxValue * p_pScene->GetSampler()->Get1DSample()));
+		m_rouletteSamplerList[pointLightSet]->Reset((unsigned int)(maxValue * p_pScene->GetSampler()->Get1DSample()));
+
+		TraceVirtualPointLights(p_pScene, m_nMaxPath, m_nMaxVPL, m_nMaxRayDepth, pointLightSet, VirtualPointLightSet.back());
 	}
 
 	return true;
