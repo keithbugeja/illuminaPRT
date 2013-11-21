@@ -185,7 +185,7 @@ Spectrum IIntegrator::SampleAllLights(Scene *p_pScene, const Intersection &p_int
 }
 
 //----------------------------------------------------------------------------------------------
-Spectrum IIntegrator::SampleF(Scene *p_pScene, Intersection &p_intersection, const Vector3 &p_wOut, Vector3 &p_wIn, float &p_pdf, BxDF::Type &p_bxdfType)
+Spectrum IIntegrator::SampleF(Scene *p_pScene, Intersection &p_intersection, ISampler *p_pSampler, const Vector3 &p_wOut, Vector3 &p_wIn, float &p_pdf, BxDF::Type &p_bxdfType)
 {
 	if (!p_intersection.HasMaterial())
 		return 0.f;
@@ -199,7 +199,7 @@ Spectrum IIntegrator::SampleF(Scene *p_pScene, Intersection &p_intersection, con
 	// Sample bsdf for next direction
 	//----------------------------------------------------------------------------------------------
 	// Generate random samples
-	Vector2 sample = p_pScene->GetSampler()->Get2DSample();
+	Vector2 sample = p_pSampler->Get2DSample();
 
 	// Convert to surface coordinate system where (0,0,1) represents surface normal
 	// Note: 
