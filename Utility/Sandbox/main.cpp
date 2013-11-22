@@ -400,6 +400,7 @@ void IlluminaPRT(
 
 	PointShader shader; std::vector<PhotonEmitter> emitterList;
 	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1, 24, 48);
+	shader.TraceEmitters(emitterList, 1024, 8192);
 
 	/* */ 
 	std::ofstream emitterFile;
@@ -414,7 +415,6 @@ void IlluminaPRT(
 	std::cout << "Shading points..." << std::endl;
 	// shader.Shade(pointSet.Get().Get());
 
-	shader.TraceEmitters(emitterList, 1024, 8192);
 	shader.Shade(pointSet.Get().Get(), emitterList, 0.25f);
 	
 	pointSet.Save("Output//pointcloud_full.asc");
