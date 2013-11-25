@@ -563,6 +563,8 @@ public:
 		Vector3 normal, 
 			wOut, wIn;
 
+		RandomSampler sequenceSampler;
+
 		LowDiscrepancySampler positionSampler,
 			directionSampler, continueSampler;
 
@@ -613,7 +615,8 @@ public:
 				// std::cout << "Le = " << emitter.Contribution.ToString() << std::endl;
 
 				// Push point light on list
-				p_photonEmitterList.push_back(emitter);
+				if (intersections > 3)
+					p_photonEmitterList.push_back(emitter);
 
 				// Sample new direction
 				f = pMaterial->SampleF(intersection.Surface, wOut, wIn, sample.U, sample.V, &pdf, bxdfType);
@@ -628,7 +631,7 @@ public:
 				// Possibly terminate virtual light path with Russian roulette
 				continueProbability = Maths::Min(1.f, (contribution[0] + contribution[1] + contribution[2]) * 0.33f);
 				if (continueSampler.Get1DSample() > continueProbability)
-						break;
+					break;
 
 				// Modify contribution accordingly
 				// alpha *= contribution / continueProbability;
@@ -645,7 +648,7 @@ public:
 
 		// Just in case we traced more than is required
 		if (p_photonEmitterList.size() > p_nMaxEmitters)
-			p_photonEmitterList.erase(p_photonEmitterList.begin() + p_nMaxEmitters, p_photonEmitterList.end());
+			p_photonEmitterList.erase(p_photonEmitterList.begin() + p_nMaxEmitters, p_photonEmitterList.end());	
 	}
 
 protected:
