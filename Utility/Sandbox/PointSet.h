@@ -1,4 +1,13 @@
+//----------------------------------------------------------------------------------------------
+//	Filename:	PointSet.h
+//	Author:		Keith Bugeja
+//	Date:		27/02/2010
+//----------------------------------------------------------------------------------------------
+// Todo: Generalise structures used... there is way too much repetition (copy-pasting and 
+//	     tweaking) of functionality available elsewhere in the core.
+//----------------------------------------------------------------------------------------------
 #pragma once
+
 #include <Maths/Montecarlo.h>
 #include <Scene/Visibility.h>
 #include "Environment.h"
@@ -685,21 +694,53 @@ protected:
 		return E / mn;
 	}
 
+	static float SmoothStep(float min, float max, float value)
+	{
+		float v = (value - min) / (max - min);
+		if (v < 0.0f) v = 0.0f;
+		if (v > 1.0f) v = 1.0f;
+		return v * v * (-2.f * v  + 3.f);
+	}
+
 	Spectrum PathGather(Vector3 &p_position, Vector3 &p_normal, std::vector<PhotonEmitter> &p_emitterList, float p_fGTermMax)
 	{
 		VisibilityQuery emitterQuery(m_pScene);
 		Spectrum Le(0), f;
 		Vector3 wIn;
 		int samplesUsed = 1;
-		float indirectScale = 1.f;
+		float indirectScale = 0.025f,
+			minDist = 0.5f,
+			cosTheta;
 
 		for (auto emitter : p_emitterList)
 		{
+			wIn = emitter.Position - p_position;
+			
+			if ((cosTheta = emitter.Normal.Dot(-wIn)) > 0.0f)
+			{
+				emitterQuery.SetSegment(p_position, m_fReflectEpsilon, emitter.Position, m_fReflectEpsilon);
+				
+				if (!emitterQuery.IsOccluded())
+				{
+					const float d2 = wIn.LengthSquared(),
+						distScale = SmoothStep(0.8f * minDist, 1.2f * minDist, d2);
+
+					Le += emitter.Contribution *
+							distScale *
+							Maths::InvPiTwo *
+							cosTheta *
+							p_normal.Dot(wIn) / d2;
+
+					samplesUsed++;
+				}
+			}
+
+			/*
 			float d2 = Vector3::DistanceSquared(p_position, emitter.Position);
 
 			// Smoothstep
 			// TODO: Add smoothstep function
-			float distScale = 1.f;
+			float distScale = SmoothStep(0.8f * minDist, 1.2f * d2);
 			// Smoothstep
 
 			wIn = Vector3::Normalize(emitter.Position - p_position);
@@ -713,7 +754,8 @@ protected:
 			emitterQuery.SetSegment(p_position, m_fReflectEpsilon, emitter.Position, m_fReflectEpsilon);
 			if (!emitterQuery.IsOccluded())
 				Le += Llight;
-				
+			*/
+
 			/*
 			if (wIn.Dot(emitter.Normal) > 0.f)
 			{
@@ -744,7 +786,7 @@ protected:
 			*/
 		}
 
-		return Le;
+		return (Le * indirectScale) / (float)p_emitterList.size();
 		// return Le / samplesUsed; //(float)p_emitterList.size();
 	}
 
@@ -889,5 +931,230 @@ public:
 		}
 
 		std::cout << "Shaded [" << p_pointList.size() << "] in [" << Platform::ToSeconds(Platform::GetTime() - total) << "]" << std::endl;
+	}
+};
+
+class GPUGrid
+{
+protected:
+	Vector3 m_minExtents,
+		m_maxExtents,
+		m_size;
+
+	float m_edgeSize,
+		m_cellSize;
+
+	int m_subdivisions;
+
+	std::vector<Dart*> m_sampleList;
+	std::map<int, std::vector<Dart*>> m_grid;
+
+public:
+	Vector3 GetOrigin(void) const {
+		return m_minExtents;
+	}
+
+	float GetCellSize(void) const {
+		return m_cellSize;
+	}
+
+	int GetSubdivisions(void) const {
+		return m_subdivisions;
+	}
+
+protected:
+	int MakeKey(const Vector3 &p_position)
+	{
+		Vector3 offset = (p_position - m_minExtents) / m_cellSize;
+		
+		int x = (int)offset.X, 
+			y = (int)offset.Y,
+			z = (int)offset.Z;
+
+		return (int)( (x & 0x1F) | ((y & 0x1F) << 5) | ((z & 0x1F) << 10) ); 
+	}
+
+	int MakeKey(int x, int y, int z)
+	{
+		return (int)( (x & 0x1F) | ((y & 0x1F) << 5) | ((z & 0x1F) << 10) ); 
+	}
+
+	void Add(int p_key, Dart *p_pSample)
+	{
+		if (m_grid.find(p_key) == m_grid.end())
+			m_grid[p_key] = std::vector<Dart*>();
+
+		m_grid[p_key].push_back(p_pSample);
+	}
+
+	void AddRange(const Vector3 &p_position, float p_fRadius, Dart *p_pSample)
+	{
+		Vector3 extent(p_fRadius);
+
+		Vector3 minExtent = p_position - extent,
+			maxExtent = p_position + extent,
+			posIter = Vector3::Zero;
+
+		for (posIter.Z = minExtent.Z; posIter.Z <= maxExtent.Z; posIter.Z += m_cellSize)
+		{
+			for (posIter.Y = minExtent.Y; posIter.Y <= maxExtent.Y; posIter.Y += m_cellSize)
+			{
+				for (posIter.X = minExtent.X; posIter.X <= maxExtent.X; posIter.X += m_cellSize)
+				{
+					Add(MakeKey(posIter), p_pSample);
+				}
+			}
+		}
+	}
+
+public:
+	void Build(std::vector<Dart*> &p_sampleList, int p_subdivisions, float p_searchRadius)
+	{
+		m_grid.clear();
+
+		m_minExtents = Vector3(Maths::Maximum);
+		m_maxExtents = -Maths::Maximum;
+	
+		for(auto sample : p_sampleList)
+		{
+			m_maxExtents = Vector3::Max(m_maxExtents, sample->Position);
+			m_minExtents = Vector3::Min(m_minExtents, sample->Position);
+
+			m_sampleList.push_back(sample);
+		}
+
+		std::cout << m_minExtents.ToString() << " - " << m_maxExtents.ToString() << std::endl;
+
+		m_subdivisions = p_subdivisions;
+
+		m_size = m_maxExtents - m_minExtents;
+		m_edgeSize = m_size.MaxAbsComponent();
+		m_cellSize = m_edgeSize / m_subdivisions;
+
+		m_size.Set(m_edgeSize, m_edgeSize, m_edgeSize);
+		m_maxExtents = m_minExtents + m_size;
+
+		for (auto sample : m_sampleList)
+		{
+			AddRange(sample->Position, p_searchRadius + m_cellSize * 0.5f, sample);
+		}
+	}
+
+	void FilterByView(const ICamera *p_pCamera, std::vector<Dart*> &p_outList)
+	{
+		// First we get 4 corner rays from which to build frustum planes.
+		Ray topLeft = p_pCamera->GetRay(0,0,0,0),
+			topRight = p_pCamera->GetRay(1,0,1,0),
+			bottomLeft = p_pCamera->GetRay(0,1,0,1),
+			bottomRight = p_pCamera->GetRay(1,1,1,1),
+			centre(p_pCamera->GetObserver(), p_pCamera->GetFrame().W);
+
+		float in[5], out[5];
+		AxisAlignedBoundingBox aabb(m_minExtents, m_maxExtents);
+
+		aabb.Intersects(topLeft, in[0], out[0]);
+		aabb.Intersects(topRight, in[1], out[1]);
+		aabb.Intersects(bottomLeft, in[2], out[2]);
+		aabb.Intersects(bottomRight, in[3], out[3]);
+		aabb.Intersects(centre, in[4], out[4]);
+	
+		std::cout << "Intersects : " << 
+			"TL [" << in[0] << ", " << out[0] << "]" <<
+			"TL [" << in[1] << ", " << out[1] << "]" <<
+			"TL [" << in[2] << ", " << out[2] << "]" <<
+			"TL [" << in[3] << ", " << out[3] << "]" <<
+			"TL [" << in[4] << ", " << out[4] << "]" << std::endl;
+
+		Vector3 frustumVerts[6] = {	
+			topLeft.PointAlongRay(out[0]),
+			topRight.PointAlongRay(out[1]),
+			bottomLeft.PointAlongRay(out[2]),
+			bottomRight.PointAlongRay(out[3]),
+			centre.PointAlongRay(out[4]),
+			p_pCamera->GetObserver() 
+		};
+
+		// Build frustum planes
+		//Plane left(frustumVerts[0], frustumVerts[2], frustumVerts[4]),
+		//	right(frustumVerts[1], frustumVerts[3], frustumVerts[4]),
+		//	top(frustumVerts[0], frustumVerts[1], frustumVerts[4]),
+		//	bottom(frustumVerts[2], frustumVerts[3], frustumVerts[4]);
+
+		Plane left(frustumVerts[0], frustumVerts[2], frustumVerts[4]),
+			right(frustumVerts[4], frustumVerts[3], frustumVerts[1]),
+			top(frustumVerts[0], frustumVerts[1], frustumVerts[4]),
+			bottom(frustumVerts[2], frustumVerts[3], frustumVerts[4]);
+
+		// Compute aabb for frustum
+		AxisAlignedBoundingBox frustum;
+		frustum.ComputeFromPoints((Vector3*)frustumVerts, 6);
+
+		Vector3 frustumMinExtent = frustum.GetMinExtent(),
+			frustumMaxExtent = frustum.GetMaxExtent(),
+			frustumIter = Vector3::Zero;
+
+		std::cout << "Frustum bounds : " << frustumMinExtent.ToString() << " - " << frustumMaxExtent.ToString() << std::endl;
+
+		// Sync inner frustum to grid cells
+		Vector3 alignedCellStart = (frustumMinExtent - m_minExtents) / m_cellSize,
+			alignedCellSize(m_cellSize);
+
+		alignedCellStart.Set(((int)alignedCellStart.X) * m_cellSize, 
+			((int)alignedCellStart.Y) * m_cellSize,
+			((int)alignedCellStart.Z) * m_cellSize);
+		
+		alignedCellStart += m_minExtents;
+
+		AxisAlignedBoundingBox cell;
+		std::set<Dart*> shadingList;
+		int cellcount = 0;
+
+		for (frustumIter.Z = frustumMinExtent.Z; frustumIter.Z < frustumMaxExtent.Z + m_cellSize * 0.5f; frustumIter.Z += m_cellSize)
+		{
+			Vector3 alignedCellStart4Y = alignedCellStart;
+			for (frustumIter.Y = frustumMinExtent.Y; frustumIter.Y < frustumMaxExtent.Y + m_cellSize * 0.5f; frustumIter.Y += m_cellSize)
+			{
+				Vector3 alignedCellStart4X = alignedCellStart4Y;
+				for (frustumIter.X = frustumMinExtent.X; frustumIter.X < frustumMaxExtent.X + m_cellSize * 0.5f; frustumIter.X += m_cellSize)
+				{
+					cell.SetExtents(alignedCellStart4X, alignedCellStart4X + alignedCellSize);
+					alignedCellStart.X += m_cellSize;
+					
+					if (m_grid.find(MakeKey(frustumIter)) != m_grid.end())
+					{
+						for (auto sample : m_grid[MakeKey(frustumIter)])
+							shadingList.insert(sample);
+					}
+
+					/*
+					Plane::Side l = cell.GetSide(left);
+					Plane::Side r = cell.GetSide(right);
+					Plane::Side t = cell.GetSide(top);
+					Plane::Side b = cell.GetSide(bottom);
+
+					if (l != r)
+						std::cout << frustumIter.ToString() << std::endl; 
+					*/
+
+					/*if (cell.GetSide(left) == Plane::Side_Negative) continue;
+					if (cell.GetSide(right) == Plane::Side_Positive) continue;
+					if (cell.GetSide(top) == Plane::Side_Positive) continue;
+					if (cell.GetSide(bottom) == Plane::Side_Negative) continue;*/
+
+					cellcount++;
+				}
+
+				alignedCellStart4Y.Y += m_cellSize;
+			}
+
+			alignedCellStart.Z += m_cellSize;
+		}
+
+		p_outList.clear(); //std::copy(shadingList.begin(), shadingList.end(), p_outList.begin());
+
+		for (auto p : shadingList)
+			p_outList.push_back(p);
+
+		std::cout << "Considered [" << cellcount << " of " << 32 * 32 * 32 << "]" << std::endl;	
 	}
 };
