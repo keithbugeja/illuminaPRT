@@ -413,12 +413,26 @@ void IlluminaPRT(
 	/* */
 
 	std::cout << "Shading points..." << std::endl;
-	// shader.Shade(pointSet.Get().Get());
 
-	shader.Shade(pointSet.Get().Get(), emitterList, 0.25f);
+	std::vector<Dart*> shadingList;
+	GPUGrid grid;
+	grid.Build(pointSet.Get().Get(), 32, 1.f);
+	grid.FilterByView(illumina.GetEnvironment()->GetCamera(), shadingList);
+
+	std::vector<Dart*> &v = pointSet.Get().Get();
+	for (auto a : v)
+		a->Irradiance.Set(10, 0, 10);
+
+	// shader.Shade(pointSet.Get().Get());
+	// shader.Shade(pointSet.Get().Get(), emitterList, 0.25f);
+
+	shader.Shade(shadingList, emitterList, 0.25f);
+	// shader.Shade(shadingList);
 	
 	pointSet.Save("Output//pointcloud_full.asc");
 	std::cout << "Point cloud saved." << std::endl;
+	/* */
+	
 	/* */
 
 	illumina.Render();	
