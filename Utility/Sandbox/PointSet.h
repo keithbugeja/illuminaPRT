@@ -559,6 +559,12 @@ protected:
 public:
 	void TraceEmitters(std::vector<PhotonEmitter> &p_photonEmitterList, int p_nMaxEmitters, int p_nMaxPaths)
 	{
+		const int lightCount = m_pScene->LightList.Size();
+		
+		if (lightCount == 0)
+			return;
+
+
 		Ray lightRay;
 		IMaterial *pMaterial;
 		PhotonEmitter emitter;
@@ -581,15 +587,18 @@ public:
 			directionSample,
 			sample;
 
-		const int lightCount = m_pScene->LightList.Size();
-
 		int intersections, index = 0;
 
 		float continueProbability, pdf, 
 			lightPdf = 1.f / lightCount;
 
+
+		int lightIndex = 0;
+
 		// Trace either a maximum number of paths or virtual point lights
-		for (int lightIndex = 0, nPathIndex = p_nMaxPaths; nPathIndex > 0 && p_photonEmitterList.size() < p_nMaxEmitters; --nPathIndex)
+		// for (int lightIndex = 0, nPathIndex = p_nMaxPaths; nPathIndex > 0 && p_photonEmitterList.size() < p_nMaxEmitters; --nPathIndex)
+
+		while (p_photonEmitterList.size() <= p_nMaxEmitters)
 		{
 			// Get samples for initial position and direction
 			positionSample = positionSampler.Get2DSample();
@@ -600,22 +609,60 @@ public:
 				m_pScene, positionSample.U, positionSample.V,
 				directionSample.U, directionSample.V, lightRay, pdf);
 
+			// Hack to test shit
+			// lightRay.Direction = Vector3::UnitYPos;
+
 			// If pdf or radiance are zero, choose a new path
 			if (pdf == 0.0f || alpha.IsBlack())
 				continue;
 
 			// Scale radiance by pdf
-			alpha /= pdf;
+			alpha /= pdf * lightPdf;
 
 			// Start tracing virtual point light path
 			for (intersections = 1; !alpha.IsBlack() && m_pScene->Intersects(lightRay, intersection); ++intersections)
 			{
-				// sample = m_pScene->GetSampler()->Get2DSample();
+				// No valid intersection
+				if (intersection.Surface.Distance <= m_fReflectEpsilon || intersection.Surface.Distance == Maths::Maximum)
+					break;
+
+				if (!intersection.HasMaterial())
+					break;
+
+				// Omega out
+				wOut = -lightRay.Direction;
+				
+				// BSDF
+				pMaterial = intersection.GetMaterial();
+				
+				// Direction sample
 				sample = directionSampler.Get2DSample();
 
-				wOut = -lightRay.Direction;
-				pMaterial = intersection.GetMaterial();
+				// Sample contribution and new ray
+				f = pMaterial->SampleF(intersection.Surface, wOut, wIn, sample.U, sample.V, &pdf, bxdfType);
 
+				// If reflectivity or pdf are zero, end path
+				if (f.IsBlack() || pdf == 0.0f)
+					break;
+
+				contribution = alpha * f * wIn.AbsDot(intersection.Surface.ShadingNormal.W) / pdf;
+				continueProbability = contribution.Luminance() / alpha.Luminance();
+
+				if (continueSampler.Get1DSample() > continueProbability || intersections == 10)
+				{
+					emitter.Contribution = pMaterial->Rho(wOut, intersection.Surface) * alpha * Maths::InvPi;
+					emitter.Position = intersection.Surface.PointWS;
+					emitter.Normal = intersection.Surface.ShadingBasisWS.W;
+					
+					p_photonEmitterList.push_back(emitter);
+
+					break;
+				}
+				
+				alpha = contribution / continueProbability;
+				lightRay.Set(intersection.Surface.PointWS + m_fReflectEpsilon * wIn, wIn, m_fReflectEpsilon, Maths::Maximum);
+
+				/*
 				// Set point light parameters
 				emitter.Position = intersection.Surface.PointWS;
 				emitter.Normal = intersection.Surface.ShadingBasisWS.W;
@@ -648,16 +695,26 @@ public:
 
 				// Set new ray position and direction
 				lightRay.Set(intersection.Surface.PointWS, wIn, m_fReflectEpsilon, Maths::Maximum);
+				*/
 			}
 
+			lightIndex = (lightIndex + 1) % lightCount;
+
+			/*
 			// Increment light index, and reset if we traversed all scene lights
 			if (++lightIndex == m_pScene->LightList.Size())
 				lightIndex = 0;
+			*/
 		}
 
 		// Just in case we traced more than is required
 		if (p_photonEmitterList.size() > p_nMaxEmitters)
 			p_photonEmitterList.erase(p_photonEmitterList.begin() + p_nMaxEmitters, p_photonEmitterList.end());	
+
+		float emitterCount = p_photonEmitterList.size();
+
+		for (auto emitter : p_photonEmitterList)
+			emitter.Contribution /= emitterCount;
 	}
 
 protected:
@@ -708,7 +765,7 @@ protected:
 		Spectrum Le(0), f;
 		Vector3 wIn;
 		int samplesUsed = 1;
-		float indirectScale = 0.025f,
+		float indirectScale = 1.f,
 			minDist = 0.5f,
 			cosTheta;
 

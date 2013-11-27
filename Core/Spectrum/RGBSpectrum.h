@@ -150,6 +150,10 @@ namespace Illumina
 				m_fSamples[2] = p_fBlue;
 			}
 
+			float Luminance(void) const {
+				return 0.212671f * m_fSamples[0] + 0.715160f * m_fSamples[1] + 0.072169f * m_fSamples[2];
+			}
+
 			void Normalize(void)
 			{
 				float length = 0;
