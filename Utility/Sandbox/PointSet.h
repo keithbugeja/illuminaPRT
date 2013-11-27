@@ -592,8 +592,8 @@ public:
 		float continueProbability, pdf, 
 			lightPdf = 1.f / lightCount;
 
-
 		int lightIndex = 0;
+		int secondary = 0;
 
 		// Trace either a maximum number of paths or virtual point lights
 		// for (int lightIndex = 0, nPathIndex = p_nMaxPaths; nPathIndex > 0 && p_photonEmitterList.size() < p_nMaxEmitters; --nPathIndex)
@@ -634,68 +634,34 @@ public:
 				
 				// BSDF
 				pMaterial = intersection.GetMaterial();
-				
-				// Direction sample
-				sample = directionSampler.Get2DSample();
+
+				// Create vpl at ray intersection point
+				emitter.Contribution = alpha * pMaterial->Rho(wOut, intersection.Surface) * Maths::InvPi;
+				emitter.Position = intersection.Surface.PointWS;
+				emitter.Normal = intersection.Surface.ShadingBasisWS.W;
+					
+				p_photonEmitterList.push_back(emitter);
 
 				// Sample contribution and new ray
+				sample = directionSampler.Get2DSample();
+
 				f = pMaterial->SampleF(intersection.Surface, wOut, wIn, sample.U, sample.V, &pdf, bxdfType);
 
 				// If reflectivity or pdf are zero, end path
 				if (f.IsBlack() || pdf == 0.0f)
 					break;
 
-				contribution = alpha * f * wIn.AbsDot(intersection.Surface.ShadingNormal.W) / pdf;
-				continueProbability = contribution.Luminance() / alpha.Luminance();
+				contribution = f * wIn.AbsDot(intersection.Surface.ShadingBasisWS.W) / pdf;
+				continueProbability = Maths::Min(1.f, contribution.Luminance());
 
 				if (continueSampler.Get1DSample() > continueProbability || intersections == 10)
-				{
-					emitter.Contribution = pMaterial->Rho(wOut, intersection.Surface) * alpha * Maths::InvPi;
-					emitter.Position = intersection.Surface.PointWS;
-					emitter.Normal = intersection.Surface.ShadingBasisWS.W;
-					
-					p_photonEmitterList.push_back(emitter);
-
 					break;
-				}
 				
-				alpha = contribution / continueProbability;
+				alpha *= contribution / continueProbability;
 				lightRay.Set(intersection.Surface.PointWS + m_fReflectEpsilon * wIn, wIn, m_fReflectEpsilon, Maths::Maximum);
 
-				/*
-				// Set point light parameters
-				emitter.Position = intersection.Surface.PointWS;
-				emitter.Normal = intersection.Surface.ShadingBasisWS.W;
-				emitter.Contribution = alpha * pMaterial->Rho(wOut, intersection.Surface) * Maths::InvPi;
-
-				// std::cout << "Le = " << emitter.Contribution.ToString() << std::endl;
-
-				// Push point light on list
-				if (intersections > 3)
-					p_photonEmitterList.push_back(emitter);
-
-				// Sample new direction
-				f = pMaterial->SampleF(intersection.Surface, wOut, wIn, sample.U, sample.V, &pdf, bxdfType);
-			
-				// If reflectivity or pdf are zero, end path
-				if (f.IsBlack() || pdf == 0.0f || intersections > m_nRayDepth)
-					break;
-
-				// Compute contribution of path
-				contribution = alpha * f * Vector3::AbsDot(wIn, intersection.Surface.ShadingBasisWS.W) / pdf;
-
-				// Possibly terminate virtual light path with Russian roulette
-				continueProbability = Maths::Min(1.f, (contribution[0] + contribution[1] + contribution[2]) * 0.33f);
-				if (continueSampler.Get1DSample() > continueProbability)
-					break;
-
-				// Modify contribution accordingly
-				// alpha *= contribution / continueProbability;
-				alpha = contribution / continueProbability;
-
-				// Set new ray position and direction
-				lightRay.Set(intersection.Surface.PointWS, wIn, m_fReflectEpsilon, Maths::Maximum);
-				*/
+				if (intersections > 1)
+					secondary++;
 			}
 
 			lightIndex = (lightIndex + 1) % lightCount;
@@ -715,6 +681,8 @@ public:
 
 		for (auto emitter : p_photonEmitterList)
 			emitter.Contribution /= emitterCount;
+
+		std::cout << "Secondary photons : " << secondary << std::endl;
 	}
 
 protected:
@@ -765,86 +733,37 @@ protected:
 		Spectrum Le(0), f;
 		Vector3 wIn;
 		int samplesUsed = 1;
-		float indirectScale = 1.f,
+		float indirectScale = 1.f, // 0.01f,
 			minDist = 0.5f,
 			cosTheta;
 
 		for (auto emitter : p_emitterList)
 		{
 			wIn = emitter.Position - p_position;
-			
+			const float d2 = wIn.LengthSquared();
+			wIn.Normalize();
+
 			if ((cosTheta = emitter.Normal.Dot(-wIn)) > 0.0f)
 			{
 				emitterQuery.SetSegment(p_position, m_fReflectEpsilon, emitter.Position, m_fReflectEpsilon);
 				
 				if (!emitterQuery.IsOccluded())
 				{
-					const float d2 = wIn.LengthSquared(),
-						distScale = SmoothStep(0.8f * minDist, 1.2f * minDist, d2);
+					const float distScale = SmoothStep(0.8f * minDist, 1.2f * minDist, d2);
+
+					float G = cosTheta * p_normal.Dot(wIn) / d2;
+					G = Maths::Min(G, p_fGTermMax);
 
 					Le += emitter.Contribution *
 							distScale *
-							Maths::InvPiTwo *
-							cosTheta *
-							p_normal.Dot(wIn) / d2;
+							Maths::InvPiTwo * G;
 
 					samplesUsed++;
 				}
 			}
-
-			/*
-			float d2 = Vector3::DistanceSquared(p_position, emitter.Position);
-
-			// Smoothstep
-			// TODO: Add smoothstep function
-			float distScale = SmoothStep(0.8f * minDist, 1.2f * d2);
-			// Smoothstep
-
-			wIn = Vector3::Normalize(emitter.Position - p_position);
-
-			f = distScale * Maths::InvPiTwo;
-
-			float G = Vector3::AbsDot(wIn, p_normal) * Vector3::AbsDot(wIn, emitter.Normal) / d2;
-
-			Spectrum Llight = (f * emitter.Contribution / (float)(p_emitterList.size())) * indirectScale * G;
-
-			emitterQuery.SetSegment(p_position, m_fReflectEpsilon, emitter.Position, m_fReflectEpsilon);
-			if (!emitterQuery.IsOccluded())
-				Le += Llight;
-			*/
-
-			/*
-			if (wIn.Dot(emitter.Normal) > 0.f)
-			{
-				emitterQuery.SetSegment(p_position, m_fReflectEpsilon, emitter.Position, m_fReflectEpsilon);
-				
-				if (emitterQuery.IsOccluded())
-					continue;
-
-				float d2 = 1.f / Vector3::DistanceSquared(p_position, emitter.Position);
-
-				const float G = 
-					Maths::Min(
-					Vector3::Dot(emitter.Normal, wIn) *
-					Vector3::Dot(p_normal, -wIn) * d2,
-					p_fGTermMax);
-
-				// Le += emitter.Contribution * G * Maths::InvPi;
-				
-				//const float G = Maths::Min(
-				//		Vector3::Dot(emitter.Normal, wIn) * 
-				//		Vector3::Dot(p_normal, wIn) * d2,
-				//		p_fGTermMax);
-
-				Le += emitter.Contribution * G * Maths::InvPi;
-				
-				samplesUsed++;
-			}
-			*/
 		}
 
 		return (Le * indirectScale) / (float)p_emitterList.size();
-		// return Le / samplesUsed; //(float)p_emitterList.size();
 	}
 
 	Spectrum PathLi(Ray &p_ray)

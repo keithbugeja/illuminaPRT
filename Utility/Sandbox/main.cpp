@@ -395,7 +395,7 @@ void IlluminaPRT(
 
 	pointSet.Load("Output//pointcloud_full.asc");
 	
-	//pointSet.Generate();
+	// pointSet.Generate();
 	// std::cout << "Generated point set. Elements in grid [" << pointSet.Get().Size() << "]" << std::endl;k
 
 	PointShader shader; std::vector<PhotonEmitter> emitterList;
