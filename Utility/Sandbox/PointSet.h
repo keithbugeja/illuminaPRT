@@ -12,6 +12,14 @@
 #include <Scene/Visibility.h>
 #include "Environment.h"
 
+#include <ctime>
+#include <iostream>
+#include <string>
+#include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/asio.hpp>
+
 using namespace Illumina::Core;
 
 struct PhotonEmitter
@@ -30,6 +38,7 @@ struct Dart
 	Vector3 Normal;
 	float Radius;
 	float Occlusion;
+	int Accumulated;
 	bool Invalid;
 };
 
@@ -258,6 +267,8 @@ public:
 				>> dart.Position.X >> separator >> dart.Position.Y >> separator >> dart.Position.Z >> separator 
 				>> dart.Occlusion >> separator >> dart.Radius;
 
+			dart.Invalid = true;
+
 			m_grid.Add(dart.Position, dart);
 		}
 
@@ -381,6 +392,7 @@ protected:
 
 					Dart dartPoint;
 
+					dartPoint.Invalid = true;
 					dartPoint.Position = intersection.Surface.PointWS;
 					dartPoint.Normal = intersection.Surface.ShadingBasisWS.W;
 					dartPoint.Occlusion = ComputeAmbientOcclusion(intersection, m_fOcclusionRadius, rayDetails);
@@ -885,9 +897,13 @@ public:
 
 		for (auto point : p_pointList)
 		{
-			double timestart = Platform::GetTime();
-			point->Irradiance = PathGather(point->Position, point->Normal, p_emitterList, p_fGTermMax);
-			std::cout << "Shaded in [" << Platform::ToSeconds(Platform::GetTime() - timestart) << "]" << std::endl;
+			if (point->Invalid)
+			{
+				double timestart = Platform::GetTime();
+				point->Irradiance = PathGather(point->Position, point->Normal, p_emitterList, p_fGTermMax);
+				point->Invalid = false;
+				std::cout << "Shaded in [" << Platform::ToSeconds(Platform::GetTime() - timestart) << "]" << std::endl;
+			}
 		}
 
 		std::cout << "Shaded [" << p_pointList.size() << "] in [" << Platform::ToSeconds(Platform::GetTime() - total) << "]" << std::endl;
@@ -901,12 +917,49 @@ public:
 
 		for (auto point : p_pointList)
 		{
-			double timestart = Platform::GetTime();
-			point->Irradiance = Shade(point->Position, point->Normal);
-			std::cout << "Shaded in [" << Platform::ToSeconds(Platform::GetTime() - timestart) << "]" << std::endl;
+			if (point->Invalid)
+			{
+				double timestart = Platform::GetTime();
+				point->Irradiance = Shade(point->Position, point->Normal);
+				point->Invalid = false;
+				std::cout << "Shaded in [" << Platform::ToSeconds(Platform::GetTime() - timestart) << "]" << std::endl;
+			}
 		}
 
 		std::cout << "Shaded [" << p_pointList.size() << "] in [" << Platform::ToSeconds(Platform::GetTime() - total) << "]" << std::endl;
+	}
+};
+
+class FilteredGPUGrid
+{
+public:
+	std::set<Dart*> FilteredSampleSet;
+
+protected:
+	std::vector<Dart*> *m_pGlobalSampleList;
+	std::vector<int> m_cellList;
+
+public:
+	void SetGlobalSampleList(std::vector<Dart*> *p_pGlobalSampleList) {
+		m_pGlobalSampleList = p_pGlobalSampleList;
+	}
+
+	void MarkCell(int p_nKey) {
+		m_cellList.push_back(p_nKey);
+	}
+
+	std::vector<int> *GetMarkedCells(void) {
+		return &m_cellList;
+	}
+
+	void GetFilteredSampleList(std::vector<Dart*> &p_sampleList)
+	{
+		p_sampleList.clear();
+
+		for (auto sample : FilteredSampleSet)
+		{
+			p_sampleList.push_back(sample);
+		}
 	}
 };
 
@@ -924,6 +977,7 @@ protected:
 
 	std::vector<Dart*> m_sampleList;
 	std::map<int, std::vector<Dart*>> m_grid;
+	std::map<int, int> m_gridIndices;
 
 public:
 	Vector3 GetOrigin(void) const {
@@ -963,6 +1017,7 @@ protected:
 		m_grid[p_key].push_back(p_pSample);
 	}
 
+	// Optimisation : Only put points in cells that intersect geometry!
 	void AddRange(const Vector3 &p_position, float p_fRadius, Dart *p_pSample)
 	{
 		Vector3 extent(p_fRadius);
@@ -986,8 +1041,12 @@ protected:
 public:
 	void Build(std::vector<Dart*> &p_sampleList, int p_subdivisions, float p_searchRadius)
 	{
+		std::cout << "GPUGrid :: Estimating dimensions..." << std::endl;
+
+		// Clear grid with sample lists
 		m_grid.clear();
 
+		// Set the grid extents
 		m_minExtents = Vector3(Maths::Maximum);
 		m_maxExtents = -Maths::Maximum;
 	
@@ -999,24 +1058,53 @@ public:
 			m_sampleList.push_back(sample);
 		}
 
-		std::cout << m_minExtents.ToString() << " - " << m_maxExtents.ToString() << std::endl;
+		std::cout << "GPUGrid :: Extents [" << m_minExtents.ToString() << " - " << m_maxExtents.ToString() << "]" << std::endl;
+		std::cout << "GPUGrid :: Inserting irradiance sample placeholders..." << std::endl;
 
+		// Compute the grid parameters
 		m_subdivisions = p_subdivisions;
-
 		m_size = m_maxExtents - m_minExtents;
 		m_edgeSize = m_size.MaxAbsComponent();
 		m_cellSize = m_edgeSize / m_subdivisions;
 
+		// Modify grid to fit cube
 		m_size.Set(m_edgeSize, m_edgeSize, m_edgeSize);
 		m_maxExtents = m_minExtents + m_size;
 
+		// Fill grid
 		for (auto sample : m_sampleList)
 		{
 			AddRange(sample->Position, p_searchRadius + m_cellSize * 0.5f, sample);
 		}
+
+		// By now, all samples exist in their respective cells, so we index
+		// the starting element in each cell.
+		std::cout << "GPUGrid :: Computing flat sample indices..." << std::endl;
+
+		int currentIndex = 0, key;
+
+		m_gridIndices.clear();
+
+		for (int z = 0; z < 0x1f; z++)
+		{
+			for (int y = 0; y < 0x1f; y++)
+			{
+				for (int x = 0; x < 0x1f; x++)
+				{
+					key = MakeKey(x, y, z);
+
+					m_gridIndices[key] = currentIndex;
+
+					if (m_grid.find(key) != m_grid.end()) 
+						currentIndex += m_grid[key].size();
+				}
+			}
+		}
+
+		std::cout << "GPUGrid :: Indexed [" << currentIndex << "] samples in [" << m_gridIndices.size() << "] cells" << std::endl;
 	}
 
-	void FilterByView(const ICamera *p_pCamera, std::vector<Dart*> &p_outList)
+	void FilterByView(const ICamera *p_pCamera, FilteredGPUGrid *p_pFilteredGrid)
 	{
 		// First we get 4 corner rays from which to build frustum planes.
 		Ray topLeft = p_pCamera->GetRay(0,0,0,0),
@@ -1033,13 +1121,6 @@ public:
 		aabb.Intersects(bottomLeft, in[2], out[2]);
 		aabb.Intersects(bottomRight, in[3], out[3]);
 		aabb.Intersects(centre, in[4], out[4]);
-	
-		std::cout << "Intersects : " << 
-			"TL [" << in[0] << ", " << out[0] << "]" <<
-			"TL [" << in[1] << ", " << out[1] << "]" <<
-			"TL [" << in[2] << ", " << out[2] << "]" <<
-			"TL [" << in[3] << ", " << out[3] << "]" <<
-			"TL [" << in[4] << ", " << out[4] << "]" << std::endl;
 
 		Vector3 frustumVerts[6] = {	
 			topLeft.PointAlongRay(out[0]),
@@ -1082,8 +1163,10 @@ public:
 		alignedCellStart += m_minExtents;
 
 		AxisAlignedBoundingBox cell;
-		std::set<Dart*> shadingList;
 		int cellcount = 0;
+
+		p_pFilteredGrid->SetGlobalSampleList(&m_sampleList);
+		p_pFilteredGrid->FilteredSampleSet.clear();
 
 		for (frustumIter.Z = frustumMinExtent.Z; frustumIter.Z < frustumMaxExtent.Z + m_cellSize * 0.5f; frustumIter.Z += m_cellSize)
 		{
@@ -1093,29 +1176,18 @@ public:
 				Vector3 alignedCellStart4X = alignedCellStart4Y;
 				for (frustumIter.X = frustumMinExtent.X; frustumIter.X < frustumMaxExtent.X + m_cellSize * 0.5f; frustumIter.X += m_cellSize)
 				{
+					int key = MakeKey(frustumIter);
+
 					cell.SetExtents(alignedCellStart4X, alignedCellStart4X + alignedCellSize);
 					alignedCellStart.X += m_cellSize;
 					
-					if (m_grid.find(MakeKey(frustumIter)) != m_grid.end())
+					if (m_grid.find(key) != m_grid.end())
 					{
+						p_pFilteredGrid->MarkCell(key);
+						
 						for (auto sample : m_grid[MakeKey(frustumIter)])
-							shadingList.insert(sample);
+							p_pFilteredGrid->FilteredSampleSet.insert(sample);
 					}
-
-					/*
-					Plane::Side l = cell.GetSide(left);
-					Plane::Side r = cell.GetSide(right);
-					Plane::Side t = cell.GetSide(top);
-					Plane::Side b = cell.GetSide(bottom);
-
-					if (l != r)
-						std::cout << frustumIter.ToString() << std::endl; 
-					*/
-
-					/*if (cell.GetSide(left) == Plane::Side_Negative) continue;
-					if (cell.GetSide(right) == Plane::Side_Positive) continue;
-					if (cell.GetSide(top) == Plane::Side_Positive) continue;
-					if (cell.GetSide(bottom) == Plane::Side_Negative) continue;*/
 
 					cellcount++;
 				}
@@ -1126,11 +1198,130 @@ public:
 			alignedCellStart.Z += m_cellSize;
 		}
 
-		p_outList.clear(); //std::copy(shadingList.begin(), shadingList.end(), p_outList.begin());
-
-		for (auto p : shadingList)
-			p_outList.push_back(p);
+		// TODO: Use an LDS to selectively sample points
+		// Should we not provide a list of affected cells instead?
 
 		std::cout << "Considered [" << cellcount << " of " << 32 * 32 * 32 << "]" << std::endl;	
+		std::cout << "Filtered Samples [" << p_pFilteredGrid->FilteredSampleSet.size() << "]" << std::endl;
+	}
+
+	void Serialize(FilteredGPUGrid *p_pFilteredGrid, std::vector<Spectrum> &p_irradianceList, std::vector<int> &p_indexList)
+	{
+		std::vector<int> *pMarkedCells = p_pFilteredGrid->GetMarkedCells();
+
+		std::vector<Spectrum> irradianceList;
+		std::vector<int> indexList;
+
+		for (auto cell : *pMarkedCells)
+		{
+			indexList.push_back(m_gridIndices[cell]);
+			indexList.push_back(m_grid[cell].size());
+
+			for (auto e : m_grid[cell])
+			{
+				irradianceList.push_back(e->Irradiance);
+			}
+		}
+
+		std::cout << "Cells :: [" << indexList.size() << "]" << std::endl;
+		std::cout << "Irradiance Records :: [" << irradianceList.size() << "]" << std::endl;
+	}
+};
+
+using boost::asio::ip::tcp;
+
+std::string make_daytime_string()
+{
+  using namespace std; // For time_t, time and ctime;
+  time_t now = time(0);
+  return ctime(&now);
+}
+
+class IrradianceConnection
+	: public boost::enable_shared_from_this<IrradianceConnection>
+{
+public:
+	typedef boost::shared_ptr<IrradianceConnection> pointer;
+
+	static pointer create(boost::asio::io_service &io_service)
+	{
+		return pointer(new IrradianceConnection(io_service));
+	}
+
+	tcp::socket &socket()
+	{
+		return socket_;
+	}
+
+	void start()
+	{
+		message_ = make_daytime_string();
+
+		boost::asio::async_write(socket_, boost::asio::buffer(message_),
+			boost::bind(&IrradianceConnection::handle_write, shared_from_this(),
+			boost::asio::placeholders::error,
+			boost::asio::placeholders::bytes_transferred));
+	}
+
+private:
+	IrradianceConnection(boost::asio::io_service& io_service)
+		: socket_(io_service)
+	{
+	}
+
+	void handle_write(const boost::system::error_code& /*error*/,
+		size_t /*bytes_transferred*/)
+	{
+	}
+
+	tcp::socket socket_;
+	std::string message_;
+};
+
+class IrradianceServer
+{
+	IrradianceServer(boost::asio::io_service& io_service)
+		: acceptor_(io_service, tcp::endpoint(tcp::v4(), 6666))
+	{
+		start_accept();
+	}
+
+private:
+	tcp::acceptor acceptor_;
+
+	void start_accept(void)
+	{
+		IrradianceConnection::pointer new_connection = 
+			IrradianceConnection::create(acceptor_ .get_io_service());
+
+		acceptor_.async_accept(new_connection->socket(),
+			boost::bind(&IrradianceServer::handle_accept, this, new_connection,
+			boost::asio::placeholders::error));
+	}
+
+	void handle_accept(IrradianceConnection::pointer new_connection,
+		const boost::system::error_code &error)
+	{
+		if (!error)
+		{
+			new_connection->start();
+			start_accept();
+		}
+	}
+
+public:
+	static void Boot(void)
+	{
+		try
+		{
+			boost::asio::io_service io_service;
+			IrradianceServer server(io_service);
+			io_service.run();
+		}
+		
+		catch (std::exception& e)
+		{
+			std::cerr << e.what() << std::endl;
+		}
 	}
 };
