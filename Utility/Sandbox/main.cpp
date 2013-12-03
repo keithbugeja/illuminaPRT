@@ -400,7 +400,7 @@ void IlluminaPRT(
 
 	PointShader shader; std::vector<PhotonEmitter> emitterList;
 	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1, 24, 48);
-	shader.TraceEmitters(emitterList, 1024, 8192);
+	shader.TraceEmitters(emitterList, 256, 8192);
 
 	/* */ 
 	std::ofstream emitterFile;
@@ -415,10 +415,15 @@ void IlluminaPRT(
 	std::cout << "Shading points..." << std::endl;
 
 	std::vector<Dart*> shadingList;
+	FilteredGPUGrid filteredGrid;
+
 	GPUGrid grid;
 	grid.Build(pointSet.Get().Get(), 32, 1.f);
-	grid.FilterByView(illumina.GetEnvironment()->GetCamera(), shadingList);
+	grid.FilterByView(illumina.GetEnvironment()->GetCamera(), &filteredGrid);
+	//grid.FilterByView(illumina.GetEnvironment()->GetCamera(), cellShadingList);
+	//grid.FilterByView(illumina.GetEnvironment()->GetCamera(), shadingList);
 
+	filteredGrid.GetFilteredSampleList(shadingList);
 	std::vector<Dart*> &v = pointSet.Get().Get();
 	for (auto a : v)
 		a->Irradiance.Set(10, 0, 10);
@@ -426,7 +431,20 @@ void IlluminaPRT(
 	// shader.Shade(pointSet.Get().Get());
 	// shader.Shade(pointSet.Get().Get(), emitterList, 0.25f);
 
+	std::cout << "Points to shade : [" << shadingList.size() << "]" << std::endl;
+
 	shader.Shade(shadingList, emitterList, 0.25f);
+
+	std::vector<int> indexList;
+	std::vector<Spectrum> irradianceList;
+
+	// 1. use indexing to send stuff 
+	grid.Serialize(&filteredGrid, irradianceList, indexList);
+
+
+	IrradianceServer::Boot();
+	
+
 	// shader.Shade(shadingList);
 	
 	pointSet.Save("Output//pointcloud_full.asc");
