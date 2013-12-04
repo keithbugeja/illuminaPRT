@@ -11,6 +11,7 @@
 #include <Maths/Montecarlo.h>
 #include <Scene/Visibility.h>
 #include "Environment.h"
+#include "MultithreadedCommon.h"
 
 #include <ctime>
 #include <iostream>
@@ -185,7 +186,7 @@ public:
 					// if (Vector3::Distance(iterator, p_centre) <= p_fRadius)
 					{
 						std::vector<T*> list = Get(iterator);
-						for(auto point : list)
+						for (auto point : list)
 						{
 							if (Vector3::Distance(point->Position, p_centre) < p_fRadius)
 								return true;
@@ -1209,22 +1210,19 @@ public:
 	{
 		std::vector<int> *pMarkedCells = p_pFilteredGrid->GetMarkedCells();
 
-		std::vector<Spectrum> irradianceList;
-		std::vector<int> indexList;
-
 		for (auto cell : *pMarkedCells)
 		{
-			indexList.push_back(m_gridIndices[cell]);
-			indexList.push_back(m_grid[cell].size());
+			p_indexList.push_back(m_gridIndices[cell]);
+			p_indexList.push_back(m_grid[cell].size());
 
 			for (auto e : m_grid[cell])
 			{
-				irradianceList.push_back(e->Irradiance);
+				p_irradianceList.push_back(e->Irradiance);
 			}
 		}
 
-		std::cout << "Cells :: [" << indexList.size() << "]" << std::endl;
-		std::cout << "Irradiance Records :: [" << irradianceList.size() << "]" << std::endl;
+		std::cout << "Cells :: [" << p_indexList.size() << "]" << std::endl;
+		std::cout << "Irradiance Records :: [" << p_irradianceList.size() << "]" << std::endl;
 	}
 };
 
@@ -1243,9 +1241,9 @@ class IrradianceConnection
 public:
 	typedef boost::shared_ptr<IrradianceConnection> pointer;
 
-	static pointer create(boost::asio::io_service &io_service)
+	static pointer create(boost::asio::io_service &io_service, IIlluminaMT *p_pIllumina, PointSet *p_pPointSet, PointShader *p_pPointShader, GPUGrid *p_pGPUGrid)
 	{
-		return pointer(new IrradianceConnection(io_service));
+		return pointer(new IrradianceConnection(io_service, p_pIllumina, p_pPointSet, p_pPointShader, p_pGPUGrid));
 	}
 
 	tcp::socket &socket()
@@ -1255,17 +1253,66 @@ public:
 
 	void start()
 	{
-		message_ = make_daytime_string();
+		FilteredGPUGrid filteredGrid;
+		m_pGPUGrid->FilterByView(m_pIllumina->GetEnvironment()->GetCamera(), &filteredGrid);
 
-		boost::asio::async_write(socket_, boost::asio::buffer(message_),
+		std::vector<Dart*> shadingList;
+		filteredGrid.GetFilteredSampleList(shadingList);
+	
+		std::vector<Dart*> &v = m_pPointSet->Get().Get();
+		for (auto a : v) a->Irradiance.Set(10, 0, 10);
+
+		std::cout << "Points to shade : [" << shadingList.size() << "]" << std::endl;
+
+		PointShader shader; std::vector<PhotonEmitter> emitterList;
+		m_pPointShader->TraceEmitters(emitterList, 256, 8192);
+		// m_pPointShader->Shade(shadingList, emitterList, 0.25f);
+
+		std::vector<int> indexList;
+		std::vector<Spectrum> irradianceList;
+
+		// 1. use indexing to send stuff 
+		m_pGPUGrid->Serialize(&filteredGrid, irradianceList, indexList);
+
+		std::cout << "Compute :: Ready" << std::endl;
+
+		int bufferSize[2] = { indexList.size(), irradianceList.size() };
+		std::cout << "Index count : " << bufferSize[0] << ", Irradiance count : " << bufferSize[1] << std::endl;
+
+		std::cout << "Send indices" << std::endl;
+
+		boost::system::error_code error;
+
+		boost::asio::write(socket_, boost::asio::buffer(bufferSize, sizeof(int) * 2), error);
+		boost::asio::write(socket_, boost::asio::buffer(indexList.data(), sizeof(int) * indexList.size()), error);
+		boost::asio::write(socket_, boost::asio::buffer(irradianceList.data(), sizeof(Spectrum) * irradianceList.size()), error);
+		
+		/*
+		boost::asio::async_write(socket_, boost::asio::buffer(bufferSize, sizeof(int) * 2),
 			boost::bind(&IrradianceConnection::handle_write, shared_from_this(),
 			boost::asio::placeholders::error,
 			boost::asio::placeholders::bytes_transferred));
+
+		boost::asio::async_write(socket_, boost::asio::buffer(indexList.data(), sizeof(int) * indexList.size()),
+			boost::bind(&IrradianceConnection::handle_write, shared_from_this(),
+			boost::asio::placeholders::error,
+			boost::asio::placeholders::bytes_transferred));
+
+		std::cout << "Send spectra" << std::endl;
+		boost::asio::async_write(socket_, boost::asio::buffer(irradianceList.data(), sizeof(Spectrum) * irradianceList.size()),
+			boost::bind(&IrradianceConnection::handle_write, shared_from_this(),
+			boost::asio::placeholders::error,
+			boost::asio::placeholders::bytes_transferred));
+		*/
 	}
 
 private:
-	IrradianceConnection(boost::asio::io_service& io_service)
+	IrradianceConnection(boost::asio::io_service& io_service, IIlluminaMT* p_pIllumina, PointSet *p_pPointSet, PointShader *p_pPointShader, GPUGrid *p_pGPUGrid)
 		: socket_(io_service)
+		, m_pIllumina(p_pIllumina)
+		, m_pPointSet(p_pPointSet)
+		, m_pPointShader(p_pPointShader)
+		, m_pGPUGrid(p_pGPUGrid)
 	{
 	}
 
@@ -1274,25 +1321,38 @@ private:
 	{
 	}
 
+	IIlluminaMT *m_pIllumina; 
+	PointSet *m_pPointSet;
+	PointShader *m_pPointShader;
+	GPUGrid *m_pGPUGrid;
+
 	tcp::socket socket_;
 	std::string message_;
 };
 
 class IrradianceServer
 {
-	IrradianceServer(boost::asio::io_service& io_service)
+	IrradianceServer(boost::asio::io_service& io_service, IIlluminaMT *p_pIllumina, PointSet *p_pPointSet, PointShader *p_pPointShader, GPUGrid *p_pGPUGrid)
 		: acceptor_(io_service, tcp::endpoint(tcp::v4(), 6666))
+		, m_pIllumina(p_pIllumina)
+		, m_pPointSet(p_pPointSet)
+		, m_pPointShader(p_pPointShader)
+		, m_pGPUGrid(p_pGPUGrid)
 	{
 		start_accept();
 	}
 
 private:
 	tcp::acceptor acceptor_;
+	IIlluminaMT *m_pIllumina;
+	PointSet *m_pPointSet;
+	PointShader *m_pPointShader;
+	GPUGrid *m_pGPUGrid;
 
 	void start_accept(void)
 	{
 		IrradianceConnection::pointer new_connection = 
-			IrradianceConnection::create(acceptor_ .get_io_service());
+			IrradianceConnection::create(acceptor_ .get_io_service(), m_pIllumina, m_pPointSet, m_pPointShader, m_pGPUGrid);
 
 		acceptor_.async_accept(new_connection->socket(),
 			boost::bind(&IrradianceServer::handle_accept, this, new_connection,
@@ -1310,12 +1370,12 @@ private:
 	}
 
 public:
-	static void Boot(void)
+	static void Boot(IIlluminaMT *p_pIllumina, PointSet *p_pPointSet, PointShader *p_pPointShader, GPUGrid *p_pGPUGrid)
 	{
 		try
 		{
 			boost::asio::io_service io_service;
-			IrradianceServer server(io_service);
+			IrradianceServer server(io_service, p_pIllumina, p_pPointSet, p_pPointShader, p_pGPUGrid);
 			io_service.run();
 		}
 		
