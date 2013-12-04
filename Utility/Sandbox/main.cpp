@@ -419,6 +419,8 @@ void IlluminaPRT(
 
 	GPUGrid grid;
 	grid.Build(pointSet.Get().Get(), 32, 1.f);
+
+	/*
 	grid.FilterByView(illumina.GetEnvironment()->GetCamera(), &filteredGrid);
 	//grid.FilterByView(illumina.GetEnvironment()->GetCamera(), cellShadingList);
 	//grid.FilterByView(illumina.GetEnvironment()->GetCamera(), shadingList);
@@ -440,10 +442,11 @@ void IlluminaPRT(
 
 	// 1. use indexing to send stuff 
 	grid.Serialize(&filteredGrid, irradianceList, indexList);
+	*/
 
+	IrradianceServer::Boot(&illumina, &pointSet, &shader, &grid);
+	std::cout << "Server started" << std::endl;
 
-	IrradianceServer::Boot();
-	
 
 	// shader.Shade(shadingList);
 	
