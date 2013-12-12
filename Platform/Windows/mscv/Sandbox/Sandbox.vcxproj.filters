@@ -40,6 +40,9 @@
     <Filter Include="Source Files\external">
       <UniqueIdentifier>{d2457496-b9d4-4a1e-b9be-946aadc9051e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\centralised">
+      <UniqueIdentifier>{6e29cfa0-0688-4bfc-b0f1-bc925a251f83}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Utility\Sandbox\main.cpp">
@@ -216,6 +219,18 @@
       <Filter>Source Files\common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Defs.h">
+      <Filter>Source Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedServer.h">
+      <Filter>Source Files\centralised</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\PointGrid.h">
+      <Filter>Source Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\PointShader.h">
+      <Filter>Source Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\DualPointGrid.h">
       <Filter>Source Files\common</Filter>
     </ClInclude>
   </ItemGroup>

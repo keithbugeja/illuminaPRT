@@ -343,6 +343,7 @@ int main(int argc, char** argv)
 #include "MultithreadedFrameless.h"
 
 #include "MultithreadedP2P.h"
+#include "MultithreadedServer.h"
 
 //----------------------------------------------------------------------------------------------
 void IlluminaPRT(
@@ -390,7 +391,7 @@ void IlluminaPRT(
 	Environment *pEnv = illumina.GetEnvironment();
 
 	/* */
-	PointSet pointSet;
+	PointSet<Dart> pointSet;
 	pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.01f, 0.75f, 1024, 64, 48, 24, 0.01f, Vector3(32));
 
 	pointSet.Load("Output//pointcloud_full.asc");
@@ -398,27 +399,22 @@ void IlluminaPRT(
 	// pointSet.Generate();
 	// std::cout << "Generated point set. Elements in grid [" << pointSet.Get().Size() << "]" << std::endl;k
 
-	PointShader shader; std::vector<PhotonEmitter> emitterList;
-	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1, 24, 48);
-	shader.TraceEmitters(emitterList, 256, 8192);
+	PointShader<Dart> shader;
+	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1);
+	shader.SetHemisphereDivisions(24, 48);
+	shader.SetVirtualPointSources(256, 8192);
+	shader.Prepare(PointShader<Dart>::PointLit);
 
-	/* */ 
-	std::ofstream emitterFile;
-	emitterFile.open("Output//emitter.asc", std::ios::binary);
+	//std::cout << "Shading points..." << std::endl;
 
-	for (auto emitter : emitterList)
-		emitterFile << emitter.Position.X << ", " << emitter.Position.Y << ", " << emitter.Position.Z << std::endl; 
+	//std::vector<Dart*> shadingList;
+	//FilteredGPUGrid filteredGrid;
 
-	emitterFile.close();
-	/* */
+	//GPUGrid grid;
+	//grid.Build(pointSet.GetContainerInstance().Get(), 32, 1.f);
 
-	std::cout << "Shading points..." << std::endl;
-
-	std::vector<Dart*> shadingList;
-	FilteredGPUGrid filteredGrid;
-
-	GPUGrid grid;
-	grid.Build(pointSet.Get().Get(), 32, 1.f);
+	DualPointGrid<Dart> grid;
+	grid.Build(pointSet.GetContainerInstance().Get(), 1.0f);
 
 	/*
 	grid.FilterByView(illumina.GetEnvironment()->GetCamera(), &filteredGrid);

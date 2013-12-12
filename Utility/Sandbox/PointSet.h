@@ -10,6 +10,8 @@
 
 #include <Maths/Montecarlo.h>
 #include <Scene/Visibility.h>
+#include "PointGrid.h"
+#include "PointShader.h"
 #include "Environment.h"
 #include "MultithreadedCommon.h"
 
@@ -23,199 +25,133 @@
 
 using namespace Illumina::Core;
 
-struct PhotonEmitter
-{
-	Spectrum Contribution;
-	Vector3	Position;
-	Vector3 Normal;
-	Vector3 Direction;
-	bool Invalid;
-};
-
 struct Dart
 {
+public:
+	enum Fields
+	{
+		F_Irradiance = 0,
+		F_Position = F_Irradiance + sizeof(float) * 3,
+		F_Normal = F_Position + sizeof(float) * 3,
+		F_Occlusion = F_Normal + sizeof(float) * 3,
+		F_Radius = F_Occlusion + sizeof(float),
+		F_Size = F_Radius + sizeof(float)
+	};
+
+public:
 	Spectrum Irradiance;
 	Vector3 Position;
 	Vector3 Normal;
 	float Radius;
 	float Occlusion;
+
 	int Accumulated;
 	bool Invalid;
-};
-
-template<class T>
-class PointGrid
-{
-protected:
-	std::vector<T*> m_pointList;
-	std::map<Int64, std::vector<T*>> m_pointGrid;
-
-	Vector3 m_centroid,
-		m_size, m_partitions,
-		m_origin;
-
-	struct Hash 
-	{
-		Int64 X : 21;
-		Int64 Y : 21;
-		Int64 Z : 21;
-	};
 
 public:
-	Int64 MakeKey(Vector3 &p_position)
+	std::string ToString(void)
 	{
-		Vector3 floatKey = (p_position - m_origin);
-		floatKey.Set(floatKey.X / m_partitions.X, floatKey.Y / m_partitions.Y, floatKey.Z / m_partitions.Z); 
+		std::stringstream result;
+
+		result << Irradiance[0] << ", " << Irradiance[1] << ", " << Irradiance[2] << ", " <<
+				Normal.X << ", " << Normal.Y << ", " << Normal.Z << ", " <<
+				Position.X << ", " << Position.Y << ", " << Position.Z << ", " <<
+				Occlusion << ", " << Radius << std::endl;
+
+		return result.str();
+	}
+
+	void FromString(std::string &p_strInput)
+	{
+		char separator; std::stringstream tokenStream(p_strInput);
+
+		tokenStream >> Irradiance[0] >> separator >> Irradiance[1] >> separator >> Irradiance[2] >> separator
+				>> Normal.X >> separator >> Normal.Y >> separator >> Normal.Z >> separator 
+				>> Position.X >> separator >> Position.Y >> separator >> Position.Z >> separator 
+				>> Occlusion >> separator >> Radius;
+
+		//Normal.X = -Normal.X;
+		//Position.X = -Position.X;
+
+		Invalid = true;
+	} 
+
+	/*
+	float* Pack(float *p_pBase)
+	{
+		float *pNext = p_pBase;
 		
-		Hash hash;
+		*pNext++ = Irradiance[0];
+		*pNext++ = Irradiance[1];
+		*pNext++ = Irradiance[2];
 
-		hash.X = (int)Maths::Floor(floatKey.X) & 0xFFFFF;
-		hash.Y = (int)Maths::Floor(floatKey.Y) & 0xFFFFF;
-		hash.Z = (int)Maths::Floor(floatKey.Z) & 0xFFFFF;
+		*pNext++ = Position.Element[0];
+		*pNext++ = Position.Element[1];
+		*pNext++ = Position.Element[2];
 
-		return *(Int64*)&hash;
-	}
+		*pNext++ = Normal.Element[0];
+		*pNext++ = Normal.Element[1];
+		*pNext++ = Normal.Element[2];
 
-protected:
-	void AddRange(T *p_pPoint) 
+		*pNext++ = Occlusion;
+		*pNext++ = Radius;
+
+		return pNext;
+	} */
+
+	int Pack(std::vector<float> *p_pElementList)
 	{
-		Vector3 extent(p_pPoint->Radius),
-			iterator;
+		p_pElementList->push_back(Irradiance[0]);
+		p_pElementList->push_back(Irradiance[1]);
+		p_pElementList->push_back(Irradiance[2]);
 
-		Vector3 minExtent(p_pPoint->Position - extent),
-				maxExtent(p_pPoint->Position + extent);
+		p_pElementList->push_back(Position.Element[0]);
+		p_pElementList->push_back(Position.Element[1]);
+		p_pElementList->push_back(Position.Element[2]);
 
-		Vector3 stepSize(m_size.X / m_partitions.X, m_size.Y / m_partitions.Y, m_size.Z / m_partitions.Y);
+		p_pElementList->push_back(Normal.Element[0]);
+		p_pElementList->push_back(Normal.Element[1]);
+		p_pElementList->push_back(Normal.Element[2]);
 
-		for (iterator.X = minExtent.X; iterator.X < maxExtent.X; iterator.X+=stepSize.X)
-		{
-			for (iterator.Y = minExtent.Y; iterator.Y < maxExtent.Y; iterator.Y+=stepSize.Y)
-			{
-				for (iterator.Z = minExtent.Z; iterator.Z < maxExtent.Z; iterator.Z+=stepSize.Z)
-				{
-					Int64 key = MakeKey(iterator);
-					m_pointGrid[key].push_back(p_pPoint);
-				}
-			}
-		}
+		p_pElementList->push_back(Occlusion);
+		p_pElementList->push_back(Radius);
+
+		return GetPackedSize();
 	}
 
-public:
-	PointGrid(void) { }
-
-	PointGrid(Vector3 &p_centroid, Vector3 &p_size, Vector3 &p_partitions)
-		: m_centroid(p_centroid)
-		, m_size(p_size)
-		, m_partitions(p_partitions)
-		, m_origin(m_centroid - m_size / 2)
-	{ }
-
-	~PointGrid(void) {
-		Clear();
-	}
-
-	void Initialise(Vector3 &p_centroid, Vector3 &p_size, Vector3 &p_partitions)
+	inline float* PackUpdate(float *p_pElement)
 	{
-		m_centroid = p_centroid;
-		m_size = p_size;
-		m_partitions = p_partitions;
-		m_origin = m_centroid - m_size / 2;
+		p_pElement[0] = Irradiance[0];
+		p_pElement[1] = Irradiance[1];
+		p_pElement[2] = Irradiance[2];
 
-		Clear();
+		return p_pElement + GetPackedSize();
 	}
 
-	void Clear(void) 
-	{ 		
-		for (auto point : m_pointList)
-			delete point;
-
-		m_pointList.clear();
-		m_pointGrid.clear();
+	inline static int GetPackedByteSize(void) {
+		return Dart::F_Size;
 	}
 
-	std::vector<T*>& Get(Int64 p_key) {
-		return m_pointGrid[p_key];
+	inline static int GetPackedSize(void) {
+		return Dart::F_Size >> 2;
 	}
-
-	std::vector<T*>& Get(Vector3 p_position) {
-		return Get(MakeKey(p_position));
-	}
-
-	void Add(Int64 p_key, T& p_point) 
-	{
-		T* point = new T(p_point);
-		m_pointList.push_back(point);
-
-		AddRange(point);
-	}
-
-	void Add(Vector3 p_position, T& p_point) {
-		Add(MakeKey(p_position), p_point);
-	}
-
-	void Get(std::vector<T> &p_pointList)
-	{
-		p_pointList.clear();
-
-		for (auto point : m_pointList)
-			p_pointList.push_back(*point);
-	}
-
-	std::vector<T*> Get(void) { 
-		return m_pointList; 
-	}
-
-	bool Contains(Vector3 p_centre, float p_fRadius)
-	{
-		Vector3 minExtent(p_centre.X - p_fRadius,
-			p_centre.Y - p_fRadius,
-			p_centre.Z - p_fRadius),
-				maxExtent(p_centre.X + p_fRadius,
-			p_centre.Y + p_fRadius,
-			p_centre.Z + p_fRadius);
-
-		Vector3 stepSize(m_size.X / m_partitions.X, m_size.Y / m_partitions.Y, m_size.Z / m_partitions.Y);
-		Vector3 iterator;
-
-		for (iterator.X = minExtent.X; iterator.X < maxExtent.X; iterator.X+=stepSize.X)
-		{
-			for (iterator.Y = minExtent.Y; iterator.Y < maxExtent.Y; iterator.Y+=stepSize.Y)
-			{
-				for (iterator.Z = minExtent.Z; iterator.Z < maxExtent.Z; iterator.Z+=stepSize.Z)
-				{
-					// if (Vector3::Distance(iterator, p_centre) <= p_fRadius)
-					{
-						std::vector<T*> list = Get(iterator);
-						for (auto point : list)
-						{
-							if (Vector3::Distance(point->Position, p_centre) < p_fRadius)
-								return true;
-						}
-					}
-				}
-			}
-		}
-
-		return false;
-	}
-
-	size_t Size(void) { 
-		return m_pointList.size();		
-	}
-
 };
 
+template <class T>
 class PointSet
 {
 protected:
-	PointGrid<Dart> m_grid;
+	PointGrid<T> m_grid;
 
 	Scene *m_pScene;
+
 	Vector3 m_subdivisions;
-	int m_nMaxDartSources,
-		m_nMaxDartsPerSource,
+
+	int m_nMaxPointSources,
+		m_nMaxPointsPerSource,
 		m_nAzimuthStrata,
 		m_nAltitudeStrata;
+
 	float m_fMinRadius,
 		m_fMaxRadius,
 		m_fOcclusionRadius,
@@ -229,65 +165,54 @@ public:
 
 	bool Save(const std::string &p_strFilename)
 	{
-		std::ofstream dartFile;
-		dartFile.open(p_strFilename.c_str(), std::ios::binary);
+		std::ofstream pointFile;
+		pointFile.open(p_strFilename.c_str(), std::ios::binary);
 
-		std::vector<Dart> dartList;
-		m_grid.Get(dartList);
+		std::vector<T> pointList;
+		m_grid.Get(pointList);
 		
-		for (auto dart : dartList)
+		for (auto point : pointList)
 		{
-			dartFile << dart.Irradiance[0] << ", " << dart.Irradiance[1] << ", " << dart.Irradiance[2] << ", " <<
-				dart.Normal.X << ", " << dart.Normal.Y << ", " << dart.Normal.Z << ", " <<
-				dart.Position.X << ", " << dart.Position.Y << ", " << dart.Position.Z << ", " <<
-				dart.Occlusion << ", " << dart.Radius << std::endl;
+			pointFile << point.ToString() << std::endl;
 		}
 
-		dartFile.close();
+		pointFile.close();
+
+		std::cout << "PointSet<T> :: Written [" << pointList.size() << "] points." << std::endl;
 
 		return true;
 	}
 
 	bool Load(const std::string &p_strFilename)
 	{
-		Dart dart;
-		char separator; float dummy;
-		std::string line;
+		T point; std::string line;
 
-		std::ifstream dartFile;
-		dartFile.open(p_strFilename.c_str(), std::ios::binary);
+		std::ifstream pointFile;
+		pointFile.open(p_strFilename.c_str(), std::ios::binary);
 
 		m_grid.Clear();
 		
-		while(std::getline(dartFile, line))
+		while(std::getline(pointFile, line))
 		{
-			std::istringstream tokenStream(line);
-			
-			tokenStream >> dart.Irradiance[0] >> separator >> dart.Irradiance[1] >> separator >> dart.Irradiance[2] >> separator
-				>> dart.Normal.X >> separator >> dart.Normal.Y >> separator >> dart.Normal.Z >> separator 
-				>> dart.Position.X >> separator >> dart.Position.Y >> separator >> dart.Position.Z >> separator 
-				>> dart.Occlusion >> separator >> dart.Radius;
-
-			dart.Invalid = true;
-
-			m_grid.Add(dart.Position, dart);
+			point.FromString(line);
+			m_grid.Add(point.Position, point);
 		}
 
-		dartFile.close();
+		pointFile.close();
 
-		std::cout << "PointGrid :: [" << m_grid.Size() << "] points loaded." << std::endl;
+		std::cout << "PointSet<T> :: Read [" << m_grid.Size() << "] points." << std::endl;
 
 		return true;
 	}
 
-	void Initialise(Scene *p_pScene, float p_fMinRadius, float p_fMaxRadius, float p_fOcclusionRadius, int p_nMaxDartSources, int p_nMaxDartsPerSource, int p_nAzimuthStrata, int p_nAltitudeStrata, float p_fReflectEpsilon, const Vector3 &p_subdivisions)
+	void Initialise(Scene *p_pScene, float p_fMinRadius, float p_fMaxRadius, float p_fOcclusionRadius, int p_nMaxPointSources, int p_nMaxPointsPerSource, int p_nAzimuthStrata, int p_nAltitudeStrata, float p_fReflectEpsilon, const Vector3 &p_subdivisions)
 	{
 		m_pScene = p_pScene;
 		m_fMinRadiusPercent = p_fMinRadius;
 		m_fMaxRadiusPercent = p_fMaxRadius;
 		m_fOcclusionRadiusPercent = p_fOcclusionRadius; 
-		m_nMaxDartSources = p_nMaxDartSources;
-		m_nMaxDartsPerSource = p_nMaxDartsPerSource;
+		m_nMaxPointSources = p_nMaxPointSources;
+		m_nMaxPointsPerSource = p_nMaxPointsPerSource;
 		m_nAzimuthStrata = p_nAltitudeStrata;
 		m_nAltitudeStrata = p_nAltitudeStrata;
 		m_fReflectEpsilon = p_fReflectEpsilon;
@@ -305,115 +230,137 @@ public:
 		m_fOcclusionRadius = m_fOcclusionRadiusPercent * size.MaxAbsComponent();
 	}
 
-	PointGrid<Dart>& Get(void) {
+	PointGrid<T>& GetContainerInstance(void) 
+	{
 		return m_grid;
 	}
 
-	void Generate(void)
+	void Generate(bool p_bSavePoints = true, bool p_bSavePointSources = true)
 	{
+		// Dart source (emitter) list
+		std::vector<T> pointSourceList;
+
+		// Clear grid : generating points
 		m_grid.Clear();
 
-		std::vector<Dart> dartSourceList;
+		// Generate point sources
+		std::cout << "Generating point sources..." << std::endl;
+		GeneratePointSource(m_nMaxPointSources * 6, 6, pointSourceList);
 
-		// Generate dart sources
-		std::cout << "Generating dart sources..." << std::endl;
-		GenerateDartSources(m_nMaxDartSources * 6, 6, dartSourceList);
+		// Persist point sources
+		if (p_bSaveDartSources)
+		{
+			std::ofstream pointSourceFile; pointSourceFile.open("Output//pointSources.asc", std::ios::binary);
 
-		// Persist
-		std::ofstream dartFile;
-		dartFile.open("Output//dartCloud.asc", std::ios::binary);
+			for (auto pointSource : pointSourceList)
+				pointSourceFile << pointSource.Position.X << ", " << pointSource.Position.Y << ", " << pointSource.Position.Z << std::endl;
 
-		for (auto darts : dartSourceList)
-			dartFile << darts.Position.X << ", " << darts.Position.Y << ", " << darts.Position.Z << std::endl;
+			pointSourceFile.close();
 
-		dartFile.close();
+			std::cout << "Saved point sources." << std::endl;
+		}
 
 		// Throw darts
-		std::cout << "Generate darts..." << std::endl;
-		GenerateDarts(dartSourceList);
+		std::cout << "Generating points..." << std::endl;
+		GeneratePoints(pointSourceList);
+
+		// Get points
+		std::vector<T> points; m_grid.Get(points);
 
 		// Persist
-		dartFile.open("Output//pointCloud.asc", std::ios::binary);
+		if (p_bSavePoints)
+		{
+			std::ofstream pointFile; pointFile.open("Output//points.asc", std::ios::binary);
 		
-		std::vector<Dart> pointCloud; m_grid.Get(pointCloud);
-		for (auto dart : pointCloud)
-			dartFile << dart.Position.X << ", " << dart.Position.Y << ", " << dart.Position.Z << std::endl;
+			for (auto point : points)
+				pointFile << point.Position.X << ", " << point.Position.Y << ", " << point.Position.Z << std::endl;
 
-		dartFile.close();
+			pointFile.close();
+
+			std::cout << "Saved points." << std::endl;
+		}
+
+		std::cout << "Point cloud [" << points.size() << "] generated using [" << pointSourceList.size() << "] emitters." << std::endl;
 	}
 
 protected:
-	void GenerateDarts(std::vector<Dart> &p_dartSourceList)
+	/* 
+	 * Generate points in final point cloud from dart sources 
+	 */
+	void GeneratePoints(std::vector<T> &p_pointSourceList)
 	{
-		Ray dart;
-		Vector2 sample, rayDetails;
+		Ray dartRay;
 		Vector3 direction;
-		Intersection intersection;
+		Vector2 rayDetails, 
+			sample;
 
 		IBoundingVolume *pBoundingVolume = m_pScene->GetSpace()->GetBoundingVolume();
-		
 		Vector3 centroid = pBoundingVolume->GetCentre();
 		Vector3 size = pBoundingVolume->GetSize();
+
+		Intersection intersection;
 		OrthonormalBasis basis;
 
 		int discarded = 0,
 			dartCount = 0, 
-			dartMaxCount = m_nMaxDartSources * m_nMaxDartsPerSource;
+			dartMaxCount = m_nMaxPointSources * m_nMaxPointsPerSource;
 
+		// Initialise grid with give parameters
 		m_grid.Initialise(centroid, size, m_subdivisions);
 		
-		for (auto dartSource : p_dartSourceList)
+		// Start throwing darts for each source
+		for (auto dartSource : p_pointSourceList)
 		{
-			for (int dartIndex = 0; dartIndex < m_nMaxDartsPerSource; dartIndex++)
+			LowDiscrepancySampler directionSampler;
+
+			for (int dartIndex = 0; dartIndex < m_nMaxPointsPerSource; dartIndex++)
 			{
-				sample = m_pScene->GetSampler()->Get2DSample();
-				
+				// Sample new direction
+				sample = directionSampler.Get2DSample();
 				direction = Montecarlo::UniformSampleSphere(sample.U, sample.V);
 
+				// Create a basis coordinate frame and project direction
 				basis.InitFromW(dartSource.Normal);
 				direction.Z = Maths::Abs(direction.Z);
 				direction = basis.Project(direction);
 
-				dart.Set(dartSource.Position + direction * m_fReflectEpsilon, direction, m_fReflectEpsilon, Maths::Maximum);
+				// Set ray direction
+				dartRay.Set(dartSource.Position + direction * m_fReflectEpsilon, direction, m_fReflectEpsilon, Maths::Maximum);
 				
+				// Intersection
 				if (m_pScene->Intersects(dart, intersection))
 				{
 					std::cout << "[" << dartCount++ << " of " << dartMaxCount << "] Index : " << dartIndex << ", Centre : " << intersection.Surface.PointWS.ToString() << std::endl; 
 
 					// Reject trivially
-					/* */
 					if (m_grid.Contains(intersection.Surface.PointWS, m_fMinRadius)) 
 					{
 						discarded++;
 						continue;
 					}
-					/* */
 
-					// std::cout << "Point not trivially rejected" << std::endl;
+					T point;
 
-					Dart dartPoint;
+					point.Invalid = true;
+					point.Irradiance = 0.0f;
+					point.Position = intersection.Surface.PointWS;
+					point.Normal = intersection.Surface.ShadingBasisWS.W;
+					point.Occlusion = ComputeAmbientOcclusion(intersection, m_fOcclusionRadius, rayDetails);
+					point.Radius = dartPoint.Occlusion * m_fMaxRadius;
 
-					dartPoint.Invalid = true;
-					dartPoint.Position = intersection.Surface.PointWS;
-					dartPoint.Normal = intersection.Surface.ShadingBasisWS.W;
-					dartPoint.Occlusion = ComputeAmbientOcclusion(intersection, m_fOcclusionRadius, rayDetails);
-					dartPoint.Radius = dartPoint.Occlusion * m_fMaxRadius;
-
-					std::cout << "Ambient occlusion computed [" << dartPoint.Occlusion << "] for radius [" << dartPoint.Radius << "]" << std::endl;
-					/* */
-					if (dartPoint.Radius > m_fMinRadius && m_grid.Contains(intersection.Surface.PointWS, dartPoint.Radius)) 
+					std::cout << "Ambient occlusion computed [" << point.Occlusion << "] for radius [" << point.Radius << "]" << std::endl;
+					if (point.Radius > m_fMinRadius && m_grid.Contains(intersection.Surface.PointWS, point.Radius)) 
 					{
 						discarded++;
 						continue;
 					}
-					/* */
 
 					std::cout << "Point accepted" << std::endl;
 
 					// Make sure contribution is not less than minradius
-					dartPoint.Radius = Maths::Max(dartPoint.Radius, m_fMinRadius);
+					point.Radius = Maths::Max(point.Radius, m_fMinRadius);
 
-					m_grid.Add(dartPoint.Position, dartPoint);
+					m_grid.Add(point.Position, point);
 				}
 			}
 		}
@@ -421,12 +368,15 @@ protected:
 		std::cout << "Grid Generation :: Points discarded [" << discarded << "]" << std::endl;
 	}
 
-	void GenerateDartSources(int p_nMaxPaths, int p_nMaxBounces, std::vector<Dart> &p_dartSourceList)
+	/*
+	 * Generate point sources by following photon emitters in scene
+	 */
+	void GeneratePointSources(int p_nMaxPaths, int p_nMaxBounces, std::vector<Dart> &p_pointSourceList)
 	{
 		Intersection intersection;
 		IMaterial *pMaterial;
 		BxDF::Type bxdfType = BxDF::All_Combined;
-		Dart dartThrower;
+		T pointSource;
 		Ray lightRay;
 
 		Spectrum contribution, 
@@ -448,7 +398,7 @@ protected:
 		int intersections;
 
 		// Trace either a maximum number of paths or virtual point lights
-		for (int lightIndex = 0, nPathIndex = p_nMaxPaths; nPathIndex > 0 && p_dartSourceList.size() < m_nMaxDartSources; --nPathIndex)
+		for (int lightIndex = 0, nPathIndex = p_nMaxPaths; nPathIndex > 0 && p_pointSourceList.size() < m_nMaxPointSources; --nPathIndex)
 		{
 			// Get samples for initial position and direction
 			positionSample = positionSampler.Get2DSample();
@@ -474,11 +424,11 @@ protected:
 				Spectrum Le = alpha * pMaterial->Rho(wOut, intersection.Surface) / Maths::Pi;
 
 				// Set point light parameters
-				dartThrower.Position = intersection.Surface.PointWS;
-				dartThrower.Normal = intersection.Surface.GeometryBasisWS.W;
+				pointSource.Position = intersection.Surface.PointWS;
+				pointSource.Normal = intersection.Surface.GeometryBasisWS.W;
 
 				// Push point light on list
-				p_dartSourceList.push_back(dartThrower);
+				p_pointSourceList.push_back(pointSource);
 
 				// Sample new direction
 				sample = m_pScene->GetSampler()->Get2DSample();
@@ -510,10 +460,13 @@ protected:
 		}
 
 		// Just in case we traced more than is required
-		if (p_dartSourceList.size() > m_nMaxDartSources)
-			p_dartSourceList.erase(p_dartSourceList.begin() + m_nMaxDartSources, p_dartSourceList.end());
+		if (p_pointSourceList.size() > m_nMaxPointSources)
+			p_pointSourceList.erase(p_pointSourceList.begin() + m_nMaxPointSources, p_pointSourceList.end());
 	}
 
+	/*
+	 * Compute ambient occlusion
+	 */
 	float ComputeAmbientOcclusion(Intersection &p_intersection, float p_fRadius, Vector2 &p_rayLengths)
 	{
 		Vector2 sample2D;
@@ -551,837 +504,6 @@ protected:
 			}
 		}
 
-		//p_rayLengths.U = Maths::Clamp(mn / harmonicMean, m_fMinRadius, m_fMaxRadius);
-		//return Maths::Min(p_rayLengths.V, p_fRadius) / p_fRadius;
 		return Maths::Clamp(totalLength / (mn * p_fRadius), 0, 1);
-	}
-};
-
-class PointShader
-{
-protected:
-	int m_nAzimuthStrata,
-		m_nAltitudeStrata,
-		m_nShadowRayCount,
-		m_nRayDepth;
-
-	float m_fReflectEpsilon;
-
-	Scene *m_pScene;
-
-public:
-	void TraceEmitters(std::vector<PhotonEmitter> &p_photonEmitterList, int p_nMaxEmitters, int p_nMaxPaths)
-	{
-		const int lightCount = m_pScene->LightList.Size();
-		
-		if (lightCount == 0)
-			return;
-
-
-		Ray lightRay;
-		IMaterial *pMaterial;
-		PhotonEmitter emitter;
-		Intersection intersection;
-		BxDF::Type bxdfType = 
-			BxDF::All_Combined;
-
-		Spectrum contribution, 
-			alpha, f;
-
-		Vector3 normal, 
-			wOut, wIn;
-
-		RandomSampler sequenceSampler;
-
-		LowDiscrepancySampler positionSampler,
-			directionSampler, continueSampler;
-
-		Vector2 positionSample, 
-			directionSample,
-			sample;
-
-		int intersections, index = 0;
-
-		float continueProbability, pdf, 
-			lightPdf = 1.f / lightCount;
-
-		int lightIndex = 0;
-		int secondary = 0;
-
-		// Trace either a maximum number of paths or virtual point lights
-		// for (int lightIndex = 0, nPathIndex = p_nMaxPaths; nPathIndex > 0 && p_photonEmitterList.size() < p_nMaxEmitters; --nPathIndex)
-
-		while (p_photonEmitterList.size() <= p_nMaxEmitters)
-		{
-			// Get samples for initial position and direction
-			positionSample = positionSampler.Get2DSample();
-			directionSample = directionSampler.Get2DSample();
-		
-			// Get initial radiance, position and direction
-			alpha = m_pScene->LightList[lightIndex]->SampleRadiance(
-				m_pScene, positionSample.U, positionSample.V,
-				directionSample.U, directionSample.V, lightRay, pdf);
-
-			// Hack to test shit
-			// lightRay.Direction = Vector3::UnitYPos;
-
-			// If pdf or radiance are zero, choose a new path
-			if (pdf == 0.0f || alpha.IsBlack())
-				continue;
-
-			// Scale radiance by pdf
-			alpha /= pdf * lightPdf;
-
-			// Start tracing virtual point light path
-			for (intersections = 1; !alpha.IsBlack() && m_pScene->Intersects(lightRay, intersection); ++intersections)
-			{
-				// No valid intersection
-				if (intersection.Surface.Distance <= m_fReflectEpsilon || intersection.Surface.Distance == Maths::Maximum)
-					break;
-
-				if (!intersection.HasMaterial())
-					break;
-
-				// Omega out
-				wOut = -lightRay.Direction;
-				
-				// BSDF
-				pMaterial = intersection.GetMaterial();
-
-				// Create vpl at ray intersection point
-				emitter.Contribution = alpha * pMaterial->Rho(wOut, intersection.Surface) * Maths::InvPi;
-				emitter.Position = intersection.Surface.PointWS;
-				emitter.Normal = intersection.Surface.ShadingBasisWS.W;
-					
-				p_photonEmitterList.push_back(emitter);
-
-				// Sample contribution and new ray
-				sample = directionSampler.Get2DSample();
-
-				f = pMaterial->SampleF(intersection.Surface, wOut, wIn, sample.U, sample.V, &pdf, bxdfType);
-
-				// If reflectivity or pdf are zero, end path
-				if (f.IsBlack() || pdf == 0.0f)
-					break;
-
-				contribution = f * wIn.AbsDot(intersection.Surface.ShadingBasisWS.W) / pdf;
-				continueProbability = Maths::Min(1.f, contribution.Luminance());
-
-				if (continueSampler.Get1DSample() > continueProbability || intersections == 10)
-					break;
-				
-				alpha *= contribution / continueProbability;
-				lightRay.Set(intersection.Surface.PointWS + m_fReflectEpsilon * wIn, wIn, m_fReflectEpsilon, Maths::Maximum);
-
-				if (intersections > 1)
-					secondary++;
-			}
-
-			lightIndex = (lightIndex + 1) % lightCount;
-
-			/*
-			// Increment light index, and reset if we traversed all scene lights
-			if (++lightIndex == m_pScene->LightList.Size())
-				lightIndex = 0;
-			*/
-		}
-
-		// Just in case we traced more than is required
-		if (p_photonEmitterList.size() > p_nMaxEmitters)
-			p_photonEmitterList.erase(p_photonEmitterList.begin() + p_nMaxEmitters, p_photonEmitterList.end());	
-
-		float emitterCount = p_photonEmitterList.size();
-
-		for (auto emitter : p_photonEmitterList)
-			emitter.Contribution /= emitterCount;
-
-		std::cout << "Secondary photons : " << secondary << std::endl;
-	}
-
-protected:
-	Spectrum Shade(Vector3 &p_position, Vector3 &p_normal)
-	{
-		Intersection isect;
-		Vector3 direction;
-		Vector2 sample2D;
-		Ray ray;
-
-		Spectrum E = 0;
-	
-		OrthonormalBasis basis; 
-		basis.InitFromW(p_normal);
-	
-		// Cache this - it doesn't change!
-		int mn = m_nAzimuthStrata * m_nAltitudeStrata;
-
-		for (int altitudeIndex = 0; altitudeIndex < m_nAltitudeStrata; altitudeIndex++)
-		{
-			for (int azimuthIndex = 0; azimuthIndex < m_nAzimuthStrata; azimuthIndex++)
-			{
-				sample2D = m_pScene->GetSampler()->Get2DSample();
-
-				direction = Montecarlo::CosineSampleHemisphere(sample2D.X, sample2D.Y, (float)altitudeIndex, (float)azimuthIndex, (float)m_nAltitudeStrata, (float)m_nAzimuthStrata); 
-				direction = basis.Project(direction);
-
-				ray.Set(p_position + direction * m_fReflectEpsilon, direction, m_fReflectEpsilon, Maths::Maximum);
-
-				E += PathLi(ray);
-			}
-		}
-
-		return E / mn;
-	}
-
-	static float SmoothStep(float min, float max, float value)
-	{
-		float v = (value - min) / (max - min);
-		if (v < 0.0f) v = 0.0f;
-		if (v > 1.0f) v = 1.0f;
-		return v * v * (-2.f * v  + 3.f);
-	}
-
-	Spectrum PathGather(Vector3 &p_position, Vector3 &p_normal, std::vector<PhotonEmitter> &p_emitterList, float p_fGTermMax)
-	{
-		VisibilityQuery emitterQuery(m_pScene);
-		Spectrum Le(0), f;
-		Vector3 wIn;
-		int samplesUsed = 1;
-		float indirectScale = 1.f, // 0.01f,
-			minDist = 0.5f,
-			cosTheta;
-
-		for (auto emitter : p_emitterList)
-		{
-			wIn = emitter.Position - p_position;
-			const float d2 = wIn.LengthSquared();
-			wIn.Normalize();
-
-			if ((cosTheta = emitter.Normal.Dot(-wIn)) > 0.0f)
-			{
-				emitterQuery.SetSegment(p_position, m_fReflectEpsilon, emitter.Position, m_fReflectEpsilon);
-				
-				if (!emitterQuery.IsOccluded())
-				{
-					const float distScale = SmoothStep(0.8f * minDist, 1.2f * minDist, d2);
-
-					float G = cosTheta * p_normal.Dot(wIn) / d2;
-					G = Maths::Min(G, p_fGTermMax);
-
-					Le += emitter.Contribution *
-							distScale *
-							Maths::InvPiTwo * G;
-
-					samplesUsed++;
-				}
-			}
-		}
-
-		return (Le * indirectScale) / (float)p_emitterList.size();
-	}
-
-	Spectrum PathLi(Ray &p_ray)
-	{
-		IMaterial *pMaterial = NULL;
-		bool specularBounce = false;
-	
-		Spectrum L(0.f),
-			pathThroughput = 1.;
-	
-		Ray ray(p_ray); p_ray.Max = 1.f;
-	
-		BxDF::Type bxdfType;
-	
-		Vector3 wIn, wOut, 
-			wInLocal, wOutLocal; 
-
-		float pdf;
-
-		// Trace
-		for (int pathLength = 0; ; ++pathLength) 
-		{
-			// Find next vertex of path
-			Intersection isect;
-		
-			if (!m_pScene->Intersects(ray, isect))
-				break;
-
-			// Get material
-			if (!isect.HasMaterial()) 
-				break;
-		
-			pMaterial = isect.GetMaterial();
-
-			// Set distance if first bounce
-			if (pathLength == 0)
-				p_ray.Max = isect.Surface.Distance;
-
-			wOut = -ray.Direction;
-
-			// Possibly add emitted light at path vertex
-			if (specularBounce)
-			{
-				if (isect.IsEmissive())
-				{
-					L += pathThroughput * 
-						isect.GetLight()->Radiance(
-							isect.Surface.PointWS, 
-							isect.Surface.GeometryBasisWS.W, 
-							wOut);
-				}
-			}
-	
-			// Sample illumination from lights to find path contribution
-			L += pathThroughput * IIntegrator::SampleAllLights(m_pScene, isect, 
-				isect.Surface.PointWS, isect.Surface.ShadingBasisWS.W, wOut, 
-				m_pScene->GetSampler(), isect.GetLight(), m_nShadowRayCount);
-
-			if (pathLength + 1 == m_nRayDepth) break;
-
-			// Sample bsdf for next direction
-			Vector2 sample = m_pScene->GetSampler()->Get2DSample();
-
-			// Convert to surface coordinate system where (0,0,1) represents surface normal
-			BSDF::WorldToSurface(isect.WorldTransform, isect.Surface, wOut, wOutLocal);
-
-			// Sample new direction in wIn (remember we're tracing backwards)
-			Spectrum f = pMaterial->SampleF(isect.Surface, wOutLocal, wInLocal, sample.U, sample.V, &pdf, BxDF::All_Combined, &bxdfType);
-
-			// If the reflectivity or pdf are zero, terminate path
-			if (f.IsBlack() || pdf == 0.0f) break;
-
-			// Record if bounce is a specular bounce
-			specularBounce = ((int)(bxdfType & BxDF::Specular)) != 0;
-
-			// Convert back to world coordinates
-			BSDF::SurfaceToWorld(isect.WorldTransform, isect.Surface, wInLocal, wIn);
-		
-			// Adjust path for new bounce
-			// ray.Set(isect.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, m_fReflectEpsilon, Maths::Maximum);
-			ray.Set(isect.Surface.PointWS, wIn, m_fReflectEpsilon, Maths::Maximum);
-		
-			// Update path contribution at current stage
-			pathThroughput *= f * Vector3::AbsDot(wIn, isect.Surface.ShadingBasisWS.W) / pdf;
-
-			// Use Russian roulette to possibly terminate path
-			if (pathLength > 2)
-			{
-				float continueProbability = Maths::Min(0.5f, 0.33f * (pathThroughput[0] + pathThroughput[1] + pathThroughput[2]));
-
-				if (m_pScene->GetSampler()->Get1DSample() > continueProbability)
-					break;
-
-				pathThroughput /= continueProbability;
-			}
-		}
-
-		return L * Maths::InvPi;
-	}
-
-public:
-	void Initialise(Scene *p_pScene, float p_fReflectEpsilon, int p_nRayDepth, int p_nShadowRayCount, int p_nAzimuthStrata, int p_nAltitudeStrata)
-	{
-		m_pScene = p_pScene;
-
-		m_fReflectEpsilon = p_fReflectEpsilon;
-
-		m_nRayDepth = p_nRayDepth;
-		m_nShadowRayCount = p_nShadowRayCount;
-		m_nAltitudeStrata = p_nAltitudeStrata;
-		m_nAzimuthStrata = p_nAzimuthStrata;
-	}
-
-	void Shade(std::vector<Dart*> &p_pointList, std::vector<PhotonEmitter> &p_emitterList, float p_fGTermMax)
-	{
-		std::cout << "Shading point using PathGather..." << std::endl;
-
-		double total = Platform::GetTime();
-
-		for (auto point : p_pointList)
-		{
-			if (point->Invalid)
-			{
-				double timestart = Platform::GetTime();
-				point->Irradiance = PathGather(point->Position, point->Normal, p_emitterList, p_fGTermMax);
-				point->Invalid = false;
-				std::cout << "Shaded in [" << Platform::ToSeconds(Platform::GetTime() - timestart) << "]" << std::endl;
-			}
-		}
-
-		std::cout << "Shaded [" << p_pointList.size() << "] in [" << Platform::ToSeconds(Platform::GetTime() - total) << "]" << std::endl;
-	}
-
-	void Shade(std::vector<Dart*> &p_pointList)
-	{
-		std::cout << "Shading point using PathLi..." << std::endl;
-
-		double total = Platform::GetTime();
-
-		for (auto point : p_pointList)
-		{
-			if (point->Invalid)
-			{
-				double timestart = Platform::GetTime();
-				point->Irradiance = Shade(point->Position, point->Normal);
-				point->Invalid = false;
-				std::cout << "Shaded in [" << Platform::ToSeconds(Platform::GetTime() - timestart) << "]" << std::endl;
-			}
-		}
-
-		std::cout << "Shaded [" << p_pointList.size() << "] in [" << Platform::ToSeconds(Platform::GetTime() - total) << "]" << std::endl;
-	}
-};
-
-class FilteredGPUGrid
-{
-public:
-	std::set<Dart*> FilteredSampleSet;
-
-protected:
-	std::vector<Dart*> *m_pGlobalSampleList;
-	std::vector<int> m_cellList;
-
-public:
-	void SetGlobalSampleList(std::vector<Dart*> *p_pGlobalSampleList) {
-		m_pGlobalSampleList = p_pGlobalSampleList;
-	}
-
-	void MarkCell(int p_nKey) {
-		m_cellList.push_back(p_nKey);
-	}
-
-	std::vector<int> *GetMarkedCells(void) {
-		return &m_cellList;
-	}
-
-	void GetFilteredSampleList(std::vector<Dart*> &p_sampleList)
-	{
-		p_sampleList.clear();
-
-		for (auto sample : FilteredSampleSet)
-		{
-			p_sampleList.push_back(sample);
-		}
-	}
-};
-
-class GPUGrid
-{
-protected:
-	Vector3 m_minExtents,
-		m_maxExtents,
-		m_size;
-
-	float m_edgeSize,
-		m_cellSize;
-
-	int m_subdivisions;
-
-	std::vector<Dart*> m_sampleList;
-	std::map<int, std::vector<Dart*>> m_grid;
-	std::map<int, int> m_gridIndices;
-
-public:
-	Vector3 GetOrigin(void) const {
-		return m_minExtents;
-	}
-
-	float GetCellSize(void) const {
-		return m_cellSize;
-	}
-
-	int GetSubdivisions(void) const {
-		return m_subdivisions;
-	}
-
-protected:
-	int MakeKey(const Vector3 &p_position)
-	{
-		Vector3 offset = (p_position - m_minExtents) / m_cellSize;
-		
-		int x = (int)offset.X, 
-			y = (int)offset.Y,
-			z = (int)offset.Z;
-
-		return (int)( (x & 0x1F) | ((y & 0x1F) << 5) | ((z & 0x1F) << 10) ); 
-	}
-
-	int MakeKey(int x, int y, int z)
-	{
-		return (int)( (x & 0x1F) | ((y & 0x1F) << 5) | ((z & 0x1F) << 10) ); 
-	}
-
-	void Add(int p_key, Dart *p_pSample)
-	{
-		if (m_grid.find(p_key) == m_grid.end())
-			m_grid[p_key] = std::vector<Dart*>();
-
-		m_grid[p_key].push_back(p_pSample);
-	}
-
-	// Optimisation : Only put points in cells that intersect geometry!
-	void AddRange(const Vector3 &p_position, float p_fRadius, Dart *p_pSample)
-	{
-		Vector3 extent(p_fRadius);
-
-		Vector3 minExtent = p_position - extent,
-			maxExtent = p_position + extent,
-			posIter = Vector3::Zero;
-
-		for (posIter.Z = minExtent.Z; posIter.Z <= maxExtent.Z; posIter.Z += m_cellSize)
-		{
-			for (posIter.Y = minExtent.Y; posIter.Y <= maxExtent.Y; posIter.Y += m_cellSize)
-			{
-				for (posIter.X = minExtent.X; posIter.X <= maxExtent.X; posIter.X += m_cellSize)
-				{
-					Add(MakeKey(posIter), p_pSample);
-				}
-			}
-		}
-	}
-
-public:
-	void Build(std::vector<Dart*> &p_sampleList, int p_subdivisions, float p_searchRadius)
-	{
-		std::cout << "GPUGrid :: Estimating dimensions..." << std::endl;
-
-		// Clear grid with sample lists
-		m_grid.clear();
-
-		// Set the grid extents
-		m_minExtents = Vector3(Maths::Maximum);
-		m_maxExtents = -Maths::Maximum;
-	
-		for(auto sample : p_sampleList)
-		{
-			m_maxExtents = Vector3::Max(m_maxExtents, sample->Position);
-			m_minExtents = Vector3::Min(m_minExtents, sample->Position);
-
-			m_sampleList.push_back(sample);
-		}
-
-		std::cout << "GPUGrid :: Extents [" << m_minExtents.ToString() << " - " << m_maxExtents.ToString() << "]" << std::endl;
-		std::cout << "GPUGrid :: Inserting irradiance sample placeholders..." << std::endl;
-
-		// Compute the grid parameters
-		m_subdivisions = p_subdivisions;
-		m_size = m_maxExtents - m_minExtents;
-		m_edgeSize = m_size.MaxAbsComponent();
-		m_cellSize = m_edgeSize / m_subdivisions;
-
-		// Modify grid to fit cube
-		m_size.Set(m_edgeSize, m_edgeSize, m_edgeSize);
-		m_maxExtents = m_minExtents + m_size;
-
-		// Fill grid
-		for (auto sample : m_sampleList)
-		{
-			AddRange(sample->Position, p_searchRadius + m_cellSize * 0.5f, sample);
-		}
-
-		// By now, all samples exist in their respective cells, so we index
-		// the starting element in each cell.
-		std::cout << "GPUGrid :: Computing flat sample indices..." << std::endl;
-
-		int currentIndex = 0, key;
-
-		m_gridIndices.clear();
-
-		for (int z = 0; z < 0x1f; z++)
-		{
-			for (int y = 0; y < 0x1f; y++)
-			{
-				for (int x = 0; x < 0x1f; x++)
-				{
-					key = MakeKey(x, y, z);
-
-					m_gridIndices[key] = currentIndex;
-
-					if (m_grid.find(key) != m_grid.end()) 
-						currentIndex += m_grid[key].size();
-				}
-			}
-		}
-
-		std::cout << "GPUGrid :: Indexed [" << currentIndex << "] samples in [" << m_gridIndices.size() << "] cells" << std::endl;
-	}
-
-	void FilterByView(const ICamera *p_pCamera, FilteredGPUGrid *p_pFilteredGrid)
-	{
-		// First we get 4 corner rays from which to build frustum planes.
-		Ray topLeft = p_pCamera->GetRay(0,0,0,0),
-			topRight = p_pCamera->GetRay(1,0,1,0),
-			bottomLeft = p_pCamera->GetRay(0,1,0,1),
-			bottomRight = p_pCamera->GetRay(1,1,1,1),
-			centre(p_pCamera->GetObserver(), p_pCamera->GetFrame().W);
-
-		float in[5], out[5];
-		AxisAlignedBoundingBox aabb(m_minExtents, m_maxExtents);
-
-		aabb.Intersects(topLeft, in[0], out[0]);
-		aabb.Intersects(topRight, in[1], out[1]);
-		aabb.Intersects(bottomLeft, in[2], out[2]);
-		aabb.Intersects(bottomRight, in[3], out[3]);
-		aabb.Intersects(centre, in[4], out[4]);
-
-		Vector3 frustumVerts[6] = {	
-			topLeft.PointAlongRay(out[0]),
-			topRight.PointAlongRay(out[1]),
-			bottomLeft.PointAlongRay(out[2]),
-			bottomRight.PointAlongRay(out[3]),
-			centre.PointAlongRay(out[4]),
-			p_pCamera->GetObserver() 
-		};
-
-		// Build frustum planes
-		//Plane left(frustumVerts[0], frustumVerts[2], frustumVerts[4]),
-		//	right(frustumVerts[1], frustumVerts[3], frustumVerts[4]),
-		//	top(frustumVerts[0], frustumVerts[1], frustumVerts[4]),
-		//	bottom(frustumVerts[2], frustumVerts[3], frustumVerts[4]);
-
-		Plane left(frustumVerts[0], frustumVerts[2], frustumVerts[4]),
-			right(frustumVerts[4], frustumVerts[3], frustumVerts[1]),
-			top(frustumVerts[0], frustumVerts[1], frustumVerts[4]),
-			bottom(frustumVerts[2], frustumVerts[3], frustumVerts[4]);
-
-		// Compute aabb for frustum
-		AxisAlignedBoundingBox frustum;
-		frustum.ComputeFromPoints((Vector3*)frustumVerts, 6);
-
-		Vector3 frustumMinExtent = frustum.GetMinExtent(),
-			frustumMaxExtent = frustum.GetMaxExtent(),
-			frustumIter = Vector3::Zero;
-
-		std::cout << "Frustum bounds : " << frustumMinExtent.ToString() << " - " << frustumMaxExtent.ToString() << std::endl;
-
-		// Sync inner frustum to grid cells
-		Vector3 alignedCellStart = (frustumMinExtent - m_minExtents) / m_cellSize,
-			alignedCellSize(m_cellSize);
-
-		alignedCellStart.Set(((int)alignedCellStart.X) * m_cellSize, 
-			((int)alignedCellStart.Y) * m_cellSize,
-			((int)alignedCellStart.Z) * m_cellSize);
-		
-		alignedCellStart += m_minExtents;
-
-		AxisAlignedBoundingBox cell;
-		int cellcount = 0;
-
-		p_pFilteredGrid->SetGlobalSampleList(&m_sampleList);
-		p_pFilteredGrid->FilteredSampleSet.clear();
-
-		for (frustumIter.Z = frustumMinExtent.Z; frustumIter.Z < frustumMaxExtent.Z + m_cellSize * 0.5f; frustumIter.Z += m_cellSize)
-		{
-			Vector3 alignedCellStart4Y = alignedCellStart;
-			for (frustumIter.Y = frustumMinExtent.Y; frustumIter.Y < frustumMaxExtent.Y + m_cellSize * 0.5f; frustumIter.Y += m_cellSize)
-			{
-				Vector3 alignedCellStart4X = alignedCellStart4Y;
-				for (frustumIter.X = frustumMinExtent.X; frustumIter.X < frustumMaxExtent.X + m_cellSize * 0.5f; frustumIter.X += m_cellSize)
-				{
-					int key = MakeKey(frustumIter);
-
-					cell.SetExtents(alignedCellStart4X, alignedCellStart4X + alignedCellSize);
-					alignedCellStart.X += m_cellSize;
-					
-					if (m_grid.find(key) != m_grid.end())
-					{
-						p_pFilteredGrid->MarkCell(key);
-						
-						for (auto sample : m_grid[MakeKey(frustumIter)])
-							p_pFilteredGrid->FilteredSampleSet.insert(sample);
-					}
-
-					cellcount++;
-				}
-
-				alignedCellStart4Y.Y += m_cellSize;
-			}
-
-			alignedCellStart.Z += m_cellSize;
-		}
-
-		// TODO: Use an LDS to selectively sample points
-		// Should we not provide a list of affected cells instead?
-
-		std::cout << "Considered [" << cellcount << " of " << 32 * 32 * 32 << "]" << std::endl;	
-		std::cout << "Filtered Samples [" << p_pFilteredGrid->FilteredSampleSet.size() << "]" << std::endl;
-	}
-
-	void Serialize(FilteredGPUGrid *p_pFilteredGrid, std::vector<Spectrum> &p_irradianceList, std::vector<int> &p_indexList)
-	{
-		std::vector<int> *pMarkedCells = p_pFilteredGrid->GetMarkedCells();
-
-		for (auto cell : *pMarkedCells)
-		{
-			p_indexList.push_back(m_gridIndices[cell]);
-			p_indexList.push_back(m_grid[cell].size());
-
-			for (auto e : m_grid[cell])
-			{
-				p_irradianceList.push_back(e->Irradiance);
-			}
-		}
-
-		std::cout << "Cells :: [" << p_indexList.size() << "]" << std::endl;
-		std::cout << "Irradiance Records :: [" << p_irradianceList.size() << "]" << std::endl;
-	}
-};
-
-using boost::asio::ip::tcp;
-
-std::string make_daytime_string()
-{
-  using namespace std; // For time_t, time and ctime;
-  time_t now = time(0);
-  return ctime(&now);
-}
-
-class IrradianceConnection
-	: public boost::enable_shared_from_this<IrradianceConnection>
-{
-public:
-	typedef boost::shared_ptr<IrradianceConnection> pointer;
-
-	static pointer create(boost::asio::io_service &io_service, IIlluminaMT *p_pIllumina, PointSet *p_pPointSet, PointShader *p_pPointShader, GPUGrid *p_pGPUGrid)
-	{
-		return pointer(new IrradianceConnection(io_service, p_pIllumina, p_pPointSet, p_pPointShader, p_pGPUGrid));
-	}
-
-	tcp::socket &socket()
-	{
-		return socket_;
-	}
-
-	void start()
-	{
-		FilteredGPUGrid filteredGrid;
-		m_pGPUGrid->FilterByView(m_pIllumina->GetEnvironment()->GetCamera(), &filteredGrid);
-
-		std::vector<Dart*> shadingList;
-		filteredGrid.GetFilteredSampleList(shadingList);
-	
-		std::vector<Dart*> &v = m_pPointSet->Get().Get();
-		for (auto a : v) a->Irradiance.Set(10, 0, 10);
-
-		std::cout << "Points to shade : [" << shadingList.size() << "]" << std::endl;
-
-		PointShader shader; std::vector<PhotonEmitter> emitterList;
-		m_pPointShader->TraceEmitters(emitterList, 256, 8192);
-		// m_pPointShader->Shade(shadingList, emitterList, 0.25f);
-
-		std::vector<int> indexList;
-		std::vector<Spectrum> irradianceList;
-
-		// 1. use indexing to send stuff 
-		m_pGPUGrid->Serialize(&filteredGrid, irradianceList, indexList);
-
-		std::cout << "Compute :: Ready" << std::endl;
-
-		int bufferSize[2] = { indexList.size(), irradianceList.size() };
-		std::cout << "Index count : " << bufferSize[0] << ", Irradiance count : " << bufferSize[1] << std::endl;
-
-		std::cout << "Send indices" << std::endl;
-
-		boost::system::error_code error;
-
-		boost::asio::write(socket_, boost::asio::buffer(bufferSize, sizeof(int) * 2), error);
-		boost::asio::write(socket_, boost::asio::buffer(indexList.data(), sizeof(int) * indexList.size()), error);
-		boost::asio::write(socket_, boost::asio::buffer(irradianceList.data(), sizeof(Spectrum) * irradianceList.size()), error);
-		
-		/*
-		boost::asio::async_write(socket_, boost::asio::buffer(bufferSize, sizeof(int) * 2),
-			boost::bind(&IrradianceConnection::handle_write, shared_from_this(),
-			boost::asio::placeholders::error,
-			boost::asio::placeholders::bytes_transferred));
-
-		boost::asio::async_write(socket_, boost::asio::buffer(indexList.data(), sizeof(int) * indexList.size()),
-			boost::bind(&IrradianceConnection::handle_write, shared_from_this(),
-			boost::asio::placeholders::error,
-			boost::asio::placeholders::bytes_transferred));
-
-		std::cout << "Send spectra" << std::endl;
-		boost::asio::async_write(socket_, boost::asio::buffer(irradianceList.data(), sizeof(Spectrum) * irradianceList.size()),
-			boost::bind(&IrradianceConnection::handle_write, shared_from_this(),
-			boost::asio::placeholders::error,
-			boost::asio::placeholders::bytes_transferred));
-		*/
-	}
-
-private:
-	IrradianceConnection(boost::asio::io_service& io_service, IIlluminaMT* p_pIllumina, PointSet *p_pPointSet, PointShader *p_pPointShader, GPUGrid *p_pGPUGrid)
-		: socket_(io_service)
-		, m_pIllumina(p_pIllumina)
-		, m_pPointSet(p_pPointSet)
-		, m_pPointShader(p_pPointShader)
-		, m_pGPUGrid(p_pGPUGrid)
-	{
-	}
-
-	void handle_write(const boost::system::error_code& /*error*/,
-		size_t /*bytes_transferred*/)
-	{
-	}
-
-	IIlluminaMT *m_pIllumina; 
-	PointSet *m_pPointSet;
-	PointShader *m_pPointShader;
-	GPUGrid *m_pGPUGrid;
-
-	tcp::socket socket_;
-	std::string message_;
-};
-
-class IrradianceServer
-{
-	IrradianceServer(boost::asio::io_service& io_service, IIlluminaMT *p_pIllumina, PointSet *p_pPointSet, PointShader *p_pPointShader, GPUGrid *p_pGPUGrid)
-		: acceptor_(io_service, tcp::endpoint(tcp::v4(), 6666))
-		, m_pIllumina(p_pIllumina)
-		, m_pPointSet(p_pPointSet)
-		, m_pPointShader(p_pPointShader)
-		, m_pGPUGrid(p_pGPUGrid)
-	{
-		start_accept();
-	}
-
-private:
-	tcp::acceptor acceptor_;
-	IIlluminaMT *m_pIllumina;
-	PointSet *m_pPointSet;
-	PointShader *m_pPointShader;
-	GPUGrid *m_pGPUGrid;
-
-	void start_accept(void)
-	{
-		IrradianceConnection::pointer new_connection = 
-			IrradianceConnection::create(acceptor_ .get_io_service(), m_pIllumina, m_pPointSet, m_pPointShader, m_pGPUGrid);
-
-		acceptor_.async_accept(new_connection->socket(),
-			boost::bind(&IrradianceServer::handle_accept, this, new_connection,
-			boost::asio::placeholders::error));
-	}
-
-	void handle_accept(IrradianceConnection::pointer new_connection,
-		const boost::system::error_code &error)
-	{
-		if (!error)
-		{
-			new_connection->start();
-			start_accept();
-		}
-	}
-
-public:
-	static void Boot(IIlluminaMT *p_pIllumina, PointSet *p_pPointSet, PointShader *p_pPointShader, GPUGrid *p_pGPUGrid)
-	{
-		try
-		{
-			boost::asio::io_service io_service;
-			IrradianceServer server(io_service, p_pIllumina, p_pPointSet, p_pPointShader, p_pGPUGrid);
-			io_service.run();
-		}
-		
-		catch (std::exception& e)
-		{
-			std::cerr << e.what() << std::endl;
-		}
 	}
 };

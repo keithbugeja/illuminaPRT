@@ -195,6 +195,7 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Controller.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Coordinator.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Defs.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\DualPointGrid.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Environment.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Export.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\GBuffer.h" />
@@ -205,9 +206,12 @@
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedCommon.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedFrameless.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedP2P.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\MultithreadedServer.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Path.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\Peer.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\PointGrid.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\PointSet.h" />
+    <ClInclude Include="..\..\..\..\Utility\Sandbox\PointShader.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCommon.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskCoordinator.h" />
     <ClInclude Include="..\..\..\..\Utility\Sandbox\RenderTaskPipeline.h" />
