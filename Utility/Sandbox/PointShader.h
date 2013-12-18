@@ -447,10 +447,10 @@ protected:
 			p_virtualPointSourceList.erase(p_virtualPointSourceList.begin() + p_nMaxVPSources, p_virtualPointSourceList.end());	
 
 		// Divide contributions
-		float sourceCount = p_virtualPointSourceList.size();
+		float sourceCount = (float)p_virtualPointSourceList.size();
 		for (auto virtualPointSource : p_virtualPointSourceList)
 			virtualPointSource.Contribution /= sourceCount;
 
-		std::cout << "Secondary photons : " << secondary << std::endl;
+		// std::cout << "Secondary photons : " << secondary << std::endl;
 	}
 };
