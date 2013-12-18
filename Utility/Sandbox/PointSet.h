@@ -70,9 +70,6 @@ public:
 				>> Position.X >> separator >> Position.Y >> separator >> Position.Z >> separator 
 				>> Occlusion >> separator >> Radius;
 
-		//Normal.X = -Normal.X;
-		//Position.X = -Position.X;
-
 		Invalid = true;
 	} 
 
@@ -99,7 +96,7 @@ public:
 		return pNext;
 	} */
 
-	int Pack(std::vector<float> *p_pElementList)
+	int PackAdd(std::vector<float> *p_pElementList)
 	{
 		p_pElementList->push_back(Irradiance[0]);
 		p_pElementList->push_back(Irradiance[1]);
@@ -117,6 +114,13 @@ public:
 		p_pElementList->push_back(Radius);
 
 		return GetPackedSize();
+	}
+
+	inline void PackUpdateAdd(std::vector<float> *p_pElementList)
+	{
+		p_pElementList->push_back(Irradiance[0]);
+		p_pElementList->push_back(Irradiance[1]);
+		p_pElementList->push_back(Irradiance[2]);
 	}
 
 	inline float* PackUpdate(float *p_pElement)
@@ -195,6 +199,7 @@ public:
 		while(std::getline(pointFile, line))
 		{
 			point.FromString(line);
+			point.Irradiance.Set(0,0,0);
 			m_grid.Add(point.Position, point);
 		}
 

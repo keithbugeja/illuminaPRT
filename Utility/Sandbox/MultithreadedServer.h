@@ -25,6 +25,12 @@ using boost::asio::ip::tcp;
 class IrradianceConnection
 	: public boost::enable_shared_from_this<IrradianceConnection>
 {
+	struct GridHeader
+	{
+		float x, y, z, w;
+		int sudivs, indices, elements; 
+	};
+
 public:
 	typedef boost::shared_ptr<IrradianceConnection> pointer;
 
@@ -40,7 +46,6 @@ public:
 
 	void start()
 	{
-
 		DualPointGridFilter<Dart> filter;
 		m_pDualPointGrid->FilterByView(m_pIllumina->GetEnvironment()->GetCamera(), &filter);
 
@@ -53,30 +58,86 @@ public:
 		m_pPointShader->SetGeometryTerm(0.25f);
 		m_pPointShader->Prepare(PointShader<Dart>::PointLit);
 
-		for (auto pointList : shadingLists)
-			m_pPointShader->Shade(*pointList, PointShader<Dart>::PointLit);
+		// for (auto pointList : shadingLists)
+			//m_pPointShader->Shade(*pointList, PointShader<Dart>::PointLit);
 		
 		// m_pPointShader->Shade(*(filter.GetGlobalPointList()), PointShader<Dart>::PointLit);
 
 		std::vector<int> indexList;
 		std::vector<float> elementList;
 
-		m_pDualPointGrid->PackByFilter(&filter);
+		// m_pDualPointGrid->PackByFilter(&filter);
 		// m_pDualPointGrid->Pack();
 		m_pDualPointGrid->Serialize(&elementList, &indexList);
 
 		std::cout << "Compute :: Ready" << std::endl;
 
-		int bufferSize[2] = { indexList.size(), elementList.size() };
-		
-		std::cout << "Index count : " << bufferSize[0] << ", Element count : " << bufferSize[1] << std::endl;
+		// Compose grid header
+		Vector3 origin = m_pDualPointGrid->GetOrigin();
+
+		GridHeader header;
+		header.x = origin.X; header.y = origin.Y; header.z = origin.Z;
+		header.w = m_pDualPointGrid->GetCellSize();
+		header.sudivs = m_pDualPointGrid->GetCellSubdivisions();
+		header.indices = indexList.size();
+		header.elements = elementList.size();
+
+		std::cout << "Index count : " << header.indices << ", Element count : " << header.elements << std::endl;
 
 		boost::system::error_code error;
 
-		boost::asio::write(socket_, boost::asio::buffer(bufferSize, sizeof(int) * 2), error);
+		boost::asio::write(socket_, boost::asio::buffer(&header, sizeof(GridHeader)), error);
 		boost::asio::write(socket_, boost::asio::buffer(indexList.data(), sizeof(int) * indexList.size()), error);
 		boost::asio::write(socket_, boost::asio::buffer(elementList.data(), sizeof(float) * elementList.size()), error);
 
+		// Initial grid sent
+		ICamera* pCamera = m_pIllumina->GetEnvironment()->GetCamera();
+		float camera[12];
+		int bufferSize[2];
+
+		// Next -> on-demand computation
+		while (true)
+		{
+			if (boost::asio::read(socket_, boost::asio::buffer(camera, sizeof(float) * 12), error) == sizeof(float) * 12)
+			{
+				Vector3 observer(camera[0], camera[1], camera[2]),
+					forward(camera[3], camera[4], camera[5]),
+					right(camera[6], camera[7], camera[8]),
+					up(camera[9], camera[10], camera[11]);
+
+				std::cout << "Camera : " << observer.ToString() << ", " << forward.ToString() << std::endl;
+
+				pCamera->MoveTo(observer);
+				pCamera->LookAt(observer + forward);
+
+				shadingLists.clear(); indexList.clear(); elementList.clear();
+
+				m_pDualPointGrid->FilterByView(pCamera, &filter);
+				filter.GetFilteredPoints(shadingLists);
+
+				double start = Platform::GetTime();
+
+				for (auto pointList : shadingLists)
+					m_pPointShader->Shade(*pointList, PointShader<Dart>::PointLit);
+
+				double end = Platform::GetTime();
+				std::cout << "Shading time : " << Platform::ToSeconds(end - start) << std::endl;
+
+				m_pDualPointGrid->PackUpdate();
+				m_pDualPointGrid->SerializeByFilter(&filter, &elementList, &indexList);
+
+				bufferSize[0] = indexList.size();
+				bufferSize[1] = elementList.size();
+
+				std::cout << "Sending : [" << bufferSize[0] << "] , [" << bufferSize[1] << "]" << std::endl;
+
+				boost::asio::write(socket_, boost::asio::buffer(bufferSize, sizeof(int) * 2), error);
+				boost::asio::write(socket_, boost::asio::buffer(indexList.data(), sizeof(int) * indexList.size()), error);
+				boost::asio::write(socket_, boost::asio::buffer(elementList.data(), sizeof(float) * elementList.size()), error);
+
+				std::cout << "Irradiance Sent..." << std::endl;
+			}
+		}
 		/*
 		std::vector<int> indexList;
 		std::vector<Spectrum> irradianceList;

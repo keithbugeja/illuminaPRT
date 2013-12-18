@@ -161,6 +161,19 @@ protected:
 	}
 
 public:
+	Vector3 GetOrigin(void) const {
+		return m_context.m_gridOrigin;
+	}
+
+	float GetCellSize(void) const {
+		return m_context.m_fGridCellSize;
+	}
+
+	int GetCellSubdivisions(void) const {
+		return CellSubdivisions;
+	}
+
+public:
 	DualPointGrid(void)
 		: m_nPointReferenceCount(0)
 	{ }
@@ -228,46 +241,10 @@ public:
 
 
 		std::cout << "DualPointGrid::Build : Normalised grid populated with [" << m_context.m_pointList.size() << "] unique points and [" << m_nPointReferenceCount << "] references." << std::endl;
-		std::cout << "DualPointGrid::Build : Generating flat grid structure..." << std::endl;
+		std::cout << "DualPointGrid::Build : Packing grid..." << std::endl;
 
-		
-		// Initialise index
-		int currentIndex = 0, key;
+		Pack();
 
-		// Clear flat grid
-		m_context.m_gridIndexMap.clear();
-		m_context.m_gridIndexList.clear();
-		m_context.m_gridElementList.clear();
-
-		for (int z = 0; z < CellSubdivisions; z++)
-		{
-			for (int y = 0; y < CellSubdivisions; y++)
-			{
-				for (int x = 0; x < CellSubdivisions; x++)
-				{
-					// Make key for current cell
-					key = MakeKey(x, y, z);
-
-					// Add current point to cell array position
-					m_context.m_gridIndexMap[key] = currentIndex;
-					m_context.m_gridIndexList.push_back(currentIndex);
-
-					// If cell is not empty...
-					if (m_context.m_pointMap.find(key) != m_context.m_pointMap.end()) 
-					{
-						currentIndex += m_context.m_pointMap[key].size();
-
-						for (auto point : m_context.m_pointMap[key])
-							point->Pack(&(m_context.m_gridElementList));
-					}
-				}
-			}
-		}
-
-		m_context.m_gridIndexList.push_back(currentIndex);
-
-
-		std::cout << "DualPointGrid::Build : Indexed [" << currentIndex << "] samples in [" << m_context.m_gridIndexList.size() << "] cells." << std::endl;
 		std::cout << "DualPointGrid::Build : Build complete." << std::endl;
 	}
 
@@ -356,15 +333,74 @@ public:
 	}
 
 	/*
+	 *
+	 */
+	void Pack(void)
+	{
+		// Initialise index
+		int currentIndex = 0, key;
+
+		// Clear flat grid
+		m_context.m_gridIndexMap.clear();
+		m_context.m_gridIndexList.clear();
+		m_context.m_gridElementList.clear();
+
+		for (int z = 0; z < CellSubdivisions; z++)
+		{
+			for (int y = 0; y < CellSubdivisions; y++)
+			{
+				for (int x = 0; x < CellSubdivisions; x++)
+				{
+					// Make key for current cell
+					key = MakeKey(x, y, z);
+
+					// Add current point to cell array position
+					m_context.m_gridIndexMap[key] = currentIndex;
+					m_context.m_gridIndexList.push_back(currentIndex);
+
+					// If cell is not empty...
+					if (m_context.m_pointMap.find(key) != m_context.m_pointMap.end()) 
+					{
+						currentIndex += m_context.m_pointMap[key].size();
+
+						for (auto point : m_context.m_pointMap[key])
+						{
+							point->PackAdd(&(m_context.m_gridElementList));
+						}
+					}
+				}
+			}
+		}
+
+		m_context.m_gridIndexList.push_back(currentIndex);
+
+		std::cout << "DualPointGrid::Pack : Indexed [" << currentIndex << "] samples in [" << m_context.m_gridIndexList.size() << "] cells." << std::endl;
+	}
+
+	/*
+	 * Packs samples into pre-existing GPU grid
+	 */
+	void PackUpdate(void) 
+	{
+		for (int key = 0; key < 32 * 32 * 32; key++)
+		{
+			float *data = (float*)(m_context.m_gridElementList.data()) + m_context.m_gridIndexMap[key] * T::GetPackedSize();
+
+			for (auto point : m_context.m_pointMap[key])
+			{
+				// point->Irradiance.Set(key >> 10, (key >> 5) & 31, key & 31);
+				data = point->PackUpdate(data);
+			}
+		}
+	}
+
+	/*
 	 * 
 	 */
 	void PackByFilter(DualPointGridFilter<T> *p_pFilter) 
 	{
 		for (auto key : p_pFilter->m_keyList)
 		{
-			//std::cout << "Key : " << std::hex << key << std::dec
-			//	<< ", Index : " << m_context.m_gridIndexMap[key] << std::endl;
-
 			float *data = m_context.m_gridElementList.data() + m_context.m_gridIndexMap[key] * T::GetPackedSize();
 
 			for (auto point : m_context.m_pointMap[key])
@@ -376,296 +412,38 @@ public:
 
 	/*
 	 *
-	 */
-	void Pack(void) 
+	 */ 
+	void SerializeByFilter(DualPointGridFilter<T> *p_pFilter, std::vector<float> *p_pElements, std::vector<int> *p_pIndices)
 	{
-		for (int key = 0; key < 32 * 32 * 32; key++)
-		{
-			//std::cout << "Key : " << std::hex << key << std::dec
-				//<< ", Index : " << m_context.m_gridIndexMap[key] << std::endl;
+		p_pElements->clear();
+		p_pIndices->clear();
 
-			float *data = m_context.m_gridElementList.data() + m_context.m_gridIndexMap[key] * T::GetPackedSize();
+		for (auto key : p_pFilter->m_keyList)
+		{
+			int offset = m_context.m_gridIndexMap[key] * T::GetPackedSize(),
+				count = 0;
+
+			p_pIndices->push_back(offset);
 
 			for (auto point : m_context.m_pointMap[key])
 			{
-				data = point->PackUpdate(data);
+				point->PackUpdateAdd(p_pElements);
+				count++;
 			}
+
+			p_pIndices->push_back(count);
 		}
 	}
 
 	/*
 	 * Serialise whole grid
 	 */
-	void Serialize(std::vector<float> *m_pGridElements, std::vector<int> *m_pGridIndices)
+	void Serialize(std::vector<float> *p_pGridElements, std::vector<int> *p_pGridIndices)
 	{
-		m_pGridElements->resize(m_context.m_gridElementList.size());
-		std::copy(m_context.m_gridElementList.begin(), m_context.m_gridElementList.end(), m_pGridElements->begin());
+		p_pGridElements->resize(m_context.m_gridElementList.size());
+		std::copy(m_context.m_gridElementList.begin(), m_context.m_gridElementList.end(), p_pGridElements->begin());
 
-		m_pGridIndices->resize(m_context.m_gridIndexList.size());
-		std::copy(m_context.m_gridIndexList.begin(), m_context.m_gridIndexList.end(), m_pGridIndices->begin());
+		p_pGridIndices->resize(m_context.m_gridIndexList.size());
+		std::copy(m_context.m_gridIndexList.begin(), m_context.m_gridIndexList.end(), p_pGridIndices->begin());
 	}
 };
-
-/*
-class GPUGrid
-{
-protected:
-	Vector3 m_minExtents,
-		m_maxExtents,
-		m_size;
-
-	float m_edgeSize,
-		m_cellSize;
-
-	int m_subdivisions;
-
-	std::vector<Dart*> m_sampleList;
-	std::map<int, std::vector<Dart*>> m_grid;
-	std::map<int, int> m_gridIndices;
-
-public:
-	Vector3 GetOrigin(void) const {
-		return m_minExtents;
-	}
-
-	float GetCellSize(void) const {
-		return m_cellSize;
-	}
-
-	int GetSubdivisions(void) const {
-		return m_subdivisions;
-	}
-
-protected:
-	int MakeKey(const Vector3 &p_position)
-	{
-		Vector3 offset = (p_position - m_minExtents) / m_cellSize;
-		
-		int x = (int)offset.X, 
-			y = (int)offset.Y,
-			z = (int)offset.Z;
-
-		return (int)( (x & 0x1F) | ((y & 0x1F) << 5) | ((z & 0x1F) << 10) ); 
-	}
-
-	int MakeKey(int x, int y, int z)
-	{
-		return (int)( (x & 0x1F) | ((y & 0x1F) << 5) | ((z & 0x1F) << 10) ); 
-	}
-
-	void Add(int p_key, Dart *p_pSample)
-	{
-		if (m_grid.find(p_key) == m_grid.end())
-			m_grid[p_key] = std::vector<Dart*>();
-
-		m_grid[p_key].push_back(p_pSample);
-	}
-
-	// Optimisation : Only put points in cells that intersect geometry!
-	void AddRange(const Vector3 &p_position, float p_fRadius, Dart *p_pSample)
-	{
-		Vector3 extent(p_fRadius);
-
-		Vector3 minExtent = p_position - extent,
-			maxExtent = p_position + extent,
-			posIter = Vector3::Zero;
-
-		for (posIter.Z = minExtent.Z; posIter.Z <= maxExtent.Z; posIter.Z += m_cellSize)
-		{
-			for (posIter.Y = minExtent.Y; posIter.Y <= maxExtent.Y; posIter.Y += m_cellSize)
-			{
-				for (posIter.X = minExtent.X; posIter.X <= maxExtent.X; posIter.X += m_cellSize)
-				{
-					Add(MakeKey(posIter), p_pSample);
-				}
-			}
-		}
-	}
-
-public:
-	void Build(std::vector<Dart*> &p_sampleList, int p_subdivisions, float p_searchRadius)
-	{
-		std::cout << "GPUGrid :: Estimating dimensions..." << std::endl;
-
-		// Clear grid with sample lists
-		m_grid.clear();
-
-		// Set the grid extents
-		m_minExtents = Vector3(Maths::Maximum);
-		m_maxExtents = -Maths::Maximum;
-	
-		for(auto sample : p_sampleList)
-		{
-			m_maxExtents = Vector3::Max(m_maxExtents, sample->Position);
-			m_minExtents = Vector3::Min(m_minExtents, sample->Position);
-
-			m_sampleList.push_back(sample);
-		}
-
-		std::cout << "GPUGrid :: Extents [" << m_minExtents.ToString() << " - " << m_maxExtents.ToString() << "]" << std::endl;
-		std::cout << "GPUGrid :: Inserting irradiance sample placeholders..." << std::endl;
-
-		// Compute the grid parameters
-		m_subdivisions = p_subdivisions;
-		m_size = m_maxExtents - m_minExtents;
-		m_edgeSize = m_size.MaxAbsComponent();
-		m_cellSize = m_edgeSize / m_subdivisions;
-
-		// Modify grid to fit cube
-		m_size.Set(m_edgeSize, m_edgeSize, m_edgeSize);
-		m_maxExtents = m_minExtents + m_size;
-
-		// Fill grid
-		for (auto sample : m_sampleList)
-		{
-			AddRange(sample->Position, p_searchRadius + m_cellSize * 0.5f, sample);
-		}
-
-		// By now, all samples exist in their respective cells, so we index
-		// the starting element in each cell.
-		std::cout << "GPUGrid :: Computing flat sample indices..." << std::endl;
-
-		int currentIndex = 0, key;
-
-		m_gridIndices.clear();
-
-		for (int z = 0; z < 0x1f; z++)
-		{
-			for (int y = 0; y < 0x1f; y++)
-			{
-				for (int x = 0; x < 0x1f; x++)
-				{
-					key = MakeKey(x, y, z);
-
-					m_gridIndices[key] = currentIndex;
-
-					if (m_grid.find(key) != m_grid.end()) 
-						currentIndex += m_grid[key].size();
-				}
-			}
-		}
-
-		std::cout << "GPUGrid :: Indexed [" << currentIndex << "] samples in [" << m_gridIndices.size() << "] cells" << std::endl;
-	}
-
-	void FilterByView(const ICamera *p_pCamera, FilteredGPUGrid *p_pFilteredGrid)
-	{
-		// First we get 4 corner rays from which to build frustum planes.
-		Ray topLeft = p_pCamera->GetRay(0,0,0,0),
-			topRight = p_pCamera->GetRay(1,0,1,0),
-			bottomLeft = p_pCamera->GetRay(0,1,0,1),
-			bottomRight = p_pCamera->GetRay(1,1,1,1),
-			centre(p_pCamera->GetObserver(), p_pCamera->GetFrame().W);
-
-		float in[5], out[5];
-		AxisAlignedBoundingBox aabb(m_minExtents, m_maxExtents);
-
-		aabb.Intersects(topLeft, in[0], out[0]);
-		aabb.Intersects(topRight, in[1], out[1]);
-		aabb.Intersects(bottomLeft, in[2], out[2]);
-		aabb.Intersects(bottomRight, in[3], out[3]);
-		aabb.Intersects(centre, in[4], out[4]);
-
-		Vector3 frustumVerts[6] = {	
-			topLeft.PointAlongRay(out[0]),
-			topRight.PointAlongRay(out[1]),
-			bottomLeft.PointAlongRay(out[2]),
-			bottomRight.PointAlongRay(out[3]),
-			centre.PointAlongRay(out[4]),
-			p_pCamera->GetObserver() 
-		};
-
-		// Build frustum planes
-		//Plane left(frustumVerts[0], frustumVerts[2], frustumVerts[4]),
-		//	right(frustumVerts[1], frustumVerts[3], frustumVerts[4]),
-		//	top(frustumVerts[0], frustumVerts[1], frustumVerts[4]),
-		//	bottom(frustumVerts[2], frustumVerts[3], frustumVerts[4]);
-
-		Plane left(frustumVerts[0], frustumVerts[2], frustumVerts[4]),
-			right(frustumVerts[4], frustumVerts[3], frustumVerts[1]),
-			top(frustumVerts[0], frustumVerts[1], frustumVerts[4]),
-			bottom(frustumVerts[2], frustumVerts[3], frustumVerts[4]);
-
-		// Compute aabb for frustum
-		AxisAlignedBoundingBox frustum;
-		frustum.ComputeFromPoints((Vector3*)frustumVerts, 6);
-
-		Vector3 frustumMinExtent = frustum.GetMinExtent(),
-			frustumMaxExtent = frustum.GetMaxExtent(),
-			frustumIter = Vector3::Zero;
-
-		std::cout << "Frustum bounds : " << frustumMinExtent.ToString() << " - " << frustumMaxExtent.ToString() << std::endl;
-
-		// Sync inner frustum to grid cells
-		Vector3 alignedCellStart = (frustumMinExtent - m_minExtents) / m_cellSize,
-			alignedCellSize(m_cellSize);
-
-		alignedCellStart.Set(((int)alignedCellStart.X) * m_cellSize, 
-			((int)alignedCellStart.Y) * m_cellSize,
-			((int)alignedCellStart.Z) * m_cellSize);
-		
-		alignedCellStart += m_minExtents;
-
-		AxisAlignedBoundingBox cell;
-		int cellcount = 0;
-
-		p_pFilteredGrid->SetGlobalSampleList(&m_sampleList);
-		p_pFilteredGrid->FilteredSampleSet.clear();
-
-		for (frustumIter.Z = frustumMinExtent.Z; frustumIter.Z < frustumMaxExtent.Z + m_cellSize * 0.5f; frustumIter.Z += m_cellSize)
-		{
-			Vector3 alignedCellStart4Y = alignedCellStart;
-			for (frustumIter.Y = frustumMinExtent.Y; frustumIter.Y < frustumMaxExtent.Y + m_cellSize * 0.5f; frustumIter.Y += m_cellSize)
-			{
-				Vector3 alignedCellStart4X = alignedCellStart4Y;
-				for (frustumIter.X = frustumMinExtent.X; frustumIter.X < frustumMaxExtent.X + m_cellSize * 0.5f; frustumIter.X += m_cellSize)
-				{
-					int key = MakeKey(frustumIter);
-
-					cell.SetExtents(alignedCellStart4X, alignedCellStart4X + alignedCellSize);
-					alignedCellStart.X += m_cellSize;
-					
-					if (m_grid.find(key) != m_grid.end())
-					{
-						p_pFilteredGrid->MarkCell(key);
-						
-						for (auto sample : m_grid[MakeKey(frustumIter)])
-							p_pFilteredGrid->FilteredSampleSet.insert(sample);
-					}
-
-					cellcount++;
-				}
-
-				alignedCellStart4Y.Y += m_cellSize;
-			}
-
-			alignedCellStart.Z += m_cellSize;
-		}
-
-		// TODO: Use an LDS to selectively sample points
-		// Should we not provide a list of affected cells instead?
-
-		std::cout << "Considered [" << cellcount << " of " << 32 * 32 * 32 << "]" << std::endl;	
-		std::cout << "Filtered Samples [" << p_pFilteredGrid->FilteredSampleSet.size() << "]" << std::endl;
-	}
-
-	void Serialize(FilteredGPUGrid *p_pFilteredGrid, std::vector<Spectrum> &p_irradianceList, std::vector<int> &p_indexList)
-	{
-		std::vector<int> *pMarkedCells = p_pFilteredGrid->GetMarkedCells();
-
-		for (auto cell : *pMarkedCells)
-		{
-			p_indexList.push_back(m_gridIndices[cell]);
-			p_indexList.push_back(m_grid[cell].size());
-
-			for (auto e : m_grid[cell])
-			{
-				p_irradianceList.push_back(e->Irradiance);
-			}
-		}
-
-		std::cout << "Cells :: [" << p_indexList.size() << "]" << std::endl;
-		std::cout << "Irradiance Records :: [" << p_irradianceList.size() << "]" << std::endl;
-	}
-};
-*/
