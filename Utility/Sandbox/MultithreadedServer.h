@@ -28,7 +28,7 @@ class IrradianceConnection
 	struct GridHeader
 	{
 		float x, y, z, w;
-		int sudivs, indices, elements; 
+		int sudivs, indices, elements, samples, positions; 
 	};
 
 public:
@@ -54,7 +54,7 @@ public:
 
 		m_pPointShader->Initialise(m_pIllumina->GetEnvironment()->GetScene(), 0.01f, 6, 1);
 		m_pPointShader->SetHemisphereDivisions(24, 48);
-		m_pPointShader->SetVirtualPointSources(256, 8192);
+		m_pPointShader->SetVirtualPointSources(32, 8192); // 256
 		m_pPointShader->SetGeometryTerm(0.25f);
 		m_pPointShader->Prepare(PointShader<Dart>::PointLit);
 
@@ -64,11 +64,14 @@ public:
 		// m_pPointShader->Shade(*(filter.GetGlobalPointList()), PointShader<Dart>::PointLit);
 
 		std::vector<int> indexList;
+		std::vector<int> colourList;
 		std::vector<float> elementList;
+		std::vector<int> sampleIndexList;
+		std::vector<int> samplePositionList;
 
 		// m_pDualPointGrid->PackByFilter(&filter);
 		// m_pDualPointGrid->Pack();
-		m_pDualPointGrid->Serialize(&elementList, &indexList);
+		m_pDualPointGrid->Serialize(&elementList, &indexList, &sampleIndexList, &samplePositionList);
 
 		std::cout << "Compute :: Ready" << std::endl;
 
@@ -81,48 +84,86 @@ public:
 		header.sudivs = m_pDualPointGrid->GetCellSubdivisions();
 		header.indices = indexList.size();
 		header.elements = elementList.size();
+		header.samples = sampleIndexList.size();
+		header.positions = samplePositionList.size();
 
-		std::cout << "Index count : " << header.indices << ", Element count : " << header.elements << std::endl;
+		std::cout << "Index count : " << header.indices << ", Element count : " << header.elements
+			<< ", Samples count : " << header.samples << ", Positions count : " << header.positions << std::endl;
 
 		boost::system::error_code error;
 
 		boost::asio::write(socket_, boost::asio::buffer(&header, sizeof(GridHeader)), error);
 		boost::asio::write(socket_, boost::asio::buffer(indexList.data(), sizeof(int) * indexList.size()), error);
 		boost::asio::write(socket_, boost::asio::buffer(elementList.data(), sizeof(float) * elementList.size()), error);
+		boost::asio::write(socket_, boost::asio::buffer(sampleIndexList.data(), sizeof(int) * sampleIndexList.size()), error);
+		boost::asio::write(socket_, boost::asio::buffer(samplePositionList.data(), sizeof(int) * samplePositionList.size()), error);
+
+		std::cout << "Scene data uploaded..." << std::endl;
 
 		// Initial grid sent
 		ICamera* pCamera = m_pIllumina->GetEnvironment()->GetCamera();
-		float camera[12];
+		float camera[15];
 		int bufferSize[2];
+
+		float moveHash = 0, lastMoveHash = 0;
+
+		PointLight *pLight = (PointLight*)m_pIllumina->GetEnvironment()->GetScene()->LightList[0];
+		Vector3 lightPosition = pLight->GetPosition();
 
 		// Next -> on-demand computation
 		while (true)
 		{
-			if (boost::asio::read(socket_, boost::asio::buffer(camera, sizeof(float) * 12), error) == sizeof(float) * 12)
+			static float angle = 0; angle += 0.01f;
+
+			// Vector3 lightMove(0, Maths::Sin(angle) * 5.0f, 0);
+
+			// pLight->SetPosition(lightPosition);
+			//pLight->SetPosition(lightPosition + lightMove);
+			// pLight->SetIntensity(Spectrum(Maths::Abs(4000 * Maths::Sin(angle))));
+
+			m_pPointShader->Prepare(PointShader<Dart>::PointLit);
+
+			for (auto point : m_pPointSet->GetContainerInstance().Get())
+				point->Invalid = true;
+
+			if (boost::asio::read(socket_, boost::asio::buffer(camera, sizeof(float) * 15), error) == sizeof(float) * 15)
 			{
 				Vector3 observer(camera[0], camera[1], camera[2]),
 					forward(camera[3], camera[4], camera[5]),
 					right(camera[6], camera[7], camera[8]),
-					up(camera[9], camera[10], camera[11]);
+					up(camera[9], camera[10], camera[11]),
+					lightPosition(camera[12], camera[13], camera[14]);
 
-				std::cout << "Camera : " << observer.ToString() << ", " << forward.ToString() << std::endl;
+				std::cout << "Camera : " << observer.ToString() << ", " << forward.ToString() << ", " << lightPosition.ToString() << std::endl;
+
+				moveHash = observer.X + observer.Y + observer.Z + forward.X + forward.Y + forward.Z + lightPosition.X + lightPosition.Y + lightPosition.Z;
 
 				pCamera->MoveTo(observer);
 				pCamera->LookAt(observer + forward);
+				pLight->SetPosition(lightPosition);
 
 				shadingLists.clear(); indexList.clear(); elementList.clear();
 
 				m_pDualPointGrid->FilterByView(pCamera, &filter);
 				filter.GetFilteredPoints(shadingLists);
 
-				double start = Platform::GetTime();
 
+				double start = Platform::GetTime();
 				for (auto pointList : shadingLists)
 					m_pPointShader->Shade(*pointList, PointShader<Dart>::PointLit);
-
 				double end = Platform::GetTime();
 				std::cout << "Shading time : " << Platform::ToSeconds(end - start) << std::endl;
 
+				m_pDualPointGrid->SerializeUniqueByFilter(&filter, &indexList, &colourList);
+				bufferSize[0] = indexList.size(); bufferSize[1] = colourList.size();
+
+				std::cout << "Sending : [" << bufferSize[0] << "] , [" << bufferSize[1] << "]" << std::endl;
+
+				boost::asio::write(socket_, boost::asio::buffer(bufferSize, sizeof(int) * 2), error);
+				boost::asio::write(socket_, boost::asio::buffer(indexList.data(), sizeof(int) * indexList.size()), error);
+				boost::asio::write(socket_, boost::asio::buffer(colourList.data(), sizeof(int) * colourList.size()), error);
+
+				/*
 				m_pDualPointGrid->PackUpdate();
 				m_pDualPointGrid->SerializeByFilter(&filter, &elementList, &indexList);
 
@@ -134,7 +175,7 @@ public:
 				boost::asio::write(socket_, boost::asio::buffer(bufferSize, sizeof(int) * 2), error);
 				boost::asio::write(socket_, boost::asio::buffer(indexList.data(), sizeof(int) * indexList.size()), error);
 				boost::asio::write(socket_, boost::asio::buffer(elementList.data(), sizeof(float) * elementList.size()), error);
-
+				*/ 
 				std::cout << "Irradiance Sent..." << std::endl;
 			}
 		}

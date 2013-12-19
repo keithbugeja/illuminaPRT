@@ -402,7 +402,8 @@ void IlluminaPRT(
 	PointShader<Dart> shader;
 	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1);
 	shader.SetHemisphereDivisions(24, 48);
-	shader.SetVirtualPointSources(256, 8192);
+	//shader.SetVirtualPointSources(256, 8192);
+	shader.SetVirtualPointSources(32, 8192);
 	shader.Prepare(PointShader<Dart>::PointLit);
 
 	//std::cout << "Shading points..." << std::endl;

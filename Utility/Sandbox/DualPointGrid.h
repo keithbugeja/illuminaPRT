@@ -37,6 +37,9 @@ public:
 	// Store hashed grid
 	std::map<int, std::vector<T*>> m_pointMap;
 
+	// Store point to flat grid map (point id -> flat grid positions)
+	std::map<int, std::vector<int>> m_pointGridElementMap;
+
 	// Store flat grid
 	std::vector<float> m_gridElementList;
 	
@@ -361,10 +364,12 @@ public:
 					// If cell is not empty...
 					if (m_context.m_pointMap.find(key) != m_context.m_pointMap.end()) 
 					{
-						currentIndex += m_context.m_pointMap[key].size();
+						// currentIndex += m_context.m_pointMap[key].size();
 
 						for (auto point : m_context.m_pointMap[key])
 						{
+							m_context.m_pointGridElementMap[point->UniqueId].push_back(currentIndex++);
+							
 							point->PackAdd(&(m_context.m_gridElementList));
 						}
 					}
@@ -413,6 +418,49 @@ public:
 	/*
 	 *
 	 */ 
+	void SerializeUniqueByFilter(DualPointGridFilter<T> *p_pFilter, std::vector<int> *p_pIndices, std::vector<int> *p_pColours)
+	{
+		p_pIndices->clear();
+		p_pColours->clear();
+
+		std::map<int, int> colourMap;
+
+		int r, g, b, colour;
+
+		for (auto key : p_pFilter->m_keyList)
+		{
+			for (auto point : m_context.m_pointMap[key])
+			{
+				r = (point->Irradiance[0] / (point->Irradiance[0] + 1) * 255.f);
+				g = (point->Irradiance[1] / (point->Irradiance[1] + 1) * 255.f);
+				b = (point->Irradiance[2] / (point->Irradiance[2] + 1) * 255.f);
+
+				colour = r << 16 | g << 8 | b;
+
+				// point->Irradiance.Set(0, 0, 1);
+
+				/*
+				colourMap[point->UniqueId] = 
+					((int)(point->Irradiance[0] / (point->Irradiance[0] + 1) * 255.0f)) << 16 +
+					((int)(point->Irradiance[1] / (point->Irradiance[1] + 1) * 255.0f)) << 8 +
+					((int)(point->Irradiance[2] / (point->Irradiance[2] + 1) * 255.0f));
+					*/
+
+				colourMap[point->UniqueId] = colour; //0xFFFFFF;
+			}
+		}
+
+		for (auto pointPair : colourMap)
+		{
+			p_pIndices->push_back(pointPair.first);
+			p_pColours->push_back(pointPair.second);
+		}
+	}
+
+
+	/*
+	 *
+	 */ 
 	void SerializeByFilter(DualPointGridFilter<T> *p_pFilter, std::vector<float> *p_pElements, std::vector<int> *p_pIndices)
 	{
 		p_pElements->clear();
@@ -445,5 +493,27 @@ public:
 
 		p_pGridIndices->resize(m_context.m_gridIndexList.size());
 		std::copy(m_context.m_gridIndexList.begin(), m_context.m_gridIndexList.end(), p_pGridIndices->begin());
+	}
+
+	/*
+	 * Serialise whole grid
+	 */
+	void Serialize(std::vector<float> *p_pGridElements, std::vector<int> *p_pGridIndices, std::vector<int> *p_pSampleIndices, std::vector<int> *p_pSamplePositions)
+	{
+		p_pGridElements->resize(m_context.m_gridElementList.size());
+		std::copy(m_context.m_gridElementList.begin(), m_context.m_gridElementList.end(), p_pGridElements->begin());
+
+		p_pGridIndices->resize(m_context.m_gridIndexList.size());
+		std::copy(m_context.m_gridIndexList.begin(), m_context.m_gridIndexList.end(), p_pGridIndices->begin());
+
+		for (auto entry : m_context.m_pointGridElementMap)
+		{
+			// Index sample and number of entries
+			p_pSampleIndices->push_back(entry.first);
+			p_pSampleIndices->push_back(entry.second.size());
+
+			for (auto position : entry.second)
+				p_pSamplePositions->push_back(position);
+		}
 	}
 };
