@@ -25,6 +25,9 @@
 
 using namespace Illumina::Core;
 
+/*
+ * Dart
+ */
 struct Dart
 {
 public:
@@ -45,10 +48,13 @@ public:
 	float Radius;
 	float Occlusion;
 
-	int Accumulated;
 	bool Invalid;
+	int UniqueId;
 
 public:
+	/*
+	 * Serialise datastructure to string
+	 */
 	std::string ToString(void)
 	{
 		std::stringstream result;
@@ -61,7 +67,10 @@ public:
 		return result.str();
 	}
 
-	void FromString(std::string &p_strInput)
+	/*
+	 * Deserialise datastructure from string
+	 */
+	void FromString(std::string &p_strInput, int p_nUniqueId = -1)
 	{
 		char separator; std::stringstream tokenStream(p_strInput);
 
@@ -71,31 +80,12 @@ public:
 				>> Occlusion >> separator >> Radius;
 
 		Invalid = true;
+		UniqueId = p_nUniqueId;
 	} 
 
 	/*
-	float* Pack(float *p_pBase)
-	{
-		float *pNext = p_pBase;
-		
-		*pNext++ = Irradiance[0];
-		*pNext++ = Irradiance[1];
-		*pNext++ = Irradiance[2];
-
-		*pNext++ = Position.Element[0];
-		*pNext++ = Position.Element[1];
-		*pNext++ = Position.Element[2];
-
-		*pNext++ = Normal.Element[0];
-		*pNext++ = Normal.Element[1];
-		*pNext++ = Normal.Element[2];
-
-		*pNext++ = Occlusion;
-		*pNext++ = Radius;
-
-		return pNext;
-	} */
-
+	 * Pack datastructure and add to vector
+	 */
 	int PackAdd(std::vector<float> *p_pElementList)
 	{
 		p_pElementList->push_back(Irradiance[0]);
@@ -116,6 +106,9 @@ public:
 		return GetPackedSize();
 	}
 
+	/*
+	 * Pack datastructure and add to vector - only pack fields that can change
+	 */
 	inline void PackUpdateAdd(std::vector<float> *p_pElementList)
 	{
 		p_pElementList->push_back(Irradiance[0]);
@@ -123,6 +116,9 @@ public:
 		p_pElementList->push_back(Irradiance[2]);
 	}
 
+	/*
+	 * Pack datastructure in place
+	 */
 	inline float* PackUpdate(float *p_pElement)
 	{
 		p_pElement[0] = Irradiance[0];
@@ -141,6 +137,9 @@ public:
 	}
 };
 
+/*
+ * PointSet
+ */
 template <class T>
 class PointSet
 {
@@ -167,6 +166,9 @@ protected:
 public:
 	PointSet(void) { }
 
+	/*
+	 * Save point set
+	 */
 	bool Save(const std::string &p_strFilename)
 	{
 		std::ofstream pointFile;
@@ -187,9 +189,13 @@ public:
 		return true;
 	}
 
+	/*
+	 * Load point set
+	 */
 	bool Load(const std::string &p_strFilename)
 	{
-		T point; std::string line;
+		T point; std::string line; 
+		int uniqueId = 0;
 
 		std::ifstream pointFile;
 		pointFile.open(p_strFilename.c_str(), std::ios::binary);
@@ -198,8 +204,13 @@ public:
 		
 		while(std::getline(pointFile, line))
 		{
-			point.FromString(line);
-			point.Irradiance.Set(0,0,0);
+			// Build point from string and assign a unique id to it
+			point.FromString(line, uniqueId++);
+
+			// Reset irriadiance (ignore file version)
+			point.Irradiance = 0.0f;
+
+			// Add to grid
 			m_grid.Add(point.Position, point);
 		}
 

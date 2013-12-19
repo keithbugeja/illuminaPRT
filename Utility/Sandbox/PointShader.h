@@ -93,7 +93,11 @@ public:
 	void Prepare(enum ShadingType p_eShadingType)
 	{
 		if (p_eShadingType == PointLit)
+		{
+			m_virtualPointSourceList.clear();
+			
 			TraceVirtualPointSources(m_virtualPointSourceList, m_nMaxVPSources, m_nMaxVPPaths);
+		}
 	}
 
 public:
