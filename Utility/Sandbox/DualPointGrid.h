@@ -431,9 +431,9 @@ public:
 		{
 			for (auto point : m_context.m_pointMap[key])
 			{
-				r = (point->Irradiance[0] / (point->Irradiance[0] + 1) * 255.f);
-				g = (point->Irradiance[1] / (point->Irradiance[1] + 1) * 255.f);
-				b = (point->Irradiance[2] / (point->Irradiance[2] + 1) * 255.f);
+				r = (int)(point->Irradiance[0] / (point->Irradiance[0] + 1) * 255.f);
+				g = (int)(point->Irradiance[1] / (point->Irradiance[1] + 1) * 255.f);
+				b = (int)(point->Irradiance[2] / (point->Irradiance[2] + 1) * 255.f);
 
 				colour = r << 16 | g << 8 | b;
 
