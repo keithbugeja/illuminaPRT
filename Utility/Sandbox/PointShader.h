@@ -361,6 +361,10 @@ protected:
 		LowDiscrepancySampler positionSampler,
 			directionSampler, continueSampler;
 
+		//positionSampler.Reset(1137);
+		//directionSampler.Reset(1137);
+		//continueSampler.Reset(1137);
+
 		Vector2 positionSample, 
 			directionSample,
 			sample;

@@ -392,19 +392,23 @@ void IlluminaPRT(
 
 	/* */
 	PointSet<Dart> pointSet;
-	pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.01f, 0.75f, 1024, 64, 48, 24, 0.01f, Vector3(32));
+	//pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.01f, 0.75f, 1024, 64, 48, 24, 0.01f, Vector3(32));
+	//pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.1f, 0.75f, 1024, 64, 48, 24, 0.01f, Vector3(32));
+	pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.1f, 0.75f, 512, 64, 48, 24, 0.01f, Vector3(32));
 
 	pointSet.Load("Output//pointcloud_full.asc");
 	
-	// pointSet.Generate();
-	// std::cout << "Generated point set. Elements in grid [" << pointSet.Get().Size() << "]" << std::endl;k
+	//pointSet.Generate();
+	//pointSet.Save("Output//pointcloud_full.asc");
+	std::cout << "Generated point set. Elements in grid [" << pointSet.GetContainerInstance().Get().size() << "]" << std::endl;
+
 
 	PointShader<Dart> shader;
-	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1);
-	shader.SetHemisphereDivisions(24, 48);
+	//shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1);
+	//shader.SetHemisphereDivisions(24, 48);
 	//shader.SetVirtualPointSources(256, 8192);
-	shader.SetVirtualPointSources(32, 8192);
-	shader.Prepare(PointShader<Dart>::PointLit);
+	//shader.SetVirtualPointSources(32, 8192);
+	//shader.Prepare(PointShader<Dart>::PointLit);
 
 	//std::cout << "Shading points..." << std::endl;
 

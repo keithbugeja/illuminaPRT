@@ -261,10 +261,10 @@ public:
 
 		// Generate point sources
 		std::cout << "Generating point sources..." << std::endl;
-		GeneratePointSource(m_nMaxPointSources * 6, 6, pointSourceList);
+		GeneratePointSources(m_nMaxPointSources * 6, 6, pointSourceList);
 
 		// Persist point sources
-		if (p_bSaveDartSources)
+		if (p_bSavePointSources)
 		{
 			std::ofstream pointSourceFile; pointSourceFile.open("Output//pointSources.asc", std::ios::binary);
 
@@ -329,6 +329,7 @@ protected:
 		{
 			LowDiscrepancySampler directionSampler;
 
+			// #pragma omp parallel for
 			for (int dartIndex = 0; dartIndex < m_nMaxPointsPerSource; dartIndex++)
 			{
 				// Sample new direction
@@ -344,7 +345,7 @@ protected:
 				dartRay.Set(dartSource.Position + direction * m_fReflectEpsilon, direction, m_fReflectEpsilon, Maths::Maximum);
 				
 				// Intersection
-				if (m_pScene->Intersects(dart, intersection))
+				if (m_pScene->Intersects(dartRay, intersection))
 				{
 					std::cout << "[" << dartCount++ << " of " << dartMaxCount << "] Index : " << dartIndex << ", Centre : " << intersection.Surface.PointWS.ToString() << std::endl; 
 
@@ -362,10 +363,11 @@ protected:
 					point.Position = intersection.Surface.PointWS;
 					point.Normal = intersection.Surface.ShadingBasisWS.W;
 					point.Occlusion = ComputeAmbientOcclusion(intersection, m_fOcclusionRadius, rayDetails);
-					point.Radius = dartPoint.Occlusion * m_fMaxRadius;
+					point.Radius = point.Occlusion * m_fMaxRadius;
 
 					std::cout << "Ambient occlusion computed [" << point.Occlusion << "] for radius [" << point.Radius << "]" << std::endl;
-					if (point.Radius > m_fMinRadius && m_grid.Contains(intersection.Surface.PointWS, point.Radius)) 
+					if (point.Radius > m_fMinRadius && m_grid.Contains(intersection.Surface.PointWS, intersection.Surface.ShadingBasisWS.W, point.Radius * 0.707f, 0.1f)) 
+					//if (point.Radius > m_fMinRadius && m_grid.Contains(intersection.Surface.PointWS, point.Radius * 0.707f)) 
 					{
 						discarded++;
 						continue;

@@ -138,6 +138,42 @@ public:
 		return m_pointList; 
 	}
 
+	bool Contains(Vector3 p_centre, Vector3 p_normal, float p_fRadius, float p_fAspect)
+	{
+		Vector3 minExtent(p_centre.X - p_fRadius,
+			p_centre.Y - p_fRadius,
+			p_centre.Z - p_fRadius),
+				maxExtent(p_centre.X + p_fRadius,
+			p_centre.Y + p_fRadius,
+			p_centre.Z + p_fRadius);
+
+		Vector3 stepSize(m_size.X / m_partitions.X, m_size.Y / m_partitions.Y, m_size.Z / m_partitions.Y);
+		Vector3 iterator;
+
+		float aspect = p_fAspect * p_fRadius;
+
+		for (iterator.X = minExtent.X; iterator.X < maxExtent.X; iterator.X+=stepSize.X)
+		{
+			for (iterator.Y = minExtent.Y; iterator.Y < maxExtent.Y; iterator.Y+=stepSize.Y)
+			{
+				for (iterator.Z = minExtent.Z; iterator.Z < maxExtent.Z; iterator.Z+=stepSize.Z)
+				{
+					std::vector<T*> list = Get(iterator);
+					for (auto point : list)
+					{
+						if (Vector3::Distance(point->Position, p_centre) < p_fRadius)
+						{
+							if (Vector3::AbsDot(p_normal, (point->Position - p_centre)) < aspect)
+								return true;
+						}
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
 	bool Contains(Vector3 p_centre, float p_fRadius)
 	{
 		Vector3 minExtent(p_centre.X - p_fRadius,
