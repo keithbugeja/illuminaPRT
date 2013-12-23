@@ -54,7 +54,7 @@ public:
 
 		m_pPointShader->Initialise(m_pIllumina->GetEnvironment()->GetScene(), 0.01f, 6, 1);
 		m_pPointShader->SetHemisphereDivisions(24, 48);
-		m_pPointShader->SetVirtualPointSources(128, 8192); // 256
+		m_pPointShader->SetVirtualPointSources(512, 8192); // 256
 		m_pPointShader->SetGeometryTerm(0.25f);
 		m_pPointShader->Prepare(PointShader<Dart>::PointLit);
 
@@ -68,6 +68,7 @@ public:
 		std::vector<float> elementList;
 		std::vector<int> sampleIndexList;
 		std::vector<int> samplePositionList;
+		std::vector<Dart*> qmcPointList;
 
 		// m_pDualPointGrid->PackByFilter(&filter);
 		// m_pDualPointGrid->Pack();
@@ -113,16 +114,28 @@ public:
 		Vector3 lightPosition = pLight->GetPosition(),
 			originalPosition = lightPosition;
 
+		LowDiscrepancySampler selectorSampler;		
+
+		std::cout << "Starting irradiance feedback loop..." << std::endl;
 
 		// Next -> on-demand computation
 		while (true)
 		{
+			std::cout << "Resetting sampler seeds" << std::endl;
+
 			m_pIllumina->GetEnvironment()->GetSampler()->Reset(11371137);
+			selectorSampler.Reset(300131137);
+
+			std::cout << "Preparing shader..." << std::endl;
 
 			m_pPointShader->Prepare(PointShader<Dart>::PointLit);
 
+			std::cout << "Invalidating points..." << std::endl;
+
 			for (auto point : m_pPointSet->GetContainerInstance().Get())
 				point->Invalid = true;
+
+			std::cout << "Try receive..." << std::endl;
 
 			// Receive observer
 			if (boost::asio::read(socket_, boost::asio::buffer(camera, sizeof(float) * 15), error) == sizeof(float) * 15)
@@ -133,7 +146,7 @@ public:
 					up(camera[9], camera[10], camera[11]),
 					lightPosition(camera[12], camera[13], camera[14]);
 
-				std::cout << "Camera : " << observer.ToString() << ", " << forward.ToString() << ", " << lightPosition.ToString() << ", " << originalPosition.ToString() << std::endl;
+				// std::cout << "Camera : " << observer.ToString() << ", " << forward.ToString() << ", " << lightPosition.ToString() << ", " << originalPosition.ToString() << std::endl;
 
 				// Compute change hash
 				// moveHash = observer.X + observer.Y + observer.Z + forward.X + forward.Y + forward.Z + lightPosition.X + lightPosition.Y + lightPosition.Z;
@@ -151,11 +164,46 @@ public:
 
 				
 				// Shade points
-				double start = Platform::GetTime();
-				for (auto pointList : shadingLists)
+				int totsamples = 0, partsamples = 0;
+
+				double startTotal = Platform::GetTime();
+				for (auto pointList : shadingLists) {
 					m_pPointShader->Shade(*pointList, PointShader<Dart>::PointLit);
+					totsamples += pointList->size();
+				}
+				double endTotal = Platform::GetTime();
+
+
+				double start = Platform::GetTime();
+				/*
+				// Shade points
+				qmcPointList.clear();
+				
+				for (auto pointList : shadingLists)
+				{
+					int sampleCount = pointList->size(),
+						reducedCount = Maths::Floor(sampleCount * 0.06125f),
+						selectorIdx;
+					// std::cout << "SampleCount : " << reducedCount << std::endl;					
+					
+					for (int idx = 0; idx < reducedCount; idx++)
+					{
+						//selectorIdx = Maths::Floor(selectorSampler.NextFloat() * sampleCount);
+						selectorIdx = Maths::Floor(selectorSampler.Get1DSample() * sampleCount);
+						qmcPointList.push_back((*pointList)[selectorIdx]);
+						qmcPointList.back()->Invalid = true;
+					}
+
+					partsamples += reducedCount;
+				}
+
+				m_pPointShader->Shade(qmcPointList, PointShader<Dart>::PointLit);
+				*/
 				double end = Platform::GetTime();
-				std::cout << "Shading time : " << Platform::ToSeconds(end - start) << std::endl;
+				// */
+
+				std::cout << "Shading time : " << Platform::ToSeconds(end - start) << " : " << Platform::ToSeconds(endTotal - startTotal) << std::endl;
+				std::cout << "Shading totals : " << partsamples << " : " << totsamples << std::endl;
 
 				
 				// Serialise points
