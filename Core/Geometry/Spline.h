@@ -93,6 +93,14 @@ namespace Illumina
 					(-2 * t_cb + 3 * t_sq) * p_x1 + 
 					(t_cb - t_sq) * p_fAccent * p_m1;
 			}
+
+			static float SmoothStep(float min, float max, float value)
+			{
+				float v = (value - min) / (max - min);
+				if (v < 0.0f) v = 0.0f;
+				if (v > 1.0f) v = 1.0f;
+				return v * v * (-2.f * v  + 3.f);
+			}
 		};
 	}
 }

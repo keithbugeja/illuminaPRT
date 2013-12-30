@@ -71,10 +71,11 @@ public:
 
 	void OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
 	{ 
+		/*
 		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
 		Vector3 position, lookAt;
 
-		m_fDeltaTime += 0.02f; if (m_fDeltaTime > 1.f) m_fDeltaTime = 1.f;
+		// m_fDeltaTime += 0.02f; if (m_fDeltaTime > 1.f) m_fDeltaTime = 1.f;
 
 		m_path.Get(m_fDeltaTime, position, lookAt);
 
@@ -82,13 +83,13 @@ public:
 		pCamera->LookAt(lookAt);
 
 		std::cout << "Position : " << position.ToString() << ", LookAt : " << lookAt.ToString() << std::endl;
-
-		// pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
+		pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
+		 */
 	};
 
 	void OnEndFrame(IIlluminaMT *p_pIlluminaMT)
 	{
-		GBuffer::Persist("Output\\gbuffer.gbf", m_nFrameNumber++, p_pIlluminaMT->GetEnvironment()->GetCamera(), p_pIlluminaMT->GetCommitBuffer());
+		// GBuffer::Persist("Output\\gbuffer.gbf", m_nFrameNumber++, p_pIlluminaMT->GetEnvironment()->GetCamera(), p_pIlluminaMT->GetCommitBuffer());
 	}
 };
 
