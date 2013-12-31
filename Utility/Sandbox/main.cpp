@@ -352,15 +352,15 @@ void IlluminaPRT(
 	int p_nRenderThreads, int p_nJobsPerFrame, int p_nTileSize, int p_nFlags, std::string p_strScript,
 	int p_nPort, bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPeerPort)
 {
-	SamplerDiagnostics diagnostics;
+	//SamplerDiagnostics diagnostics;
 
-	diagnostics.DistributionTest(new LowDiscrepancySampler(), 512*512, "Output\\ld.ppm");
-	diagnostics.DistributionTest(new RandomSampler(), 512*512, "Output\\rng.ppm");
-	diagnostics.DistributionTest(new MultijitterSampler(), 512*512, "Output\\mj.ppm");
-	diagnostics.DistributionTest(new JitterSampler(), 512*512, "Output\\j.ppm");
+	//diagnostics.DistributionTest(new LowDiscrepancySampler(), 512*512, "Output\\ld.ppm");
+	//diagnostics.DistributionTest(new RandomSampler(), 512*512, "Output\\rng.ppm");
+	//diagnostics.DistributionTest(new MultijitterSampler(), 512*512, "Output\\mj.ppm");
+	//diagnostics.DistributionTest(new JitterSampler(), 512*512, "Output\\j.ppm");
 
-	std::cout << "OK" << std::endl;
-	std::getchar();
+	//std::cout << "OK" << std::endl;
+	//std::getchar();
 
 	Peer localHost;
 
@@ -397,7 +397,8 @@ void IlluminaPRT(
 	//pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.1f, 0.75f, 1024, 64, 48, 24, 0.01f, Vector3(32));
 	pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.1f, 0.75f, 512, 64, 48, 24, 0.01f, Vector3(32));
 
-	pointSet.Load("Output//pointcloud_full.asc");
+	//pointSet.Load("Output//pointcloud_full.asc");
+	pointSet.Load("Output//vertices.asc");
 	
 	//pointSet.Generate();
 	//pointSet.Save("Output//pointcloud_full.asc");
@@ -405,11 +406,23 @@ void IlluminaPRT(
 
 
 	PointShader<Dart> shader;
-	//shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1);
-	//shader.SetHemisphereDivisions(24, 48);
-	//shader.SetVirtualPointSources(256, 8192);
-	//shader.SetVirtualPointSources(32, 8192);
-	//shader.Prepare(PointShader<Dart>::PointLit);
+	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1);
+	shader.SetHemisphereDivisions(24, 48);
+	shader.SetVirtualPointSources(2048, 8192); // 256
+	shader.SetGeometryTerm(0.00001f);
+	shader.Prepare(PointShader<Dart>::PointLit);
+	//shader.Prepare(PointShader<Dart>::PathTraced);
+
+	std::cout << "Starting shading..." << std::endl;
+
+	shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PointLit);
+	//shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PathTraced);
+
+	pointSet.Save("Output//vertices_shaded.asc");
+
+	std::cout << "Shading READY!"<< std::endl;
+	std::getchar();
+	return;
 
 	//std::cout << "Shading points..." << std::endl;
 
@@ -420,8 +433,8 @@ void IlluminaPRT(
 	//grid.Build(pointSet.GetContainerInstance().Get(), 32, 1.f);
 
 	DualPointGrid<Dart> grid;
-	grid.Build(pointSet.GetContainerInstance().Get(), 1.0f);
-
+	//grid.Build(pointSet.GetContainerInstance().Get(), 1.0f);
+	
 	/*
 	grid.FilterByView(illumina.GetEnvironment()->GetCamera(), &filteredGrid);
 	//grid.FilterByView(illumina.GetEnvironment()->GetCamera(), cellShadingList);
