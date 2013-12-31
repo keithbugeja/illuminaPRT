@@ -406,6 +406,9 @@ protected:
 				if (!intersection.HasMaterial())
 					break;
 
+				if (lightRay.Direction.Dot(intersection.Surface.ShadingBasisWS.W) >= 0)
+					break;
+
 				// Omega out
 				wOut = -lightRay.Direction;
 				
