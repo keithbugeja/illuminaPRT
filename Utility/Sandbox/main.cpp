@@ -409,14 +409,14 @@ void IlluminaPRT(
 	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1);
 	shader.SetHemisphereDivisions(24, 48);
 	shader.SetVirtualPointSources(2048, 8192); // 256
-	shader.SetGeometryTerm(0.00001f);
-	shader.Prepare(PointShader<Dart>::PointLit);
-	//shader.Prepare(PointShader<Dart>::PathTraced);
+	shader.SetGeometryTerm(0.01f);
+	//shader.Prepare(PointShader<Dart>::PointLit);
+	shader.Prepare(PointShader<Dart>::PathTraced);
 
 	std::cout << "Starting shading..." << std::endl;
 
-	shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PointLit);
-	//shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PathTraced);
+	//shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PointLit);
+	shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PathTraced);
 
 	pointSet.Save("Output//vertices_shaded.asc");
 
