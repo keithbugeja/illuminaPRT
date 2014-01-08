@@ -16,6 +16,54 @@ namespace Illumina
 {
 	namespace Core
 	{
+				class Spline
+		{
+		public:
+			template <class T>
+			static T Hermite(const T &p_x0, const T &p_x1, const T &p_m0, const T &p_m1, float p_t)
+			{
+				float t_sq = p_t * p_t,
+					t_cb = t_sq * p_t;
+
+				return (2 * t_cb - 3 * t_sq + 1) * p_x0 +
+					(t_cb - 2 * t_sq + p_t) * p_m0 +
+					(-2 * t_cb + 3 * t_sq) * p_x1 + 
+					(t_cb - t_sq) * p_m1;
+			}
+
+			template <class T>
+			static T Hermite(const T &p_x0, const T &p_x1, const T &p_m0, const T &p_m1, float p_fAccent, float p_t)
+			{
+				float t_sq = p_t * p_t,
+					t_cb = t_sq * p_t;
+
+				return (2 * t_cb - 3 * t_sq + 1) * p_x0 +
+					(t_cb - 2 * t_sq + p_t) * p_fAccent * p_m0 +
+					(-2 * t_cb + 3 * t_sq) * p_x1 + 
+					(t_cb - t_sq) * p_fAccent * p_m1;
+			}
+
+			template <class T>
+			static T CatmullRom(const T &p_p0, const T &p_p1, const T &p_p2, const T &p_p3, float t)
+			{
+				float t2 = t * t,
+					t3 = t2 * t;
+
+				return 0.5f * ((2 * p_p1) +
+					(-p_p0 + p_p2) * t +
+					(2 * p_p0 - 5 * p_p1 + 4 * p_p2 - p_p3) * t2 +
+					(-p_p0 + 3 * p_p1 - 3 * p_p2 + p_p3) * t3);
+			}
+
+			static float SmoothStep(float min, float max, float value)
+			{
+				float v = (value - min) / (max - min);
+				if (v < 0.0f) v = 0.0f;
+				if (v > 1.0f) v = 1.0f;
+				return v * v * (-2.f * v  + 3.f);
+			}
+		};
+
 		class Interpolator
 		{
 		private:
@@ -65,41 +113,53 @@ namespace Illumina
 
 				return finalPoint;
 			}
-		};
 
-		class Spline
-		{
-		public:
-			template <class T>
-			static T Hermite(const T &p_x0, const T &p_x1, const T &p_m0, const T &p_m1, float p_t)
+			static Vector3 Lerp(std::vector<Vector3> &p_controlPoints, float p_x)
 			{
-				float t_sq = p_t * p_t,
-					t_cb = t_sq * p_t;
+				Vector3 d0, d1;
+				float x_frac;
 
-				return (2 * t_cb - 3 * t_sq + 1) * p_x0 +
-					(t_cb - 2 * t_sq + p_t) * p_m0 +
-					(-2 * t_cb + 3 * t_sq) * p_x1 + 
-					(t_cb - t_sq) * p_m1;
+				if (p_controlPoints.size() == 2)
+				{
+					d0 = p_controlPoints[0];
+					d1 = p_controlPoints[1];
+					x_frac = p_x;
+				}
+				else
+				{
+					float x = p_x * Maths::Abs((float)(p_controlPoints.size() - 2));
+					int x_int = (int)Maths::Floor(x);
+					x_frac = x - x_int;
+
+					d0 = p_controlPoints[x_int];
+					d1 = p_controlPoints[x_int + 1];
+				}
+
+				return d0 + (d1 - d0) * x_frac;
 			}
 
-			template <class T>
-			static T Hermite(const T &p_x0, const T &p_x1, const T &p_m0, const T &p_m1, float p_fAccent, float p_t)
+			static void PadForCubicInterpolation(std::vector<Vector3> &p_controlPoints)
 			{
-				float t_sq = p_t * p_t,
-					t_cb = t_sq * p_t;
-
-				return (2 * t_cb - 3 * t_sq + 1) * p_x0 +
-					(t_cb - 2 * t_sq + p_t) * p_fAccent * p_m0 +
-					(-2 * t_cb + 3 * t_sq) * p_x1 + 
-					(t_cb - t_sq) * p_fAccent * p_m1;
+				p_controlPoints.insert(p_controlPoints.begin(), p_controlPoints[0]);
+				p_controlPoints.push_back(p_controlPoints.back());
+				p_controlPoints.push_back(p_controlPoints.back());
 			}
 
-			static float SmoothStep(float min, float max, float value)
+			/*
+			 * Assumes extra points at the start and end! 
+			 */
+			static Vector3 CubicInterpolation(std::vector<Vector3> &p_controlPoints, float p_x)
 			{
-				float v = (value - min) / (max - min);
-				if (v < 0.0f) v = 0.0f;
-				if (v > 1.0f) v = 1.0f;
-				return v * v * (-2.f * v  + 3.f);
+				float x = 1 + p_x * Maths::Abs((float)(p_controlPoints.size() - 4));
+				int x_int = (int)Maths::Floor(x);
+				float x_frac = x - x_int;
+
+				Vector3 d0 = p_controlPoints[x_int - 1],
+						d1 = p_controlPoints[x_int],
+						d2 = p_controlPoints[x_int + 1],
+						d3 = p_controlPoints[x_int + 2];
+
+				return Spline::CatmullRom<Vector3>(d0, d1, d2, d3, x_frac);
 			}
 		};
 	}

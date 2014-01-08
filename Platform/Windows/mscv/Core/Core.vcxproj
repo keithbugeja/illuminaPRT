@@ -272,6 +272,7 @@
     <ClInclude Include="..\..\..\..\Core\Integrator\IGIIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\Integrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\IntegratorFactories.h" />
+    <ClInclude Include="..\..\..\..\Core\Integrator\IntegratorHelper.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\MLICIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\PathIntegrator.h" />
     <ClInclude Include="..\..\..\..\Core\Integrator\PhotonIntegrator.h" />

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Integrator/Integrator.h"
+#include "Integrator/IntegratorHelper.h"
 #include "Geometry/Intersection.h"
 #include "Geometry/BoundingBox.h"
 //----------------------------------------------------------------------------------------------
@@ -21,7 +22,7 @@ namespace Illumina
 		{
 			Spectrum Irradiance;
 
-			Vector3 Point, 
+			Vector3 Position, 
 				Normal;
 			
 			float RiClamp, 
@@ -85,6 +86,7 @@ namespace Illumina
 		protected:
 			float W_Ward(const Vector3 &p_point, const Vector3 &p_normal, MLIrradianceCacheRecord &p_record);
 			float W_Tabelion(const Vector3 &p_point, const Vector3 &p_normal, MLIrradianceCacheRecord &p_record);
+			float W_Debattista(const Vector3 &p_point, const Vector3 &p_normal, MLIrradianceCacheRecord &p_record);
 
 		public:
 			MLIrradianceCache(void) 
@@ -124,6 +126,8 @@ namespace Illumina
 			public IIntegrator
 		{
 		protected:
+			IntegratorHelper<MLIrradianceCacheRecord> m_helper;
+	
 			// Irradiance cache
 			MLIrradianceCache m_irradianceCache;
 
@@ -151,6 +155,9 @@ namespace Illumina
 
 			// Disable creation of new samples
 			bool m_bIsSampleGenerationDisabled;
+
+			int m_nGenerationCount,
+				m_nInsertionCount;
 
 		protected:
 			// Mini-path tracer

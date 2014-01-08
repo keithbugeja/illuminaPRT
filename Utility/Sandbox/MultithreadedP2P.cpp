@@ -5,6 +5,11 @@
 #include "MultithreadedP2P.h"
 
 //----------------------------------------------------------------------------------------------
+P2PListener2Way::P2PListener2Way(void)
+{
+	InitPath();
+}
+//----------------------------------------------------------------------------------------------
 void P2PListener2Way::NewsCastThreadHandler(P2PListener2Way *p_pListener)
 {
 	while(p_pListener->IsRunning())
@@ -246,9 +251,9 @@ bool P2PListener2Way::State_IrradianceReceive(RakNet::BitStream &p_bitStream, Ho
 
 	for (auto irradiance : irradianceList)
 	{
-		MLIrradianceCacheRecord *pRecord = m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch);
-		pIrradianceCache->Insert(pRecord);
-		//pIrradianceCache->Insert(m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch));
+		//MLIrradianceCacheRecord *pRecord = m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch);
+		//pIrradianceCache->Insert(pRecord);
+		pIrradianceCache->Insert(m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch));
 	}
 
 	std::cout << "---> [P2P Subsystem] :: Transaction " << received.GetIdString() << " bound to epoch [" << m_newscastEpoch << "]" << std::endl;
@@ -475,7 +480,8 @@ void P2PListener2Way::OnEndRender(IIlluminaMT *p_pIlluminaMT)
 //----------------------------------------------------------------------------------------------
 void P2PListener2Way::OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
 { 
-	ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
+	BeginPath(p_pIlluminaMT);
+	//ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
 	// pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
 };
 //----------------------------------------------------------------------------------------------
@@ -489,6 +495,8 @@ void P2PListener2Way::OnEndFrame(IIlluminaMT *p_pIlluminaMT)
 			NewsCast();
 			NewsUpdate();
 		*/
+	
+		std::cout << m_pWFICIntegrator->ToString() << std::endl;
 	}
 }
 //----------------------------------------------------------------------------------------------

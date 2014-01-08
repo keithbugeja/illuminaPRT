@@ -8,13 +8,18 @@
 //----------------------------------------------------------------------------------------------
 #pragma once
 
+#include <System/IlluminaPRT.h>
+#include <System/FactoryManager.h>
+
+#include <Geometry/Spline.h>
 #include <Maths/Montecarlo.h>
+#include <Sampler/LowDiscrepancySampler.h>
+#include <Sampler/RandomSampler.h>
+#include <Material/Material.h>
 #include <Scene/Visibility.h>
 
 using namespace Illumina::Core;
-
 //----------------------------------------------------------------------------------------------
-/*
 struct VirtualPointSource
 {
 	Spectrum Contribution;
@@ -23,23 +28,34 @@ struct VirtualPointSource
 	Vector3 Direction;
 	bool Invalid;
 };
-*/
 
 //----------------------------------------------------------------------------------------------
 template <class T>
-class PointShader
+class IntegratorHelper
 {
 protected:
+	// For hemisphere sampling (distribution raytracing style)
 	int m_nAzimuthStrata,
 		m_nAltitudeStrata;
 
+	// For virtual point source-based lighting
 	std::vector<VirtualPointSource> m_virtualPointSourceList;
-	int m_nMaxVPSources,
-		m_nMaxVPPaths;
+
+	RandomSampler m_sequenceSampler;
+
+	LowDiscrepancySampler m_positionSampler,
+		m_directionSampler, m_continueSampler;
+	
+	int m_nVPSources, m_nVPSets,
+		m_nMaxVPBounces;
+
 	float m_fMaxGTerm;
 
-	int	m_nShadowRayCount,
+	// General parameters
+	int	m_nShadowRays,
 		m_nRayDepth;
+
+	unsigned int m_unGeneratorSeed;
 
 	float m_fReflectEpsilon;
 
@@ -66,7 +82,7 @@ public:
 		m_fReflectEpsilon = p_fReflectEpsilon;
 
 		m_nRayDepth = p_nRayDepth;
-		m_nShadowRayCount = p_nShadowRayCount;
+		m_nShadowRays = p_nShadowRayCount;
 	}
 
 	//----------------------------------------------------------------------------------------------
@@ -75,18 +91,25 @@ public:
 	void SetHemisphereDivisions(int p_nAzimuthStrata, int p_nAltitudeStrata) 
 	{
 		m_nAltitudeStrata = p_nAltitudeStrata;
-		m_nAzimuthStrata = p_nAzimuthStrata;		
+		m_nAzimuthStrata = p_nAzimuthStrata;
 	}
 
-	void SetVirtualPointSources(int p_nMaxVirtualPointSources, int p_nMaxVirtualPointPaths)
+	void SetVirtualPointSources(int p_nMaxVirtualPointSources, int p_nVirtualPointSets, int p_nMaxBounces)
 	{
-		m_nMaxVPSources = p_nMaxVirtualPointSources;
-		m_nMaxVPPaths = p_nMaxVirtualPointPaths;
+		m_nVPSources = p_nMaxVirtualPointSources;
+		m_nVPSets = p_nVirtualPointSets;
+		m_nMaxVPBounces = p_nMaxBounces;
 	}
 
 	void SetGeometryTerm(float p_fMaxGeometryTerm)
 	{
 		m_fMaxGTerm = p_fMaxGeometryTerm;
+	}
+
+	//----------------------------------------------------------------------------------------------
+	void SetGeneratorSeed(int p_unSeed)
+	{
+		m_unGeneratorSeed = p_unSeed;
 	}
 
 	//----------------------------------------------------------------------------------------------
@@ -96,9 +119,16 @@ public:
 	{
 		if (p_eShadingType == PointLit)
 		{
+			// Reset samplers
+			m_positionSampler.Reset(m_unGeneratorSeed);
+			m_directionSampler.Reset(m_unGeneratorSeed);
+			m_continueSampler.Reset(m_unGeneratorSeed);
+			m_sequenceSampler.Reset(m_unGeneratorSeed);
+
+			// Clear point source list
 			m_virtualPointSourceList.clear();
-			
-			TraceVirtualPointSources(m_virtualPointSourceList, m_nMaxVPSources, m_nMaxVPPaths);
+
+			TraceVirtualPointSources(m_virtualPointSourceList, m_nVPSources * m_nVPSets, m_nMaxVPBounces);
 		}
 	}
 
@@ -106,41 +136,46 @@ public:
 	//----------------------------------------------------------------------------------------------
 	// Shade points
 	//----------------------------------------------------------------------------------------------
+	void Shade(T* p_pPoint, ShadingType p_eShadingType)
+	{
+		//if (p_pPoint->Invalid)
+		{
+			if (p_eShadingType == PointLit)
+				p_pPoint->Irradiance = LiPointLit(p_pPoint->Position, p_pPoint->Normal);
+			else
+				p_pPoint->Irradiance = LiPathTraced(p_pPoint->Position, p_pPoint->Normal);
+
+			//p_pPoint->Invalid = false;
+		}
+	}
+
+	/*
 	void Shade(std::vector<T*> &p_pointList, ShadingType p_eShadingType)
 	{
-		double total = Platform::GetTime();
-
 		if (p_eShadingType == PointLit)
 		{
-			//std::cout << "Shading point cloud using LiPointLit..." << std::endl;
 			for (auto point : p_pointList)
 			{
 				if (point->Invalid)
 				{
-					//double timestart = Platform::GetTime();
 					point->Irradiance = LiPointLit(point->Position, point->Normal);
 					point->Invalid = false;
-					//std::cout << "Shaded in [" << Platform::ToSeconds(Platform::GetTime() - timestart) << "]" << std::endl;
 				}
 			}
 		}
 		else
 		{
-			//std::cout << "Shading point cloud using LiPathTraced..." << std::endl;
-
 			for (auto point : p_pointList)
 			{
 				if (point->Invalid)
 				{
-					//double timestart = Platform::GetTime();
 					point->Irradiance = LiPathTraced(point->Position, point->Normal);
 					point->Invalid = false;
-					// std::cout << "Shaded in [" << Platform::ToSeconds(Platform::GetTime() - timestart) << "]" << std::endl;
 				}
 			}
 		}
-		//std::cout << "Shaded [" << p_pointList.size() << "] in [" << Platform::ToSeconds(Platform::GetTime() - total) << "]" << std::endl;
 	}
+	*/
 
 protected:
 	//----------------------------------------------------------------------------------------------
@@ -236,7 +271,7 @@ protected:
 			// Sample illumination from lights to find path contribution
 			L += pathThroughput * IIntegrator::SampleAllLights(m_pScene, isect, 
 				isect.Surface.PointWS, isect.Surface.ShadingBasisWS.W, wOut, 
-				m_pScene->GetSampler(), isect.GetLight(), m_nShadowRayCount);
+				m_pScene->GetSampler(), isect.GetLight(), m_nShadowRays);
 
 			if (pathLength + 1 == m_nRayDepth) break;
 
@@ -268,7 +303,8 @@ protected:
 			// Use Russian roulette to possibly terminate path
 			if (pathLength > 2)
 			{
-				float continueProbability = Maths::Min(0.5f, 0.33f * (pathThroughput[0] + pathThroughput[1] + pathThroughput[2]));
+				//float continueProbability = Maths::Min(0.5f, 0.33f * (pathThroughput[0] + pathThroughput[1] + pathThroughput[2]));
+				float continueProbability = Maths::Min(1.0f, pathThroughput.Luminance());
 
 				if (m_pScene->GetSampler()->Get1DSample() > continueProbability)
 					break;
@@ -289,9 +325,9 @@ protected:
 		Spectrum Le(0), f;
 		Vector3 wIn;
 		int samplesUsed = 1;
-		float indirectScale = 1.f, // 0.01f,
-			minDist = 0.5f,
-			cosTheta;
+		float indirectScale = 1.2f, // 0.01f,
+			minDist = 5.0f,
+			cosTheta, cosAlpha;
 
 		for (auto virtualPointSource : m_virtualPointSourceList)
 		{
@@ -299,16 +335,17 @@ protected:
 			const float d2 = wIn.LengthSquared();
 			wIn.Normalize();
 
-			if ((cosTheta = virtualPointSource.Normal.Dot(-wIn)) > 0.0f)
+			if ((cosTheta = virtualPointSource.Normal.Dot(-wIn)) > 0.0f && 
+				(cosAlpha = p_normal.Dot(wIn)) > 0.0f)
 			{
 				occlusionQuery.SetSegment(p_position, m_fReflectEpsilon, virtualPointSource.Position, m_fReflectEpsilon);
 				
 				if (!occlusionQuery.IsOccluded())
 				{
-					const float distScale = SmoothStep(0.8f * minDist, 1.2f * minDist, d2);
+					const float distScale = Spline::SmoothStep(0.8f * minDist, 1.2f * minDist, d2);
 
-					float G = cosTheta * p_normal.Dot(wIn) / d2;
-					G = Maths::Min(G, m_fMaxGTerm);
+					float G = (cosTheta * cosAlpha) / d2;
+					// G = Maths::Min(G, m_fMaxGTerm);
 
 					Le += virtualPointSource.Contribution *
 							distScale *
@@ -323,20 +360,9 @@ protected:
 	}
 
 	/*
-	 * Sigmoid function for smoothing values in range min-max
-	 */
-	static float SmoothStep(float min, float max, float value)
-	{
-		float v = (value - min) / (max - min);
-		if (v < 0.0f) v = 0.0f;
-		if (v > 1.0f) v = 1.0f;
-		return v * v * (-2.f * v  + 3.f);
-	}
-
-	/*
 	 * Trace virtual point sources for point lit radiance
 	 */
-	void TraceVirtualPointSources(std::vector<VirtualPointSource> &p_virtualPointSourceList, int p_nMaxVPSources, int p_nMaxVPPaths)
+	void TraceVirtualPointSources(std::vector<VirtualPointSource> &p_virtualPointSourceList, int p_nMaxVPSources, int p_nMaxVPBounces)
 	{
 		// Get number of lights in scene
 		const int lightCount = m_pScene->LightList.Size();
@@ -358,15 +384,6 @@ protected:
 		Vector3 normal, 
 			wOut, wIn;
 
-		RandomSampler sequenceSampler;
-
-		LowDiscrepancySampler positionSampler,
-			directionSampler, continueSampler;
-
-		//positionSampler.Reset(1137);
-		//directionSampler.Reset(1137);
-		//continueSampler.Reset(1137);
-
 		Vector2 positionSample, 
 			directionSample,
 			sample;
@@ -383,8 +400,8 @@ protected:
 		while (p_virtualPointSourceList.size() <= p_nMaxVPSources)
 		{
 			// Get samples for initial position and direction
-			positionSample = positionSampler.Get2DSample();
-			directionSample = directionSampler.Get2DSample();
+			positionSample = m_positionSampler.Get2DSample();
+			directionSample = m_directionSampler.Get2DSample();
 		
 			// Get initial radiance, position and direction
 			alpha = m_pScene->LightList[lightIndex]->SampleRadiance(
@@ -402,13 +419,10 @@ protected:
 			for (intersections = 1; !alpha.IsBlack() && m_pScene->Intersects(lightRay, intersection); ++intersections)
 			{
 				// No valid intersection
-				if (intersection.Surface.Distance <= m_fReflectEpsilon || intersection.Surface.Distance == Maths::Maximum)
-					break;
-
-				if (!intersection.HasMaterial())
-					break;
-
-				if (lightRay.Direction.Dot(intersection.Surface.ShadingBasisWS.W) >= 0)
+				if (intersection.HasMaterial() == false 
+					|| intersection.Surface.Distance <= m_fReflectEpsilon 
+					|| intersection.Surface.Distance == Maths::Maximum
+					|| lightRay.Direction.Dot(intersection.Surface.ShadingBasisWS.W) >= 0)
 					break;
 
 				// Omega out
@@ -425,7 +439,7 @@ protected:
 				p_virtualPointSourceList.push_back(pointSource);
 
 				// Sample contribution and new ray
-				sample = directionSampler.Get2DSample();
+				sample = m_directionSampler.Get2DSample();
 
 				f = pMaterial->SampleF(intersection.Surface, wOut, wIn, sample.U, sample.V, &pdf, bxdfType);
 
@@ -436,23 +450,14 @@ protected:
 				contribution = f * wIn.AbsDot(intersection.Surface.ShadingBasisWS.W) / pdf;
 				continueProbability = Maths::Min(1.f, contribution.Luminance());
 
-				if (continueSampler.Get1DSample() > continueProbability || intersections == 10)
+				if (m_continueSampler.Get1DSample() > continueProbability || intersections == p_nMaxVPBounces)
 					break;
 				
 				alpha *= contribution / continueProbability;
 				lightRay.Set(intersection.Surface.PointWS + m_fReflectEpsilon * wIn, wIn, m_fReflectEpsilon, Maths::Maximum);
-
-				if (intersections > 1)
-					secondary++;
 			}
 
 			lightIndex = (lightIndex + 1) % lightCount;
-
-			/*
-			// Increment light index, and reset if we traversed all scene lights
-			if (++lightIndex == m_pScene->LightList.Size())
-				lightIndex = 0;
-			*/
 		}
 
 		// Just in case we traced more than is required
@@ -463,7 +468,5 @@ protected:
 		float sourceCount = (float)p_virtualPointSourceList.size();
 		for (auto virtualPointSource : p_virtualPointSourceList)
 			virtualPointSource.Contribution /= sourceCount;
-
-		// std::cout << "Secondary photons : " << secondary << std::endl;
 	}
 };

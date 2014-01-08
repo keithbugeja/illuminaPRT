@@ -35,7 +35,7 @@ namespace Illumina
 			}
 
 			inline static float Frac(float p_fValue) {
-				return fabs(p_fValue - floor(p_fValue));
+				return FAbs(p_fValue - floor(p_fValue));
 			}
 
 			inline static float Ceil(float p_fValue) {
