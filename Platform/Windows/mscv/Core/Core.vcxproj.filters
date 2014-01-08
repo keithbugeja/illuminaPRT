@@ -899,6 +899,9 @@
     <ClInclude Include="..\..\..\..\Core\Sampler\LowDiscrepancySampler.h">
       <Filter>Header Files\Sampler</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Integrator\IntegratorHelper.h">
+      <Filter>Header Files\Integrator</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Core\Geometry\Vector3.inl">

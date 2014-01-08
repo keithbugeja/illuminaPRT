@@ -347,49 +347,9 @@ int main(int argc, char** argv)
 #include "MultithreadedServer.h"
 
 //----------------------------------------------------------------------------------------------
-void IlluminaPRT(
-	Logger *p_pLogger, int p_nVerboseFrequency, int p_nIterations, int p_nFPS,
-	int p_nRenderThreads, int p_nJobsPerFrame, int p_nTileSize, int p_nFlags, std::string p_strScript,
-	int p_nPort, bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPeerPort)
+void IlluminaPRT_IrradianceServer(IIlluminaMT *p_pIllumina)
 {
-	//SamplerDiagnostics diagnostics;
-
-	//diagnostics.DistributionTest(new LowDiscrepancySampler(), 512*512, "Output\\ld.ppm");
-	//diagnostics.DistributionTest(new RandomSampler(), 512*512, "Output\\rng.ppm");
-	//diagnostics.DistributionTest(new MultijitterSampler(), 512*512, "Output\\mj.ppm");
-	//diagnostics.DistributionTest(new JitterSampler(), 512*512, "Output\\j.ppm");
-
-	//std::cout << "OK" << std::endl;
-	//std::getchar();
-
-	Peer localHost;
-
-	localHost.Configure(p_nPort, p_nPeerPort, 2, 1);
-	localHost.Initialise();
-
-	HostId remoteHost = HostId::MakeHostId(p_strPeerIP, p_nPeerPort);
-
-	// IlluminaMTFrameless illumina;
-	IlluminaMT illumina;
-
-	illumina.SetFlags(p_nFlags);
-	illumina.SetLogger(p_pLogger);
-	illumina.SetLoggerUpdate(p_nVerboseFrequency);
-	illumina.SetScript(p_strScript);
-	illumina.SetThreadCount(p_nRenderThreads);
-	illumina.SetIterations(p_nIterations);
-	illumina.SetJobs(p_nJobsPerFrame, p_nTileSize);
-	illumina.SetFrameBudget(0);
-
-	P2PListener2Way listener;
-	listener.SetPeer(&localHost, p_nPort == 7001 ? P2PListener2Way::P2PReceive : P2PListener2Way::P2PSendReceive);
-	HostDirectory &hostDir = listener.GetHostDirectory();
-	hostDir.Add(remoteHost);
-	illumina.AttachListener(&listener);
-
-	illumina.Initialise();
-
-	Environment *pEnv = illumina.GetEnvironment();
+	Environment *pEnv = p_pIllumina->GetEnvironment();
 
 	/* */
 	PointSet<Dart> pointSet;
@@ -459,17 +419,59 @@ void IlluminaPRT(
 	grid.Serialize(&filteredGrid, irradianceList, indexList);
 	*/
 
-	IrradianceServer::Boot(&illumina, &pointSet, &shader, &grid);
+	IrradianceServer::Boot(p_pIllumina, &pointSet, &shader, &grid);
 	std::cout << "Server started" << std::endl;
-
 
 	// shader.Shade(shadingList);
 	
 	pointSet.Save("Output//pointcloud_full.asc");
 	std::cout << "Point cloud saved." << std::endl;
-	/* */
-	
-	/* */
+}
+
+void IlluminaPRT(
+	Logger *p_pLogger, int p_nVerboseFrequency, int p_nIterations, int p_nFPS,
+	int p_nRenderThreads, int p_nJobsPerFrame, int p_nTileSize, int p_nFlags, std::string p_strScript,
+	int p_nPort, bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPeerPort)
+{
+	//SamplerDiagnostics diagnostics;
+
+	//diagnostics.DistributionTest(new LowDiscrepancySampler(), 512*512, "Output\\ld.ppm");
+	//diagnostics.DistributionTest(new RandomSampler(), 512*512, "Output\\rng.ppm");
+	//diagnostics.DistributionTest(new MultijitterSampler(), 512*512, "Output\\mj.ppm");
+	//diagnostics.DistributionTest(new JitterSampler(), 512*512, "Output\\j.ppm");
+
+	//std::cout << "OK" << std::endl;
+	//std::getchar();
+
+	Peer localHost;
+
+	localHost.Configure(p_nPort, p_nPeerPort, 2, 1);
+	localHost.Initialise();
+
+	HostId remoteHost = HostId::MakeHostId(p_strPeerIP, p_nPeerPort);
+
+	//IlluminaMTFrameless illumina;
+	IlluminaMT illumina;
+
+	illumina.SetFlags(p_nFlags);
+	illumina.SetLogger(p_pLogger);
+	illumina.SetLoggerUpdate(p_nVerboseFrequency);
+	illumina.SetScript(p_strScript);
+	illumina.SetThreadCount(p_nRenderThreads);
+	illumina.SetIterations(p_nIterations);
+	illumina.SetJobs(p_nJobsPerFrame, p_nTileSize);
+	illumina.SetFrameBudget(0);
+
+	P2PListener2Way listener;
+	listener.SetPeer(&localHost, p_nPort > 7100 ? P2PListener2Way::P2PReceive : P2PListener2Way::P2PSendReceive);
+	HostDirectory &hostDir = listener.GetHostDirectory();
+	hostDir.Add(remoteHost);
+	illumina.AttachListener(&listener);
+
+	illumina.Initialise();
+
+	// If irradiance server is enabled
+	// IlluminaPRT_IrradianceServer(&illumina);
 
 	illumina.Render();	
 	illumina.Shutdown();

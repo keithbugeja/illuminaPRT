@@ -21,6 +21,9 @@
 #include "Maths/Montecarlo.h"
 
 using namespace Illumina::Core;
+
+#define __INSTANT_CACHING__
+
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 int MLIrradianceCache::CountNodes(MLIrradianceCacheNode* p_pNode) const
@@ -108,6 +111,11 @@ void MLIrradianceCache::Insert(MLIrradianceCacheNode *p_pNode, MLIrradianceCache
 		if (p_pNode->Children == NULL)
 		{
 			MLIrradianceCacheNode *pTempNode = new MLIrradianceCacheNode[8];
+
+			// Before we CAS, make sure the bounds of the node are correct!
+			for (int i = 0; i < 8; i++)
+				SetBounds(p_pNode->Bounds, i, pTempNode[i].Bounds);
+
 			if (p_pNode->Children == (MLIrradianceCacheNode*)AtomicInt64::CompareAndSwap((Int64*)&(p_pNode->Children), (Int64)pTempNode, NULL))
 			{
 				std::cout << "CAS failed at new node!" << std::endl;
@@ -120,8 +128,8 @@ void MLIrradianceCache::Insert(MLIrradianceCacheNode *p_pNode, MLIrradianceCache
 			{
 				// We still aren't sure where the thread that made CAS fail stopped, 
 				// so although redundant, we still set the bounds of the nodes
-				SetBounds(p_pNode->Bounds, i, p_pNode->Children[i].Bounds);
-				if (SphereBoxOverlap(p_pNode->Children[i].Bounds, p_pRecord->Point, p_pRecord->RiClamp))
+				// SetBounds(p_pNode->Bounds, i, p_pNode->Children[i].Bounds);
+				if (SphereBoxOverlap(p_pNode->Children[i].Bounds, p_pRecord->Position, p_pRecord->RiClamp))
 					Insert(p_pNode->Children + i, p_pRecord, p_nDepth - 1);
 			}
 		}
@@ -129,7 +137,7 @@ void MLIrradianceCache::Insert(MLIrradianceCacheNode *p_pNode, MLIrradianceCache
 		{
 			for (int i = 0; i < 8; i++)
 			{
-				if (SphereBoxOverlap(p_pNode->Children[i].Bounds, p_pRecord->Point, p_pRecord->RiClamp))
+				if (SphereBoxOverlap(p_pNode->Children[i].Bounds, p_pRecord->Position, p_pRecord->RiClamp))
 					Insert(p_pNode->Children + i, p_pRecord, p_nDepth - 1);
 			}
 		}
@@ -180,22 +188,26 @@ bool MLIrradianceCache::FindRecords(const Vector3 &p_point, const Vector3 &p_nor
 //----------------------------------------------------------------------------------------------
 float MLIrradianceCache::W_Ward(const Vector3 &p_point, const Vector3 &p_normal, MLIrradianceCacheRecord &p_record)
 {
-	float dist = Vector3::Distance(p_point, p_record.Point) / p_record.RiClamp,
+	float dist = Vector3::Distance(p_point, p_record.Position) / p_record.RiClamp,
 		cosTheta = Vector3::Dot(p_normal, p_record.Normal);
 
 	if (cosTheta <= 0)
 		return -1.f;
+	
+	float den = Maths::Max(Maths::Epsilon, dist + 1 - cosTheta);
+	
+	return (1.f / den) - (1.f / m_fErrorThreshold);
 
 	// Also: cache reciprocal of error threshold
 	// float norm = 1 - cosTheta;
-	return (1.f / (dist + 1 - cosTheta)) - (1.f / m_fErrorThreshold);
+	// return (1.f / (dist + 1 - cosTheta)) - (1.f / m_fErrorThreshold);
 }
 //----------------------------------------------------------------------------------------------
 float MLIrradianceCache::W_Tabelion(const Vector3 &p_point, const Vector3 &p_normal, MLIrradianceCacheRecord &p_record)
 {
 	float cosMaxAngleDifference = 0.2f;
 
-	float epi = Vector3::Distance(p_point, p_record.Point) / p_record.RiClamp;
+	float epi = Vector3::Distance(p_point, p_record.Position) / p_record.RiClamp;
 	float eni = Maths::Sqrt((1 - Vector3::Dot(p_normal, p_record.Normal)) / 
 							(1.f - cosMaxAngleDifference));
 
@@ -204,11 +216,33 @@ float MLIrradianceCache::W_Tabelion(const Vector3 &p_point, const Vector3 &p_nor
 	return 1.f - (err * m_fErrorThreshold);
 }
 //----------------------------------------------------------------------------------------------
+float MLIrradianceCache::W_Debattista(const Vector3 &p_point, const Vector3 &p_normal, MLIrradianceCacheRecord &p_record)
+{
+	float dist = Vector3::Distance(p_point, p_record.Position),
+		cosTheta = Vector3::Dot(p_normal, p_record.Normal);
+
+	if (cosTheta <= 0)
+		return -1.f;
+
+	float den = Maths::Max(Maths::Epsilon, dist + 1 - cosTheta);
+	
+	return (1.f / den) - (1.f / m_fErrorThreshold);
+
+	// Also: cache reciprocal of error threshold
+	// float norm = 1 - cosTheta;
+	// return (1.f / (dist + 1 - cosTheta)) - (1.f / m_fErrorThreshold);
+	// return (1.f / (dist + Maths::Sqrt(1 - cosTheta))) - (1.f / m_fErrorThreshold);
+}
+//----------------------------------------------------------------------------------------------
 float MLIrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, MLIrradianceCacheRecord &p_record)
 {
+#if (defined __INSTANT_CACHING__)
+	return W_Debattista(p_point, p_normal, p_record);
+#else
 	return W_Ward(
 	// return W_Tabelion(
 		p_point, p_normal, p_record);
+#endif
 }
 //----------------------------------------------------------------------------------------------
 void MLIrradianceCache::Merge(MLIrradianceCache *p_pIrradianceCache)
@@ -221,10 +255,10 @@ std::string MLIrradianceCache::ToString(void) const
 {
 	std::stringstream output;
 
-	output 
-		//<< "Inserts : [ " << m_nInsertCount << "]" << std::endl 
-		<< "Records : [" << m_nRecordCount  << "]" << std::endl 
-		<< "Nodes : [" << m_nNodeCount<< "]" << std::endl;
+	output << std::endl << "[Wait-Free Irradiance Cache :: Stats]" << std::endl
+		<< " :: Records : [" << m_nRecordCount  << "]" << std::endl 
+		<< " :: Nodes : [" << m_nNodeCount<< "]" << std::endl;
+		// << "Inserts : [ " << m_nInsertCount << "]" << std::endl 
 		//<< "Counted Nodes : [" << CountNodes((IrradianceCacheNode*)&RootNode) << "]" << std::endl;
 	
 	return output.str();
@@ -335,6 +369,16 @@ bool MLICIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 	m_irradianceCache.SetErrorThreshold(m_fErrorThreshold);
 	m_irradianceCache.SetDepth(m_nCacheDepth);
 
+	m_nGenerationCount = 0;
+	m_nInsertionCount = 0;
+
+#if (defined __INSTANT_CACHING__)
+	m_helper.Initialise(p_pScene, m_fReflectEpsilon, m_nRayDepth, m_nShadowRays);
+	m_helper.SetHemisphereDivisions(m_nAzimuthStrata, m_nAltitudeStrata);
+	m_helper.SetVirtualPointSources(1024, 1, 10);
+	m_helper.SetGeometryTerm(0.1f);
+#endif
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------
@@ -347,6 +391,8 @@ bool MLICIntegrator::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 bool MLICIntegrator::Prepare(Scene *p_pScene)
 {
+	m_helper.Prepare(IntegratorHelper<MLIrradianceCacheRecord>::PointLit);
+
 	return true;
 }
 //----------------------------------------------------------------------------------------------
@@ -494,6 +540,8 @@ Spectrum MLICIntegrator::GetIrradiance(const Intersection &p_intersection, Scene
 		{
 			if (m_bIsSampleGenerationDisabled) return 0.f;
 
+			m_nGenerationCount++;
+
 			MLIrradianceCacheRecord *record = RequestRecord();
 			ComputeRecord(p_intersection, p_pScene, *record);
 			m_irradianceCache.Insert(&(m_irradianceCache.RootNode), record, m_nCacheDepth);
@@ -504,6 +552,15 @@ Spectrum MLICIntegrator::GetIrradiance(const Intersection &p_intersection, Scene
 //----------------------------------------------------------------------------------------------
 void MLICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_pScene, MLIrradianceCacheRecord &p_record)
 {
+#if (defined __INSTANT_CACHING__)
+	p_record.Position = p_intersection.Surface.PointWS;
+	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W;
+	p_record.Ri = m_fErrorThreshold * 2.0f;
+	p_record.RiClamp = Maths::Max(m_fRMin, Maths::Min(m_fRMax, p_record.Ri));
+
+	// m_helper.Shade(&p_record, IntegratorHelper<MLIrradianceCacheRecord>::PathTraced);
+	m_helper.Shade(&p_record, IntegratorHelper<MLIrradianceCacheRecord>::PointLit);
+#else
 	Intersection isect;
 	Vector2 sample2D;
 	Vector3 wOutR;
@@ -537,14 +594,14 @@ void MLICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_
 
 	// MN = total samples
 
-	p_record.Point = p_intersection.Surface.PointWS;
-	// p_record.Point = p_intersection.Surface.ShadingNormal;
+	p_record.Position = p_intersection.Surface.PointWS;
 	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W;
 	p_record.Irradiance = E / mn;
 	p_record.Ri = mn / totLength;
 	// p_record.Ri = minLength;
 	// p_record.RiClamp = p_record.Ri;
 	p_record.RiClamp = Maths::Max(m_fRMin, Maths::Min(m_fRMax, p_record.Ri));
+#endif
 
 	// std::cout << "Ri = [" << p_record.Ri << "], [" << p_record.RiClamp << "]" << std::endl;
 }
@@ -649,6 +706,8 @@ Spectrum MLICIntegrator::PathLi(Scene *p_pScene, Ray &p_ray)
 //----------------------------------------------------------------------------------------------
 MLIrradianceCacheRecord* MLICIntegrator::RequestRecord(void)
 {
+	m_nInsertionCount++;
+
 	MLIrradianceCacheRecord *pRecord = new MLIrradianceCacheRecord();
 	pRecord->Epoch = m_nEpoch;
 	m_irradianceCacheRecordList.push_back(pRecord);
@@ -657,6 +716,8 @@ MLIrradianceCacheRecord* MLICIntegrator::RequestRecord(void)
 //----------------------------------------------------------------------------------------------
 MLIrradianceCacheRecord* MLICIntegrator::RequestRecord(MLIrradianceCacheRecord* p_pRecord, int p_nEpoch)
 {
+	m_nInsertionCount++;
+	
 	MLIrradianceCacheRecord *pRecord = new MLIrradianceCacheRecord(*p_pRecord);
 	pRecord->Epoch = (p_nEpoch == -1) ? m_nEpoch : p_nEpoch;
 	m_irradianceCacheRecordList.push_back(pRecord);
@@ -679,5 +740,11 @@ void MLICIntegrator::ReleaseRecords(void)
 //----------------------------------------------------------------------------------------------
 std::string MLICIntegrator::ToString(void) const
 {
-	return m_irradianceCache.ToString();
+	std::stringstream result; result 
+		<< " :: Generated [" << m_nGenerationCount << "]" << std::endl 
+		<< " :: Inserted [" << m_nInsertionCount << "]" << std::endl;
+	
+	return m_irradianceCache.ToString() + result.str();
+
+	//return m_irradianceCache.ToString();
 }

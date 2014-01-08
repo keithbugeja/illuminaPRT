@@ -82,7 +82,9 @@ public:
 	}
 
 	void PreparePath(void) {
-		Illumina::Core::Interpolator::ComputePivots(m_orientationList, m_pivotList);
+		//Illumina::Core::Interpolator::ComputePivots(m_orientationList, m_pivotList);
+		Interpolator::PadForCubicInterpolation(m_orientationList);
+		Interpolator::PadForCubicInterpolation(m_positionList);
 	}
 
 	void Get(float p_fTime, Vector3 &p_position, Vector3 &p_lookat)
@@ -94,10 +96,12 @@ public:
 		} 
 		else
 		{
-			p_position = Illumina::Core::Interpolator::Lagrange(m_positionList, m_pivotList, p_fTime);
-			p_lookat = Illumina::Core::Interpolator::Lagrange(m_orientationList, m_pivotList, p_fTime);
+			p_position = Illumina::Core::Interpolator::CubicInterpolation(m_positionList, p_fTime);
+			p_lookat = Illumina::Core::Interpolator::CubicInterpolation(m_orientationList, p_fTime);
+			//p_position = Illumina::Core::Interpolator::Lagrange(m_positionList, m_pivotList, p_fTime);
+			//p_lookat = Illumina::Core::Interpolator::Lagrange(m_orientationList, m_pivotList, p_fTime);
 
-			std::cout << p_fTime << ":" << p_position.ToString() << ":" << p_lookat.ToString() << std::endl;
+			// std::cout << p_fTime << ":" << p_position.ToString() << ":" << p_lookat.ToString() << std::endl;
 		}
 	}
 
