@@ -267,6 +267,11 @@ bool P2PListener2Way::State_IrradianceReceive(RakNet::BitStream &p_bitStream, Ho
 	return true;
 }
 //----------------------------------------------------------------------------------------------
+void P2PListener2Way::Dump_TransactionCache(void)
+{
+}
+
+//----------------------------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------------------------
 // UpdateLocalCatalogue
@@ -436,10 +441,6 @@ HostDirectory& P2PListener2Way::GetHostDirectory(void) {
 //----------------------------------------------------------------------------------------------
 bool P2PListener2Way::IsRunning(void) { return m_bIsRunning; }
 //----------------------------------------------------------------------------------------------
-void P2PListener2Way::SetCameraPath(std::vector<PathEx> &p_cameraPath)
-{
-}
-//----------------------------------------------------------------------------------------------
 void P2PListener2Way::SetPeer(Peer *p_pPeer, Role p_eRole) 
 {
 	m_pPeer = p_pPeer;
@@ -490,7 +491,7 @@ void P2PListener2Way::OnBeginFrame(IIlluminaMT *p_pIlluminaMT)
 { 
 	BeginPath(p_pIlluminaMT);
 	//ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
-	// pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
+	//pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
 };
 //----------------------------------------------------------------------------------------------
 void P2PListener2Way::OnEndFrame(IIlluminaMT *p_pIlluminaMT)
