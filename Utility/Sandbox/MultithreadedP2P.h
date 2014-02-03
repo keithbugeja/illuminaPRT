@@ -87,6 +87,9 @@ protected:
 	bool State_IrradianceSend(HostId p_hostId, std::vector<boost::uuids::uuid> &p_requestList, bool p_bResponse = false);
 	bool State_IrradianceReceive(RakNet::BitStream &p_bitStream, HostId p_hostId);
 	//----------------------------------------------------------------------------------------------
+
+	void Dump_TransactionCache(void);
+	//----------------------------------------------------------------------------------------------
 public:
 	P2PListener2Way(void);
 
@@ -97,7 +100,6 @@ public:
 	//----------------------------------------------------------------------------------------------
 	bool IsRunning(void);
 	void SetPeer(Peer *p_pPeer, Role p_eRole = P2PSendReceive);
-	void SetCameraPath(std::vector<PathEx> &p_cameraPath);
 	//----------------------------------------------------------------------------------------------
 	void OnBeginRender(IIlluminaMT *p_pIlluminaMT);
 	void OnEndRender(IIlluminaMT *p_pIlluminaMT);
@@ -248,12 +250,5 @@ protected:
 		m_path.Get(m_fDeltaTime, position, lookAt);
 		pCamera->MoveTo(position); 
 		pCamera->LookAt(lookAt);
-		
-		//pCamera->LookAt(lookAt);
-		//m_path.Get(m_fDeltaTime + 0.01f, position, lookAt);
-		//pCamera->LookAt(position);
-
-		// std::cout << "Position : " << position.ToString() << ", LookAt : " << lookAt.ToString() << std::endl;
-		// pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
 	}
 };
