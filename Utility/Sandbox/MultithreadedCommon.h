@@ -81,7 +81,8 @@ protected:
 
 	float m_fFrameBudget;
 
-	std::string m_strScript;
+	std::string m_strScript,
+		m_strCameraScript;
 
 	Flags m_flags;
 
@@ -100,6 +101,8 @@ protected:
 public:
 
 	void SetScript(const std::string &p_strScript) { m_strScript = p_strScript; }
+	void SetCameraScript(const std::string &p_strCameraScript) { m_strCameraScript = p_strCameraScript; }
+	std::string GetCameraScript(void) const { return m_strCameraScript; } 
 	
 	void SetLogger(Logger *p_pLogger) { m_pLogger = p_pLogger; }
 	void SetLoggerUpdate(int p_nFrameCount) { m_nLoggerUpdate = p_nFrameCount; }

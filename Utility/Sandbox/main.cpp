@@ -430,7 +430,8 @@ void IlluminaPRT_IrradianceServer(IIlluminaMT *p_pIllumina)
 
 void IlluminaPRT(
 	Logger *p_pLogger, int p_nVerboseFrequency, int p_nIterations, int p_nFPS,
-	int p_nRenderThreads, int p_nJobsPerFrame, int p_nTileSize, int p_nFlags, std::string p_strScript,
+	int p_nRenderThreads, int p_nJobsPerFrame, int p_nTileSize, int p_nFlags, 
+	std::string p_strScript, std::string p_strCameraScript,
 	int p_nPort, bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPeerPort)
 {
 	//SamplerDiagnostics diagnostics;
@@ -457,6 +458,7 @@ void IlluminaPRT(
 	illumina.SetLogger(p_pLogger);
 	illumina.SetLoggerUpdate(p_nVerboseFrequency);
 	illumina.SetScript(p_strScript);
+	illumina.SetCameraScript(p_strCameraScript);
 	illumina.SetThreadCount(p_nRenderThreads);
 	illumina.SetIterations(p_nIterations);
 	illumina.SetJobs(p_nJobsPerFrame, p_nTileSize);
@@ -493,7 +495,8 @@ int main(int argc, char** argv)
 		nSize = 32,
 		nJobs = 0x10000,
 		nFPS = 5,
-		nFlags = 0xFF;
+		nFlags = 0xFF,
+		nSync = 0;
 
 	bool bVerbose = false,
 		bDiscovery = false;
@@ -502,7 +505,8 @@ int main(int argc, char** argv)
 		nPort = 6666;
 
 	std::string strScript("default.ilm"),
-		strRemoteAddress("127.0.0.1");
+		strRemoteAddress("127.0.0.1"),
+		strCameraScript;
 
 	// Declare the supported options.
 	boost::program_options::options_description description("Allowed Settings");
@@ -512,6 +516,7 @@ int main(int argc, char** argv)
 		("verbose", boost::program_options::value<bool>(), "show extended information")
 		("statfreq", boost::program_options::value<int>(), "show frame statistics every nth frame (requires verbose)")
 		("script", boost::program_options::value<std::string>(), "script file to render")
+		("camerascript", boost::program_options::value<std::string>(), "camera fly-by script")
 		("workdir", boost::program_options::value<std::string>(), "working directory")
 		("iterations", boost::program_options::value<int>(), "iterations to execute")
 		("threads", boost::program_options::value<int>(), "number of rendering threads")
@@ -523,6 +528,7 @@ int main(int argc, char** argv)
 		("discovery", boost::program_options::value<bool>(), "try automatic discovery in P2P network")
 		("remoteaddr", boost::program_options::value<std::string>(), "remote address of peer in P2P network")
 		("remoteport", boost::program_options::value<int>(), "remote port of peer in P2P network")
+		("sync", boost::program_options::value<int>(), "delay until system clock is a multiple of value (minutes)")
 		;
 
 	// Declare variable map
@@ -648,6 +654,13 @@ int main(int argc, char** argv)
 		std::cout << "Flags [" << nFlags << "]" << std::endl;
 	}
 
+	// --camerapath
+	if (variableMap.count("camerascript"))
+	{
+		strCameraScript = variableMap["camerascript"].as<std::string>();
+		std::cout << "Camera Path [" << strCameraScript << "]" << std::endl;
+	}
+
 	// --discovery
 	if (variableMap.count("discovery"))
 	{
@@ -684,12 +697,33 @@ int main(int argc, char** argv)
 		std::cout << "Local Port [" << nPort << "]" << std::endl;
 	}
 
+	// --sync
+	if (variableMap.count("sync"))
+	{
+		try 
+		{
+			nSync = variableMap["sync"].as<int>();
+		} catch (...) { nSync = 0; }
+		std::cout << "Synchronised Start [" << nSync << "]" << std::endl;
+	}
+
+	// Handle sync start here
+	if (nSync > 0)
+	{
+		int nSyncSec = nSync * 60;
+		long lTime = (long)Platform::ToSeconds(Platform::GetTime()),
+			lDelay = nSyncSec - (lTime % nSyncSec);
+
+		std::cout << "Sleeping for [" << lDelay << " of " << nSyncSec << "] seconds" << std::endl;
+		boost::this_thread::sleep(boost::posix_time::seconds(lDelay));
+	}
+
 	// Initialise new logger
 	Logger logger; logger.SetLoggingFilter(bVerbose ? LL_All : LL_ErrorLevel);
 
 	// -- start rendering
-	IlluminaPRT(&logger, nVerboseFrequency, nIterations, nFPS,  nThreads, nJobs, nSize, nFlags, strScript, nPort, bDiscovery, strRemoteAddress, nRemotePort);
-
+	IlluminaPRT(&logger, nVerboseFrequency, nIterations, nFPS,  nThreads, nJobs, nSize, nFlags, strScript, strCameraScript, nPort, bDiscovery, strRemoteAddress, nRemotePort);
+	
 	// Exit
 	return 1;
 }

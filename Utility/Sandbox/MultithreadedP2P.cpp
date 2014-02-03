@@ -5,15 +5,16 @@
 #include "MultithreadedP2P.h"
 
 //----------------------------------------------------------------------------------------------
-P2PListener2Way::P2PListener2Way(void)
-{
-	InitPath();
-}
+P2PListener2Way::P2PListener2Way(void) { }
 //----------------------------------------------------------------------------------------------
 void P2PListener2Way::NewsCastThreadHandler(P2PListener2Way *p_pListener)
 {
+	int m_newscastCycle = 0;
+
 	while(p_pListener->IsRunning())
 	{
+		std::cout << "---->> NewsCast Cycle : [" << m_newscastCycle++ << "]" << std::endl;
+
 		if (p_pListener->m_pWFICIntegrator != NULL)
 			p_pListener->NewsCast();
 	
@@ -23,8 +24,12 @@ void P2PListener2Way::NewsCastThreadHandler(P2PListener2Way *p_pListener)
 //----------------------------------------------------------------------------------------------
 void P2PListener2Way::NewsUpdateThreadHandler(P2PListener2Way *p_pListener)
 {
+	int m_newsupdateHandler = 0;
+
 	while(p_pListener->IsRunning())
 	{
+		std::cout << "---->> NewsUpdate Cycle : [" << m_newsupdateHandler++ << "]" << std::endl;
+
 		if (p_pListener->m_pWFICIntegrator != NULL)
 			p_pListener->NewsUpdate();
 	
@@ -457,10 +462,13 @@ void P2PListener2Way::OnBeginRender(IIlluminaMT *p_pIlluminaMT)
 		m_pWFICIntegrator = NULL;
 		m_pRecordBuffer = NULL;
 	}
-
+	
 	m_newscastEpoch = P2PLISTENER_GIC_EPOCH;
 	m_newscastState = NCInitiateConnection;
 	m_newscastDeadline = 0;
+
+	// Initialise path
+	LoadCameraScript(p_pIlluminaMT->GetCameraScript());
 
 	// Start background thread
 	m_bIsRunning = true;
