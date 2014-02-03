@@ -58,7 +58,7 @@ protected:
 	State m_newscastState;
 	int m_newscastDeadline,
 		m_newscastEpoch;
-
+	
 	HostId m_exchangeHostId;
 	std::vector<boost::uuids::uuid> m_exchangeRequestList;
 
@@ -113,34 +113,129 @@ protected:
 	float m_fDeltaTime;
 	int m_nFrameNumber;
 
-	void InitPath(void)
+	bool LoadCameraScript(std::string p_strCameraScript)
 	{
-		Random r(Platform::GetCycles());
+		if (p_strCameraScript.empty())
+			return false;
 
-		m_nFrameNumber = 0;
-		m_fDeltaTime = 0;
+		std::ifstream cameraFile;
+		cameraFile.open(p_strCameraScript.c_str(), std::ios::binary);
 
-		m_path.Clear();
+		if (!cameraFile.is_open())
+			return false;
+		
+		std::string line, cameraType, 
+			deltaTime, generation, range, angle;
 
-		// Generate a random path
-		PathVertexEx vertex;
-		vertex.position.Set(0, -14, 0);
-		//vertex.position.Set(-8, 2.5, 0);
-		vertex.orientation.Set(Maths::DegToRad(90), 0, 0);
-		m_path.AddVertex(vertex);
+		std::stringstream cameraPathString;
+		std::vector<std::string> cameraPathVector;
 
-		for (int n = 0; n < 12; n++)
+		std::getline(cameraFile, cameraType); boost::trim(cameraType);
+		std::getline(cameraFile, deltaTime); boost::trim(deltaTime);
+		std::getline(cameraFile, generation); boost::trim(generation);
+		std::getline(cameraFile, range); boost::trim(range);
+		std::getline(cameraFile, angle); boost::trim(angle);
+
+		while(std::getline(cameraFile, line))
 		{
-			Vector3 position = Montecarlo::UniformSampleSphere(r.NextFloat(), r.NextFloat()); 
-			position.Y = 0; position.Normalize(); position *= 3.0f;
-
-			vertex.position += position;
-			vertex.orientation.X += (r.NextFloat() - 0.5f) * Maths::DegToRad(20);
-
-			m_path.AddVertex(vertex);
+			boost::trim(line);
+			cameraPathVector.push_back(line);
+			std::cout << ":: " << line << std::endl;
 		}
 
-		// m_path.FromString("path={{-16, -14, -5.75},{90,0,0},{-8, -14, -5.75},{90,0,0},{-2.36, -14, -5.75},{90,0,0}}");
+		cameraFile.close();
+
+		// Now create actual path according
+		m_path.Clear();
+		
+		// Strict camera type
+		if (cameraType == "strict")
+		{
+			std::cout << "Camera Path [Strict]" << std::endl;
+			
+			cameraPathString << "path={";
+
+			for (int index = 0; index < cameraPathVector.size(); index++)
+			{
+				cameraPathString << cameraPathVector[index];
+				if (index < cameraPathVector.size() - 1)
+					cameraPathString << ", ";
+			}
+
+			cameraPathString << "}";
+		}
+
+		// Shuffle
+		else if (cameraType == "shuffle")
+		{
+			Random random(Platform::GetCycles());
+
+			std::cout << "Camera Path [Shuffle]" << std::endl;
+
+			cameraPathString << "path={";
+			
+			while (!cameraPathVector.empty())
+			{
+				int index = random.Next(cameraPathVector.size());
+				cameraPathString << cameraPathVector[index];
+				cameraPathVector.erase(cameraPathVector.begin() + index);
+
+				if (!cameraPathVector.empty())
+					cameraPathString << ",";
+			}
+			
+			cameraPathString << "}";
+		}
+
+		// Random
+		else if (cameraType == "random")
+		{
+			Random random(Platform::GetCycles());
+
+			std::cout << "Camera Path [Random]" << std::endl;
+			
+			float fRange = boost::lexical_cast<float>(range),
+				fAngle = boost::lexical_cast<float>(angle);
+
+			int nGeneration = boost::lexical_cast<int>(generation),
+				index = random.Next(cameraPathVector.size());
+			
+			std::vector<Vector3> vertexList;
+			ArgumentMap argMap("vertex={" + cameraPathVector[index] + "}");
+			argMap.GetArgument("vertex", vertexList);
+
+			Vector3 position = vertexList[0],
+				heading = vertexList[1];
+
+			cameraPathString << "path={" << cameraPathVector[index] << ", ";
+
+			for (index = 0; index < nGeneration; index++)
+			{
+				Vector3 displacement = 
+					Montecarlo::UniformSampleSphere(random.NextFloat(), random.NextFloat()); 
+				
+				displacement.Y = 0.0f; displacement.Normalize(); 
+				position += displacement * fRange;
+
+				heading.X += ((random.NextFloat() - 0.5f) * 2.0f) * fAngle;
+
+				cameraPathString << "{" << position.X << ", " << position.Y << ", " << position.Z << "}, {" 
+					<< heading.X << ", " << heading.Y << ", " << heading.Z << "}";
+
+				if (index < nGeneration - 1) cameraPathString << ", ";
+			}
+		}
+
+		// Delta time parameter
+		m_nFrameNumber = 0;
+		m_fDeltaTime = boost::lexical_cast<float>(deltaTime);
+		std::cout << "-- Delta Time [" << m_fDeltaTime << "]" << std::endl;
+		std::cout << "-- Path [" << cameraPathString.str() << "]" << std::endl;
+
+		// Build path from string;
+		m_path.FromString(cameraPathString.str());
+
+		return true;
 	}
 
 	void BeginPath(IIlluminaMT *p_pIlluminaMT)
@@ -151,9 +246,12 @@ protected:
 		m_fDeltaTime += 0.002f; if (m_fDeltaTime > 1.f) m_fDeltaTime = 1.f;
 
 		m_path.Get(m_fDeltaTime, position, lookAt);
-		pCamera->MoveTo(position); //pCamera->LookAt(lookAt);
-		m_path.Get(m_fDeltaTime + 0.01f, position, lookAt);
-		pCamera->LookAt(position);
+		pCamera->MoveTo(position); 
+		pCamera->LookAt(lookAt);
+		
+		//pCamera->LookAt(lookAt);
+		//m_path.Get(m_fDeltaTime + 0.01f, position, lookAt);
+		//pCamera->LookAt(position);
 
 		// std::cout << "Position : " << position.ToString() << ", LookAt : " << lookAt.ToString() << std::endl;
 		// pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
