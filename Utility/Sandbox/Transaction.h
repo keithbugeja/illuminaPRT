@@ -12,7 +12,8 @@ enum TransactionType
 	TTGeneric,
 	TTPeerList,
 	TTTransactionList,
-	TTIrradianceSamples
+	TTIrradianceSamples,
+	TTOriginator
 };
 
 class ITransaction
@@ -249,3 +250,34 @@ public:
 typedef IDataTransaction<HostId, TTPeerList> HostDirectoryTransaction;
 typedef IDataTransaction<boost::uuids::uuid, TTTransactionList> TransactionListTransaction;
 typedef IDataTransaction<MLIrradianceCacheRecord, TTIrradianceSamples> IrradianceRecordTransaction;
+
+class TransactionRecord
+{
+protected:
+	boost::uuids::uuid m_transactionId;
+	unsigned long m_ulType;
+	HostId m_originatorId;
+
+public:
+	TransactionRecord(void) { }
+
+	TransactionRecord(boost::uuids::uuid p_transactionId, unsigned long p_ulType, HostId p_originator)
+		: m_transactionId(p_transactionId)
+		, m_ulType(p_ulType)
+		, m_originatorId(p_originator)
+	{ }
+
+	boost::uuids::uuid GetTransactionId(void) const { return m_transactionId; }
+	unsigned long GetType(void) const { return m_ulType; }
+	HostId GetOriginatorId(void) const { return m_originatorId; }
+
+	std::string ToString(void) 
+	{
+		std::stringstream result;
+
+		result << ITransaction::GetIdString(m_transactionId) << " : Type = [" << m_ulType << "]" 
+			<< " : HostId = [" << m_originatorId.ToIPv4String() << " : " << m_originatorId.GetPort() << "]";
+
+		return result.str();
+	}
+};
