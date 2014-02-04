@@ -57,13 +57,16 @@ protected:
 	// Newscast exchange details
 	State m_newscastState;
 	int m_newscastDeadline,
-		m_newscastEpoch;
+		m_newscastEpoch,
+		m_newscastPush,
+		m_newscastPull;
 	
 	HostId m_exchangeHostId;
 	std::vector<boost::uuids::uuid> m_exchangeRequestList;
 
 	// Transactions
 	std::map<boost::uuids::uuid, int> m_transactionMap;
+	std::map<boost::uuids::uuid, TransactionRecord> m_transactionRecordMap;
 
 	bool m_bIsRunning;
 
@@ -88,7 +91,7 @@ protected:
 	bool State_IrradianceReceive(RakNet::BitStream &p_bitStream, HostId p_hostId);
 	//----------------------------------------------------------------------------------------------
 
-	void Dump_TransactionCache(void);
+	void Dump_TransactionCache(int p_nCycle, bool p_bFilePerCycle = true);
 	//----------------------------------------------------------------------------------------------
 public:
 	P2PListener2Way(void);
@@ -100,6 +103,8 @@ public:
 	//----------------------------------------------------------------------------------------------
 	bool IsRunning(void);
 	void SetPeer(Peer *p_pPeer, Role p_eRole = P2PSendReceive);
+	void SetEventPush(int p_nPush);
+	void SetEventPull(int p_nPull);
 	//----------------------------------------------------------------------------------------------
 	void OnBeginRender(IIlluminaMT *p_pIlluminaMT);
 	void OnEndRender(IIlluminaMT *p_pIlluminaMT);

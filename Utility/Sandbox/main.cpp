@@ -432,7 +432,8 @@ void IlluminaPRT(
 	Logger *p_pLogger, int p_nVerboseFrequency, int p_nIterations, int p_nFPS,
 	int p_nRenderThreads, int p_nJobsPerFrame, int p_nTileSize, int p_nFlags, 
 	std::string p_strScript, std::string p_strCameraScript,
-	int p_nPort, bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPeerPort)
+	int p_nPort, bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPeerPort,
+	int p_nPush, int p_nPull)
 {
 	//SamplerDiagnostics diagnostics;
 
@@ -465,9 +466,13 @@ void IlluminaPRT(
 	illumina.SetFrameBudget(0);
 
 	P2PListener2Way listener;
-	listener.SetPeer(&localHost, p_nPort > 7100 ? P2PListener2Way::P2PReceive : P2PListener2Way::P2PSendReceive);
+	listener.SetEventPush(p_nPush);
+	listener.SetEventPull(p_nPull);
+	listener.SetPeer(&localHost, p_nPort > 7100 ? P2PListener2Way::P2PReceive : P2PListener2Way::P2PSendReceive);	
+
 	HostDirectory &hostDir = listener.GetHostDirectory();
 	hostDir.Add(remoteHost);
+
 	illumina.AttachListener(&listener);
 
 	illumina.Initialise();
@@ -496,7 +501,9 @@ int main(int argc, char** argv)
 		nJobs = 0x10000,
 		nFPS = 5,
 		nFlags = 0xFF,
-		nSync = 0;
+		nSync = 0, 
+		nPush = 500, 
+		nPull = 500;
 
 	bool bVerbose = false,
 		bDiscovery = false;
@@ -529,6 +536,8 @@ int main(int argc, char** argv)
 		("remoteaddr", boost::program_options::value<std::string>(), "remote address of peer in P2P network")
 		("remoteport", boost::program_options::value<int>(), "remote port of peer in P2P network")
 		("sync", boost::program_options::value<int>(), "delay until system clock is a multiple of value (minutes)")
+		("eventpush", boost::program_options::value<int>(), "event push (msec)")
+		("eventpull", boost::program_options::value<int>(), "event pull (msec)")
 		;
 
 	// Declare variable map
@@ -697,6 +706,26 @@ int main(int argc, char** argv)
 		std::cout << "Local Port [" << nPort << "]" << std::endl;
 	}
 
+	// --eventpush
+	if (variableMap.count("eventpush"))
+	{
+		try 
+		{
+			nPush = variableMap["eventpush"].as<int>();
+		} catch (...) { nPush = 500; }
+		std::cout << "Event Push [" << nPush << "]" << std::endl;
+	}
+
+	// --eventpull
+	if (variableMap.count("eventpull"))
+	{
+		try 
+		{
+			nPull = variableMap["eventpull"].as<int>();
+		} catch (...) { nPull = 0; }
+		std::cout << "Event Pull [" << nPull << "]" << std::endl;
+	}
+
 	// --sync
 	if (variableMap.count("sync"))
 	{
@@ -722,7 +751,7 @@ int main(int argc, char** argv)
 	Logger logger; logger.SetLoggingFilter(bVerbose ? LL_All : LL_ErrorLevel);
 
 	// -- start rendering
-	IlluminaPRT(&logger, nVerboseFrequency, nIterations, nFPS,  nThreads, nJobs, nSize, nFlags, strScript, strCameraScript, nPort, bDiscovery, strRemoteAddress, nRemotePort);
+	IlluminaPRT(&logger, nVerboseFrequency, nIterations, nFPS,  nThreads, nJobs, nSize, nFlags, strScript, strCameraScript, nPort, bDiscovery, strRemoteAddress, nRemotePort, nPush, nPull);
 	
 	// Exit
 	return 1;

@@ -18,7 +18,7 @@ void P2PListener2Way::NewsCastThreadHandler(P2PListener2Way *p_pListener)
 		if (p_pListener->m_pWFICIntegrator != NULL)
 			p_pListener->NewsCast();
 	
-		boost::this_thread::sleep(boost::posix_time::millisec(500));
+		boost::this_thread::sleep(boost::posix_time::millisec(p_pListener->m_newscastPush));
 	}
 }
 //----------------------------------------------------------------------------------------------
@@ -33,7 +33,9 @@ void P2PListener2Way::NewsUpdateThreadHandler(P2PListener2Way *p_pListener)
 		if (p_pListener->m_pWFICIntegrator != NULL)
 			p_pListener->NewsUpdate();
 	
-		boost::this_thread::sleep(boost::posix_time::millisec(500));
+		p_pListener->Dump_TransactionCache(m_newsupdateHandler);
+
+		boost::this_thread::sleep(boost::posix_time::millisec(p_pListener->m_newscastPull));
 	}
 }
 //----------------------------------------------------------------------------------------------
@@ -68,11 +70,12 @@ bool P2PListener2Way::State_InitiateConnection(void)
 
 	// Connect to chosen host
 	std::cout << "---> [P2P Subsystem] :: Initiating connection to [" << m_exchangeHostId.ToIPv4String() << ":" << m_exchangeHostId.GetPort() << "]" << std::endl;
-	m_pPeer->Connect(m_exchangeHostId, 0);
+	// m_pPeer->Connect(m_exchangeHostId, 0);
+	m_pPeer->Connect(m_exchangeHostId, m_newscastPush * 2);
 				
-	// New state / set deadline (5s)
+	// New state / set deadline (2.5 x push + pull)
 	m_newscastState = NCConnect;
-	m_newscastDeadline = RakNet::GetTimeMS() + 5000;
+	m_newscastDeadline = RakNet::GetTimeMS() + (m_newscastPush * 10);
 
 	return true;
 }
@@ -204,7 +207,7 @@ bool P2PListener2Way::State_TransactionReceive(RakNet::BitStream &p_bitStream, H
 	for (auto uuid : p_outRequestList)
 		std::cout << "------->" << ITransaction::GetIdString(uuid) << "[-]" << std::endl;
 
-	m_newscastDeadline += 500 * p_outRequestList.size();
+	m_newscastDeadline += (m_newscastPull + m_newscastPush) * p_outRequestList.size();
 
 	return p_outRequestList.size() > 0;
 }
@@ -253,11 +256,10 @@ bool P2PListener2Way::State_IrradianceReceive(RakNet::BitStream &p_bitStream, Ho
 
 	MLIrradianceCache *pIrradianceCache = m_pWFICIntegrator->GetIrradianceCache();
 	m_transactionMap[received.GetId()] = m_newscastEpoch;
+	m_transactionRecordMap[received.GetId()] = TransactionRecord(received.GetId(), received.GetType(), received.GetHostId());
 
 	for (auto irradiance : irradianceList)
 	{
-		//MLIrradianceCacheRecord *pRecord = m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch);
-		//pIrradianceCache->Insert(pRecord);
 		pIrradianceCache->Insert(m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch));
 	}
 
@@ -267,10 +269,36 @@ bool P2PListener2Way::State_IrradianceReceive(RakNet::BitStream &p_bitStream, Ho
 	return true;
 }
 //----------------------------------------------------------------------------------------------
-void P2PListener2Way::Dump_TransactionCache(void)
+void P2PListener2Way::Dump_TransactionCache(int p_nCycle, bool p_bFilePerCycle)
 {
-}
+	std::ofstream transactionCache;
 
+	if (p_bFilePerCycle)
+	{
+		std::stringstream filename; filename << "transactionCache_" << p_nCycle << ".txt";
+		transactionCache.open(filename.str(), std::ios_base::binary);
+	}
+	else
+		transactionCache.open("transactionCache.txt", std::ios_base::binary);
+
+	transactionCache << "Cycle [" << p_nCycle << "]" << std::endl;
+	transactionCache << "Event List:" << std::endl;
+	for (auto transactionRecord : m_transactionRecordMap)
+	{
+		transactionCache << transactionRecord.second.ToString() << std::endl;
+	}
+
+	std::vector<HostId> hostDirectory;
+	m_hostDirectory.GetDirectory(hostDirectory);
+	transactionCache << "Host List:" << std::endl;
+
+	for (auto host : hostDirectory)
+	{
+		transactionCache << host.ToIPv4String() << " : " << host.GetPort() << std::endl;
+	}
+
+	transactionCache.close();
+}
 //----------------------------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------------------------
@@ -283,7 +311,8 @@ void P2PListener2Way::UpdateLocalCatalogue(void)
 	{
 		boost::uuids::uuid transactionId = ITransaction::GenerateId();
 		int lastEpoch = m_pWFICIntegrator->NextEpoch();
-		m_transactionMap[transactionId] = lastEpoch;
+		m_transactionMap[transactionId] = lastEpoch;		
+		m_transactionRecordMap[transactionId] = TransactionRecord(transactionId, TransactionType::TTOriginator, m_pPeer->GetHostId());
 
 		std::cout << "---> [P2P Subsystem] :: Created transaction " << ITransaction::GetIdString(transactionId) 
 			<< " bound to epoch [" << lastEpoch << "]" << std::endl;
@@ -334,7 +363,10 @@ void P2PListener2Way::NewsCast(void)
 {
 	// Has the deadline run out?
 	if (RakNet::GetTimeMS() > m_newscastDeadline && m_newscastState!= NCInitiateConnection)
+	{
+		std::cout << "---> [P2P Subsystem :: Connection deadline expired!" << std::endl;
 		m_newscastState = NCTerminateConnection;
+	}
 
 	switch(m_newscastState)
 	{
@@ -354,6 +386,9 @@ void P2PListener2Way::NewsCast(void)
 
 		case NCConnect:
 		{
+			// --- >> Increased deadline
+			m_newscastDeadline += m_newscastPush * 2;
+
 			// Connected
 			std::cout << "---> [P2P Subsystem] :: State = [Connect]" << std::endl;
 				
@@ -447,6 +482,16 @@ void P2PListener2Way::SetPeer(Peer *p_pPeer, Role p_eRole)
 	m_eRole = p_eRole;
 }
 //----------------------------------------------------------------------------------------------
+void P2PListener2Way::SetEventPush(int p_nPush)
+{
+	m_newscastPush = p_nPush;
+}
+//----------------------------------------------------------------------------------------------
+void P2PListener2Way::SetEventPull(int p_nPull)
+{
+	m_newscastPull = p_nPull;
+}
+//----------------------------------------------------------------------------------------------
 void P2PListener2Way::OnBeginRender(IIlluminaMT *p_pIlluminaMT)
 {
 	IIntegrator *pIntegrator = p_pIlluminaMT->GetEnvironment()->GetIntegrator();
@@ -505,7 +550,7 @@ void P2PListener2Way::OnEndFrame(IIlluminaMT *p_pIlluminaMT)
 			NewsUpdate();
 		*/
 	
-		std::cout << m_pWFICIntegrator->ToString() << std::endl;
+		// std::cout << m_pWFICIntegrator->ToString() << std::endl;
 	}
 }
 //----------------------------------------------------------------------------------------------
