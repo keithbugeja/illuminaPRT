@@ -375,7 +375,8 @@ bool MLICIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 #if (defined __INSTANT_CACHING__)
 	m_helper.Initialise(p_pScene, m_fReflectEpsilon, m_nRayDepth, m_nShadowRays);
 	m_helper.SetHemisphereDivisions(m_nAzimuthStrata, m_nAltitudeStrata);
-	m_helper.SetVirtualPointSources(1024, 1, 10);
+	//m_helper.SetVirtualPointSources(1024, 1, 10);
+	m_helper.SetVirtualPointSources(512, 1, 10);
 	m_helper.SetGeometryTerm(0.1f);
 #endif
 
@@ -391,8 +392,9 @@ bool MLICIntegrator::Shutdown(void)
 //----------------------------------------------------------------------------------------------
 bool MLICIntegrator::Prepare(Scene *p_pScene)
 {
+#if (defined __INSTANT_CACHING__)
 	m_helper.Prepare(IntegratorHelper<MLIrradianceCacheRecord>::PointLit);
-
+#endif
 	return true;
 }
 //----------------------------------------------------------------------------------------------

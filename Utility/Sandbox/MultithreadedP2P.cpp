@@ -9,32 +9,32 @@ P2PListener2Way::P2PListener2Way(void) { }
 //----------------------------------------------------------------------------------------------
 void P2PListener2Way::NewsCastThreadHandler(P2PListener2Way *p_pListener)
 {
-	int m_newscastCycle = 0;
+	// int m_newscastCycle = 0;
 
 	while(p_pListener->IsRunning())
 	{
-		std::cout << "---->> NewsCast Cycle : [" << m_newscastCycle++ << "]" << std::endl;
+		// std::cout << "---->> NewsCast Cycle : [" << m_newscastCycle++ << "]" << std::endl;
 
 		if (p_pListener->m_pWFICIntegrator != NULL)
 			p_pListener->NewsCast();
 	
+		// p_pListener->Dump_TransactionCache(m_newscastCycle);
+
 		boost::this_thread::sleep(boost::posix_time::millisec(p_pListener->m_newscastPush));
 	}
 }
 //----------------------------------------------------------------------------------------------
 void P2PListener2Way::NewsUpdateThreadHandler(P2PListener2Way *p_pListener)
 {
-	int m_newsupdateHandler = 0;
+	// int m_newsupdateCycle = 0;
 
 	while(p_pListener->IsRunning())
 	{
-		std::cout << "---->> NewsUpdate Cycle : [" << m_newsupdateHandler++ << "]" << std::endl;
+		// std::cout << "---->> NewsUpdate Cycle : [" << m_newsupdateHandler++ << "]" << std::endl;
 
 		if (p_pListener->m_pWFICIntegrator != NULL)
 			p_pListener->NewsUpdate();
 	
-		p_pListener->Dump_TransactionCache(m_newsupdateHandler);
-
 		boost::this_thread::sleep(boost::posix_time::millisec(p_pListener->m_newscastPull));
 	}
 }
@@ -104,7 +104,7 @@ bool P2PListener2Way::State_Connect(HostId p_hostId)
 		case RakNet::ConnectionState::IS_NOT_CONNECTED:
 		{
 			std::cout << "---> [P2P Subsystem] :: Connection failed with error code [" << (int)cs << "]" << std::endl;
-			m_newscastState = NCQuiescent;
+			m_newscastState = NCTerminateConnection;
 			return false;
 		}
 	}
@@ -207,6 +207,7 @@ bool P2PListener2Way::State_TransactionReceive(RakNet::BitStream &p_bitStream, H
 	for (auto uuid : p_outRequestList)
 		std::cout << "------->" << ITransaction::GetIdString(uuid) << "[-]" << std::endl;
 
+	// Increase deadline
 	m_newscastDeadline += (m_newscastPull + m_newscastPush) * p_outRequestList.size();
 
 	return p_outRequestList.size() > 0;
@@ -378,7 +379,8 @@ void P2PListener2Way::NewsCast(void)
 			if (!State_InitiateConnection()) 
 			{
 				std::cout << "---> [P2P Subsystem] :: Initiation Failed!" << std::endl;
-				m_newscastState = NCQuiescent;
+				// m_newscastState = NCQuiescent;
+				m_newscastState = NCTerminateConnection;
 			}
 					
 			break;
@@ -395,7 +397,8 @@ void P2PListener2Way::NewsCast(void)
 			if (!State_Connect(m_exchangeHostId))
 			{
 				std::cout << "---> [P2P Subsystem] :: Connection Failed!" << std::endl;
-				m_newscastState = NCQuiescent;
+				// m_newscastState = NCQuiescent;
+				m_newscastState = NCTerminateConnection;
 			}
 
 			break;
@@ -403,6 +406,9 @@ void P2PListener2Way::NewsCast(void)
 
 		case NCPeerSend:
 		{
+			// --- >> Increased deadline
+			m_newscastDeadline += m_newscastPush * 2;
+
 			std::cout << "---> [P2P Subsystem] :: State = [Peer Send]" << std::endl;
 			State_PeerSend(m_exchangeHostId);
 			m_newscastState = NCQuiescent;
@@ -465,6 +471,11 @@ void P2PListener2Way::NewsCast(void)
 			m_pPeer->Disconnect(m_exchangeHostId);
 
 			m_newscastState = NCInitiateConnection;
+
+			// Newscast cycle
+			Dump_TransactionCache(m_newscastCycle++);
+			std::cout << "---> [P2P Subsystem] :: Newscast Cycle = [" << m_newscastCycle << "]" << std::endl;
+
 			break;
 		}
 	}
@@ -512,6 +523,7 @@ void P2PListener2Way::OnBeginRender(IIlluminaMT *p_pIlluminaMT)
 	m_newscastEpoch = P2PLISTENER_GIC_EPOCH;
 	m_newscastState = NCInitiateConnection;
 	m_newscastDeadline = 0;
+	m_newscastCycle = 0;
 
 	// Initialise path
 	LoadCameraScript(p_pIlluminaMT->GetCameraScript());
