@@ -58,6 +58,7 @@ protected:
 	State m_newscastState;
 	int m_newscastDeadline,
 		m_newscastEpoch,
+		m_newscastCycle,
 		m_newscastPush,
 		m_newscastPull;
 	
@@ -117,7 +118,7 @@ protected:
 	// Crap for testing...
 	//----------------------------------------------------------------------------------------------
 	PathEx m_path;
-	float m_fDeltaTime;
+	float m_fTime, m_fDelta;
 	int m_nFrameNumber;
 
 	bool LoadCameraScript(std::string p_strCameraScript)
@@ -234,9 +235,9 @@ protected:
 		}
 
 		// Delta time parameter
-		m_nFrameNumber = 0;
-		m_fDeltaTime = boost::lexical_cast<float>(deltaTime);
-		std::cout << "-- Delta Time [" << m_fDeltaTime << "]" << std::endl;
+		m_nFrameNumber = 0; m_fTime = 0.0f;
+		m_fDelta = boost::lexical_cast<float>(deltaTime);
+		std::cout << "-- Delta Time [" << m_fDelta << "]" << std::endl;
 		std::cout << "-- Path [" << cameraPathString.str() << "]" << std::endl;
 
 		// Build path from string;
@@ -250,9 +251,9 @@ protected:
 		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
 		Vector3 position, lookAt, position2;
 
-		m_fDeltaTime += 0.002f; if (m_fDeltaTime > 1.f) m_fDeltaTime = 1.f;
+		m_fTime += m_fDelta; if (m_fTime > 1.f) m_fTime = 1.f;
 
-		m_path.Get(m_fDeltaTime, position, lookAt);
+		m_path.Get(m_fTime, position, lookAt);
 		pCamera->MoveTo(position); 
 		pCamera->LookAt(lookAt);
 	}
