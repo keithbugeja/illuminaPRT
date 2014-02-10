@@ -24,6 +24,8 @@ using namespace Illumina::Core;
 
 #define __INSTANT_CACHING__
 
+#define __EPOCH_PARTITION__ 0x7FFFFF
+
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 int MLIrradianceCache::CountNodes(MLIrradianceCacheNode* p_pNode) const
@@ -375,8 +377,8 @@ bool MLICIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 #if (defined __INSTANT_CACHING__)
 	m_helper.Initialise(p_pScene, m_fReflectEpsilon, m_nRayDepth, m_nShadowRays);
 	m_helper.SetHemisphereDivisions(m_nAzimuthStrata, m_nAltitudeStrata);
-	//m_helper.SetVirtualPointSources(1024, 1, 10);
-	m_helper.SetVirtualPointSources(512, 1, 10);
+	m_helper.SetVirtualPointSources(1024, 1, 10);
+	// m_helper.SetVirtualPointSources(512, 1, 10);
 	m_helper.SetGeometryTerm(0.1f);
 #endif
 
@@ -531,7 +533,14 @@ Spectrum MLICIntegrator::GetIrradiance(const Intersection &p_intersection, Scene
 			{
 				auto pair = *iter;
 
-				num += pair.second->Irradiance * pair.first;
+				#if (defined __EPOCH_PARTITION__)
+					if (pair.second->Epoch >= __EPOCH_PARTITION__)
+						num += (pair.second->Irradiance + Spectrum(5,0,0)) * pair.first;
+					else
+						num += pair.second->Irradiance * pair.first;
+				#else
+					num += pair.second->Irradiance * pair.first;
+				#endif
 				den += pair.first;
 			}
 
