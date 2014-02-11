@@ -22,9 +22,9 @@
 
 using namespace Illumina::Core;
 
-#define __INSTANT_CACHING__
+// #define __INSTANT_CACHING__
 
-#define __EPOCH_PARTITION__ 0x7FFFFF
+//#define __EPOCH_PARTITION__ 0x7FFFFF
 
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
@@ -569,8 +569,8 @@ void MLICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_
 	p_record.Ri = m_fErrorThreshold * 2.0f;
 	p_record.RiClamp = Maths::Max(m_fRMin, Maths::Min(m_fRMax, p_record.Ri));
 
-	// m_helper.Shade(&p_record, IntegratorHelper<MLIrradianceCacheRecord>::PathTraced);
-	m_helper.Shade(&p_record, IntegratorHelper<MLIrradianceCacheRecord>::PointLit);
+	m_helper.Shade(&p_record, IntegratorHelper<MLIrradianceCacheRecord>::PathTraced);
+	// m_helper.Shade(&p_record, IntegratorHelper<MLIrradianceCacheRecord>::PointLit);
 #else
 	Intersection isect;
 	Vector2 sample2D;
