@@ -67,7 +67,6 @@ namespace Illumina
 		class MLIrradianceCache
 		{
 		protected:
-			// std::vector<MLIrradianceCacheRecord*> m_irradianceRecordList;
 			WaitFreeList<MLIrradianceCacheRecord*> m_irradianceRecordList;
 			
 			float m_fErrorThreshold;
@@ -116,7 +115,7 @@ namespace Illumina
 
 			void Merge(MLIrradianceCache *p_pIrradianceCache);
 
-			std::string ToString(void) const;
+			std::string ToString(void);
 		};
 
 		//----------------------------------------------------------------------------------------------
@@ -133,7 +132,6 @@ namespace Illumina
 
 			// Irradiance record list
 			WaitFreeList<MLIrradianceCacheRecord*> m_irradianceCacheRecordList;
-			// std::vector<MLIrradianceCacheRecord*> m_irradianceCacheRecordList;
 
 			// Irradiance cache rendering parameters
 			int m_nRayDepth,
@@ -212,7 +210,7 @@ namespace Illumina
 			Spectrum Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext = NULL);
 			Spectrum Radiance(IntegratorContext *p_pContext, Scene *p_pScene, Intersection &p_intersection, RadianceContext *p_pRadianceContext = NULL);
 		
-			std::string ToString(void) const;
+			std::string ToString(void);
 		};
 	}
 }

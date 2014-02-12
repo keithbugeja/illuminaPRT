@@ -84,50 +84,66 @@ void OrthonormalBasis::InitFromV(const Vector3 &p_v)
 //----------------------------------------------------------------------------------------------
 void OrthonormalBasis::InitFromW(const Vector3 &p_w)
 {
-	// Using Gram-Schmidt
 	W = Vector3::Normalize(p_w);
-	V = Vector3::UnitYPos - Vector3::Dot(Vector3::UnitYPos, W) * W;
 
-	// Do we choose another axis?
-	if (V.LengthSquared() <= 1e-4f)
-	{
-		V = Vector3::Cross(Vector3::UnitXPos, W);
-		V = V - Vector3::Dot(V, W) * W;
+	if (Maths::FAbs(W.X) > Maths::FAbs(W.Y)) {
+		float invLen = 1.f / Maths::Sqrt(W.X*W.X + W.Z*W.Z);
+		V.Set(-W.Z * invLen, 0.f, W.X * invLen);
+	}
+	else {
+		float invLen = 1.f / Maths::Sqrt(W.Y*W.Y + W.Z*W.Z);
+		V.Set(0.f, W.Z * invLen, -W.Y * invLen);
 	}
 
-	V.Normalize();
-
-	U = Vector3::Cross(V, W);
-
-	//if (Maths::FAbs(U.Dot(V)) > 1e-5f || 
-	//	Maths::FAbs(U.Dot(W)) > 1e-5f  || 
-	//	Maths::FAbs(V.Dot(W)) > 1e-5f)
-	//{
-	//	std::cout<<"Basis not orthonormal!"<<std::endl
-	//		<<ToString()<<std::endl;
-	//}
-
-	/*
-	W = Vector3::Normalize(p_w);
-	U = Vector3::Cross(W, Vector3::UnitYPos);
-
-	if (U.LengthSquared() < 1e-4f)
-		U = Vector3::Cross(W, Vector3::UnitXPos);
-
-	V = Vector3::Cross(W, U);
-	V.Normalize();
-	*/
-
-	/*
-	W = Vector3::Normalize(p_w);
-	V = Vector3::Cross(W, Vector3::UnitXPos);
-				
-	if (V.LengthSquared() < Epsilon)
-		V = Vector3::Cross(W, Vector3::UnitZNeg);
-
-	U = Vector3::Cross(V, W);
-	*/
+	U = Vector3::Cross(W, V);
 }
+//----------------------------------------------------------------------------------------------
+//void OrthonormalBasis::InitFromW(const Vector3 &p_w)
+//{
+//	// Using Gram-Schmidt
+//	W = Vector3::Normalize(p_w);
+//	V = Vector3::UnitYPos - Vector3::Dot(Vector3::UnitYPos, W) * W;
+//
+//	// Do we choose another axis?
+//	if (V.LengthSquared() <= 1e-4f)
+//	{
+//		V = Vector3::Cross(Vector3::UnitXPos, W);
+//		V = V - Vector3::Dot(V, W) * W;
+//	}
+//
+//	V.Normalize();
+//
+//	U = Vector3::Cross(V, W);
+//
+//	//if (Maths::FAbs(U.Dot(V)) > 1e-5f || 
+//	//	Maths::FAbs(U.Dot(W)) > 1e-5f  || 
+//	//	Maths::FAbs(V.Dot(W)) > 1e-5f)
+//	//{
+//	//	std::cout<<"Basis not orthonormal!"<<std::endl
+//	//		<<ToString()<<std::endl;
+//	//}
+//
+//	/*
+//	W = Vector3::Normalize(p_w);
+//	U = Vector3::Cross(W, Vector3::UnitYPos);
+//
+//	if (U.LengthSquared() < 1e-4f)
+//		U = Vector3::Cross(W, Vector3::UnitXPos);
+//
+//	V = Vector3::Cross(W, U);
+//	V.Normalize();
+//	*/
+//
+//	/*
+//	W = Vector3::Normalize(p_w);
+//	V = Vector3::Cross(W, Vector3::UnitXPos);
+//				
+//	if (V.LengthSquared() < Epsilon)
+//		V = Vector3::Cross(W, Vector3::UnitZNeg);
+//
+//	U = Vector3::Cross(V, W);
+//	*/
+//}
 //----------------------------------------------------------------------------------------------
 void OrthonormalBasis::InitFromUV(const Vector3 &p_u, const Vector3 &p_v)
 {

@@ -56,7 +56,8 @@ protected:
 
 	// Newscast exchange details
 	State m_newscastState;
-	int m_newscastDeadline,
+	int m_newscastTimeout,
+		m_newscastDeadline,
 		m_newscastEpoch,
 		m_newscastCycle,
 		m_newscastPush,
@@ -104,6 +105,7 @@ public:
 	//----------------------------------------------------------------------------------------------
 	bool IsRunning(void);
 	void SetPeer(Peer *p_pPeer, Role p_eRole = P2PSendReceive);
+	void SetTimeout(int p_nTimeout);
 	void SetEventPush(int p_nPush);
 	void SetEventPull(int p_nPull);
 	//----------------------------------------------------------------------------------------------

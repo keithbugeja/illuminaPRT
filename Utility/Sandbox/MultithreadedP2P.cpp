@@ -298,6 +298,9 @@ void P2PListener2Way::Dump_TransactionCache(int p_nCycle, bool p_bFilePerCycle)
 		transactionCache << host.ToIPv4String() << " : " << host.GetPort() << std::endl;
 	}
 
+	transactionCache << "Integrator Properties:" << std::endl;
+	transactionCache << m_pWFICIntegrator->ToString() << std::endl;
+
 	transactionCache.close();
 }
 //----------------------------------------------------------------------------------------------
@@ -389,7 +392,7 @@ void P2PListener2Way::NewsCast(void)
 		case NCConnect:
 		{
 			// --- >> Increased deadline
-			m_newscastDeadline += m_newscastPush * 2;
+			m_newscastDeadline += m_newscastTimeout;
 
 			// Connected
 			std::cout << "---> [P2P Subsystem] :: State = [Connect]" << std::endl;
@@ -407,7 +410,7 @@ void P2PListener2Way::NewsCast(void)
 		case NCPeerSend:
 		{
 			// --- >> Increased deadline
-			m_newscastDeadline += m_newscastPush * 2;
+			m_newscastDeadline += m_newscastTimeout;
 
 			std::cout << "---> [P2P Subsystem] :: State = [Peer Send]" << std::endl;
 			State_PeerSend(m_exchangeHostId);
@@ -501,6 +504,11 @@ void P2PListener2Way::SetEventPush(int p_nPush)
 void P2PListener2Way::SetEventPull(int p_nPull)
 {
 	m_newscastPull = p_nPull;
+}
+//----------------------------------------------------------------------------------------------
+void P2PListener2Way::SetTimeout(int p_nTimeout)
+{
+	m_newscastTimeout = p_nTimeout;
 }
 //----------------------------------------------------------------------------------------------
 void P2PListener2Way::OnBeginRender(IIlluminaMT *p_pIlluminaMT)

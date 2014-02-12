@@ -24,9 +24,8 @@ using namespace Illumina::Core;
 
 // #define __INSTANT_CACHING__
 
-//#define __EPOCH_PARTITION__ 0x7FFFFF
+// #define __EPOCH_PARTITION__ 0x7FFFFF
 
-//----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 int MLIrradianceCache::CountNodes(MLIrradianceCacheNode* p_pNode) const
 {
@@ -253,14 +252,15 @@ void MLIrradianceCache::Merge(MLIrradianceCache *p_pIrradianceCache)
 		Insert(record);
 }
 //----------------------------------------------------------------------------------------------
-std::string MLIrradianceCache::ToString(void) const
+std::string MLIrradianceCache::ToString(void)
 {
 	std::stringstream output;
 
 	output << std::endl << "[Wait-Free Irradiance Cache :: Stats]" << std::endl
 		<< " :: Records : [" << m_nRecordCount  << "]" << std::endl 
 		<< " :: Nodes : [" << m_nNodeCount<< "]" << std::endl;
-		// << "Inserts : [ " << m_nInsertCount << "]" << std::endl 
+
+	// << "Inserts : [ " << m_nInsertCount << "]" << std::endl 
 		//<< "Counted Nodes : [" << CountNodes((IrradianceCacheNode*)&RootNode) << "]" << std::endl;
 	
 	return output.str();
@@ -377,8 +377,8 @@ bool MLICIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 #if (defined __INSTANT_CACHING__)
 	m_helper.Initialise(p_pScene, m_fReflectEpsilon, m_nRayDepth, m_nShadowRays);
 	m_helper.SetHemisphereDivisions(m_nAzimuthStrata, m_nAltitudeStrata);
-	m_helper.SetVirtualPointSources(1024, 1, 10);
-	// m_helper.SetVirtualPointSources(512, 1, 10);
+	//m_helper.SetVirtualPointSources(1024, 1, 10);
+	m_helper.SetVirtualPointSources(512, 1, 10);
 	m_helper.SetGeometryTerm(0.1f);
 #endif
 
@@ -749,13 +749,11 @@ void MLICIntegrator::ReleaseRecords(void)
 	*/
 }
 //----------------------------------------------------------------------------------------------
-std::string MLICIntegrator::ToString(void) const
+std::string MLICIntegrator::ToString(void)
 {
 	std::stringstream result; result 
-		<< " :: Generated [" << m_nGenerationCount << "]" << std::endl 
+		<< " :: Computed [" << m_nGenerationCount << "]" << std::endl 
 		<< " :: Inserted [" << m_nInsertionCount << "]" << std::endl;
 	
 	return m_irradianceCache.ToString() + result.str();
-
-	//return m_irradianceCache.ToString();
 }

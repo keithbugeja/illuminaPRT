@@ -153,6 +153,7 @@ public:
 		//----------------------------------------------------------------------------------------------
 		logger->Write("Environment :: Registering Lights...", LL_Info);
 		m_engineKernel->GetLightManager()->RegisterFactory("Point", new PointLightFactory());
+		m_engineKernel->GetLightManager()->RegisterFactory("Directional", new DirectionalLightFactory());
 		m_engineKernel->GetLightManager()->RegisterFactory("DiffuseArea", new DiffuseAreaLightFactory());
 		m_engineKernel->GetLightManager()->RegisterFactory("InfiniteArea", new InfiniteAreaLightFactory());
 
@@ -323,10 +324,12 @@ public:
 			logger->Write("Environment :: Freeing and unregistering Lights...", LL_Info);
 
 			delete m_engineKernel->GetLightManager()->RequestFactory("Point");
+			delete m_engineKernel->GetLightManager()->RequestFactory("Directional");
 			delete m_engineKernel->GetLightManager()->RequestFactory("DiffuseArea");
 			delete m_engineKernel->GetLightManager()->RequestFactory("InfiniteArea");
 
 			m_engineKernel->GetLightManager()->UnregisterFactory("Point");
+			m_engineKernel->GetLightManager()->UnregisterFactory("Directional");
 			m_engineKernel->GetLightManager()->UnregisterFactory("DiffuseArea");
 			m_engineKernel->GetLightManager()->UnregisterFactory("InfiniteArea");
 
