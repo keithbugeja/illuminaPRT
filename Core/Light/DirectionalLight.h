@@ -19,8 +19,8 @@ namespace Illumina
 		{
 		public:
 			DirectionalLight(const DirectionalLight &p_directionalLight);
-			DirectionalLight(const Vector3 &p_direction, const Spectrum &p_intensity);
-			DirectionalLight(const std::string& p_strName, const Vector3 &p_direction, const Spectrum &p_intensity);
+			DirectionalLight(float p_fDistance, const Vector3 &p_direction, const Spectrum &p_intensity);
+			DirectionalLight(const std::string &p_strName, float p_fDistance, const Vector3 &p_direction, const Spectrum &p_intensity);
 
 			float Pdf(const Vector3 &p_point, const Vector3 &p_wOut);
 
@@ -33,6 +33,9 @@ namespace Illumina
 
 			Vector3 SamplePoint(float p_u, float p_v, Vector3 &p_lightSurfaceNormal, float &p_pdf);
 		
+			float GetDistance(void) const;
+			void SetDistance(float p_fDistance);
+
 			Vector3 GetDirection(void) const;
 			void SetDirection(const Vector3 &p_direction);
 
@@ -40,6 +43,7 @@ namespace Illumina
 			void SetIntensity(const Spectrum &p_intensity);
 
 		protected:
+			float m_fDistance;
 			Vector3 m_direction;
 			Spectrum m_intensity;
 		};

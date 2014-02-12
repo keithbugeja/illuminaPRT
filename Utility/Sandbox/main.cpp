@@ -368,7 +368,7 @@ void IlluminaPRT_IrradianceServer(IIlluminaMT *p_pIllumina)
 	PointShader<Dart> shader;
 	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1);
 	shader.SetHemisphereDivisions(24, 48);
-	shader.SetVirtualPointSources(2048, 8192); // 256
+	shader.SetVirtualPointSources(512, 8192); // 256
 	shader.SetGeometryTerm(0.01f);
 	//shader.Prepare(PointShader<Dart>::PointLit);
 	shader.Prepare(PointShader<Dart>::PathTraced);
@@ -433,7 +433,7 @@ void IlluminaPRT(
 	int p_nRenderThreads, int p_nJobsPerFrame, int p_nTileSize, int p_nFlags, 
 	std::string p_strScript, std::string p_strCameraScript,
 	int p_nPort, bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPeerPort,
-	int p_nPush, int p_nPull)
+	int p_nPush, int p_nPull, int p_nTimeout)
 {
 	//SamplerDiagnostics diagnostics;
 
@@ -452,7 +452,7 @@ void IlluminaPRT(
 
 	HostId remoteHost = HostId::MakeHostId(p_strPeerIP, p_nPeerPort);
 
-	//IlluminaMTFrameless illumina;
+	// IlluminaMTFrameless illumina;
 	IlluminaMT illumina;
 
 	illumina.SetFlags(p_nFlags);
@@ -468,6 +468,7 @@ void IlluminaPRT(
 	P2PListener2Way listener;
 	listener.SetEventPush(p_nPush);
 	listener.SetEventPull(p_nPull);
+	listener.SetTimeout(p_nTimeout);
 	listener.SetPeer(&localHost, p_nPort > 7100 ? P2PListener2Way::P2PReceive : P2PListener2Way::P2PSendReceive);	
 
 	HostDirectory &hostDir = listener.GetHostDirectory();
@@ -503,7 +504,8 @@ int main(int argc, char** argv)
 		nFlags = 0xFF,
 		nSync = 0, 
 		nPush = 500, 
-		nPull = 500;
+		nPull = 500,
+		nTimeout = 30000;
 
 	bool bVerbose = false,
 		bDiscovery = false;
@@ -538,6 +540,7 @@ int main(int argc, char** argv)
 		("sync", boost::program_options::value<int>(), "delay until system clock is a multiple of value (minutes)")
 		("eventpush", boost::program_options::value<int>(), "event push (msec)")
 		("eventpull", boost::program_options::value<int>(), "event pull (msec)")
+		("eventtimeout", boost::program_options::value<int>(), "event timeout (msec)")
 		;
 
 	// Declare variable map
@@ -722,8 +725,18 @@ int main(int argc, char** argv)
 		try 
 		{
 			nPull = variableMap["eventpull"].as<int>();
-		} catch (...) { nPull = 0; }
+		} catch (...) { nPull = 500; }
 		std::cout << "Event Pull [" << nPull << "]" << std::endl;
+	}
+	
+	// --eventtimeout
+	if (variableMap.count("eventtimeout"))
+	{
+		try 
+		{
+			nPull = variableMap["eventtimeout"].as<int>();
+		} catch (...) { nTimeout = 30000; }
+		std::cout << "Event Timeout [" << nTimeout << "]" << std::endl;
 	}
 
 	// --sync
@@ -751,7 +764,7 @@ int main(int argc, char** argv)
 	Logger logger; logger.SetLoggingFilter(bVerbose ? LL_All : LL_ErrorLevel);
 
 	// -- start rendering
-	IlluminaPRT(&logger, nVerboseFrequency, nIterations, nFPS,  nThreads, nJobs, nSize, nFlags, strScript, strCameraScript, nPort, bDiscovery, strRemoteAddress, nRemotePort, nPush, nPull);
+	IlluminaPRT(&logger, nVerboseFrequency, nIterations, nFPS,  nThreads, nJobs, nSize, nFlags, strScript, strCameraScript, nPort, bDiscovery, strRemoteAddress, nRemotePort, nPush, nPull, nTimeout);
 	
 	// Exit
 	return 1;
