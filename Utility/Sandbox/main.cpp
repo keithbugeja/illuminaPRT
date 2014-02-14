@@ -435,6 +435,9 @@ void IlluminaPRT(
 	int p_nPort, bool p_bAutomaticDiscovery, std::string p_strPeerIP, int p_nPeerPort,
 	int p_nPush, int p_nPull, int p_nTimeout)
 {
+	/*
+	 * Diagnostics and quick tests
+	 */
 	//SamplerDiagnostics diagnostics;
 
 	//diagnostics.DistributionTest(new LowDiscrepancySampler(), 512*512, "Output\\ld.ppm");
@@ -442,8 +445,34 @@ void IlluminaPRT(
 	//diagnostics.DistributionTest(new MultijitterSampler(), 512*512, "Output\\mj.ppm");
 	//diagnostics.DistributionTest(new JitterSampler(), 512*512, "Output\\j.ppm");
 
-	//std::cout << "OK" << std::endl;
-	//std::getchar();
+	/*HostId hidA = HostId::MakeHostId(0x01010101, 0xFFFF),
+		hidB = HostId::MakeHostId(0x20202020, 0xF0F0);
+
+	SparseVectorClock a(hidA),
+		b(hidB);
+
+	a.Tick();
+	b.Tick();
+
+	std::cout << "A: " << a.ToString() << std::endl;
+	std::cout << "B: " << b.ToString() << std::endl;
+
+	b.Send();
+	a.Receive(b);
+	a.Send();
+	b.Receive(a);
+
+	std::cout << "A: " << a.ToString() << std::endl;
+	std::cout << "B: " << b.ToString() << std::endl;
+
+	std::cout << "OK" << std::endl;
+	std::getchar();
+
+	return;*/
+
+	/*
+	 * Diagnostics and quick tests
+	 */
 
 	Peer localHost;
 

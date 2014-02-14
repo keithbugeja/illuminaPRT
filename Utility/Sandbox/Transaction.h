@@ -20,6 +20,7 @@ class ITransaction
 {
 protected:
 	boost::uuids::uuid m_transactionId;
+	SparseVectorClock m_timestamp;
 	unsigned long m_ulType;
 	HostId m_hostId;
 
@@ -31,6 +32,14 @@ protected:
 		: m_transactionId(boost::uuids::random_generator()())
 		, m_ulType(p_ulType)
 		, m_hostId(p_hostId)
+		, m_timestamp(p_hostId)
+	{ }
+
+	ITransaction(unsigned long p_ulType, HostId p_hostId, SparseVectorClock &p_timestamp)
+		: m_transactionId(boost::uuids::random_generator()())
+		, m_ulType(p_ulType)
+		, m_hostId(p_hostId)
+		, m_timestamp(p_timestamp)
 	{ }
 
 public:
@@ -50,8 +59,8 @@ public:
 	}
 
 public:
+	// Id
 	void SetId(boost::uuids::uuid &p_uuid) { m_transactionId = p_uuid; }
-
 	boost::uuids::uuid GetId(void) { return m_transactionId; }
 	std::string GetIdString(void) 
 	{
@@ -62,8 +71,16 @@ public:
 
 		return uid.str();
 	}
+
+	// Type
 	unsigned long GetType(void) { return m_ulType; }
+	
+	// Host id
 	HostId GetHostId(void) { return m_hostId; }
+
+	// Timestamp
+	SparseVectorClock& GetTimestamp(void) { return m_timestamp; }
+	void SetTimestamp(SparseVectorClock &p_timestamp) { m_timestamp = p_timestamp; }
 
 	virtual ~ITransaction(void) { }
 
@@ -81,6 +98,7 @@ class IDataTransaction
 {
 protected:
 	using ITransaction::m_transactionId;
+	using ITransaction::m_timestamp;
 	using ITransaction::m_hostId;
 	using ITransaction::m_ulType;
 
@@ -97,6 +115,12 @@ public:
 
 	IDataTransaction(HostId p_hostId)
 		: ITransaction(K, p_hostId)
+		, m_pData(NULL)
+		, m_nLength(-1)
+	{ }
+
+	IDataTransaction(HostId p_hostId, SparseVectorClock &p_timestamp)
+		: ITransaction(K, p_hostId, p_timestamp)
 		, m_pData(NULL)
 		, m_nLength(-1)
 	{ }
@@ -139,6 +163,9 @@ public:
 		p_bitstream.Write((const char*)m_transactionId.data, 16);
 		p_bitstream.Write((unsigned long)m_ulType);
 		p_bitstream.Write((unsigned long long)m_hostId.GetHash());
+		
+		m_timestamp.WriteToBitStream(p_bitstream);
+
 		p_bitstream.Write((int)m_nLength);
 		p_bitstream.Write((const char*)m_pData, m_nLength);
 	}
@@ -155,6 +182,8 @@ public:
 		p_bitstream.Read(hostId);
 		m_hostId = hostId;
 
+		m_timestamp.ReadFromBitStream(p_bitstream);
+
 		p_bitstream.Read(m_nLength);
 		m_pData = new unsigned char[m_nLength];
 		p_bitstream.Read((char*)m_pData, m_nLength);
@@ -164,6 +193,7 @@ public:
 class HostDirectory
 {
 protected:
+	std::vector<std::pair<HostId, SparseVectorClock>> m_hostList2;
 	std::vector<std::pair<HostId, double>> m_hostList;
 	int m_nSize;
 
@@ -257,26 +287,30 @@ protected:
 	boost::uuids::uuid m_transactionId;
 	unsigned long m_ulType;
 	HostId m_originatorId;
+	SparseVectorClock m_timestamp;
 
 public:
 	TransactionRecord(void) { }
 
-	TransactionRecord(boost::uuids::uuid p_transactionId, unsigned long p_ulType, HostId p_originator)
+	TransactionRecord(boost::uuids::uuid p_transactionId, unsigned long p_ulType, HostId p_originator, SparseVectorClock p_timestamp)
 		: m_transactionId(p_transactionId)
 		, m_ulType(p_ulType)
 		, m_originatorId(p_originator)
+		, m_timestamp(p_timestamp)
 	{ }
 
 	boost::uuids::uuid GetTransactionId(void) const { return m_transactionId; }
 	unsigned long GetType(void) const { return m_ulType; }
 	HostId GetOriginatorId(void) const { return m_originatorId; }
+	SparseVectorClock& GetTimestamp(void) { return m_timestamp; }
 
 	std::string ToString(void) 
 	{
 		std::stringstream result;
 
 		result << ITransaction::GetIdString(m_transactionId) << " : Type = [" << m_ulType << "]" 
-			<< " : HostId = [" << m_originatorId.ToIPv4String() << " : " << m_originatorId.GetPort() << "]";
+			<< " : HostId = [" << m_originatorId.ToIPv4String() << " : " << m_originatorId.GetPort() << "]"
+			<< " : Timestamp = [" << m_timestamp.ToString() << "]";
 
 		return result.str();
 	}

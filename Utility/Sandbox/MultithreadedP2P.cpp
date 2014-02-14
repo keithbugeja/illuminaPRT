@@ -9,29 +9,19 @@ P2PListener2Way::P2PListener2Way(void) { }
 //----------------------------------------------------------------------------------------------
 void P2PListener2Way::NewsCastThreadHandler(P2PListener2Way *p_pListener)
 {
-	// int m_newscastCycle = 0;
-
 	while(p_pListener->IsRunning())
 	{
-		// std::cout << "---->> NewsCast Cycle : [" << m_newscastCycle++ << "]" << std::endl;
-
 		if (p_pListener->m_pWFICIntegrator != NULL)
 			p_pListener->NewsCast();
 	
-		// p_pListener->Dump_TransactionCache(m_newscastCycle);
-
 		boost::this_thread::sleep(boost::posix_time::millisec(p_pListener->m_newscastPush));
 	}
 }
 //----------------------------------------------------------------------------------------------
 void P2PListener2Way::NewsUpdateThreadHandler(P2PListener2Way *p_pListener)
 {
-	// int m_newsupdateCycle = 0;
-
 	while(p_pListener->IsRunning())
 	{
-		// std::cout << "---->> NewsUpdate Cycle : [" << m_newsupdateHandler++ << "]" << std::endl;
-
 		if (p_pListener->m_pWFICIntegrator != NULL)
 			p_pListener->NewsUpdate();
 	
@@ -39,6 +29,9 @@ void P2PListener2Way::NewsUpdateThreadHandler(P2PListener2Way *p_pListener)
 	}
 }
 //----------------------------------------------------------------------------------------------
+/*
+ * Deprecated - to be removed
+ */
 void P2PListener2Way::BackgroundThreadHandler(P2PListener2Way *p_pListener)
 {
 	while(p_pListener->IsRunning())
@@ -70,8 +63,8 @@ bool P2PListener2Way::State_InitiateConnection(void)
 
 	// Connect to chosen host
 	std::cout << "---> [P2P Subsystem] :: Initiating connection to [" << m_exchangeHostId.ToIPv4String() << ":" << m_exchangeHostId.GetPort() << "]" << std::endl;
-	// m_pPeer->Connect(m_exchangeHostId, 0);
-	m_pPeer->Connect(m_exchangeHostId, m_newscastPush * 2);
+	m_pPeer->Connect(m_exchangeHostId, 0);
+	// m_pPeer->Connect(m_exchangeHostId, m_newscastPush * 2);
 				
 	// New state / set deadline (2.5 x push + pull)
 	m_newscastState = NCConnect;
@@ -119,6 +112,7 @@ bool P2PListener2Way::State_PeerSend(HostId p_hostId, bool p_bResponse)
 	m_hostDirectory.GetDirectory(hostList);
 
 	// Set transaction
+	// TODO : Each host should be timestamped with the last interaction time
 	HostDirectoryTransaction peerSendTR(m_pPeer->GetHostId());
 	peerSendTR.SetData(hostList);
 
@@ -142,6 +136,9 @@ bool P2PListener2Way::State_PeerReceive(RakNet::BitStream &p_bitStream, HostId p
 	std::cout << "---> [P2P Subsystem] :: Received peers [size = " << hostList.size() << "] from [" << p_hostId.ToIPv4String() << " : " << p_hostId.GetPort() << "]" << std::endl;
 	for (auto host : hostList) std::cout << "------->" << host.ToIPv4String() << ":" << host.GetPort() << std::endl;
 		
+	// TODO: Hosts should be timestamped! 
+	// TODO: Sorting should be on the basis of timestamps!
+
 	// Remove entry of this host
 	auto me = std::find(hostList.begin(), hostList.end(), m_pPeer->GetHostId());
 		if (me != hostList.end()) hostList.erase(me);
@@ -172,7 +169,12 @@ bool P2PListener2Way::State_TransactionSend(HostId p_hostId, bool p_bResponse)
 	if (transactionList.empty()) transactionList.push_back(boost::uuids::uuid());
 
 	RakNet::BitStream bitStream;
-	TransactionListTransaction transactionExchangeTR(m_pPeer->GetHostId());
+
+	// Update logical clock (we're messaging a peer)
+	m_pPeer->GetClock().Send();
+	std::cout << "---> [P2P Subsystem] :: Sending CLOCK : " << m_pPeer->GetClock().ToString() << std::endl;
+
+	TransactionListTransaction transactionExchangeTR(m_pPeer->GetHostId(), m_pPeer->GetClock());
 	transactionExchangeTR.SetData(transactionList);
 	transactionExchangeTR.WriteToBitStream(bitStream);
 
@@ -190,6 +192,11 @@ bool P2PListener2Way::State_TransactionReceive(RakNet::BitStream &p_bitStream, H
 	TransactionListTransaction received;
 	received.ReadFromBitStream(p_bitStream);
 	received.GetData(transactionList);
+
+	// Update clock since we received a message
+	std::cout << "---> [P2P Subsystem] :: Received CLOCK : " << received.GetTimestamp().ToString() << std::endl;
+	m_pPeer->GetClock().Receive(received.GetTimestamp());
+	std::cout << "---> [P2P Subsystem] :: Updated CLOCK : " << m_pPeer->GetClock().ToString() << std::endl;
 
 	// Request transactions from the list that we don't have
 	std::cout << "---> [P2P Subsystem] :: Received catalogue [size = " << transactionList.size() << "]" << std::endl;
@@ -216,7 +223,9 @@ bool P2PListener2Way::State_TransactionReceive(RakNet::BitStream &p_bitStream, H
 bool P2PListener2Way::State_IrradianceSend(HostId p_hostId, std::vector<boost::uuids::uuid> &p_requestList, bool p_bResponse)
 {
 	// Prepare irradiance exchange transaction
-	RakNet::BitStream bitStream;
+	RakNet::BitStream bitStream; 
+	
+	// Irradiance transaction
 	IrradianceRecordTransaction irradianceExchangeTR(m_pPeer->GetHostId());
 	int epoch; std::vector<MLIrradianceCacheRecord*> recordList;
 
@@ -228,6 +237,7 @@ bool P2PListener2Way::State_IrradianceSend(HostId p_hostId, std::vector<boost::u
 		epoch = m_transactionMap[uuid]; recordList.clear();
 		m_pWFICIntegrator->GetByEpoch(epoch, recordList);
 		irradianceExchangeTR.SetId(uuid);
+		irradianceExchangeTR.SetTimestamp(m_transactionRecordMap[uuid].GetTimestamp());
 
 		std::cout << "---> [P2P Subsystem] :: Fetched [" << recordList.size() << "] for epoch [" << epoch << "]" << std::endl;
 		if (!recordList.empty())
@@ -257,7 +267,7 @@ bool P2PListener2Way::State_IrradianceReceive(RakNet::BitStream &p_bitStream, Ho
 
 	MLIrradianceCache *pIrradianceCache = m_pWFICIntegrator->GetIrradianceCache();
 	m_transactionMap[received.GetId()] = m_newscastEpoch;
-	m_transactionRecordMap[received.GetId()] = TransactionRecord(received.GetId(), received.GetType(), received.GetHostId());
+	m_transactionRecordMap[received.GetId()] = TransactionRecord(received.GetId(), received.GetType(), received.GetHostId(), received.GetTimestamp());
 
 	for (auto irradiance : irradianceList)
 	{
@@ -313,10 +323,14 @@ void P2PListener2Way::UpdateLocalCatalogue(void)
 	// We need a quota of at least 100 samples before promoting to a transaction!
 	if (m_pWFICIntegrator->HasEpochQuota(P2PLISTENER_TX_QUOTA))
 	{
+		// Generated a new event
+		m_pPeer->GetClock().Tick();
+		std::cout << "---> [P2P Subsystem] :: Tick CLOCK : " << m_pPeer->GetClock().ToString() << std::endl;
+
 		boost::uuids::uuid transactionId = ITransaction::GenerateId();
 		int lastEpoch = m_pWFICIntegrator->NextEpoch();
 		m_transactionMap[transactionId] = lastEpoch;		
-		m_transactionRecordMap[transactionId] = TransactionRecord(transactionId, TransactionType::TTOriginator, m_pPeer->GetHostId());
+		m_transactionRecordMap[transactionId] = TransactionRecord(transactionId, TransactionType::TTOriginator, m_pPeer->GetHostId(), m_pPeer->GetClock());
 
 		std::cout << "---> [P2P Subsystem] :: Created transaction " << ITransaction::GetIdString(transactionId) 
 			<< " bound to epoch [" << lastEpoch << "]" << std::endl;
@@ -548,29 +562,15 @@ void P2PListener2Way::OnBeginRender(IIlluminaMT *p_pIlluminaMT)
 		boost::thread(boost::bind(P2PListener2Way::NewsUpdateThreadHandler, this));
 }
 //----------------------------------------------------------------------------------------------
-void P2PListener2Way::OnEndRender(IIlluminaMT *p_pIlluminaMT)
-{
-}
+void P2PListener2Way::OnEndRender(IIlluminaMT *p_pIlluminaMT) { }
 //----------------------------------------------------------------------------------------------
-void P2PListener2Way::OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
-{ 
-	BeginPath(p_pIlluminaMT);
-	//ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
-	//pCamera->MoveTo(pCamera->GetObserver() + pCamera->GetFrame().W * 1.0f);
-};
+void P2PListener2Way::OnBeginFrame(IIlluminaMT *p_pIlluminaMT) { BeginPath(p_pIlluminaMT); };
 //----------------------------------------------------------------------------------------------
 void P2PListener2Way::OnEndFrame(IIlluminaMT *p_pIlluminaMT)
 {
 	if (m_pWFICIntegrator != NULL)
 	{
 		UpdateLocalCatalogue();
-		
-		/* 
-			NewsCast();
-			NewsUpdate();
-		*/
-	
-		// std::cout << m_pWFICIntegrator->ToString() << std::endl;
 	}
 }
 //----------------------------------------------------------------------------------------------
