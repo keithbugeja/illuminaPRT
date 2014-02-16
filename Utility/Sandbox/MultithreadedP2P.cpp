@@ -271,7 +271,8 @@ bool P2PListener2Way::State_IrradianceReceive(RakNet::BitStream &p_bitStream, Ho
 
 	for (auto irradiance : irradianceList)
 	{
-		pIrradianceCache->Insert(m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch));
+		pIrradianceCache->InsertPoisson(m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch), m_pWFICIntegrator->GetMinRadius());
+		//pIrradianceCache->Insert(m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch));
 	}
 
 	std::cout << "---> [P2P Subsystem] :: Transaction " << received.GetIdString() << " bound to epoch [" << m_newscastEpoch << "]" << std::endl;

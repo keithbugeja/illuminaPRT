@@ -94,6 +94,67 @@ bool MLIrradianceCache::SphereBoxOverlap(const AxisAlignedBoundingBox &p_aabb,
 	return dmin <= p_fRadius*p_fRadius;
 }
 //----------------------------------------------------------------------------------------------
+void MLIrradianceCache::InsertPoisson(MLIrradianceCacheRecord *p_pRecord, float p_fMinDistance)
+{
+	InsertPoisson(&RootNode, p_pRecord, p_fMinDistance, m_nDepth);
+}
+//----------------------------------------------------------------------------------------------
+void MLIrradianceCache::InsertPoisson(MLIrradianceCacheNode *p_pNode, MLIrradianceCacheRecord *p_pRecord, float p_fMinDistance, int p_nDepth)
+{
+	if (p_nDepth <= 0 || p_pRecord->RiClamp > p_pNode->Bounds.GetExtent().MaxAbsComponent())
+	{
+		float distSqr = p_fMinDistance * p_fMinDistance;
+
+		// If there is another record within disc radius, reject
+		for (auto record : p_pNode->RecordList)
+		{
+			// Reject?
+			if (Vector3::DistanceSquared(record->Position, p_pRecord->Position) < distSqr) 
+				return;
+		}
+		
+		m_nRecordCount++;
+		p_pNode->Add(p_pRecord);
+	} 
+	else
+	{
+		// This node has no children allocated
+		if (p_pNode->Children == NULL)
+		{
+			MLIrradianceCacheNode *pTempNode = new MLIrradianceCacheNode[8];
+
+			// Before we CAS, make sure the bounds of the node are correct!
+			for (int i = 0; i < 8; i++)
+				SetBounds(p_pNode->Bounds, i, pTempNode[i].Bounds);
+
+			if (p_pNode->Children == (MLIrradianceCacheNode*)AtomicInt64::CompareAndSwap((Int64*)&(p_pNode->Children), (Int64)pTempNode, NULL))
+			{
+				std::cout << "CAS failed at new node!" << std::endl;
+				delete [] pTempNode;
+			}
+			else
+				m_nNodeCount+=8;
+
+			for (int i = 0; i < 8; i++)
+			{
+				// We still aren't sure where the thread that made CAS fail stopped, 
+				// so although redundant, we still set the bounds of the nodes
+				// SetBounds(p_pNode->Bounds, i, p_pNode->Children[i].Bounds);
+				if (SphereBoxOverlap(p_pNode->Children[i].Bounds, p_pRecord->Position, p_pRecord->RiClamp))
+					Insert(p_pNode->Children + i, p_pRecord, p_nDepth - 1);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < 8; i++)
+			{
+				if (SphereBoxOverlap(p_pNode->Children[i].Bounds, p_pRecord->Position, p_pRecord->RiClamp))
+					Insert(p_pNode->Children + i, p_pRecord, p_nDepth - 1);
+			}
+		}
+	}
+}
+//----------------------------------------------------------------------------------------------
 void MLIrradianceCache::Insert(MLIrradianceCacheRecord *p_pRecord)
 {
 	Insert(&RootNode, p_pRecord, m_nDepth);
@@ -150,7 +211,7 @@ bool MLIrradianceCache::FindRecords(const Vector3 &p_point, const Vector3 &p_nor
 {
 	MLIrradianceCacheNode *pNode = &RootNode;
 
-	float wi, minval = 1e+10, maxval = -1e+10;
+	float wi; //, minval = 1e+10, maxval = -1e+10;
 	int rejected = 0;
 
 	if (pNode->Bounds.Contains(p_point))
@@ -164,8 +225,8 @@ bool MLIrradianceCache::FindRecords(const Vector3 &p_point, const Vector3 &p_nor
 				MLIrradianceCacheRecord *r = *iter;
 
 				wi = W(p_point, p_normal, *r);
-				minval = Maths::Min(wi, minval);
-				maxval = Maths::Max(wi, maxval);
+				//minval = Maths::Min(wi, minval);
+				//maxval = Maths::Max(wi, maxval);
 
 				if (wi > 0.f)
 					p_nearbyRecordList.push_back(std::pair<float, MLIrradianceCacheRecord*>(wi, r));

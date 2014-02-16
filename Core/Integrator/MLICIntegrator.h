@@ -112,6 +112,8 @@ namespace Illumina
 
 			void Insert(MLIrradianceCacheRecord *p_pRecord);
 			void Insert(MLIrradianceCacheNode *p_pNode, MLIrradianceCacheRecord *p_pRecord, int p_nDepth);
+			void InsertPoisson(MLIrradianceCacheRecord *p_pRecord, float p_fMinDistance);
+			void InsertPoisson(MLIrradianceCacheNode *p_pNode, MLIrradianceCacheRecord *p_pRecord, float p_fMinDistance, int p_nDepth);
 
 			void Merge(MLIrradianceCache *p_pIrradianceCache);
 
@@ -189,6 +191,9 @@ namespace Illumina
 			
 			// Return current epoch
 			int GetEpoch(void) { return m_nEpoch; }
+
+			float GetMinRadius(void) { return m_fRMin; }
+			float GetMaxRadius(void) { return m_fRMax; }
 
 			// Disable sample generation
 			void DisableSampleGeneration(bool p_bDisable) { m_bIsSampleGenerationDisabled = p_bDisable; }
