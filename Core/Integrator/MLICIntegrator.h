@@ -77,6 +77,8 @@ namespace Illumina
 		public:
 			int m_nInsertCount,
 				m_nRecordCount,
+				m_nInsertRejectCount,
+				m_nInsertAcceptCount,
 				m_nNodeCount;
 
 		public:
@@ -90,6 +92,8 @@ namespace Illumina
 		public:
 			MLIrradianceCache(void) 
 				: m_nInsertCount(0)
+				, m_nInsertRejectCount(0)
+				, m_nInsertAcceptCount(0)
 				, m_nRecordCount(0)
 				, m_nNodeCount(0)
 				, m_nEpoch(0)
@@ -192,7 +196,7 @@ namespace Illumina
 			// Return current epoch
 			int GetEpoch(void) { return m_nEpoch; }
 
-			float GetMinRadius(void) { return m_fRMin; }
+			float GetMinRadius(void) { return m_fRMin * 0.1f; }
 			float GetMaxRadius(void) { return m_fRMax; }
 
 			// Disable sample generation

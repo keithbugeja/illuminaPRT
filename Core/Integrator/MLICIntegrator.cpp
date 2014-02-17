@@ -25,6 +25,7 @@ using namespace Illumina::Core;
 // #define __INSTANT_CACHING__
 
 // #define __EPOCH_PARTITION__ 0x7FFFFF
+#define	__EPOCH_CAP__ 0x7FFFFF
 
 //----------------------------------------------------------------------------------------------
 int MLIrradianceCache::CountNodes(MLIrradianceCacheNode* p_pNode) const
@@ -103,17 +104,22 @@ void MLIrradianceCache::InsertPoisson(MLIrradianceCacheNode *p_pNode, MLIrradian
 {
 	if (p_nDepth <= 0 || p_pRecord->RiClamp > p_pNode->Bounds.GetExtent().MaxAbsComponent())
 	{
-		float distSqr = p_fMinDistance * p_fMinDistance;
-
 		// If there is another record within disc radius, reject
 		for (auto record : p_pNode->RecordList)
 		{
 			// Reject?
-			if (Vector3::DistanceSquared(record->Position, p_pRecord->Position) < distSqr) 
+			// std::cout << "DIST : " << Vector3::Distance(record->Position, p_pRecord->Position) << " : " << p_fMinDistance << std::endl;
+
+			if (record != p_pRecord && Vector3::Distance(record->Position, p_pRecord->Position) < p_fMinDistance) 
+			{
+				m_nInsertRejectCount++;
 				return;
+			}
 		}
 		
 		m_nRecordCount++;
+		m_nInsertAcceptCount++;
+
 		p_pNode->Add(p_pRecord);
 	} 
 	else
@@ -141,7 +147,7 @@ void MLIrradianceCache::InsertPoisson(MLIrradianceCacheNode *p_pNode, MLIrradian
 				// so although redundant, we still set the bounds of the nodes
 				// SetBounds(p_pNode->Bounds, i, p_pNode->Children[i].Bounds);
 				if (SphereBoxOverlap(p_pNode->Children[i].Bounds, p_pRecord->Position, p_pRecord->RiClamp))
-					Insert(p_pNode->Children + i, p_pRecord, p_nDepth - 1);
+					InsertPoisson(p_pNode->Children + i, p_pRecord, p_fMinDistance, p_nDepth - 1);
 			}
 		}
 		else
@@ -149,7 +155,7 @@ void MLIrradianceCache::InsertPoisson(MLIrradianceCacheNode *p_pNode, MLIrradian
 			for (int i = 0; i < 8; i++)
 			{
 				if (SphereBoxOverlap(p_pNode->Children[i].Bounds, p_pRecord->Position, p_pRecord->RiClamp))
-					Insert(p_pNode->Children + i, p_pRecord, p_nDepth - 1);
+					InsertPoisson(p_pNode->Children + i, p_pRecord, p_fMinDistance, p_nDepth - 1);
 			}
 		}
 	}
@@ -230,8 +236,8 @@ bool MLIrradianceCache::FindRecords(const Vector3 &p_point, const Vector3 &p_nor
 
 				if (wi > 0.f)
 					p_nearbyRecordList.push_back(std::pair<float, MLIrradianceCacheRecord*>(wi, r));
-				else
-					rejected++;
+				//else
+				//	rejected++;
 			}
 
 			// if ((pNode = pNode->Children) == nullptr)
@@ -319,7 +325,9 @@ std::string MLIrradianceCache::ToString(void)
 
 	output << std::endl << "[Wait-Free Irradiance Cache :: Stats]" << std::endl
 		<< " :: Records : [" << m_nRecordCount  << "]" << std::endl 
-		<< " :: Nodes : [" << m_nNodeCount<< "]" << std::endl;
+		<< " :: Nodes : [" << m_nNodeCount<< "]" << std::endl
+		<< " :: Rejected : [" << m_nInsertRejectCount << "]" << std::endl
+		<< " :: Accepted : [" << m_nInsertAcceptCount << "]" << std::endl;
 
 	// << "Inserts : [ " << m_nInsertCount << "]" << std::endl 
 		//<< "Counted Nodes : [" << CountNodes((IrradianceCacheNode*)&RootNode) << "]" << std::endl;
@@ -600,7 +608,15 @@ Spectrum MLICIntegrator::GetIrradiance(const Intersection &p_intersection, Scene
 					else
 						num += pair.second->Irradiance * pair.first;
 				#else
-					num += pair.second->Irradiance * pair.first;
+					if (Vector3::DistanceSquared(pair.second->Position, p_intersection.Surface.PointWS) < 0.01f)
+					{
+						if (pair.second->Epoch >= __EPOCH_CAP__)
+							return Spectrum(0, 0, 100.0f);
+						else
+							return Spectrum(100.0f, 0, 0);
+					}
+					else
+						num += pair.second->Irradiance * pair.first;
 				#endif
 				den += pair.first;
 			}

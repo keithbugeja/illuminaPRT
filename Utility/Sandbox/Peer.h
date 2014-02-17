@@ -263,16 +263,16 @@ public:
 	{
 		std::cout << "---> [P2P Subsystem] :: Write Timestamp :: " << ToString() << std::endl;
 
-		std::cout << "---> Size :: [" << m_clockMap.size() << "]" << std::endl;
+		// std::cout << "---> Size :: [" << m_clockMap.size() << "]" << std::endl;
 		p_bitstream.Write((int)m_clockMap.size());
 		// std::cout << "---> Hash :: [" << std::hex <<  m_peerHash << std::dec << "]" << std::endl;
 		// p_bitstream.Write(m_peerHash);
 
 		for (auto clockEntry : m_clockMap)
 		{
-			std::cout << "---> Key :: [" << std::hex << clockEntry.first << std::dec << "]" << std::endl;
+			// std::cout << "---> Key :: [" << std::hex << clockEntry.first << std::dec << "]" << std::endl;
 			p_bitstream.Write(clockEntry.first);
-			std::cout << "---> Value :: [" << std::hex << clockEntry.second << std::dec << "]" << std::endl;
+			// std::cout << "---> Value :: [" << std::hex << clockEntry.second << std::dec << "]" << std::endl;
 			p_bitstream.Write(clockEntry.second);
 		}
 	}
@@ -288,7 +288,7 @@ public:
 
 		// Read number of entries in clock
 		p_bitstream.Read(clockEntries);
-		std::cout << "---> Size :: [" << clockEntries << "]" << std::endl;
+		// std::cout << "---> Size :: [" << clockEntries << "]" << std::endl;
 		// p_bitstream.Read(m_peerHash);
 		// std::cout << "---> Hash :: [" << m_peerHash << "]" << std::endl;
 		// m_peerId = m_peerHash;
@@ -296,9 +296,9 @@ public:
 		for (int entry = 0; entry < clockEntries; entry++)
 		{
 			p_bitstream.Read(hostIdHash);
-			std::cout << "---> Key :: [" << std::hex << hostIdHash << std::dec << "]" << std::endl;
+			// std::cout << "---> Key :: [" << std::hex << hostIdHash << std::dec << "]" << std::endl;
 			p_bitstream.Read(counter);
-			std::cout << "---> Value :: [" << std::hex << counter << std::dec << "]" << std::endl;
+			// std::cout << "---> Value :: [" << std::hex << counter << std::dec << "]" << std::endl;
 
 			m_clockMap[hostIdHash] = counter;
 		}
