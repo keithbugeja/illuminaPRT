@@ -269,9 +269,11 @@ bool P2PListener2Way::State_IrradianceReceive(RakNet::BitStream &p_bitStream, Ho
 	m_transactionMap[received.GetId()] = m_newscastEpoch;
 	m_transactionRecordMap[received.GetId()] = TransactionRecord(received.GetId(), received.GetType(), received.GetHostId(), received.GetTimestamp());
 
+	float poissonDiskRadius = Maths::Max(m_pWFICIntegrator->GetMinRadius(), m_pWFICIntegrator->GetPoissionDiskRadius());
+
 	for (auto irradiance : irradianceList)
 	{
-		pIrradianceCache->InsertPoisson(m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch), m_pWFICIntegrator->GetMinRadius());
+		pIrradianceCache->InsertPoisson(m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch), poissonDiskRadius);
 		//pIrradianceCache->Insert(m_pWFICIntegrator->RequestRecord(&irradiance, m_newscastEpoch));
 	}
 
@@ -550,6 +552,9 @@ void P2PListener2Way::OnBeginRender(IIlluminaMT *p_pIlluminaMT)
 
 	// Initialise path
 	LoadCameraScript(p_pIlluminaMT->GetCameraScript());
+
+	// Start time logging
+	m_fLastFrameTime = m_fStartTime = Platform::GetTime();
 
 	// Start background thread
 	m_bIsRunning = true;

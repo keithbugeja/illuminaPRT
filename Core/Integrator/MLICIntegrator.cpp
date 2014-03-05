@@ -345,38 +345,44 @@ std::string MLIrradianceCache::ToString(void)
 MLICIntegrator::MLICIntegrator(const std::string &p_strName, 
 						   int p_nCacheDepth, float p_fErrorThreshold, 
 						   float p_fAmbientResolution, float p_fAmbientMultiplier,  
+						   float p_fPoissonDiskRadius,
 						   int p_nAzimuthStrata, int p_nAltitudeStrata, 
 						   int p_nRayDepth, int p_nShadowRays, 
-						   float p_fReflectEpsilon)
+						   float p_fReflectEpsilon, float p_fDisplayDiskRadius)
 	: IIntegrator(p_strName)
 	, m_nCacheDepth(p_nCacheDepth)
 	, m_fErrorThreshold(p_fErrorThreshold)
 	, m_fAmbientResolution(p_fAmbientResolution)
 	, m_fAmbientMultiplier(p_fAmbientMultiplier)
+	, m_fPoissonDiskRadius(p_fPoissonDiskRadius)
 	, m_nAzimuthStrata(p_nAzimuthStrata)
 	, m_nAltitudeStrata(p_nAltitudeStrata)
 	, m_nRayDepth(p_nRayDepth)
 	, m_nShadowRays(p_nShadowRays)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
+	, m_fDisplayDiskRadius(p_fDisplayDiskRadius)
 	, m_nEpoch(0)
 	, m_bIsSampleGenerationDisabled(false)
 { }
 //----------------------------------------------------------------------------------------------
 MLICIntegrator::MLICIntegrator(int p_nCacheDepth, float p_fErrorThreshold, 
-						   float p_fAmbientResolution, float p_fAmbientMultiplier,
+						   float p_fAmbientResolution, float p_fAmbientMultiplier, 
+						   float p_fPoissonDiskRadius, 
 						   int p_nAzimuthStrata, int p_nAltitudeStrata, 
 						   int p_nRayDepth, int p_nShadowRays, 
-						   float p_fReflectEpsilon)
+						   float p_fReflectEpsilon, float p_fDisplayDiskRadius)
 	: IIntegrator()
 	, m_nCacheDepth(p_nCacheDepth)
 	, m_fErrorThreshold(p_fErrorThreshold)
 	, m_fAmbientResolution(p_fAmbientResolution)
 	, m_fAmbientMultiplier(p_fAmbientMultiplier)
+	, m_fPoissonDiskRadius(p_fPoissonDiskRadius)
 	, m_nAzimuthStrata(p_nAzimuthStrata)
 	, m_nAltitudeStrata(p_nAltitudeStrata)
 	, m_nRayDepth(p_nRayDepth)
 	, m_nShadowRays(p_nShadowRays)
 	, m_fReflectEpsilon(p_fReflectEpsilon)
+	, m_fDisplayDiskRadius(p_fDisplayDiskRadius)
 	, m_nEpoch(0)
 	, m_bIsSampleGenerationDisabled(false)
 { }
@@ -608,7 +614,7 @@ Spectrum MLICIntegrator::GetIrradiance(const Intersection &p_intersection, Scene
 					else
 						num += pair.second->Irradiance * pair.first;
 				#else
-					if (Vector3::DistanceSquared(pair.second->Position, p_intersection.Surface.PointWS) < 0.01f)
+					if (Vector3::DistanceSquared(pair.second->Position, p_intersection.Surface.PointWS) < m_fDisplayDiskRadius)
 					{
 						if (pair.second->Epoch >= __EPOCH_CAP__)
 							return Spectrum(0, 0, 100.0f);
