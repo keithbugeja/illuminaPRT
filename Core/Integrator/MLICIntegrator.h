@@ -149,6 +149,8 @@ namespace Illumina
 			float m_fErrorThreshold,
 				m_fAmbientResolution,
 				m_fAmbientMultiplier,
+				m_fPoissonDiskRadius,
+				m_fDisplayDiskRadius,
 				m_fReflectEpsilon;
 
 			float m_fRMin, 
@@ -196,6 +198,8 @@ namespace Illumina
 			// Return current epoch
 			int GetEpoch(void) { return m_nEpoch; }
 
+			float GetPoissionDiskRadius(void) { return m_fPoissonDiskRadius; }
+
 			float GetMinRadius(void) { return m_fRMin * 0.1f; }
 			float GetMaxRadius(void) { return m_fRMax; }
 
@@ -204,10 +208,12 @@ namespace Illumina
 
 		public:
 			MLICIntegrator(const std::string &p_strName, int p_nCacheDepth, float p_fErrorThreshold, float p_fAmbientResolution, float p_fAmbientMultipler,
-				int p_nAzimuthStrata, int p_nAltitudeStrata, int p_nRayDepth, int p_nShadowRays = 1, float p_fReflectEpsilon = 1e-1f);
+				float p_fPoissonDiskRadius, int p_nAzimuthStrata, int p_nAltitudeStrata, int p_nRayDepth, int p_nShadowRays = 1, float p_fReflectEpsilon = 1e-1f,
+				float p_fDisplayDiskRadius = 1e-1f);
 
 			MLICIntegrator(int p_nCacheDepth, float p_fErrorThreshold, float p_fAmbientResolution, float p_fAmbientMultipler,
-				int p_nAzimuthStrata, int p_nAltitudeStrata, int p_nRayDepth, int p_nShadowRays = 1, float p_fReflectEpsilon = 1e-1f);
+				float p_fPoissonDiskRadius, int p_nAzimuthStrata, int p_nAltitudeStrata, int p_nRayDepth, int p_nShadowRays = 1, float p_fReflectEpsilon = 1e-1f,
+				float p_fDisplayDiskRadius = 1e-1f);
 
 			std::string GetType(void) const { return "WFIC"; }
 

@@ -98,6 +98,8 @@ namespace Illumina
 				float errorThreshold = 1.f,
 					ambientResolution = 1e-3f,
 					ambientMultiplier = 1e+3f,
+					poissonDiskRadius = 0.5f,
+					displayDiskRadius = 0.005f,
 					reflectEpsilon = 1e-4f;
 
 				std::string strId;
@@ -108,32 +110,34 @@ namespace Illumina
 				p_argumentMap.GetArgument("AltitudeStrata", altitudeStrata);
 				p_argumentMap.GetArgument("AmbientResolution", ambientResolution);
 				p_argumentMap.GetArgument("AmbientMultiplier", ambientMultiplier);
+				p_argumentMap.GetArgument("PoissonDiskRadius", poissonDiskRadius);
+				p_argumentMap.GetArgument("DisplayDiskRadius", displayDiskRadius);
 				p_argumentMap.GetArgument("RayDepth", raydepth);
 				p_argumentMap.GetArgument("ShadowRays", shadowrays);
 				p_argumentMap.GetArgument("Epsilon", reflectEpsilon);
 
 				if (p_argumentMap.GetArgument("Id", strId))
-					return CreateInstance(strId, cacheDepth, errorThreshold, ambientResolution, ambientMultiplier, 
-						azimuthStrata, altitudeStrata, raydepth, shadowrays, reflectEpsilon);
+					return CreateInstance(strId, cacheDepth, errorThreshold, ambientResolution, ambientMultiplier, poissonDiskRadius,
+						azimuthStrata, altitudeStrata, raydepth, shadowrays, reflectEpsilon, displayDiskRadius);
 
-				return CreateInstance(cacheDepth, errorThreshold, ambientResolution, ambientMultiplier, 
-					azimuthStrata, altitudeStrata, raydepth, shadowrays, reflectEpsilon);
+				return CreateInstance(cacheDepth, errorThreshold, ambientResolution, ambientMultiplier, poissonDiskRadius,
+					azimuthStrata, altitudeStrata, raydepth, shadowrays, reflectEpsilon, displayDiskRadius);
 			}
 
 			Illumina::Core::IIntegrator *CreateInstance(const std::string &p_strId,  int p_nCacheDepth, float p_fErrorThreshold, 
-				float p_fAmbientResolution, float p_fAmbientMultiplier, int p_nAzimuthStrata, int p_nAltitudeStrata, 
-				int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon)
+				float p_fAmbientResolution, float p_fAmbientMultiplier, float p_fPoissonDiskRadius, int p_nAzimuthStrata, int p_nAltitudeStrata, 
+				int p_nRayDepth, int p_nShadowRays, float p_fReflectEpsilon, float p_fDisplayDiskRadius)
 			{
-				return new MLICIntegrator(p_strId, p_nCacheDepth, p_fErrorThreshold, p_fAmbientResolution, p_fAmbientMultiplier,
-					p_nAzimuthStrata, p_nAltitudeStrata, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
+				return new MLICIntegrator(p_strId, p_nCacheDepth, p_fErrorThreshold, p_fAmbientResolution, p_fAmbientMultiplier, p_fPoissonDiskRadius,
+					p_nAzimuthStrata, p_nAltitudeStrata, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon, p_fDisplayDiskRadius);
 			}
 
-			Illumina::Core::IIntegrator *CreateInstance(int p_nCacheDepth, float p_fErrorThreshold, float p_fAmbientResolution, 
+			Illumina::Core::IIntegrator *CreateInstance(int p_nCacheDepth, float p_fErrorThreshold, float p_fAmbientResolution, float p_fPoissonDiskRadius,
 				float p_fAmbientMultiplier, int p_nAzimuthStrata, int p_nAltitudeStrata, int p_nRayDepth, 
-				int p_nShadowRays, float p_fReflectEpsilon)
+				int p_nShadowRays, float p_fReflectEpsilon, float p_fDisplayDiskRadius)
 			{
-				return new MLICIntegrator(p_nCacheDepth, p_fErrorThreshold, p_fAmbientResolution,  p_fAmbientMultiplier,
-					p_nAzimuthStrata, p_nAltitudeStrata, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon);
+				return new MLICIntegrator(p_nCacheDepth, p_fErrorThreshold, p_fAmbientResolution,  p_fAmbientMultiplier, p_fPoissonDiskRadius,
+					p_nAzimuthStrata, p_nAltitudeStrata, p_nRayDepth, p_nShadowRays, p_fReflectEpsilon, p_fDisplayDiskRadius);
 			}
 		};
 

@@ -119,6 +119,10 @@ protected:
 	//----------------------------------------------------------------------------------------------
 	// Crap for testing...
 	//----------------------------------------------------------------------------------------------
+	// Logging details
+	double m_fStartTime, 
+		m_fLastFrameTime;
+
 	PathEx m_path;
 	float m_fTime, m_fDelta;
 	int m_nFrameNumber;
@@ -258,5 +262,21 @@ protected:
 		m_path.Get(m_fTime, position, lookAt);
 		pCamera->MoveTo(position); 
 		pCamera->LookAt(lookAt);
+
+		// Log path details and frame times
+		DumpPathDetails();
+	}
+
+	void DumpPathDetails(void)
+	{
+		std::ofstream timingLog;
+
+		double currentTime = Platform::GetTime();
+		
+		timingLog.open("peer-timing.log", std::ios_base::binary | std::ios_base::app);
+		timingLog << "Path % [" << m_fTime * 100.f << "] : Time :: Frame [" << Platform::ToSeconds(currentTime - m_fLastFrameTime) << "] : Total [" << Platform::ToSeconds(currentTime - m_fStartTime) << "]" << std::endl;  
+		timingLog.close();
+
+		m_fLastFrameTime = currentTime;
 	}
 };

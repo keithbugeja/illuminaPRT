@@ -534,7 +534,7 @@ int main(int argc, char** argv)
 		nSync = 0, 
 		nPush = 500, 
 		nPull = 500,
-		nTimeout = 15000;
+		nTimeout = 30000;
 
 	bool bVerbose = false,
 		bDiscovery = false;
@@ -763,8 +763,8 @@ int main(int argc, char** argv)
 	{
 		try 
 		{
-			nPull = variableMap["eventtimeout"].as<int>();
-		} catch (...) { nTimeout = 15000; }
+			nTimeout = variableMap["eventtimeout"].as<int>();
+		} catch (...) { nTimeout = 30000; }
 		std::cout << "Event Timeout [" << nTimeout << "]" << std::endl;
 	}
 
