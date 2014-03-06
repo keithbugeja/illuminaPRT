@@ -347,6 +347,39 @@ int main(int argc, char** argv)
 #include "MultithreadedServer.h"
 
 //----------------------------------------------------------------------------------------------
+void IlluminaPRT_IrradianceCompute(IIlluminaMT *p_pIllumina)
+{
+	Environment *pEnvironment = p_pIllumina->GetEnvironment();
+
+	std::cout << "Loading point cloud..." << std::endl;
+	
+	PointSet<Dart> pointSet;
+	pointSet.Load("Output//vertices_barber.asc");
+
+	PointShader<Dart> shader;
+	shader.Initialise(pEnvironment->GetScene(), 0.01f, 6, 1);
+	shader.SetHemisphereDivisions(128, 128);
+	//shader.SetVirtualPointSources(256, 8192); 
+	shader.SetGeometryTerm(0.01f);
+	//shader.Prepare(PointShader<Dart>::PointLit);
+	shader.Prepare(PointShader<Dart>::PathTraced);
+
+	std::cout << "Shading points..." << std::endl;
+
+	//shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PointLit);
+	shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PathTraced);
+
+	std::cout << "Shading ready..." << std::endl;
+	std::cout << "Saving point cloud..." << std::endl;
+
+	pointSet.Save("Output//vertices_barber_shaded.asc");
+
+	std::cout << "Irradiance computation ready!"<< std::endl;
+	std::getchar();
+	return;
+}
+
+//----------------------------------------------------------------------------------------------
 void IlluminaPRT_IrradianceServer(IIlluminaMT *p_pIllumina)
 {
 	Environment *pEnv = p_pIllumina->GetEnvironment();
@@ -358,10 +391,10 @@ void IlluminaPRT_IrradianceServer(IIlluminaMT *p_pIllumina)
 	pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.1f, 0.75f, 512, 64, 48, 24, 0.01f, Vector3(32));
 
 	//pointSet.Load("Output//pointcloud_full.asc");
-	pointSet.Load("Output//vertices.asc");
+	//pointSet.Load("Output//vertices.asc");
 	
-	//pointSet.Generate();
-	//pointSet.Save("Output//pointcloud_full.asc");
+	pointSet.Generate();
+	pointSet.Save("Output//pointcloud_full.asc");
 	std::cout << "Generated point set. Elements in grid [" << pointSet.GetContainerInstance().Get().size() << "]" << std::endl;
 
 
@@ -507,10 +540,14 @@ void IlluminaPRT(
 
 	illumina.Initialise();
 
+	IlluminaPRT_IrradianceCompute(&illumina);
+
 	// If irradiance server is enabled
 	// IlluminaPRT_IrradianceServer(&illumina);
 
-	illumina.Render();	
+	// If p2p
+	// illumina.Render();	
+	
 	illumina.Shutdown();
 
 	std::cout << "Press any key to continue..." << std::endl;
