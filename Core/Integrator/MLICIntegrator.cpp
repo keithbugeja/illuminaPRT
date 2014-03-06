@@ -614,15 +614,15 @@ Spectrum MLICIntegrator::GetIrradiance(const Intersection &p_intersection, Scene
 					else
 						num += pair.second->Irradiance * pair.first;
 				#else
-					if (Vector3::DistanceSquared(pair.second->Position, p_intersection.Surface.PointWS) < m_fDisplayDiskRadius)
-					{
-						if (pair.second->Epoch >= __EPOCH_CAP__)
-							return Spectrum(0, 0, 100.0f);
-						else
-							return Spectrum(100.0f, 0, 0);
-					}
-					else
-						num += pair.second->Irradiance * pair.first;
+					//if (Vector3::DistanceSquared(pair.second->Position, p_intersection.Surface.PointWS) < m_fDisplayDiskRadius)
+					//{
+					//	if (pair.second->Epoch >= __EPOCH_CAP__)
+					//		return Spectrum(0, 0, 100.0f);
+					//	else
+					//		return Spectrum(100.0f, 0, 0);
+					//}
+					//else
+					num += pair.second->Irradiance * pair.first;
 				#endif
 				den += pair.first;
 			}
