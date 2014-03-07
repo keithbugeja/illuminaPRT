@@ -358,16 +358,16 @@ void IlluminaPRT_IrradianceCompute(IIlluminaMT *p_pIllumina)
 
 	PointShader<Dart> shader;
 	shader.Initialise(pEnvironment->GetScene(), 0.01f, 6, 1);
-	shader.SetHemisphereDivisions(128, 128);
-	//shader.SetVirtualPointSources(256, 8192); 
+	//shader.SetHemisphereDivisions(24, 64);
+	shader.SetVirtualPointSources(1024, 8192); 
 	shader.SetGeometryTerm(0.01f);
-	//shader.Prepare(PointShader<Dart>::PointLit);
-	shader.Prepare(PointShader<Dart>::PathTraced);
+	shader.Prepare(PointShader<Dart>::PointLit);
+	//shader.Prepare(PointShader<Dart>::PathTraced);
 
 	std::cout << "Shading points..." << std::endl;
 
-	//shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PointLit);
-	shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PathTraced);
+	shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PointLit);
+	//shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PathTraced);
 
 	std::cout << "Shading ready..." << std::endl;
 	std::cout << "Saving point cloud..." << std::endl;
