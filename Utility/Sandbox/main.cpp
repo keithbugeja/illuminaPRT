@@ -354,24 +354,26 @@ void IlluminaPRT_IrradianceCompute(IIlluminaMT *p_pIllumina)
 	std::cout << "Loading point cloud..." << std::endl;
 	
 	PointSet<Dart> pointSet;
+	//pointSet.Load("Output//vertices_kitchen.asc");
 	pointSet.Load("Output//vertices_barber.asc");
 
 	PointShader<Dart> shader;
 	shader.Initialise(pEnvironment->GetScene(), 0.01f, 6, 1);
-	//shader.SetHemisphereDivisions(24, 64);
-	shader.SetVirtualPointSources(1024, 8192); 
+	shader.SetHemisphereDivisions(24, 64);
+	shader.SetVirtualPointSources(2048, 8192); 
 	shader.SetGeometryTerm(0.01f);
 	shader.Prepare(PointShader<Dart>::PointLit);
 	//shader.Prepare(PointShader<Dart>::PathTraced);
 
 	std::cout << "Shading points..." << std::endl;
 
-	shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PointLit);
+	shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PointLit, true);
 	//shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PathTraced);
 
 	std::cout << "Shading ready..." << std::endl;
 	std::cout << "Saving point cloud..." << std::endl;
 
+	//pointSet.Save("Output//vertices_kitchen_shaded.asc");
 	pointSet.Save("Output//vertices_barber_shaded.asc");
 
 	std::cout << "Irradiance computation ready!"<< std::endl;
@@ -400,8 +402,8 @@ void IlluminaPRT_IrradianceServer(IIlluminaMT *p_pIllumina)
 
 	PointShader<Dart> shader;
 	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1);
-	shader.SetHemisphereDivisions(24, 48);
-	shader.SetVirtualPointSources(512, 8192); // 256
+	shader.SetHemisphereDivisions(24, 64);
+	shader.SetVirtualPointSources(1024, 8192); // 256
 	shader.SetGeometryTerm(0.01f);
 	//shader.Prepare(PointShader<Dart>::PointLit);
 	shader.Prepare(PointShader<Dart>::PathTraced);
