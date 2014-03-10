@@ -106,40 +106,68 @@ public:
 	//----------------------------------------------------------------------------------------------
 	// Shade points
 	//----------------------------------------------------------------------------------------------
-	void Shade(std::vector<T*> &p_pointList, ShadingType p_eShadingType)
+	void Shade(std::vector<T*> &p_pointList, ShadingType p_eShadingType, bool p_bShowProgress = false)
 	{
 		double total = Platform::GetTime();
 
-		if (p_eShadingType == PointLit)
+		if (p_bShowProgress)
 		{
-			//std::cout << "Shading point cloud using LiPointLit..." << std::endl;
-			for (auto point : p_pointList)
+			int pointNumber = 0;
+
+			if (p_eShadingType == PointLit)
 			{
-				if (point->Invalid)
+				for (auto point : p_pointList)
 				{
-					//double timestart = Platform::GetTime();
-					point->Irradiance = LiPointLit(point->Position, point->Normal);
-					point->Invalid = false;
-					//std::cout << "Shaded in [" << Platform::ToSeconds(Platform::GetTime() - timestart) << "]" << std::endl;
+					if (pointNumber++ % 100 == 0) std::cout << "[" << pointNumber << "] " << std::endl;
+
+					if (point->Invalid)
+					{
+						point->Irradiance = LiPointLit(point->Position, point->Normal);
+						point->Invalid = false;
+					}
+				}
+			}
+			else
+			{
+				for (auto point : p_pointList)
+				{
+					if (pointNumber++ % 100 == 0) std::cout << "[" << pointNumber << "] " << std::endl;
+
+					if (point->Invalid)
+					{
+						point->Irradiance = LiPathTraced(point->Position, point->Normal);
+						point->Invalid = false;
+					}
 				}
 			}
 		}
 		else
 		{
-			//std::cout << "Shading point cloud using LiPathTraced..." << std::endl;
-
-			for (auto point : p_pointList)
+			if (p_eShadingType == PointLit)
 			{
-				if (point->Invalid)
+				for (auto point : p_pointList)
 				{
-					//double timestart = Platform::GetTime();
-					point->Irradiance = LiPathTraced(point->Position, point->Normal);
-					point->Invalid = false;
-					// std::cout << "Shaded in [" << Platform::ToSeconds(Platform::GetTime() - timestart) << "]" << std::endl;
+					if (point->Invalid)
+					{
+						point->Irradiance = LiPointLit(point->Position, point->Normal);
+						point->Invalid = false;
+					}
+				}
+			}
+			else
+			{
+				for (auto point : p_pointList)
+				{
+					if (point->Invalid)
+					{
+						point->Irradiance = LiPathTraced(point->Position, point->Normal);
+						point->Invalid = false;
+					}
 				}
 			}
 		}
-		//std::cout << "Shaded [" << p_pointList.size() << "] in [" << Platform::ToSeconds(Platform::GetTime() - total) << "]" << std::endl;
+		
+		std::cout << "Shaded [" << p_pointList.size() << "] in [" << Platform::ToSeconds(Platform::GetTime() - total) << "]" << std::endl;
 	}
 
 protected:

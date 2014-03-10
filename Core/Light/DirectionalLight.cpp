@@ -44,25 +44,36 @@ Spectrum DirectionalLight::Power(void)
 Spectrum DirectionalLight::Radiance(const Vector3 &p_lightSurfacePoint, const Vector3 &p_lightSurfaceNormal, const Vector3 &p_wIn)
 {
 	//return m_intensity;
-	return Vector3::Dot(p_lightSurfacePoint, p_wIn) > 0 ? m_intensity : 0.0f;
+	//return Vector3::Dot(p_lightSurfacePoint, p_wIn) > 0 ? m_intensity : 0.0f;
+	return 0;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum DirectionalLight::SampleRadiance(const Vector3 &p_surfacePoint, float p_u, float p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)
 {
+	p_visibilityQuery.SetSegment(p_surfacePoint, -m_direction, m_fDistance, 1e-4f);
+	p_wIn = m_direction;
+	p_pdf = 1.0f;
+
+	return m_intensity;
+
 	// Update visibility query information
+	/*
 	p_visibilityQuery.SetSegment(p_surfacePoint - (m_fDistance * m_direction), 1e-3f, p_surfacePoint, 1e-3f);
 
 	p_wIn = m_direction;
 	p_pdf = 1.0f;
 
 	return m_intensity;
+	*/
 }
 //----------------------------------------------------------------------------------------------
 Spectrum DirectionalLight::SampleRadiance(const Scene *p_pScene, float p_u, float p_v, float p_w, float p_x, Ray &p_ray, float &p_pdf)
 {
+	/* */
 	IBoundingVolume *pBoundingVolume = p_pScene->GetSpace()->GetBoundingVolume();
 	Vector3 worldCentre = pBoundingVolume->GetCentre();
-	float worldRadius = pBoundingVolume->GetRadius();
+	// float worldRadius = pBoundingVolume->GetRadius();
+	float worldRadius = m_fDistance;
 
 	OrthonormalBasis basis;
 	basis.InitFromW(m_direction);
