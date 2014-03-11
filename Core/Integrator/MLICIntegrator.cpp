@@ -22,9 +22,16 @@
 
 using namespace Illumina::Core;
 
+#define ___DEBUG_IC___
+
+// Instant caching automatically assumes the weighting function used in Kurt's paper
 // #define __INSTANT_CACHING__
 
-#define __EPOCH_PARTITION__ 0x7FFFFF
+#define __WEIGHT_IC_WARD__
+//#define __WEIGHT_IC_TABELION__
+//#define __WEIGHT_IC_KURT__
+
+#define __EPOCH_PARTITION__	0x7FFFFF
 
 //----------------------------------------------------------------------------------------------
 int MLIrradianceCache::CountNodes(MLIrradianceCacheNode* p_pNode) const
@@ -312,8 +319,11 @@ float MLIrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, MLIr
 #if (defined __INSTANT_CACHING__)
 	return W_Debattista(p_point, p_normal, p_record);
 #else
-	// return W_Ward(
-	return W_Tabelion(
+	#if (defined __WEIGHT_IC_WARD__)
+		return W_Ward(
+	#elif (defined __WEIGHT__IC_TABELION__)
+		return W_Tabelion(
+	#endif
 		p_point, p_normal, p_record);
 #endif
 }
@@ -340,7 +350,6 @@ std::string MLIrradianceCache::ToString(void)
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
 
-// #define ___DEBUG_IC___
 
 //----------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------
@@ -447,6 +456,7 @@ bool MLICIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 
 	m_irradianceCache.SetErrorThreshold(m_fErrorThreshold);
 	m_irradianceCache.SetDepth(m_nCacheDepth);
+	m_irradianceCache.SetRecordLimits(m_fRMin, m_fRMax);
 
 	m_nGenerationCount = 0;
 	m_nInsertionCount = 0;
@@ -572,7 +582,6 @@ Spectrum MLICIntegrator::GetIrradiance(const Intersection &p_intersection, Scene
 	// Find nearyby records
 	m_irradianceCache.FindRecords(p_intersection.Surface.PointWS, p_intersection.Surface.ShadingBasisWS.W, nearbyRecordList);
 
-
 	if (nearbyRecordList.size() > 0)
 	{
 		Spectrum num = 0.f;
@@ -589,7 +598,7 @@ Spectrum MLICIntegrator::GetIrradiance(const Intersection &p_intersection, Scene
 					if (pair.second->Epoch >= __EPOCH_PARTITION__)
 						return Spectrum(0, 0, 100.0f);
 					else
-						return Spectrum(100.0f, 0, 0);
+						return Spectrum(100.0f * pair.first, 0, 0);
 				}
 				else
 					num += pair.second->Irradiance * pair.first;
@@ -634,7 +643,7 @@ void MLICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_
 
 	Spectrum E = 0;
 	
-	float totLength = 0,
+	float totLength = 0, len = 0,
 		minLength = Maths::Maximum;
 	
 	// Cache this - it doesn't change!
@@ -653,8 +662,9 @@ void MLICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_
 			ray.Set(p_intersection.Surface.PointWS + wOutR * m_fReflectEpsilon, wOutR, m_fReflectEpsilon, Maths::Maximum);
 
 			E += PathLi(p_pScene, ray);
-			totLength += 1.f / ray.Max;
-			minLength = Maths::Min(ray.Max, minLength);
+			len = Maths::Max(Maths::Min(ray.Max, m_fRMax), m_fRMin);
+			totLength += 1.f / len;
+			minLength = Maths::Min(len, minLength);
 		}
 	}
 
@@ -663,9 +673,13 @@ void MLICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_
 	p_record.Position = p_intersection.Surface.PointWS;
 	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W;
 	p_record.Irradiance = E / mn;
-	// p_record.Ri = mn / totLength;
+
+	#if (defined __WEIGHT_IC_WARD__)
+	p_record.Ri = mn / totLength;
+	#elif (defined __WEIGHT_IC_TABELION__)
 	p_record.Ri = minLength;
-	// p_record.RiClamp = p_record.Ri;
+	#endif
+	
 	p_record.RiClamp = Maths::Max(m_fRMin, Maths::Min(m_fRMax, p_record.Ri));
 #endif
 

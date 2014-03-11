@@ -69,7 +69,9 @@ namespace Illumina
 		protected:
 			WaitFreeList<MLIrradianceCacheRecord*> m_irradianceRecordList;
 			
-			float m_fErrorThreshold;
+			float m_fErrorThreshold,
+				m_fRMin,
+				m_fRMax;
 			
 			int m_nDepth,
 				m_nEpoch;
@@ -108,6 +110,7 @@ namespace Illumina
 			void SetEpoch(int p_nEpoch) { m_nEpoch = p_nEpoch; }
 			void SetDepth(int p_nDepth) { m_nDepth = p_nDepth; }
 			void SetErrorThreshold(float p_fErrorThreshold) { m_fErrorThreshold = p_fErrorThreshold; }
+			void SetRecordLimits(float p_fRMin, float p_fRMax) { m_fRMin = p_fRMin; m_fRMax = p_fRMax; }
 			void SetBounds(const AxisAlignedBoundingBox &p_parent, int p_nChildIndex, AxisAlignedBoundingBox &p_child);
 			
 			float W(const Vector3 &p_point, const Vector3 &p_normal, MLIrradianceCacheRecord &p_record);
