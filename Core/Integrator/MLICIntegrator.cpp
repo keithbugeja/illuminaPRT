@@ -22,13 +22,13 @@
 
 using namespace Illumina::Core;
 
-#define ___DEBUG_IC___
+// #define ___DEBUG_IC___
 
 // Instant caching automatically assumes the weighting function used in Kurt's paper
 // #define __INSTANT_CACHING__
 
-#define __WEIGHT_IC_WARD__
-//#define __WEIGHT_IC_TABELION__
+//#define __WEIGHT_IC_WARD__
+#define __WEIGHT_IC_TABELION__
 //#define __WEIGHT_IC_KURT__
 
 #define __EPOCH_PARTITION__	0x7FFFFF
@@ -246,7 +246,22 @@ bool MLIrradianceCache::FindRecords(const Vector3 &p_point, const Vector3 &p_nor
 //----------------------------------------------------------------------------------------------
 float MLIrradianceCache::W_Ward(const Vector3 &p_point, const Vector3 &p_normal, MLIrradianceCacheRecord &p_record)
 {
-	if (Vector3::Dot((p_point - p_record.Position), (p_normal + p_record.Normal) * 0.5f) < -1e-3f)
+	float dist = Vector3::Distance(p_point, p_record.Position) / p_record.RiClamp;
+	if (dist > 1.0f) 
+		return 0.f;
+
+	float cosTheta = Vector3::Dot(p_normal, p_record.Normal);
+	if (cosTheta <= 0)
+		return 0.f;
+
+	if (Vector3::Dot((p_point - p_record.Position), (p_normal + p_record.Normal) * 0.5f) < -1e-6f)
+		return 0.f;
+
+	float weight = 1.0f - Maths::Min(0.0f, Maths::Max(1.0f, dist + Maths::Sqrt(1 - cosTheta) - m_fErrorThreshold));
+	return 1.0f / weight;
+
+	/*
+	if (Vector3::Dot((p_point - p_record.Position), (p_normal + p_record.Normal) * 0.5f) < -1e-6f)
 		return -1.f;
 
 	float dist = Vector3::Distance(p_point, p_record.Position) / p_record.RiClamp,
@@ -255,6 +270,7 @@ float MLIrradianceCache::W_Ward(const Vector3 &p_point, const Vector3 &p_normal,
 	if (cosTheta <= 0)
 		return -1.f;
 	
+
 	float den = Maths::Max(Maths::Epsilon, dist) + Maths::Sqrt(1 - cosTheta);
 	//float den = Maths::Max(Maths::Epsilon, dist + 1 - cosTheta);
 	
@@ -263,25 +279,39 @@ float MLIrradianceCache::W_Ward(const Vector3 &p_point, const Vector3 &p_normal,
 	// Also: cache reciprocal of error threshold
 	// float norm = 1 - cosTheta;
 	// return (1.f / (dist + 1 - cosTheta)) - (1.f / m_fErrorThreshold);
+	*/
 }
 //----------------------------------------------------------------------------------------------
 float MLIrradianceCache::W_Tabelion(const Vector3 &p_point, const Vector3 &p_normal, MLIrradianceCacheRecord &p_record)
-{
-	float cosTheta = Vector3::Dot(p_normal, p_record.Normal) ;
-
+{	
+	/*
+	float cosTheta = Vector3::Dot(p_normal, p_record.Normal);
 	if (cosTheta <= 0)
-		return -1.f;
+		return 0.f;
+	
+	float dist = Vector3::Distance(p_point, p_record.Position) / p_record.RiClamp;
+	//if (dist > 1.0f) 
+	//	return 0.f;
 
-	if (Vector3::Dot((p_point - p_record.Position), (p_normal + p_record.Normal) * 0.5f) < -0.02f)
-		return -1.f;
+	if (Vector3::Dot((p_point - p_record.Position), (p_normal + p_record.Normal) * 0.5f) < -1e-6f)
+		return 0.f;
 
-	float cosMaxAngleDifference = 0.98f;
+	return 1.0f - (1.0f / m_fErrorThreshold) * Maths::Max(dist, (1 - cosTheta) / (0.02f));
+	*/
+	
+	//if (Vector3::Dot((p_point - p_record.Position), (p_normal + p_record.Normal) * 0.5f) < -1e-6f)
+	//	return 0.f;
 
-	float epi = Vector3::Distance(p_point, p_record.Position) / (p_record.RiClamp * 0.5f);
-	float eni = Maths::Sqrt(1 - cosTheta) / Maths::Sqrt(1.f - cosMaxAngleDifference);
+	float cosTheta = Vector3::Dot(p_normal, p_record.Normal);
+	//if (cosTheta <= 0) return 0.f;
+
+	//const float cosMaxAngleDifference = 1.0f - 0.98f;
+
+	float epi = Vector3::Distance(p_point, p_record.Position) / p_record.RiClamp;
+	float eni = (1 - cosTheta) * 9.0124f; // / (cosMaxAngleDifference);
 	float err = Maths::Max(epi, eni);
 
-	return 1.f - (err * (1.f / m_fErrorThreshold));
+	return 1.0f - (1.0f / m_fErrorThreshold) * err;
 }
 //----------------------------------------------------------------------------------------------
 float MLIrradianceCache::W_Debattista(const Vector3 &p_point, const Vector3 &p_normal, MLIrradianceCacheRecord &p_record)
@@ -321,7 +351,7 @@ float MLIrradianceCache::W(const Vector3 &p_point, const Vector3 &p_normal, MLIr
 #else
 	#if (defined __WEIGHT_IC_WARD__)
 		return W_Ward(
-	#elif (defined __WEIGHT__IC_TABELION__)
+	#elif (defined __WEIGHT_IC_TABELION__)
 		return W_Tabelion(
 	#endif
 		p_point, p_normal, p_record);
@@ -530,7 +560,7 @@ Spectrum MLICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 				// Set indirect 
 				#if (defined ___DEBUG_IC___)
 					Spectrum irradiance = GetIrradiance(p_intersection, p_pScene);
-					if (irradiance[0] + irradiance[1] + irradiance[2] == 100.0f)
+					if (irradiance[0] + irradiance[1] + irradiance[2] == 200.0f)
 						return irradiance;
 
 					p_pRadianceContext->Indirect = irradiance * p_pRadianceContext->Albedo * Maths::InvPi;
@@ -596,9 +626,9 @@ Spectrum MLICIntegrator::GetIrradiance(const Intersection &p_intersection, Scene
 				if (Vector3::DistanceSquared(pair.second->Position, p_intersection.Surface.PointWS) < /*m_fRMin)*/ m_fDisplayDiskRadius)
 				{
 					if (pair.second->Epoch >= __EPOCH_PARTITION__)
-						return Spectrum(0, 0, 100.0f);
+						return Spectrum(0, 100.0f, 100.0f);
 					else
-						return Spectrum(100.0f * pair.first, 0, 0);
+						return Spectrum(100.0f, 0, 100.0f);
 				}
 				else
 					num += pair.second->Irradiance * pair.first;
@@ -662,9 +692,12 @@ void MLICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_
 			ray.Set(p_intersection.Surface.PointWS + wOutR * m_fReflectEpsilon, wOutR, m_fReflectEpsilon, Maths::Maximum);
 
 			E += PathLi(p_pScene, ray);
-			len = Maths::Max(Maths::Min(ray.Max, m_fRMax), m_fRMin);
-			totLength += 1.f / len;
-			minLength = Maths::Min(len, minLength);
+
+			#if (defined __WEIGHT_IC_WARD__)
+			totLength += 1.f / Maths::Clamp(ray.Max, m_fRMin, m_fRMax);;
+			#elif (defined __WEIGHT_IC_TABELION__)
+			minLength = Maths::Min(Maths::Clamp(ray.Max, m_fRMin, m_fRMax), minLength);
+			#endif
 		}
 	}
 
@@ -763,7 +796,7 @@ Spectrum MLICIntegrator::PathLi(Scene *p_pScene, Ray &p_ray)
 		BSDF::SurfaceToWorld(isect.WorldTransform, isect.Surface, wInLocal, wIn);
 		
 		// Adjust path for new bounce
-		// ray.Set(isect.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, m_fReflectEpsilon, Maths::Maximum);
+		ray.Set(isect.Surface.PointWS + wIn * m_fReflectEpsilon, wIn, m_fReflectEpsilon, Maths::Maximum);
 		ray.Set(isect.Surface.PointWS, wIn, m_fReflectEpsilon, Maths::Maximum);
 		
 		// Update path contribution at current stage
