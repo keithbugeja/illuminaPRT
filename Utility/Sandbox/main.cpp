@@ -355,7 +355,8 @@ void IlluminaPRT_IrradianceCompute(IIlluminaMT *p_pIllumina)
 	
 	PointSet<Dart> pointSet;
 	//pointSet.Load("Output//vertices_kitchen.asc");
-	pointSet.Load("Output//vertices_barber.asc");
+	//pointSet.Load("Output//vertices_barber.asc");
+	pointSet.Load("Output//vertices_empire.asc");
 
 	PointShader<Dart> shader;
 	shader.Initialise(pEnvironment->GetScene(), 0.01f, 6, 1);
@@ -374,7 +375,8 @@ void IlluminaPRT_IrradianceCompute(IIlluminaMT *p_pIllumina)
 	std::cout << "Saving point cloud..." << std::endl;
 
 	//pointSet.Save("Output//vertices_kitchen_shaded.asc");
-	pointSet.Save("Output//vertices_barber_shaded.asc");
+	//pointSet.Save("Output//vertices_barber_shaded.asc");
+	pointSet.Save("Output//vertices_empire_shaded.asc");
 
 	std::cout << "Irradiance computation ready!"<< std::endl;
 	std::getchar();

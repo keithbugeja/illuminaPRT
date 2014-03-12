@@ -302,16 +302,19 @@ float MLIrradianceCache::W_Tabelion(const Vector3 &p_point, const Vector3 &p_nor
 	//if (Vector3::Dot((p_point - p_record.Position), (p_normal + p_record.Normal) * 0.5f) < -1e-6f)
 	//	return 0.f;
 
-	float cosTheta = Vector3::Dot(p_normal, p_record.Normal);
-	//if (cosTheta <= 0) return 0.f;
+	//float cosTheta = Maths::Clamp(Vector3::Dot(p_normal, p_record.Normal), 0, 1);
+	// if (cosTheta <= 0) return 0.f;
 
 	//const float cosMaxAngleDifference = 1.0f - 0.98f;
+
+	float cosTheta = Vector3::Dot(p_normal, p_record.Normal);
 
 	float epi = Vector3::Distance(p_point, p_record.Position) / p_record.RiClamp;
 	float eni = (1 - cosTheta) * 9.0124f; // / (cosMaxAngleDifference);
 	float err = Maths::Max(epi, eni);
 
-	return 1.0f - (1.0f / m_fErrorThreshold) * err;
+	return 1.f - (1.f / m_fErrorThreshold) * err;
+	//return 1.f - Maths::Clamp((1.f / m_fErrorThreshold) * err, 0, 1);
 }
 //----------------------------------------------------------------------------------------------
 float MLIrradianceCache::W_Debattista(const Vector3 &p_point, const Vector3 &p_normal, MLIrradianceCacheRecord &p_record)
@@ -663,8 +666,8 @@ void MLICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_
 	p_record.Ri = m_fErrorThreshold * 2.0f;
 	p_record.RiClamp = Maths::Max(m_fRMin, Maths::Min(m_fRMax, p_record.Ri));
 
-	m_helper.Shade(&p_record, IntegratorHelper<MLIrradianceCacheRecord>::PathTraced);
-	// m_helper.Shade(&p_record, IntegratorHelper<MLIrradianceCacheRecord>::PointLit);
+	//m_helper.Shade(&p_record, IntegratorHelper<MLIrradianceCacheRecord>::PathTraced);
+	m_helper.Shade(&p_record, IntegratorHelper<MLIrradianceCacheRecord>::PointLit);
 #else
 	Intersection isect;
 	Vector2 sample2D;
@@ -689,22 +692,28 @@ void MLICIntegrator::ComputeRecord(const Intersection &p_intersection, Scene *p_
 				Montecarlo::CosineSampleHemisphere(sample2D.X, sample2D.Y, altitudeIndex, azimuthIndex, m_nAltitudeStrata, m_nAzimuthStrata); 
 
 			BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, vH, wOutR);
-			ray.Set(p_intersection.Surface.PointWS + wOutR * m_fReflectEpsilon, wOutR, m_fReflectEpsilon, Maths::Maximum);
+			ray.Set(p_intersection.Surface.PointWS, wOutR, m_fReflectEpsilon * 2.0f, Maths::Maximum);
+			// ray.Set(p_intersection.Surface.PointWS, wOutR, m_fReflectEpsilon * 10, Maths::Maximum);
+			// ray.Set(p_intersection.Surface.PointWS + wOutR * m_fReflectEpsilon, wOutR, m_fReflectEpsilon, Maths::Maximum);
 
 			E += PathLi(p_pScene, ray);
 
 			#if (defined __WEIGHT_IC_WARD__)
 			totLength += 1.f / Maths::Clamp(ray.Max, m_fRMin, m_fRMax);;
 			#elif (defined __WEIGHT_IC_TABELION__)
-			minLength = Maths::Min(Maths::Clamp(ray.Max, m_fRMin, m_fRMax), minLength);
+			minLength = Maths::Min(ray.Max, minLength); 
+			//Maths::Min(Maths::Clamp(ray.Max, m_fRMin, m_fRMax), minLength);
 			#endif
 		}
 	}
 
 	// MN = total samples
+	std::cout << "+";
 
 	p_record.Position = p_intersection.Surface.PointWS;
-	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W;
+	p_record.Normal = p_intersection.Surface.ShadingBasisWS.W; 
+	// p_record.Normal = p_intersection.Surface.GeometryBasisWS.W;
+
 	p_record.Irradiance = E / mn;
 
 	#if (defined __WEIGHT_IC_WARD__)
