@@ -238,8 +238,11 @@ bool IndexedTriangle::Intersects(const Ray &p_ray, DifferentialSurface &p_surfac
 		v0.Normal.Z * alpha + v1.Normal.Z * beta + v2.Normal.Z * gamma);
 	
 	p_surface.ShadingNormal.Normalize();
-	// p_surface.GeometryNormal = p_surface.ShadingNormal;
+	
 	p_surface.GeometryNormal.Set(te1xte2[0], te1xte2[1], te1xte2[2]);
+	p_surface.GeometryNormal.Normalize();
+	
+	// p_surface.GeometryNormal = p_surface.ShadingNormal;
 
 	/* Sanity check */
 	/*
