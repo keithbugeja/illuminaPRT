@@ -245,7 +245,7 @@ Spectrum PathIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 	p_pRadianceContext->Flags |= RadianceContext::DF_Albedo | 
 		RadianceContext::DF_Direct | RadianceContext::DF_Indirect;
 	
-	return p_pRadianceContext->Direct + p_pRadianceContext->Indirect;
+	return /*p_pRadianceContext->Direct +*/ p_pRadianceContext->Indirect;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum PathIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext)

@@ -96,7 +96,8 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 		alpha, f;
 
 	Vector3 normal, 
-		wOut, wIn;
+		wOut, wIn,
+		wOutLocal, wInLocal;
 
 	Vector2 positionSample, 
 			directionSample;
@@ -157,13 +158,15 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 			p_virtualPointLightList.push_back(pointLight);
 
 			// Sample contribution and new ray
-			directionSample = m_directionSamplerList[p_nVirtualPointLightSetId]->Get2DSample();
+			BSDF::SurfaceToWorld(intersection.WorldTransform, intersection.Surface, wOut, wOutLocal);
 
-			f = pMaterial->SampleF(intersection.Surface, wOut, wIn, directionSample.U, directionSample.V, &pdf, bxdfType);
-			
+			directionSample = m_directionSamplerList[p_nVirtualPointLightSetId]->Get2DSample();
+			f = pMaterial->SampleF(intersection.Surface, wOutLocal, wInLocal, directionSample.U, directionSample.V, &pdf, bxdfType);
+
 			// If reflectivity or pdf are zero, end path
-			if (f.IsBlack() || pdf == 0.0f)
-				break;
+			if (f.IsBlack() || pdf == 0.0f) break;
+
+			BSDF::WorldToSurface(intersection.WorldTransform, intersection.Surface, wInLocal, wIn);
 
 			// Compute contribution of path
 			contribution = f * wIn.AbsDot(intersection.Surface.ShadingBasisWS.W) / pdf;
@@ -401,7 +404,7 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 	p_pRadianceContext->Flags |= RadianceContext::DF_Albedo |  
 		RadianceContext::DF_Direct | RadianceContext::DF_Indirect;
 	
-	return p_pRadianceContext->Direct + p_pRadianceContext->Indirect;
+	return /*p_pRadianceContext->Direct +*/ p_pRadianceContext->Indirect;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext)

@@ -19,6 +19,8 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
 
+#include <omp.h>
+
 using namespace Illumina::Core;
 using boost::asio::ip::tcp;
 
@@ -46,23 +48,24 @@ public:
 
 	void start()
 	{
+		omp_set_num_threads(20);
+
+		// Create new filter for grid and filter by current camera view
 		DualPointGridFilter<Dart> filter;
 		m_pDualPointGrid->FilterByView(m_pIllumina->GetEnvironment()->GetCamera(), &filter);
 
+		// Get list of points to shade in view
 		std::vector<std::vector<Dart*>*> shadingLists;
 		filter.GetFilteredPoints(shadingLists);
 
+		// Initialise shader
 		m_pPointShader->Initialise(m_pIllumina->GetEnvironment()->GetScene(), 0.01f, 6, 1);
 		m_pPointShader->SetHemisphereDivisions(24, 48);
-		m_pPointShader->SetVirtualPointSources(512, 8192); // 256
+		m_pPointShader->SetVirtualPointSources(32, 8192); // 256
 		m_pPointShader->SetGeometryTerm(0.25f);
 		m_pPointShader->Prepare(PointShader<Dart>::PointLit);
 
-		// for (auto pointList : shadingLists) 
-			//m_pPointShader->Shade(*pointList, PointShader<Dart>::PointLit);
-		
-		// m_pPointShader->Shade(*(filter.GetGlobalPointList()), PointShader<Dart>::PointLit);
-
+		// Keep buffers for transfer
 		std::vector<int> indexList;
 		std::vector<int> colourList;
 		std::vector<float> elementList;
@@ -70,11 +73,8 @@ public:
 		std::vector<int> samplePositionList;
 		std::vector<Dart*> qmcPointList;
 
-		// m_pDualPointGrid->PackByFilter(&filter);
-		// m_pDualPointGrid->Pack();
+		// Serialise grid
 		m_pDualPointGrid->Serialize(&elementList, &indexList, &sampleIndexList, &samplePositionList);
-
-		std::cout << "Compute :: Ready" << std::endl;
 
 		// Compose grid header
 		Vector3 origin = m_pDualPointGrid->GetOrigin();
@@ -88,8 +88,8 @@ public:
 		header.samples = sampleIndexList.size();
 		header.positions = samplePositionList.size();
 
-		std::cout << "Index count : " << header.indices << ", Element count : " << header.elements
-			<< ", Samples count : " << header.samples << ", Positions count : " << header.positions << std::endl;
+		std::cout << "Irradiance Server :: [Index count : " << header.indices << ", Element count : " << header.elements
+			<< ", Samples count : " << header.samples << ", Positions count : " << header.positions << "]" << std::endl;
 
 		boost::system::error_code error;
 
@@ -99,52 +99,58 @@ public:
 		boost::asio::write(socket_, boost::asio::buffer(sampleIndexList.data(), sizeof(int) * sampleIndexList.size()), error);
 		boost::asio::write(socket_, boost::asio::buffer(samplePositionList.data(), sizeof(int) * samplePositionList.size()), error);
 
-		std::cout << "Scene data uploaded..." << std::endl;
-
+		// Grid sent to client
+		std::cout << "Irradiance Server :: Grid packed" << std::endl;
+		std::cout << "Irradiance Server :: Scene data uploaded..." << std::endl;
 
 		// Initial grid sent
 		ICamera* pCamera = m_pIllumina->GetEnvironment()->GetCamera();
-		float camera[15];
+		float camera[18];
 		int bufferSize[2];
 
 		float moveHash = 0, 
 			lastMoveHash = 0;
 
-		PointLight *pLight = (PointLight*)m_pIllumina->GetEnvironment()->GetScene()->LightList[0];
+		SpotLight *pLight = (SpotLight*)m_pIllumina->GetEnvironment()->GetScene()->LightList[0];
 		Vector3 lightPosition = pLight->GetPosition(),
+			lightDirection = pLight->GetDirection(),
 			originalPosition = lightPosition;
 
 		LowDiscrepancySampler selectorSampler;		
 
-		std::cout << "Starting irradiance feedback loop..." << std::endl;
+		std::cout << "Irradiance Server :: Starting irradiance feedback loop..." << std::endl;
 
 		// Next -> on-demand computation
 		while (true)
 		{
-			std::cout << "Resetting sampler seeds" << std::endl;
+			// Reset samplers
+			//std::cout << "Irradiance Server :: Resetting sampler seeds..." << std::endl;
+			// m_pIllumina->GetEnvironment()->GetSampler()->Reset(11371137);
+			// selectorSampler.Reset(300131137);
 
-			m_pIllumina->GetEnvironment()->GetSampler()->Reset(11371137);
-			selectorSampler.Reset(300131137);
-
-			std::cout << "Preparing shader..." << std::endl;
-
+			// Prepare shaders
+			//std::cout << "Irradiance Server :: Preparing shader..." << std::endl;
 			m_pPointShader->Prepare(PointShader<Dart>::PointLit);
 
-			std::cout << "Invalidating points..." << std::endl;
-
+			// Invalidate all points
+			//std::cout << "Irradiance Server :: Invalidating points..." << std::endl;
 			for (auto point : m_pPointSet->GetContainerInstance().Get())
+			{
+				point->Irradiance.Set(10, 0, 0);
 				point->Invalid = true;
+			}
 
-			std::cout << "Try receive..." << std::endl;
+			//std::cout << "Irradiance Server :: Try receive..." << std::endl;
 
 			// Receive observer
-			if (boost::asio::read(socket_, boost::asio::buffer(camera, sizeof(float) * 15), error) == sizeof(float) * 15)
+			if (boost::asio::read(socket_, boost::asio::buffer(camera, sizeof(float) * 18), error) == sizeof(float) * 18)
 			{
 				Vector3 observer(camera[0], camera[1], camera[2]),
 					forward(camera[3], camera[4], camera[5]),
 					right(camera[6], camera[7], camera[8]),
 					up(camera[9], camera[10], camera[11]),
-					lightPosition(camera[12], camera[13], camera[14]);
+					lightPosition(camera[12], camera[13], camera[14]),
+					lightDirection(camera[15], camera[16], camera[17]);
 
 				// std::cout << "Camera : " << observer.ToString() << ", " << forward.ToString() << ", " << lightPosition.ToString() << ", " << originalPosition.ToString() << std::endl;
 
@@ -155,70 +161,51 @@ public:
 				pCamera->MoveTo(observer);
 				pCamera->LookAt(observer + forward);
 				pLight->SetPosition(lightPosition);
-
+				pLight->SetDirection(lightDirection);
 
 				// Clear shading and transfer buffers
 				shadingLists.clear(); indexList.clear(); elementList.clear();
+				
+				// Unfiltering to keep initial camera view
 				m_pDualPointGrid->FilterByView(pCamera, &filter);
 				filter.GetFilteredPoints(shadingLists);
-
 				
 				// Shade points
 				int totsamples = 0, partsamples = 0;
 
 				double startTotal = Platform::GetTime();
-				for (auto pointList : shadingLists) {
+				#pragma omp parallel for
+				for (int index = 0; index < shadingLists.size(); index++)
+				{
+					auto pointList = shadingLists[index];
 					m_pPointShader->Shade(*pointList, PointShader<Dart>::PointLit);
 					totsamples += pointList->size();
+
 				}
+
+				//for (auto pointList : shadingLists) {
+				//	m_pPointShader->Shade(*pointList, PointShader<Dart>::PointLit);
+				//	// m_pPointShader->Shade(*pointList,PointShader<Dart>::FalseColour);
+				//	totsamples += pointList->size();
+				//}
 				double endTotal = Platform::GetTime();
 
-
-				double start = Platform::GetTime();
-				/*
-				// Shade points
-				qmcPointList.clear();
-				
-				for (auto pointList : shadingLists)
-				{
-					int sampleCount = pointList->size(),
-						reducedCount = Maths::Floor(sampleCount * 0.06125f),
-						selectorIdx;
-					// std::cout << "SampleCount : " << reducedCount << std::endl;					
-					
-					for (int idx = 0; idx < reducedCount; idx++)
-					{
-						//selectorIdx = Maths::Floor(selectorSampler.NextFloat() * sampleCount);
-						selectorIdx = Maths::Floor(selectorSampler.Get1DSample() * sampleCount);
-						qmcPointList.push_back((*pointList)[selectorIdx]);
-						qmcPointList.back()->Invalid = true;
-					}
-
-					partsamples += reducedCount;
-				}
-
-				m_pPointShader->Shade(qmcPointList, PointShader<Dart>::PointLit);
-				*/
-				double end = Platform::GetTime();
-				// */
-
-				std::cout << "Shading time : " << Platform::ToSeconds(end - start) << " : " << Platform::ToSeconds(endTotal - startTotal) << std::endl;
-				std::cout << "Shading totals : " << partsamples << " : " << totsamples << std::endl;
+				//std::cout << "Irradiance Server :: Shading time [" << Platform::ToSeconds(endTotal - startTotal) << "]" << std::endl;
+				//std::cout << "Irradiance Server :: Shading totals [" << partsamples << " : " << totsamples << "]" << std::endl;
 
 				
 				// Serialise points
 				m_pDualPointGrid->SerializeUniqueByFilter(&filter, &indexList, &colourList);
-
 				
 				// Send points
 				bufferSize[0] = indexList.size(); bufferSize[1] = colourList.size();
-				std::cout << "Sending : [" << bufferSize[0] << "] , [" << bufferSize[1] << "]" << std::endl;
+				//std::cout << "Irradiance Server :: Sending [" << bufferSize[0] << "] , [" << bufferSize[1] << "]" << std::endl;
 
 				boost::asio::write(socket_, boost::asio::buffer(bufferSize, sizeof(int) * 2), error);
 				boost::asio::write(socket_, boost::asio::buffer(indexList.data(), sizeof(int) * indexList.size()), error);
 				boost::asio::write(socket_, boost::asio::buffer(colourList.data(), sizeof(int) * colourList.size()), error);
 
-				std::cout << "Irradiance Sent..." << std::endl;
+				std::cout << "Irradiance Server :: Irradiance sent..." << std::endl;
 			}
 		}
 	}
