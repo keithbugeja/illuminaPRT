@@ -44,27 +44,6 @@ namespace Illumina
 				float x = r * Maths::Cos(phi);
 				float y = r * Maths::Sin(phi);
 				return Vector3(x, y, z);
-
-				/*
-				Vector3 result;
-
-				result.Z = p_u;
-				float r = Maths::Sqrt(Maths::Max(0.f, 1.f - result.Z * result.Z));
-				float phi = Maths::PiTwo * p_v;
-				result.X = r * Maths::Cos(phi);
-				result.Y = r * Maths::Sin(phi);
-
-				return result;
-				*/
-
-				/* 
-				float z = 1.0f - 2.0 * p_u;
-				float r = Maths::Sqrt(Maths::Max(0.0f, 1.0f - z * z));
-				float phi = Maths::PiTwo * p_v;
-				float x = r * Maths::Cos(phi);
-				float y = r * Maths::Sin(phi);
-				return Vector3(x, y, z);
-				*/
 			}
 
 			static float UniformHemispherePdf(void)

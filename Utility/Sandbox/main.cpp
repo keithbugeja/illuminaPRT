@@ -357,10 +357,11 @@ void IlluminaPRT_IrradianceCompute(IIlluminaMT *p_pIllumina)
 	//pointSet.Load("Output//vertices_kitchen.asc");
 	//pointSet.Load("Output//vertices_barber.asc");
 	pointSet.Load("Output//vertices_empire.asc");
+	//pointSet.Load("Output//vertices_kitchen_open.asc");
 
 	PointShader<Dart> shader;
-	shader.Initialise(pEnvironment->GetScene(), 0.01f, 6, 1);
-	shader.SetHemisphereDivisions(24, 64);
+	shader.Initialise(pEnvironment->GetScene(), 0.01f, 6, 4);
+	shader.SetHemisphereDivisions(32, 12);
 	shader.SetVirtualPointSources(2048, 8192); 
 	shader.SetGeometryTerm(0.01f);
 	shader.Prepare(PointShader<Dart>::PointLit);
@@ -369,7 +370,7 @@ void IlluminaPRT_IrradianceCompute(IIlluminaMT *p_pIllumina)
 	std::cout << "Shading points..." << std::endl;
 
 	shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PointLit, true);
-	//shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PathTraced);
+	//shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PathTraced, true);
 
 	std::cout << "Shading ready..." << std::endl;
 	std::cout << "Saving point cloud..." << std::endl;
@@ -377,6 +378,7 @@ void IlluminaPRT_IrradianceCompute(IIlluminaMT *p_pIllumina)
 	//pointSet.Save("Output//vertices_kitchen_shaded.asc");
 	//pointSet.Save("Output//vertices_barber_shaded.asc");
 	pointSet.Save("Output//vertices_empire_shaded.asc");
+	//pointSet.Save("Output//vertices_kitchen_open_shaded.asc");
 
 	std::cout << "Irradiance computation ready!"<< std::endl;
 	std::getchar();
@@ -394,34 +396,20 @@ void IlluminaPRT_IrradianceServer(IIlluminaMT *p_pIllumina)
 	//pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.1f, 0.75f, 1024, 64, 48, 24, 0.01f, Vector3(32));
 	pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.1f, 0.75f, 512, 64, 48, 24, 0.01f, Vector3(32));
 
-	//pointSet.Load("Output//pointcloud_full.asc");
+	pointSet.Load("Output//pointcloud_full.asc");
 	//pointSet.Load("Output//vertices.asc");
 	
-	pointSet.Generate();
-	pointSet.Save("Output//pointcloud_full.asc");
+	//pointSet.Generate();
+	//pointSet.Save("Output//pointcloud_full.asc");
 	std::cout << "Generated point set. Elements in grid [" << pointSet.GetContainerInstance().Get().size() << "]" << std::endl;
-
 
 	PointShader<Dart> shader;
 	shader.Initialise(pEnv->GetScene(), 0.01f, 6, 1);
 	shader.SetHemisphereDivisions(24, 64);
 	shader.SetVirtualPointSources(1024, 8192); // 256
 	shader.SetGeometryTerm(0.01f);
-	//shader.Prepare(PointShader<Dart>::PointLit);
-	shader.Prepare(PointShader<Dart>::PathTraced);
-
-	std::cout << "Starting shading..." << std::endl;
-
-	//shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PointLit);
-	shader.Shade(pointSet.GetContainerInstance().Get(), PointShader<Dart>::PathTraced);
-
-	pointSet.Save("Output//vertices_shaded.asc");
-
-	std::cout << "Shading READY!"<< std::endl;
-	std::getchar();
-	return;
-
-	//std::cout << "Shading points..." << std::endl;
+	shader.Prepare(PointShader<Dart>::PointLit);
+	//shader.Prepare(PointShader<Dart>::PathTraced);
 
 	//std::vector<Dart*> shadingList;
 	//FilteredGPUGrid filteredGrid;
@@ -430,7 +418,7 @@ void IlluminaPRT_IrradianceServer(IIlluminaMT *p_pIllumina)
 	//grid.Build(pointSet.GetContainerInstance().Get(), 32, 1.f);
 
 	DualPointGrid<Dart> grid;
-	//grid.Build(pointSet.GetContainerInstance().Get(), 1.0f);
+	grid.Build(pointSet.GetContainerInstance().Get(), 1.0f);
 	
 	/*
 	grid.FilterByView(illumina.GetEnvironment()->GetCamera(), &filteredGrid);
@@ -461,8 +449,8 @@ void IlluminaPRT_IrradianceServer(IIlluminaMT *p_pIllumina)
 
 	// shader.Shade(shadingList);
 	
-	pointSet.Save("Output//pointcloud_full.asc");
-	std::cout << "Point cloud saved." << std::endl;
+	// pointSet.Save("Output//pointcloud_full.asc");
+	// std::cout << "Point cloud saved." << std::endl;
 }
 
 void IlluminaPRT(
@@ -544,10 +532,11 @@ void IlluminaPRT(
 
 	illumina.Initialise();
 
-	IlluminaPRT_IrradianceCompute(&illumina);
+	// If irradiance computation of dataset is required...
+	// IlluminaPRT_IrradianceCompute(&illumina);
 
 	// If irradiance server is enabled
-	// IlluminaPRT_IrradianceServer(&illumina);
+	IlluminaPRT_IrradianceServer(&illumina);
 
 	// If p2p
 	// illumina.Render();	

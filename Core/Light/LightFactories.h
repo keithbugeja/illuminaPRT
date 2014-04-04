@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "Light/Light.h"
+#include "Light/SpotLight.h"
 #include "Light/PointLight.h"
 #include "Light/DirectionalLight.h"
 #include "Light/DiffuseAreaLight.h"
@@ -60,6 +61,55 @@ namespace Illumina
 			Illumina::Core::ILight *CreateInstance(float p_fDistance, const Vector3 &p_direction, const Spectrum &p_intensity)
 			{
 				return new DirectionalLight(p_fDistance, p_direction, p_intensity);
+			}
+		};
+
+		class SpotLightFactory : public Illumina::Core::Factory<Illumina::Core::ILight>
+		{
+		public:
+			Illumina::Core::ILight *CreateInstance(void)
+			{
+				throw new Exception("Method not supported!");
+			}
+
+			/*
+			 * Arguments
+			 * -- Id {String}
+			 * -- Position {Vector3}
+			 * -- Direction {Vector3}
+			 * -- Intensity {Spectrum}
+			 * -- ConeWidth {float}
+			 * -- ConeFalloff {float}
+			 */
+			Illumina::Core::ILight *CreateInstance(ArgumentMap &p_argumentMap)
+			{
+				Vector3 position(0),
+					direction(Vector3::UnitYNeg);
+				Spectrum intensity(0);
+				float falloff = 5, 
+					width = 60;
+				std::string strId;
+
+				p_argumentMap.GetArgument("Position", position);
+				p_argumentMap.GetArgument("Direction", direction);
+				p_argumentMap.GetArgument("Intensity", intensity);
+				p_argumentMap.GetArgument("ConeWidth", width);
+				p_argumentMap.GetArgument("ConeFalloff", falloff);
+
+				if (p_argumentMap.GetArgument("Id", strId))
+					return CreateInstance(strId, position, direction, intensity, width, falloff);
+
+				return CreateInstance(position, direction, intensity, width, falloff);
+			}
+
+			Illumina::Core::ILight *CreateInstance(const std::string &p_strId, const Vector3 &p_position, const Vector3 &p_direction, const Spectrum &p_intensity, float p_fWidth, float p_fFalloff)
+			{
+				return new SpotLight(p_strId, p_position, p_direction, p_intensity, p_fWidth, p_fFalloff);
+			}
+
+			Illumina::Core::ILight *CreateInstance(const Vector3 &p_position, const Vector3 &p_direction, const Spectrum &p_intensity, float p_fWidth, float p_fFalloff)
+			{
+				return new SpotLight(p_position, p_direction, p_intensity, p_fWidth, p_fFalloff);
 			}
 		};
 

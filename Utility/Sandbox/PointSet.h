@@ -62,7 +62,7 @@ public:
 		result << Irradiance[0] << ", " << Irradiance[1] << ", " << Irradiance[2] << ", " <<
 				Normal.X << ", " << Normal.Y << ", " << Normal.Z << ", " <<
 				Position.X << ", " << Position.Y << ", " << Position.Z << ", " <<
-				Occlusion << ", " << Radius << std::endl;
+				Occlusion << ", " << Radius;
 
 		return result.str();
 	}

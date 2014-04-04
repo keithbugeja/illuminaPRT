@@ -363,6 +363,9 @@
     <ClCompile Include="..\..\..\..\Core\Light\DirectionalLight.cpp">
       <Filter>Header Files\Light</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Core\Light\SpotLight.cpp">
+      <Filter>Header Files\Light</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Core\Camera\Camera.h">
@@ -906,6 +909,9 @@
       <Filter>Header Files\Integrator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\Core\Light\DirectionalLight.h">
+      <Filter>Header Files\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\Core\Light\SpotLight.h">
       <Filter>Header Files\Light</Filter>
     </ClInclude>
   </ItemGroup>

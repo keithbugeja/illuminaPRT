@@ -52,7 +52,8 @@ public:
 	enum ShadingType
 	{
 		PointLit,
-		PathTraced
+		PathTraced,
+		FalseColour
 	};
 	
 	//----------------------------------------------------------------------------------------------
@@ -108,6 +109,7 @@ public:
 	//----------------------------------------------------------------------------------------------
 	void Shade(std::vector<T*> &p_pointList, ShadingType p_eShadingType, bool p_bShowProgress = false)
 	{
+		Random random((int)(Platform::GetTime() * 1e+8));
 		double total = Platform::GetTime();
 
 		if (p_bShowProgress)
@@ -127,7 +129,7 @@ public:
 					}
 				}
 			}
-			else
+			else if (p_eShadingType == PathTraced)
 			{
 				for (auto point : p_pointList)
 				{
@@ -136,6 +138,19 @@ public:
 					if (point->Invalid)
 					{
 						point->Irradiance = LiPathTraced(point->Position, point->Normal);
+						point->Invalid = false;
+					}
+				}
+			}
+			else
+			{
+				for (auto point : p_pointList)
+				{
+					if (pointNumber++ % 100 == 0) std::cout << "[" << pointNumber << "] " << std::endl;
+
+					if (point->Invalid)
+					{
+						point->Irradiance.Set(random.NextFloat(), random.NextFloat(), random.NextFloat());
 						point->Invalid = false;
 					}
 				}
@@ -154,7 +169,7 @@ public:
 					}
 				}
 			}
-			else
+			else if (p_eShadingType == PathTraced)
 			{
 				for (auto point : p_pointList)
 				{
@@ -165,9 +180,20 @@ public:
 					}
 				}
 			}
+			else
+			{
+				for (auto point : p_pointList)
+				{
+					// if (point->Invalid)
+					{
+						point->Irradiance.Set(random.NextFloat(), 0.0f, random.NextFloat());
+						point->Invalid = false;
+					}
+				}
+			}
 		}
 		
-		std::cout << "Shaded [" << p_pointList.size() << "] in [" << Platform::ToSeconds(Platform::GetTime() - total) << "]" << std::endl;
+		// std::cout << "Shaded [" << p_pointList.size() << "] in [" << Platform::ToSeconds(Platform::GetTime() - total) << "]" << std::endl;
 	}
 
 protected:
@@ -388,7 +414,7 @@ protected:
 
 		RandomSampler sequenceSampler;
 
-		LowDiscrepancySampler positionSampler,
+		static LowDiscrepancySampler positionSampler,
 			directionSampler, continueSampler;
 
 		//positionSampler.Reset(1137);

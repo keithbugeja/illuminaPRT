@@ -152,6 +152,7 @@ public:
 		// Lights
 		//----------------------------------------------------------------------------------------------
 		logger->Write("Environment :: Registering Lights...", LL_Info);
+		m_engineKernel->GetLightManager()->RegisterFactory("Spot", new SpotLightFactory());
 		m_engineKernel->GetLightManager()->RegisterFactory("Point", new PointLightFactory());
 		m_engineKernel->GetLightManager()->RegisterFactory("Directional", new DirectionalLightFactory());
 		m_engineKernel->GetLightManager()->RegisterFactory("DiffuseArea", new DiffuseAreaLightFactory());
@@ -248,7 +249,7 @@ public:
 			// Space
 			//----------------------------------------------------------------------------------------------
 			logger->Write("Environment :: Freeing and unregistering Spaces...", LL_Info);
-			//Logger::Message("Freeing and unregistering Spaces...", p_bVerbose);
+
 			delete m_engineKernel->GetSpaceManager()->RequestFactory("Basic");
 			m_engineKernel->GetSpaceManager()->UnregisterFactory("Basic");
 
@@ -323,11 +324,13 @@ public:
 			//----------------------------------------------------------------------------------------------
 			logger->Write("Environment :: Freeing and unregistering Lights...", LL_Info);
 
+			delete m_engineKernel->GetLightManager()->RequestFactory("Spot");
 			delete m_engineKernel->GetLightManager()->RequestFactory("Point");
 			delete m_engineKernel->GetLightManager()->RequestFactory("Directional");
 			delete m_engineKernel->GetLightManager()->RequestFactory("DiffuseArea");
 			delete m_engineKernel->GetLightManager()->RequestFactory("InfiniteArea");
 
+			m_engineKernel->GetLightManager()->UnregisterFactory("Spot");
 			m_engineKernel->GetLightManager()->UnregisterFactory("Point");
 			m_engineKernel->GetLightManager()->UnregisterFactory("Directional");
 			m_engineKernel->GetLightManager()->UnregisterFactory("DiffuseArea");
