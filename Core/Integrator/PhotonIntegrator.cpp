@@ -111,7 +111,8 @@ Spectrum PhotonIntegrator::SampleF(Scene *p_pScene, Intersection &p_intersection
 	// Sample bsdf for next direction
 	//----------------------------------------------------------------------------------------------
 	// Generate random samples
-	Vector2 sample = p_pScene->GetSampler()->Get2DSample();
+	Vector2 directionSample = p_pScene->GetSampler()->Get2DSample();
+	float bsdfSample = p_pScene->GetSampler()->Get1DSample();
 
 	// Convert to surface coordinate system where (0,0,1) represents surface normal
 	// Note: 
@@ -124,7 +125,7 @@ Spectrum PhotonIntegrator::SampleF(Scene *p_pScene, Intersection &p_intersection
 	// -- wIn returns the sampled direction
 	// -- pdf returns the reflectivity function's pdf at the sampled point
 	// -- bxdfType returns the type of BxDF sampled
-	Spectrum f = pMaterial->SampleF(p_intersection.Surface, wOutLocal, wInLocal, sample.U, sample.V, &p_pdf, BxDF::All_Combined, &p_bxdfType);
+	Spectrum f = pMaterial->SampleF(p_intersection.Surface, wOutLocal, wInLocal, directionSample.U, directionSample.V, bsdfSample, &p_pdf, BxDF::All_Combined, &p_bxdfType);
 
 	// If the reflectivity or pdf are zero, terminate path
 	if (f.IsBlack() || p_pdf == 0.0f) return 0.f;
@@ -502,11 +503,12 @@ Spectrum PhotonIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSce
 	if (pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Reflection)))
 	{
 		sample = p_pScene->GetSampler()->Get2DSample();
+		float bsdfSample = p_pScene->GetSampler()->Get1DSample();
 			
 		Vector3 i,o;
 
 		BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, o, false);
-		Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, o, i, sample.U, sample.V, &pdf, BxDF::Type(BxDF::Reflection), &bxdfType);
+		Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, o, i, sample.U, sample.V, bsdfSample, &pdf, BxDF::Type(BxDF::Reflection), &bxdfType);
 		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, i, wIn, false);
 
 		ray.Set(p_intersection.Surface.PointWS + wIn * 1E-4f, wIn, 1E-4f, Maths::Maximum);
@@ -529,11 +531,12 @@ Spectrum PhotonIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pSce
 	if (pMaterial->HasBxDFType(BxDF::Type(BxDF::Specular | BxDF::Transmission)))
 	{
 		sample = p_pScene->GetSampler()->Get2DSample();
+		float bsdfSample = p_pScene->GetSampler()->Get1DSample();
 			
 		Vector3 i,o;
 
 		BSDF::WorldToSurface(p_intersection.WorldTransform, p_intersection.Surface, wOut, o);
-		Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, o, i, sample.U, sample.V, &pdf, BxDF::Type(BxDF::Transmission), &bxdfType);
+		Spectrum f = p_intersection.GetMaterial()->SampleF(p_intersection.Surface, o, i, sample.U, sample.V, bsdfSample, &pdf, BxDF::Type(BxDF::Transmission), &bxdfType);
 		BSDF::SurfaceToWorld(p_intersection.WorldTransform, p_intersection.Surface, i, wIn);
 
 		ray.Set(p_intersection.Surface.PointWS + wIn * 1E-4f, wIn, 1E-4f, Maths::Maximum);

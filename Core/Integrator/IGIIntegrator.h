@@ -58,7 +58,8 @@ namespace Illumina
 			std::vector<LowDiscrepancySampler*> 
 				m_directionSamplerList,
 				m_positionSamplerList,
-				m_rouletteSamplerList;
+				m_rouletteSamplerList,
+				m_bsdfSamplerList;
 
 		public:
 			std::vector<std::vector<VirtualPointLight>> VirtualPointLightSet;

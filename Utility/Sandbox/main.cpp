@@ -71,6 +71,9 @@ public:
 
 	void OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
 	{ 
+		//GeometricPrimitive *g = (GeometricPrimitive*)p_pIlluminaMT->GetEnvironment()->GetScene()->GetSpace()->PrimitiveList[0];
+		//std::cout << "Area : " << g->GetShape()->GetArea() << std::endl;
+
 		/*
 		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
 		Vector3 position, lookAt;
@@ -394,13 +397,19 @@ void IlluminaPRT_IrradianceServer(IIlluminaMT *p_pIllumina)
 	PointSet<Dart> pointSet;
 	//pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.01f, 0.75f, 1024, 64, 48, 24, 0.01f, Vector3(32));
 	//pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.1f, 0.75f, 1024, 64, 48, 24, 0.01f, Vector3(32));
-	pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.1f, 0.75f, 512, 64, 48, 24, 0.01f, Vector3(32));
+	
+	//Sibenik
+	//pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.1f, 0.75f, 512, 64, 48, 24, 0.01f, Vector3(32));
 
-	pointSet.Load("Output//pointcloud_full.asc");
+	//Sponza
+	pointSet.Initialise(pEnv->GetScene(), 0.0025f, 0.1f, 0.75f, 512, 128, 48, 24, 0.01f, Vector3(32));
+	// pointSet.Load("Output//sponza_pointcloud_full.asc");
+
+	//pointSet.Load("Output//pointcloud_full.asc");
 	//pointSet.Load("Output//vertices.asc");
 	
-	//pointSet.Generate();
-	//pointSet.Save("Output//pointcloud_full.asc");
+	pointSet.Generate();
+	pointSet.Save("Output//pointcloud_sponza.asc");
 	std::cout << "Generated point set. Elements in grid [" << pointSet.GetContainerInstance().Get().size() << "]" << std::endl;
 
 	PointShader<Dart> shader;

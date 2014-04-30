@@ -104,18 +104,15 @@ int BSDF::GetBxDF(BxDF::Type p_bxdfType, int p_nBxDFIndex, BxDF **p_pBxDF, bool 
 		return p_nBxDFIndex;
 	}
 
-	//for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); bxdfIndex++)
 	for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.size(); bxdfIndex++)
 	{
 		if (m_bxdfList[bxdfIndex]->IsType(p_bxdfType, p_bExactMatch))
 		{
-			if (p_nBxDFIndex == 0)
+			if (p_nBxDFIndex-- == 0)
 			{
 				*p_pBxDF = m_bxdfList[bxdfIndex];
 				return (int)bxdfIndex;
 			}
-
-			p_nBxDFIndex--;
 		}
 	}
 
@@ -141,7 +138,7 @@ Spectrum BSDF::Rho(Vector3 &p_wOut, const DifferentialSurface &p_surface, BxDF::
 	return rho;
 }
 //----------------------------------------------------------------------------------------------
-Spectrum BSDF::SampleF(const DifferentialSurface& p_surface, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float *p_pdf, BxDF::Type p_bxdfType, BxDF::Type *p_sampledBxDFType)
+Spectrum BSDF::SampleF(const DifferentialSurface& p_surface, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float p_w, float *p_pdf, BxDF::Type p_bxdfType, BxDF::Type *p_sampledBxDFType)
 { 
 	int bxdfCount = GetBxDFCount(p_bxdfType);
 
@@ -152,9 +149,7 @@ Spectrum BSDF::SampleF(const DifferentialSurface& p_surface, const Vector3 &p_wO
 	}
 
 	// Choose a bxdf to sample
-	// #pragma message ("Need to pass random number or a way to generate it")
-	// Need to get a new random number to remove bias!
-	int bxdfIndexFilter = (int)((p_v + p_u) * bxdfCount) % bxdfCount,
+	int bxdfIndexFilter = (int)(p_w * bxdfCount) % bxdfCount,
 		bxdfIndexList;
 
 	BxDF *pBxDF;
@@ -177,7 +172,6 @@ Spectrum BSDF::SampleF(const DifferentialSurface& p_surface, const Vector3 &p_wO
 	{
 		if (!pBxDF->IsType(BxDF::Specular)) 
 		{
-			//for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); ++bxdfIndex) 
 			for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.size(); ++bxdfIndex) 
 			{
 				BxDF *pBxDF4Pdf = m_bxdfList[bxdfIndex];
@@ -202,7 +196,6 @@ Spectrum BSDF::SampleF(const DifferentialSurface& p_surface, const Vector3 &p_wO
 		else
 			bxdfFlags = BxDF::Type(p_bxdfType & ~BxDF::Reflection);
 
-		//for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); ++bxdfIndex)
 		for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.size(); ++bxdfIndex)
 		{
 			BxDF *pBxDF4F = m_bxdfList[bxdfIndex];
@@ -227,7 +220,6 @@ Spectrum BSDF::F(const DifferentialSurface& p_surface, const Vector3 &p_wOut, co
 	else
 		bxdfFlags = BxDF::Type(p_bxdfType & ~BxDF::Reflection);
 
-	//for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.Size(); ++bxdfIndex)
 	for (size_t bxdfIndex = 0; bxdfIndex < m_bxdfList.size(); ++bxdfIndex)
 	{
 		BxDF *pBxDF4F = m_bxdfList[bxdfIndex];

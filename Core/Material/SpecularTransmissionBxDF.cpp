@@ -57,6 +57,7 @@ Spectrum SpecularTransmission::SampleF(const Spectrum &p_reflectance, const Vect
 	*p_pdf = 1.f;
 
 	return p_reflectance  / Maths::FAbs(p_wIn.Z);
+	//return p_reflectance * (etaT * etaT) / (etaI * etaI) / Maths::Abs(p_wIn.Z);
 	//return p_reflectance * (etaT * etaT) / (etaI * etaI) / Maths::FAbs(p_wIn.Z);
 	//*/
 }

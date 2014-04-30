@@ -60,9 +60,9 @@ Spectrum InfiniteAreaLight::Radiance(const Ray &p_ray)
 	return Radiance(p_ray.Direction);
 }
 //----------------------------------------------------------------------------------------------
-Spectrum InfiniteAreaLight::Radiance(const Vector3 &p_lightSurfacePoint, const Vector3 &p_lightSurfaceNormal, const Vector3 &p_wIn)
+Spectrum InfiniteAreaLight::Radiance(const Vector3 &p_surfacePoint, const Vector3 &p_surfaceNormal, const Vector3 &p_wIn)
 {
-	return Vector3::Dot(p_lightSurfaceNormal, p_wIn) > 0 ? Radiance(p_wIn) : 0.0f;
+	return Vector3::Dot(p_surfaceNormal, p_wIn) > 0 ? Radiance(p_wIn) : 0.0f;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum InfiniteAreaLight::SampleRadiance(const Vector3 &p_surfacePoint, float p_u, float p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)

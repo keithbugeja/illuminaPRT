@@ -200,6 +200,7 @@ Spectrum IIntegrator::SampleF(Scene *p_pScene, Intersection &p_intersection, ISa
 	//----------------------------------------------------------------------------------------------
 	// Generate random samples
 	Vector2 sample = p_pSampler->Get2DSample();
+	float bsdfSample = p_pSampler->Get1DSample();
 
 	// Convert to surface coordinate system where (0,0,1) represents surface normal
 	// Note: 
@@ -212,7 +213,7 @@ Spectrum IIntegrator::SampleF(Scene *p_pScene, Intersection &p_intersection, ISa
 	// -- wIn returns the sampled direction
 	// -- pdf returns the reflectivity function's pdf at the sampled point
 	// -- bxdfType returns the type of BxDF sampled
-	Spectrum f = pMaterial->SampleF(p_intersection.Surface, wOutLocal, wInLocal, sample.U, sample.V, &p_pdf, BxDF::All_Combined, &p_bxdfType);
+	Spectrum f = pMaterial->SampleF(p_intersection.Surface, wOutLocal, wInLocal, sample.U, sample.V, bsdfSample, &p_pdf, BxDF::All_Combined, &p_bxdfType);
 
 	// If the reflectivity or pdf are zero, terminate path
 	if (f.IsBlack() || p_pdf == 0.0f) return 0.f;
