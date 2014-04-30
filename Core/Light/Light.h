@@ -45,12 +45,12 @@ namespace Illumina
 			virtual Spectrum Radiance(const Ray &p_ray) { return 0.0f; }
 
 			//----------------------------------------------------------------------------------------------
-			/* Returns the Radiance emitted at the specified point on the surface of the luminaire along
+			/* Returns the Radiance emitted at the specified point on the surface of the object along
 			 * the direction vector wIn.
 			 * 
 			 * This method is mainly employed by area lights that have a position and volume in space.
 			 */
-			virtual Spectrum Radiance(const Vector3 &p_lightSurfacePoint, const Vector3 &p_lightSurfaceNormal, const Vector3 &p_wIn) = 0;
+			virtual Spectrum Radiance(const Vector3 &p_surfacePoint, const Vector3 &p_surfaceNormal, const Vector3 &p_wIn) = 0;
 			
 			//----------------------------------------------------------------------------------------------
 			/* Samples a point on the luminaire.

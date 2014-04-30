@@ -41,8 +41,6 @@ namespace Illumina
 				, m_fEtaT(p_fEtaT)
 				, m_pTexture(p_pTexture)
 			{
-				//m_bxdfList.PushBack(new SpecularTransmission(p_fEtaI, p_fEtaT));
-				//m_bxdfList.PushBack(new SpecularReflection());
 				m_bxdfList.push_back(new SpecularTransmission(p_fEtaI, p_fEtaT));
 				m_bxdfList.push_back(new SpecularReflection());
 			}
@@ -55,16 +53,12 @@ namespace Illumina
 				, m_fEtaT(p_fEtaT)
 				, m_pTexture(p_pTexture)
 			{
-				//m_bxdfList.PushBack(new SpecularTransmission(p_fEtaI, p_fEtaT));
-				//m_bxdfList.PushBack(new SpecularReflection());
 				m_bxdfList.push_back(new SpecularTransmission(p_fEtaI, p_fEtaT));
 				m_bxdfList.push_back(new SpecularReflection());
 			}
 
 			~GlassMaterial(void)
 			{
-				//delete m_bxdfList.At(1);
-				//delete m_bxdfList.At(0);
 				delete m_bxdfList[1];
 				delete m_bxdfList[0];
 			}
@@ -74,59 +68,65 @@ namespace Illumina
 				m_pTexture = p_pTexture;
 			}
 			
-			Spectrum SampleF(const DifferentialSurface &p_surface, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, 
+			Spectrum SampleF(const DifferentialSurface &p_surface, const Vector3 &p_wOut, Vector3 &p_wIn, float p_u, float p_v, float p_w,
 				float *p_pdf, BxDF::Type p_bxdfType = BxDF::All_Combined, BxDF::Type *p_sampledBxDFType = NULL)
 			{
-				const Spectrum &F = BSDF::SampleF(p_surface, p_wOut, p_wIn, p_u, p_v, p_pdf, p_bxdfType, p_sampledBxDFType);
+				return 	BSDF::SampleF(p_surface, p_wOut, p_wIn, p_u, p_v, p_w, p_pdf, p_bxdfType, p_sampledBxDFType);
+				
+				const static Spectrum one(1.f);
+
+				// int bxdfIndex = 1;
+				int bxdfIndex = p_w < 0.5f ?  0 : 1;
+				BxDF *pBxDF = m_bxdfList[bxdfIndex];
+
+				Spectrum reflectivity = SampleTexture(p_surface, bxdfIndex);
+				Spectrum f = pBxDF->SampleF(reflectivity, p_wOut, p_wIn, p_u, p_v, p_pdf);
+				Spectrum fr = Fresnel::EvaluateDielectricTerm(p_wOut.Z, m_fEtaI, m_fEtaT);
+				
+				*p_pdf *= 0.5f;
+
+				/*
+				
+				if (!pBxDF->IsType(BxDF::Reflection)) 
+					fr = one - fr;
+				
+				f *= fr;
+				
+				*/
+				/*
+				f.Set(Maths::Exp(-p_surface.Distance * 0.15 * f[0]),
+					Maths::Exp(-p_surface.Distance * 0.15 * f[1]),
+					Maths::Exp(-p_surface.Distance * 0.15 * f[2]));
+				*/
+
+				return f;
+				
+				/* 
+				BSDF::SampleF(p_surface, p_wOut, p_wIn, p_u, p_v, p_w, p_pdf, p_bxdfType, p_sampledBxDFType);
+				
+				const static Spectrum one(1.f);
+
+				Spectrum f = BSDF::SampleF(p_surface, p_wOut, p_wIn, p_u, p_v, p_w, p_pdf, p_bxdfType, p_sampledBxDFType);
+				Spectrum fr = EvaluateFresnelTerm(p_wOut.Z, m_fEtaI, m_fEtaT);
+				
+				if (*p_sampledBxDFType & BxDF::Reflection)
+					return f * fr;
+
+				return f * (one - fr);
+				*/
+				// return BSDF::SampleF(p_surface, p_wOut, p_wIn, p_u, p_v, p_w, p_pdf, p_bxdfType, p_sampledBxDFType);
+
+				/*
+				const Spectrum &F = BSDF::SampleF(p_surface, p_wOut, p_wIn, p_u, p_v, p_w, p_pdf, p_bxdfType, p_sampledBxDFType);
 				const Spectrum &fresnel = EvaluateFresnelTerm(p_wOut.Z, m_fEtaI, m_fEtaT);
 
 				if (*p_sampledBxDFType & BxDF::Reflection)
 					return F * fresnel;
 
 				return F * (Spectrum(1.0f) - fresnel);
+				*/
 			}
 			
-			Spectrum EvaluateFresnelTerm(float cosi, float etai, float etat) const
-			{
-				// Compute Fresnel reflectance for dielectric
-				cosi = Maths::Clamp(cosi, -1.0f, 1.0f);
-		
-				// Compute indices of refraction for dielectric
-				bool entering = cosi > 0.;
-				float ei = etai, et = etat;
-		
-				if (!entering)
-					Maths::Swap(ei, et);
-		
-				// Compute _sint_ using Snell's law
-				float sint = ei / et * Maths::Sqrt(Maths::Max(0.f, 1.0f - cosi*cosi));
-		
-				if (sint >= 1.0f) 
-				{
-					// Handle total internal reflection
-					return 1.0f;
-				}
-				else
-				{
-					float cost = Maths::Sqrt(Maths::Max(0.0f, 1.0f - sint*sint));
-					return FresnelDielectric(Maths::FAbs(cosi), cost, ei, et);
-				}
-			}
-
-			Spectrum FresnelDielectric(const float cosi, 
-						  const float cost, 
-						  const float &etai, 
-						  const float &etat) const
-			{
-				float Rparl = ((etat * cosi) - (etai * cost)) /
-							   ((etat * cosi) + (etai * cost));
-		
-				float Rperp = ((etai * cosi) - (etat * cost)) /
-							   ((etai * cosi) + (etat * cost));
-
-				return (Rparl * Rparl + Rperp * Rperp) / 2.0f;
-			}
-
 			Spectrum SampleTexture(const DifferentialSurface &p_surface, int p_bxdfIndex)
 			{
 				if (m_pTexture)
@@ -136,9 +136,8 @@ namespace Illumina
 				}
 				else
 				{
-					return p_bxdfIndex == 0 ? m_transmittance : m_reflectivity;// p_bxdfIndex == 0 ? m_reflectivity : Spectrum(1.0f) - m_reflectivity;
+					return p_bxdfIndex == 0 ? m_transmittance : m_reflectivity;
 				}
-
 			}
 		};
 	}

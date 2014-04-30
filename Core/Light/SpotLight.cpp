@@ -57,9 +57,9 @@ Spectrum SpotLight::Power(void) {
 	return m_intensity * 2.0 * Maths::Pi * (1.f - 0.5 * (m_fCosFalloffStart + m_fCosTotalWidth));
 }
 //----------------------------------------------------------------------------------------------
-Spectrum SpotLight::Radiance(const Vector3 &p_lightSurfacePoint, const Vector3 &p_lightSurfaceNormal, const Vector3 &p_wIn)
+Spectrum SpotLight::Radiance(const Vector3 &p_surfacePoint, const Vector3 &p_surfaceNormal, const Vector3 &p_wIn)
 {
-	return Vector3::Dot(p_lightSurfacePoint, p_wIn) > 0 ? m_intensity : 0.0f;
+	return Vector3::Dot(p_surfaceNormal, p_wIn) > 0 ? m_intensity : 0.0f;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum SpotLight::SampleRadiance(const Vector3 &p_surfacePoint, float p_u, float p_v, Vector3 &p_wIn, float &p_pdf, VisibilityQuery &p_visibilityQuery)

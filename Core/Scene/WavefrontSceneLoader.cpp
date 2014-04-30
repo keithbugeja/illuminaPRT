@@ -372,7 +372,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 
 			case WavefrontMaterial::Mirror:
 			{
-				argumentStream << "Reflectivity={" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "};";
+				argumentStream << "Reflectivity={" << material.Specular[0] << "," << material.Specular[1] << "," << material.Specular[2] << "};";
 				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Mirror", material.Name, argumentStream.str());
 				((MirrorMaterial*)pMaterial)->SetTexture(pTexture);
 				break;
@@ -381,7 +381,7 @@ bool WavefrontSceneLoader::LoadMaterials(const std::string &p_strFilename, Wavef
 			case WavefrontMaterial::Glass:
 			{
 				argumentStream << "Reflectivity={{" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "},"
-					<< "{" << material.Diffuse[0] << "," << material.Diffuse[1] << "," << material.Diffuse[2] << "}};";
+					<< "{" << material.Specular[0] << "," << material.Specular[1] << "," << material.Specular[2] << "}};";
 				pMaterial = m_pEngineKernel->GetMaterialManager()->CreateInstance("Glass", material.Name, argumentStream.str());
 				((GlassMaterial*)pMaterial)->SetTexture(pTexture);
 				break;

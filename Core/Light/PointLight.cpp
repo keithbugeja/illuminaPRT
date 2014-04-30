@@ -34,9 +34,9 @@ Spectrum PointLight::Power(void) {
 	return m_intensity * 4.0 * Maths::Pi;
 }
 //----------------------------------------------------------------------------------------------
-Spectrum PointLight::Radiance(const Vector3 &p_lightSurfacePoint, const Vector3 &p_lightSurfaceNormal, const Vector3 &p_wIn)
+Spectrum PointLight::Radiance(const Vector3 &p_surfacePoint, const Vector3 &p_surfaceNormal, const Vector3 &p_wIn)
 {
-	return Vector3::Dot(p_lightSurfacePoint, p_wIn) > 0 ? m_intensity : 0.0f;
+	return Vector3::Dot(p_surfaceNormal, p_wIn) > 0 ? m_intensity : 0.0f;
 }
 //----------------------------------------------------------------------------------------------
 /*

@@ -787,13 +787,14 @@ Spectrum MLICIntegrator::PathLi(Scene *p_pScene, Ray &p_ray)
 		if (pathLength + 1 == m_nRayDepth) break;
 
 		// Sample bsdf for next direction
-		Vector2 sample = p_pScene->GetSampler()->Get2DSample();
+		Vector2 directionSample = p_pScene->GetSampler()->Get2DSample();
+		float bsdfSample = p_pScene->GetSampler()->Get1DSample();
 
 		// Convert to surface coordinate system where (0,0,1) represents surface normal
 		BSDF::WorldToSurface(isect.WorldTransform, isect.Surface, wOut, wOutLocal);
 
 		// Sample new direction in wIn (remember we're tracing backwards)
-		Spectrum f = pMaterial->SampleF(isect.Surface, wOutLocal, wInLocal, sample.U, sample.V, &pdf, BxDF::All_Combined, &bxdfType);
+		Spectrum f = pMaterial->SampleF(isect.Surface, wOutLocal, wInLocal, directionSample.U, directionSample.V, bsdfSample, &pdf, BxDF::All_Combined, &bxdfType);
 
 		// If the reflectivity or pdf are zero, terminate path
 		if (f.IsBlack() || pdf == 0.0f) break;

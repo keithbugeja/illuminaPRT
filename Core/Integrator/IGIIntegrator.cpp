@@ -101,6 +101,8 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 
 	Vector2 positionSample, 
 			directionSample;
+
+	float bsdfSample;
 	
 	int intersections, 
 		lightIndex = 0,
@@ -116,7 +118,7 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 		// Get samples for initial position and direction
 		positionSample = m_positionSamplerList[p_nVirtualPointLightSetId]->Get2DSample();
 		directionSample = m_directionSamplerList[p_nVirtualPointLightSetId]->Get2DSample();
-		
+
 		// Get initial radiance, position and direction
 		alpha = p_pScene->LightList[lightIndex]->SampleRadiance(
 			p_pScene, positionSample.U, positionSample.V, 
@@ -160,8 +162,9 @@ void IGIIntegrator::TraceVirtualPointLights(Scene *p_pScene, int p_nMaxPaths, in
 			// Sample contribution and new ray
 			BSDF::SurfaceToWorld(intersection.WorldTransform, intersection.Surface, wOut, wOutLocal);
 
+			bsdfSample = m_bsdfSamplerList[p_nVirtualPointLightSetId]->Get1DSample();
 			directionSample = m_directionSamplerList[p_nVirtualPointLightSetId]->Get2DSample();
-			f = pMaterial->SampleF(intersection.Surface, wOutLocal, wInLocal, directionSample.U, directionSample.V, &pdf, bxdfType);
+			f = pMaterial->SampleF(intersection.Surface, wOutLocal, wInLocal, directionSample.U, directionSample.V, bsdfSample, &pdf, bxdfType);
 
 			// If reflectivity or pdf are zero, end path
 			if (f.IsBlack() || pdf == 0.0f) break;
@@ -349,8 +352,8 @@ Spectrum IGIIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene,
 						// Ignore if such is the case.
 						if (pointLightQuery.IsOccluded()) 
 							continue; 
-
 						// Compute geometry term
+
 						#if (defined(SSE_ENABLED))
 							__m128 surfacePoint		= _mm_load_ps(p_intersection.Surface.PointWS.Element);
 							__m128 lightPosition	= _mm_load_ps(pointLight.Context.Surface.PointWS.Element); 
