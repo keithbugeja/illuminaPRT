@@ -579,21 +579,25 @@ Spectrum MLICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene
 	}
 	else
 	{
-		/*
 		Ray ray(p_intersection.Surface.RayOriginWS, -p_intersection.Surface.RayDirectionWS);
+		for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
+			p_pRadianceContext->Indirect += p_pScene->LightList[lightIndex]->Radiance(ray);
+
+		/*
+		// Ray ray(p_intersection.Surface.RayOriginWS, -p_intersection.Surface.RayDirectionWS);
 
 		for (size_t lightIndex = 0; lightIndex < p_pScene->LightList.Size(); ++lightIndex)
 			p_pRadianceContext->Direct += p_pScene->LightList[lightIndex]->Radiance(ray);
 		*/
 
-		p_pRadianceContext->Direct.Set(20, 50, 100);
+		// p_pRadianceContext->Direct.Set(20, 50, 100);
 	}
 
 	// Populate radiance context
 	p_pRadianceContext->Flags |= RadianceContext::DF_Albedo |  
 		RadianceContext::DF_Direct | RadianceContext::DF_Indirect;
 	
-	return /*p_pRadianceContext->Direct +*/ p_pRadianceContext->Indirect;
+	return p_pRadianceContext->Direct + p_pRadianceContext->Indirect;
 }
 //----------------------------------------------------------------------------------------------
 Spectrum MLICIntegrator::Radiance(IntegratorContext *p_pContext, Scene *p_pScene, const Ray &p_ray, Intersection &p_intersection, RadianceContext *p_pRadianceContext)
