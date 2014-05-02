@@ -55,6 +55,7 @@ bool IGIIntegrator::Initialise(Scene *p_pScene, ICamera *p_pCamera)
 		m_directionSamplerList.push_back(new LowDiscrepancySampler());
 		m_positionSamplerList.push_back(new LowDiscrepancySampler());
 		m_rouletteSamplerList.push_back(new LowDiscrepancySampler());
+		m_bsdfSamplerList.push_back(new LowDiscrepancySampler());
 	}
 
 	return true;
