@@ -498,9 +498,13 @@ bool WavefrontSceneLoader::LoadGeometry(const std::string &p_strFilename, Wavefr
 
 				vertex.Position = boost::lexical_cast<int>(faceTokenList[0]);
 
-				if (faceTokenList.size() == 2) {
+				if (faceTokenList.size() == 2) 
+				{
 					vertex.Normal = boost::lexical_cast<int>(faceTokenList[1]);
-				} else if (faceTokenList.size() == 3) {
+					vertex.Texture = 0;
+				} 
+				else if (faceTokenList.size() == 3) 
+				{
 					vertex.Texture = boost::lexical_cast<int>(faceTokenList[1]);
 					vertex.Normal = boost::lexical_cast<int>(faceTokenList[2]);
 				} 
