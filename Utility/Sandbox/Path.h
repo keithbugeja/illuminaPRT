@@ -187,7 +187,7 @@ public:
 	
 	void Reset(void) 
 	{ 
-		m_currentPass = vertexList.empty() ? 0 : m_vertexList[0].passCount; 
+		m_currentPass = m_vertexList.empty() ? 0 : m_vertexList[0].passCount; 
 		m_currentVertex = m_currentFrame = 0; 
 	}
 
