@@ -305,7 +305,7 @@ public:
 		m_pReconstructionFilter = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Reconstruction", "ReconstructionBuffer", "");
 
 		// Progressive Rendering
-		m_pTemporalFilter = (AccumulationBuffer*)m_pEngineKernel->GetPostProcessManager()->CreateInstance("Accumulation", "Accumulation", "");
+		m_pTemporalFilter = (AccumulationBuffer*)m_pEngineKernel->GetPostProcessManager()->CreateInstance("Accumulation", "AccumulationBuffer", "");
 		m_pTemporalFilter->SetAccumulationBuffer(m_pRadianceAccumulationBuffer);
 		m_pTemporalFilter->Reset();
 		/*
