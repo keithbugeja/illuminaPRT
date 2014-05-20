@@ -19,6 +19,7 @@ public:
 
 class IIlluminaMT
 {
+public:
 	struct Flags
 	{
 	protected:
@@ -99,7 +100,6 @@ protected:
 	virtual ~IIlluminaMT(void) { }
 
 public:
-
 	void SetScript(const std::string &p_strScript) { m_strScript = p_strScript; }
 	void SetCameraScript(const std::string &p_strCameraScript) { m_strCameraScript = p_strCameraScript; }
 	std::string GetCameraScript(void) const { return m_strCameraScript; } 
@@ -111,6 +111,7 @@ public:
 
 	void SetIterations(int p_nIterations) { m_nIterations = p_nIterations; }
 	void SetFlags(int p_nFlags) { m_flags.FromInt(p_nFlags); }
+	Flags GetFlags(void) { return m_flags; }
 
 	void SetFrameBudget(float p_fBudget) {m_fFrameBudget = p_fBudget; }
 

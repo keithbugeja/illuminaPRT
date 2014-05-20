@@ -56,21 +56,64 @@ class SimpleListener
 	: public IlluminaMTListener
 {
 protected:
-	PathEx m_path;
-	float m_fDeltaTime;
-	int m_nFrameNumber;
+	IIlluminaMT::Flags m_flags;
+	bool m_resetAccumulation;
+	PathEx2 m_path2;
+
+	//PathEx m_path;
+	//float m_fDeltaTime;
+	//int m_nFrameNumber;
 
 public:
 	SimpleListener(void)
-		: m_nFrameNumber(0)
+	{
+		m_path2.AddVertex(Vector3(-28, 5, 13.5), Vector3::Zero, 5);
+		m_path2.AddVertex(Vector3(-27, 5, 13.5), Vector3::Zero, 5);
+		m_path2.AddVertex(Vector3(-26, 5, 13.5), Vector3::Zero, 1);
+		m_path2.AddVertex(Vector3(-28, 5, 13.5), Vector3::Zero, 1);
+		m_path2.AddVertex(Vector3(-27, 5, 13.5), Vector3::Zero, 1);
+		m_path2.Reset();
+	}
+	/*	: m_nFrameNumber(0)
 		, m_fDeltaTime(0)
-	{ 
+	{
 		m_path.Clear();
 		m_path.FromString("path={{-16, -14, -5.75},{90,0,0},{-8, -14, -5.75},{90,0,0},{-2.36, -14, -5.75},{90,0,0}}");
 	}
+	*/
 
 	void OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
 	{ 
+		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
+		Vector3 position, lookAt;
+
+		m_path2.GetObserver(position, lookAt);
+		
+		if (m_path2.IsComplete()) 
+		{
+			std::cout << "Animation complete!" << std::endl;
+			return;
+		}
+		
+		m_flags = p_pIlluminaMT->GetFlags();
+		if (m_resetAccumulation)
+		{
+			m_resetAccumulation = false;
+			IIlluminaMT::Flags tempFlags = m_flags;
+			tempFlags.EnableAccumulationBuffer(false);
+			p_pIlluminaMT->SetFlags(tempFlags.ToInt());
+		}
+
+		int currentPass = m_path2.GetCurrentPass();
+		if (currentPass == 1) m_resetAccumulation = true;
+
+		m_path2.NextFrame();
+		
+		pCamera->MoveTo(position);
+		pCamera->LookAt(lookAt);
+
+		std::cout << "Position : " << position.ToString() << ", LookAt : " << lookAt.ToString() << ", Pass : " << currentPass << std::endl;
+
 		//GeometricPrimitive *g = (GeometricPrimitive*)p_pIlluminaMT->GetEnvironment()->GetScene()->GetSpace()->PrimitiveList[0];
 		//std::cout << "Area : " << g->GetShape()->GetArea() << std::endl;
 
@@ -92,7 +135,9 @@ public:
 
 	void OnEndFrame(IIlluminaMT *p_pIlluminaMT)
 	{
-		// GBuffer::Persist("Output\\gbuffer.gbf", m_nFrameNumber++, p_pIlluminaMT->GetEnvironment()->GetCamera(), p_pIlluminaMT->GetCommitBuffer());
+		GBuffer::Persist("Output\\gbuffer.gbf", m_path2.GetCurrentFrame(), p_pIlluminaMT->GetEnvironment()->GetCamera(), p_pIlluminaMT->GetCommitBuffer());
+
+		p_pIlluminaMT->SetFlags(m_flags.ToInt());
 	}
 };
 
