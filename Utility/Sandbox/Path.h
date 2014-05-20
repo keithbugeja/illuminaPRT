@@ -137,3 +137,81 @@ public:
 		PreparePath();
 	}
 };
+
+struct PathVertexEx2
+{
+	Vector3 position;
+	Vector3 target;
+	int passCount;
+
+	PathVertexEx2(void) { }
+	
+	PathVertexEx2(Vector3 p_position, Vector3 p_target, int p_nPass) 
+		: position(p_position)
+		, target(p_target)
+		, passCount(p_nPass) 
+	{ }
+	
+	PathVertexEx2(const PathVertexEx2& p_vertex)
+		: position(p_vertex.position)
+		, target(p_vertex.target)
+		, passCount(p_vertex.passCount)
+	{ }
+};
+
+class PathEx2
+{
+protected:
+	int m_currentPass,
+		m_currentVertex,
+		m_currentFrame,
+		m_frameCount;
+
+	std::vector<PathVertexEx2> m_vertexList;
+
+public:
+	void AddVertex(Vector3 p_position, Vector3 p_target, int p_nPass)
+	{
+		m_vertexList.push_back(PathVertexEx2(p_position, p_target, p_nPass));
+		m_frameCount += p_nPass;
+	}
+
+	bool IsComplete(void) { return m_frameCount == m_currentFrame; }
+	int GetVertexCount(void) { return m_vertexList.size(); }
+	int GetFrameCount(void) { return m_frameCount; }
+	int GetCurrentFrame(void) { return m_currentFrame; }
+	int GetCurrentPass(void) { return m_currentPass; }
+	void Clear(void) { m_vertexList.clear(); }
+	
+	void Reset(void) 
+	{ 
+		m_currentPass = m_vertexList[0].passCount; 
+		m_currentVertex = m_currentFrame = 0; 
+	}
+
+	int NextFrame(void) 
+	{
+		if (--m_currentPass <= 0)
+		{
+			if (m_currentVertex++ == m_vertexList.size())
+				return m_currentFrame;
+
+			m_currentPass = m_vertexList[m_currentVertex].passCount;
+		}
+
+		return m_currentFrame++;
+	}
+
+	void GetObserver(Vector3 &p_position, Vector3 &p_target)
+	{
+		if (m_vertexList.empty())
+		{
+			p_position = 0;
+			p_target = 0;
+		}
+
+		p_position = m_vertexList[m_currentVertex].position;
+		p_target = m_vertexList[m_currentVertex].target;
+	}
+};
+

@@ -430,7 +430,10 @@ public:
 				m_pTemporalFilter->Apply(m_pRadianceBuffer, m_pRadianceBuffer);
 			}
 			else
+			{
 				m_pEnvironment->GetScene()->GetSampler()->Reset();
+				m_pTemporalFilter->Reset();
+			}
 
 			// Tonemapping
 			if (m_flags.IsToneMappingEnabled())
