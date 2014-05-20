@@ -170,6 +170,8 @@ protected:
 	std::vector<PathVertexEx2> m_vertexList;
 
 public:
+	PathEx2(void) { Clear(); }
+
 	void AddVertex(Vector3 p_position, Vector3 p_target, int p_nPass)
 	{
 		m_vertexList.push_back(PathVertexEx2(p_position, p_target, p_nPass));
@@ -181,11 +183,11 @@ public:
 	int GetFrameCount(void) { return m_frameCount; }
 	int GetCurrentFrame(void) { return m_currentFrame; }
 	int GetCurrentPass(void) { return m_currentPass; }
-	void Clear(void) { m_vertexList.clear(); }
+	void Clear(void) { m_frameCount = 0; m_vertexList.clear(); }
 	
 	void Reset(void) 
 	{ 
-		m_currentPass = m_vertexList[0].passCount; 
+		m_currentPass = vertexList.empty() ? 0 : m_vertexList[0].passCount; 
 		m_currentVertex = m_currentFrame = 0; 
 	}
 

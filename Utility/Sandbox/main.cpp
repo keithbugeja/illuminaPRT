@@ -57,8 +57,9 @@ class SimpleListener
 {
 protected:
 	IIlluminaMT::Flags m_flags;
-	bool m_resetAccumulation;
+	// bool m_resetAccumulation;
 	PathEx2 m_path2;
+	bool m_lastPass;
 
 	//PathEx m_path;
 	//float m_fDeltaTime;
@@ -86,35 +87,40 @@ public:
 
 	void OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
 	{ 
+		// If path is complete, exit
+		if (m_path2.IsComplete()) return;
+
 		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
 		Vector3 position, lookAt;
 
-		m_path2.GetObserver(position, lookAt);
-		
-		if (m_path2.IsComplete()) 
-		{
-			std::cout << "Animation complete!" << std::endl;
-			return;
-		}
-		
+		// Save render flags
 		m_flags = p_pIlluminaMT->GetFlags();
-		if (m_resetAccumulation)
+
+		// If previous frame was last pass, switch off accumulation
+		if (m_lastPass)
 		{
-			m_resetAccumulation = false;
 			IIlluminaMT::Flags tempFlags = m_flags;
 			tempFlags.EnableAccumulationBuffer(false);
 			p_pIlluminaMT->SetFlags(tempFlags.ToInt());
 		}
+	
+		// Retrieve observer position and target
+		m_path2.GetObserver(position, lookAt);
 
+		// Find if current pass is last in sequence
 		int currentPass = m_path2.GetCurrentPass();
-		if (currentPass == 1) m_resetAccumulation = true;
+		m_lastPass = (currentPass == 1);
 
+		// Move to next frame
 		m_path2.NextFrame();
 		
+		// Update camera
 		pCamera->MoveTo(position);
 		pCamera->LookAt(lookAt);
 
-		std::cout << "Position : " << position.ToString() << ", LookAt : " << lookAt.ToString() << ", Pass : " << currentPass << std::endl;
+		// Debug out
+		std::cout << "Frame [" << m_path2.GetCurrentFrame() << " of " << m_path2.GetFrameCount() << "] :: "
+			<< "Position : " << position.ToString() << ", LookAt : " << lookAt.ToString() << ", Pass : " << currentPass << std::endl;
 
 		//GeometricPrimitive *g = (GeometricPrimitive*)p_pIlluminaMT->GetEnvironment()->GetScene()->GetSpace()->PrimitiveList[0];
 		//std::cout << "Area : " << g->GetShape()->GetArea() << std::endl;
