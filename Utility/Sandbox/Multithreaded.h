@@ -282,7 +282,8 @@ protected:
 		*m_pDiscontinuityFilter,
 		*m_pReconstructionFilter;
 
-	MotionBlur *m_pTemporalFilter;
+	AccumulationBuffer *m_pTemporalFilter;
+	//MotionBlur *m_pTemporalFilter;
 
 public:
 	void SetJobs(int p_nSubdivide, int p_nSize) { m_nJobs = p_nSubdivide; m_nSize = p_nSize; }
@@ -294,7 +295,8 @@ public:
 		//----------------------------------------------------------------------------------------------
 		// Post processing setup
 		//----------------------------------------------------------------------------------------------
-		m_pRadianceBuffer = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight()),
+		m_pRadianceBuffer = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight());
+		m_pRadianceAccumulationBuffer = new RadianceBuffer(m_pRenderer->GetDevice()->GetWidth(), m_pRenderer->GetDevice()->GetHeight());
 
 		// Discontinuity, reconstruction and tone mapping
 		m_pTonemapFilter = m_pEngineKernel->GetPostProcessManager()->CreateInstance("GlobalTone", "GlobalTone", "");
@@ -302,10 +304,15 @@ public:
 		m_pDiscontinuityFilter = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Discontinuity", "DiscontinuityBuffer", "");
 		m_pReconstructionFilter = m_pEngineKernel->GetPostProcessManager()->CreateInstance("Reconstruction", "ReconstructionBuffer", "");
 
-		// Motion blur filter
+		// Progressive Rendering
+		m_pTemporalFilter = (AccumulationBuffer*)m_pEngineKernel->GetPostProcessManager()->CreateInstance("Accumulation", "Accumulation", "");
+		m_pTemporalFilter->SetAccumulationBuffer(m_pRadianceAccumulationBuffer);
+		m_pTemporalFilter->Reset();
+		/*
 		m_pTemporalFilter = (MotionBlur*)m_pEngineKernel->GetPostProcessManager()->CreateInstance("MotionBlur", "MotionBlur", "");
 		m_pTemporalFilter->SetExternalBuffer(m_pRadianceBuffer, 6);
 		m_pTemporalFilter->Reset();
+		*/
 	
 		//----------------------------------------------------------------------------------------------
 		// Rendering budget setup
@@ -320,6 +327,9 @@ public:
 
 	bool OnShutdown(void)
 	{
+		delete m_pRadianceBuffer;
+		delete m_pRadianceAccumulationBuffer;
+
 		return true;
 	}
 

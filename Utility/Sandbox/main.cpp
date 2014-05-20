@@ -70,8 +70,10 @@ public:
 		m_path2.AddVertex(Vector3(-28, 5, 13.5), Vector3::Zero, 5);
 		m_path2.AddVertex(Vector3(-27, 5, 13.5), Vector3::Zero, 5);
 		m_path2.AddVertex(Vector3(-26, 5, 13.5), Vector3::Zero, 1);
-		m_path2.AddVertex(Vector3(-28, 5, 13.5), Vector3::Zero, 1);
-		m_path2.AddVertex(Vector3(-27, 5, 13.5), Vector3::Zero, 1);
+		m_path2.AddVertex(Vector3(-25, 5, 13.5), Vector3::Zero, 1);
+		m_path2.AddVertex(Vector3(-24, 5, 13.5), Vector3::Zero, 1);
+		m_path2.AddVertex(Vector3(-23, 5, 13.5), Vector3::Zero, 1);
+		m_path2.AddVertex(Vector3(-22, 5, 13.5), Vector3::Zero, 1);
 		m_path2.Reset();
 	}
 	/*	: m_nFrameNumber(0)
