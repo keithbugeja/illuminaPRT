@@ -56,17 +56,36 @@ class SimpleListener
 	: public IlluminaMTListener
 {
 protected:
+	// PathEx2
 	IIlluminaMT::Flags m_flags;
-	// bool m_resetAccumulation;
 	PathEx2 m_path2;
 	bool m_lastPass;
 
+	// PathEx
 	//PathEx m_path;
 	//float m_fDeltaTime;
 	//int m_nFrameNumber;
 
 public:
 	SimpleListener(void)
+	{
+		// InitPathEx();
+		InitPathEx2();
+	}
+
+	/*
+	void InitPathEx(void) 
+	{ 
+		m_nFrameNumber = 0;
+		m_fDeltaTime = 0;
+
+		m_path.Clear();
+		m_path.FromString("path={{-16, -14, -5.75},{90,0,0},{-8, -14, -5.75},{90,0,0},{-2.36, -14, -5.75},{90,0,0}}");
+	}
+	*/
+
+	/**/
+	void InitPathEx2(void)
 	{
 		m_path2.AddVertex(Vector3(-28, 5, 13.5), Vector3::Zero, 5);
 		m_path2.AddVertex(Vector3(-27, 5, 13.5), Vector3::Zero, 5);
@@ -77,16 +96,21 @@ public:
 		m_path2.AddVertex(Vector3(-22, 5, 13.5), Vector3::Zero, 1);
 		m_path2.Reset();
 	}
-	/*	: m_nFrameNumber(0)
-		, m_fDeltaTime(0)
-	{
-		m_path.Clear();
-		m_path.FromString("path={{-16, -14, -5.75},{90,0,0},{-8, -14, -5.75},{90,0,0},{-2.36, -14, -5.75},{90,0,0}}");
-	}
-	*/
+	/**/
+
 
 	void OnBeginFrame(IIlluminaMT *p_pIlluminaMT) 
 	{ 
+		/*
+		GeometricPrimitive *g = (GeometricPrimitive*)p_pIlluminaMT->GetEnvironment()->GetScene()->GetSpace()->PrimitiveList[0];
+		std::cout << "Computing area..." << ((ITreeMesh*)g->GetShape())->ComputeArea();
+		std::cout << "Faces : " << ((ITreeMesh*)g->GetShape())->TriangleList.Size();
+		std::cout << "Verts : " << ((ITreeMesh*)g->GetShape())->VertexList.Size();
+		std::cout << "Area : " << g->GetShape()->GetArea() << std::endl;
+		*/
+
+		// PathEx2 based walkthrough
+		/**/
 		// If path is complete, exit
 		if (m_path2.IsComplete()) return;
 
@@ -121,10 +145,9 @@ public:
 		// Debug out
 		std::cout << "Frame [" << m_path2.GetCurrentFrame() << " of " << m_path2.GetFrameCount() << "] :: "
 			<< "Position : " << position.ToString() << ", LookAt : " << lookAt.ToString() << ", Pass : " << currentPass << std::endl;
+		/**/
 
-		//GeometricPrimitive *g = (GeometricPrimitive*)p_pIlluminaMT->GetEnvironment()->GetScene()->GetSpace()->PrimitiveList[0];
-		//std::cout << "Area : " << g->GetShape()->GetArea() << std::endl;
-
+		//PathEx based walkthrough
 		/*
 		ICamera* pCamera = p_pIlluminaMT->GetEnvironment()->GetCamera();
 		Vector3 position, lookAt;
@@ -144,7 +167,6 @@ public:
 	void OnEndFrame(IIlluminaMT *p_pIlluminaMT)
 	{
 		GBuffer::Persist("Output\\gbuffer.gbf", m_path2.GetCurrentFrame(), p_pIlluminaMT->GetEnvironment()->GetCamera(), p_pIlluminaMT->GetCommitBuffer());
-
 		p_pIlluminaMT->SetFlags(m_flags.ToInt());
 	}
 };
